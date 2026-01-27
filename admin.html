@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Panel de Administración - El Gorila de Franzkafka</title>
+    <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#A97C22",
+                        "background-dark": "#1F1A12",
+                        "surface-dark": "#312A22",
+                        "text-dark": "#EAE0D1",
+                        "accent-gold": "#D4AF37",
+                    },
+                    fontFamily: {
+                        display: ["Cinzel", "serif"],
+                        body: ["Lato", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            background-image: url('img/FONDOS/1.png');
+            background-size: 100% auto;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="font-body bg-background-dark text-text-dark min-h-screen">
+    <!-- Pantalla de Login -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-surface-dark/90 backdrop-blur-sm p-8 rounded-lg border border-primary/30 max-w-md w-full mx-4">
+            <h2 class="text-3xl font-display font-bold text-primary mb-2 text-center">Acceso al Sistema</h2>
+            <p class="text-text-dark/70 text-center mb-6">El Gorila de Franzkafka</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Usuario ID</label>
+                    <input type="text" id="usuario-input" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="admin, gerente, taquilla1, etc." autocomplete="username">
+                </div>
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Contraseña</label>
+                    <input type="password" id="password-input" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="Ingresa la contraseña" autocomplete="current-password">
+                </div>
+                <button onclick="verificarAcceso()" class="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold py-2 px-4 rounded transition-colors">
+                    Acceder
+                </button>
+                <div id="error-login" class="hidden bg-red-900/30 border border-red-800/50 text-red-300 p-3 rounded text-sm"></div>
+                <p class="text-xs text-text-dark/50 text-center mt-4">
+                    Usuarios por defecto:<br>
+                    admin/admin2024 | gerente/gerente2024<br>
+                    taquilla1/taquilla2024 | validacion1/validacion2024<br>
+                    reclamos1/reclamos2024
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Principal (oculto inicialmente) -->
+    <div id="admin-panel" class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-display font-bold text-primary mb-2">Panel de Administración</h1>
+                    <p class="text-text-dark/70">El Gorila de Franzkafka</p>
+                    <p class="text-sm text-text-dark/60 mt-1">
+                        Usuario: <span id="usuario-actual" class="text-accent-gold font-semibold">-</span> | 
+                        Rol: <span id="rol-actual" class="text-accent-gold font-semibold">-</span>
+                    </p>
+                </div>
+                <div class="flex gap-3 flex-wrap">
+                    <a href="taquilla.html" id="link-taquilla" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm hidden">
+                        <span class="material-symbols-outlined align-middle text-sm">confirmation_number</span>
+                        Taquilla
+                    </a>
+                    <a href="acomodadores.html" id="link-acomodadores" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm hidden">
+                        <span class="material-symbols-outlined align-middle text-sm">qr_code_scanner</span>
+                        Acomodadores
+                    </a>
+                    <button onclick="cerrarSesion()" class="px-4 py-2 bg-red-900/30 hover:bg-red-900/40 text-red-300 rounded-sm transition-colors border border-red-800/30 text-sm">
+                        Cerrar Sesión
+                    </button>
+                    <a href="Index.html" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30">
+                        Volver al sitio
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Tarjeta: Total Vendido -->
+            <div class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-text-dark">Total Vendido</h3>
+                    <span class="material-symbols-outlined text-primary text-3xl">payments</span>
+                </div>
+                <p class="text-3xl font-bold text-primary" id="total-vendido">$0.00 MXN</p>
+                <p class="text-sm text-text-dark/60 mt-2" id="total-boletos-vendidos">0 boletos vendidos</p>
+            </div>
+
+            <!-- Tarjeta: Disponibilidad -->
+            <div class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-text-dark">Disponibilidad</h3>
+                    <span class="material-symbols-outlined text-primary text-3xl">event_seat</span>
+                </div>
+                <p class="text-3xl font-bold text-text-dark" id="total-disponible">0</p>
+                <p class="text-sm text-text-dark/60 mt-2">boletos disponibles</p>
+            </div>
+
+            <!-- Tarjeta: Reservas Activas -->
+            <div class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-text-dark">Reservas Activas</h3>
+                    <span class="material-symbols-outlined text-primary text-3xl">schedule</span>
+                </div>
+                <p class="text-3xl font-bold text-text-dark" id="reservas-activas">0</p>
+                <p class="text-sm text-text-dark/60 mt-2">reservas temporales</p>
+            </div>
+        </div>
+
+        <!-- Inventario por Fecha -->
+        <div class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8">
+            <h2 class="text-2xl font-display font-bold text-primary mb-6">Inventario por Función</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="inventario-fechas">
+                <!-- Se llenará con JavaScript -->
+            </div>
+        </div>
+
+        <!-- Ventas Recientes -->
+        <div class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-primary">Ventas Recientes</h2>
+                <button onclick="exportarDatos()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
+                    Exportar Datos
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-primary/20">
+                            <th class="pb-3 text-text-dark/70 font-semibold">Orden</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Fecha</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Función</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Cantidad</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Total</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-ventas">
+                        <!-- Se llenará con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Acciones (según permisos) -->
+        <div id="acciones-admin" class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 hidden">
+            <h2 class="text-2xl font-display font-bold text-primary mb-6">Acciones de Administración</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onclick="resetearInventario()" id="btn-resetear" class="px-6 py-3 bg-red-900/30 hover:bg-red-900/40 text-red-300 rounded-sm transition-colors border border-red-800/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Resetear Inventario
+                </button>
+                <button onclick="limpiarReservas()" id="btn-limpiar-reservas" class="px-6 py-3 bg-yellow-900/30 hover:bg-yellow-900/40 text-yellow-300 rounded-sm transition-colors border border-yellow-800/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Limpiar Reservas Expiradas
+                </button>
+                <button onclick="limpiarVentas()" id="btn-limpiar-ventas" class="px-6 py-3 bg-orange-900/30 hover:bg-orange-900/40 text-orange-300 rounded-sm transition-colors border border-orange-800/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Limpiar Historial de Ventas
+                </button>
+                <button onclick="actualizarPanel()" class="px-6 py-3 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30">
+                    Actualizar Panel
+                </button>
+            </div>
+        </div>
+
+        <!-- Gestión de Usuarios (solo Admin/Gerente) -->
+        <div id="gestion-usuarios" class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-primary">Gestión de Usuarios</h2>
+                <button onclick="mostrarFormularioUsuario()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
+                    <span class="material-symbols-outlined align-middle text-lg">add</span>
+                    Nuevo Usuario
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-primary/20">
+                            <th class="pb-3 text-text-dark/70 font-semibold">ID</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Nombre</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Rol</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Estado</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Último Acceso</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-usuarios">
+                        <!-- Se llenará con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Gestión de Funciones Especiales (solo Admin/Gerente) -->
+        <div id="gestion-funciones" class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-primary">Funciones Especiales (Viernes)</h2>
+                <button onclick="mostrarFormularioFuncion()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
+                    <span class="material-symbols-outlined align-middle text-lg">add</span>
+                    Nueva Función Especial
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-primary/20">
+                            <th class="pb-3 text-text-dark/70 font-semibold">Nombre</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Fecha y Hora</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Estado</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-funciones-especiales">
+                        <!-- Se llenará con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Auditoría (solo Admin/Gerente) -->
+        <div id="auditoria" class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-primary">Registro de Auditoría</h2>
+                <button onclick="exportarAuditoria()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
+                    Exportar Auditoría
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-primary/20">
+                            <th class="pb-3 text-text-dark/70 font-semibold">Fecha</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Usuario</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Rol</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Acción</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-auditoria">
+                        <!-- Se llenará con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear/editar función especial -->
+    <div id="modal-funcion" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-surface-dark p-8 rounded-lg border border-primary/30 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-display font-bold text-primary mb-6" id="modal-funcion-titulo">Nueva Función Especial</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Nombre de la Función</label>
+                    <input type="text" id="modal-funcion-nombre" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="Ej: Viernes 15 Nov">
+                </div>
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Fecha</label>
+                    <input type="date" id="modal-funcion-fecha" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-text-dark/70 mb-2">Hora</label>
+                        <input type="number" id="modal-funcion-hora" min="0" max="23" value="20" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-text-dark/70 mb-2">Minutos</label>
+                        <input type="number" id="modal-funcion-minutos" min="0" max="59" value="30" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="guardarFuncion()" class="flex-1 bg-primary hover:bg-primary/90 text-background-dark font-bold py-2 px-4 rounded transition-colors">
+                        Guardar
+                    </button>
+                    <button onclick="cerrarModalFuncion()" class="flex-1 bg-background-dark hover:bg-background-dark/80 text-text-dark font-bold py-2 px-4 rounded transition-colors border border-primary/30">
+                        Cancelar
+                    </button>
+                </div>
+                <div id="error-funcion" class="hidden bg-red-900/30 border border-red-800/50 text-red-300 p-3 rounded text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear/editar usuario -->
+    <div id="modal-usuario" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-surface-dark p-8 rounded-lg border border-primary/30 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-display font-bold text-primary mb-6" id="modal-titulo">Nuevo Usuario</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Usuario ID</label>
+                    <input type="text" id="modal-usuario-id" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="ej: taquilla2">
+                </div>
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Nombre</label>
+                    <input type="text" id="modal-usuario-nombre" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="Nombre completo">
+                </div>
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Rol</label>
+                    <select id="modal-usuario-rol" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary">
+                        <option value="taquilla">Taquilla</option>
+                        <option value="validacion">Validación QR</option>
+                        <option value="reclamos">Reclamos</option>
+                        <option value="admin">Administrador</option>
+                        <option value="gerente">Gerente</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Contraseña</label>
+                    <input type="password" id="modal-usuario-password" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="Nueva contraseña">
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="guardarUsuario()" class="flex-1 bg-primary hover:bg-primary/90 text-background-dark font-bold py-2 px-4 rounded transition-colors">
+                        Guardar
+                    </button>
+                    <button onclick="cerrarModalUsuario()" class="flex-1 bg-background-dark hover:bg-background-dark/80 text-text-dark font-bold py-2 px-4 rounded transition-colors border border-primary/30">
+                        Cancelar
+                    </button>
+                </div>
+                <div id="error-usuario" class="hidden bg-red-900/30 border border-red-800/50 text-red-300 p-3 rounded text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+<script src="js/inventario.js"></script>
+<script src="js/fechas.js"></script>
+<script src="js/imagenes.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

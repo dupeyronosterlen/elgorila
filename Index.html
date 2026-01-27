@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<title>El Gorila de Franz Kafka</title>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+    body {
+      padding-top: 85px;
+      position: relative;
+      background-color: #1a150e;
+    }
+    .main-container {
+      background-image: url('img/FONDOS/1.png');
+      background-size: 100% auto;
+      background-position: top center;
+      background-attachment: scroll;
+      background-repeat: no-repeat;
+      position: relative;
+      min-height: 100vh;
+    }
+    .main-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .frame-maze-1 {
+        -webkit-mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(90deg,#0000 25%,#000 0 calc(75%),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0);
+        -webkit-mask-composite: source-in, xor, destination-in;
+        mask-composite: intersect;
+        mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(90deg,#0000 25%,#000 0 calc(75%),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0);
+        mask-composite: intersect;
+    }
+    .frame-maze-2 {
+        -webkit-mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(90deg,#0000 2px, #000 0 calc(100% - 25%), #0000 0),
+            linear-gradient(#000 25%, #0000 0 calc(100% - 2px));
+        -webkit-mask-composite: source-in, xor, destination-in, destination-in;
+        mask-composite: intersect;
+        mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(90deg,#0000 2px, #000 0 calc(100% - 25%), #0000 0),
+            linear-gradient(#000 25%, #0000 0 calc(100% - 2px));
+        mask-composite: intersect;
+    }
+    .frame-maze-3 {
+        -webkit-mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 25%,#000 0 calc(100% - 2px)),
+            linear-gradient(90deg,#000 75%, #0000 0 calc(100% - 2px));
+        -webkit-mask-composite: source-in, xor, destination-in, destination-in;
+        mask-composite: intersect;
+        mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 25%,#000 0 calc(100% - 2px)),
+            linear-gradient(90deg,#000 75%, #0000 0 calc(100% - 2px));
+        mask-composite: intersect;
+    }.bg-kafka-rich {
+        background: linear-gradient(180deg, rgba(60, 10, 10, 0.85) 0%, rgba(20, 45, 25, 0.85) 50%, rgba(80, 60, 10, 0.85) 100%);
+    }
+  </style>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#8B0000",
+            "background-light": "#F5F5DC",
+            "background-dark": "#1a150e",
+            "text-light": "#333333",
+            "text-dark": "#D4CFC3",
+            "accent-gold": "#D4AF37",
+            "rich-dark": "#2a1e12",
+            "deep-forest": "#1e2a1e",
+          },
+          fontFamily: {
+            display: ["Lora", "serif"],
+            body: ["Inter", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "8px",
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="font-body bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark antialiased">
+<header class="fixed top-0 left-0 right-0 z-20 bg-background-dark/85 backdrop-blur-sm shadow-sm border-b border-accent-gold/10" style="height: 85px;">
+<div class="mx-auto flex h-full max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
+<div class="flex items-center space-x-2">
+<img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="El Gorila de Franz Kafka" class="h-14 md:h-16 w-auto object-contain">
+</div>
+<div class="flex items-center gap-3">
+<a class="rounded bg-accent-gold px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-background-dark transition-opacity hover:opacity-90 active:opacity-75 touch-manipulation" href="#contacto" style="-webkit-tap-highlight-color: transparent;">
+  Información de Taquilla
+</a>
+</div>
+
+</div>
+</header>
+<div class="main-container">
+<div class="absolute inset-0 bg-kafka-rich mix-blend-multiply z-0 opacity-40"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/25 z-0 pointer-events-none"></div>
+<div class="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+<main class="pt-0 pb-12">
+<section class="mb-4 text-center -mt-28">
+<div class="h-[400px] sm:h-[500px] md:h-[650px] lg:h-[750px] flex items-center justify-center overflow-hidden relative group" id="cartel-container">
+<div class="absolute inset-0 flex items-center justify-center" id="cartel-imagen" style="background-image: url('img/CARTEL PRINCIPAL/1.png'); background-size: contain; background-position: center center; background-repeat: no-repeat; transition: opacity 0.5s ease-in-out;">
+</div>
+<!-- Flecha izquierda -->
+<button onclick="cambiarCartel(-1)" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white p-2 sm:p-3 rounded-full transition-all opacity-70 md:opacity-0 md:group-hover:opacity-100 touch-manipulation" aria-label="Cartel anterior" style="-webkit-tap-highlight-color: transparent;">
+<svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Flecha derecha -->
+<button onclick="cambiarCartel(1)" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white p-2 sm:p-3 rounded-full transition-all opacity-70 md:opacity-0 md:group-hover:opacity-100 touch-manipulation" aria-label="Siguiente cartel" style="-webkit-tap-highlight-color: transparent;">
+<svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</section>
+<section class="mb-4 rounded-sm bg-rich-dark/50 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-sm border border-accent-gold/20 shadow-lg">
+<h2 class="mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
+<div class="mx-auto max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left space-y-3 sm:space-y-4">
+            <p>
+                El Gorila pone en escena a una voz que habla con claridad, humor y una inteligencia afilada. Lo que comienza como un discurso ordenado se va llenando de giros, ironía y risa, hasta convertirse en una experiencia tan divertida como incómoda.
+            </p>
+            <p>
+                Aquí, el humor no distrae: despierta. La palabra se mueve entre lo animal y lo humano, entre la obediencia y el deseo de libertad, invitando al espectador a reírse de sí mismo mientras algo se reacomoda por dentro.
+            </p>
+            <p>
+                El Gorila no promete respuestas, pero sí una recompensa poco común: salir del teatro más ligero, más despierto y con la sensación de haber pensado —y reído— en serio.
+            </p>
+          </div>
+</section>
+<section class="mb-4">
+<h2 class="mb-3 sm:mb-4 text-center font-display text-2xl sm:text-3xl md:text-4xl text-white drop-shadow-md tracking-wide">Galería</h2>
+<div class="grid grid-cols-2 gap-x-2 gap-y-4 sm:gap-x-3 sm:gap-y-6 md:grid-cols-3 md:gap-x-4 md:gap-y-8 max-w-5xl mx-auto">
+<div class="group relative aspect-square">
+<div class="absolute inset-0 bg-accent-gold frame-maze-1"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-1" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" src="img/GALERIA/1.png"/>
+</div>
+</div>
+<div class="group relative aspect-square">
+<div class="absolute inset-0 bg-primary frame-maze-2"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-2" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" src="img/GALERIA/2.png"/>
+</div>
+</div>
+<div class="group relative aspect-square">
+<div class="absolute inset-0 bg-accent-gold frame-maze-3"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-3" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" src="img/GALERIA/3.png"/>
+</div>
+</div>
+<div class="group relative aspect-square">
+<div class="absolute inset-0 bg-primary frame-maze-1"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-4" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" src="img/GALERIA/4.png"/>
+</div>
+</div>
+<div class="group relative aspect-square">
+<div class="absolute inset-0 bg-accent-gold frame-maze-2"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-5" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" src="img/GALERIA/5.png"/>
+</div>
+</div>
+<div class="group relative aspect-square">
+<div class="absolute inset-0 bg-primary frame-maze-3"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-6" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" src="img/GALERIA/6.png"/>
+</div>
+</div>
+</div>
+</section>
+<div class="mb-4 flex justify-center gap-3 flex-wrap">
+<a class="rounded-sm bg-primary px-6 py-3 sm:px-4 sm:py-2 text-base sm:text-sm font-semibold text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] border border-primary/30 hover:bg-red-900/90 tracking-wide touch-manipulation" href="#contacto" style="-webkit-tap-highlight-color: transparent;">
+                Compra en Taquilla (Carpa Geodésica)
+            </a>
+</div>
+
+<!-- Sección La Obra -->
+<section class="mb-4 text-center">
+    <div class="h-[400px] sm:h-[500px] md:h-[650px] lg:h-[750px] flex items-center justify-center overflow-hidden relative">
+        <div class="absolute inset-0 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 px-4 sm:px-6 md:px-8">
+            <div class="flex-1 max-w-2xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left space-y-3 sm:space-y-4">
+                <h2 class="mb-4 sm:mb-6 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left">La Obra</h2>
+                <p>
+                    "El Gorila" está basado en "Informe para una academia" de Franz Kafka, un relato de 1917 que explora temas de transformación, adaptación y la pérdida de la naturaleza original.
+                </p>
+                <p>
+                    La obra adapta este texto clásico al contexto mexicano contemporáneo, manteniendo la esencia del monólogo kafkiano pero dotándolo de un lenguaje y humor propios que resuenan con la audiencia actual.
+                </p>
+            </div>
+            <div class="w-full md:w-[500px] lg:w-[600px] flex-shrink-0">
+                <div class="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border-2 border-accent-gold/30 shadow-xl">
+                    <img id="obra-imagen" alt="La Obra" class="w-full h-full object-cover transition-opacity duration-500" src="img/OBRA/1.png" onerror="this.style.display='none'"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sección El Actor -->
+<section class="mb-4 text-center">
+    <div class="h-[400px] sm:h-[500px] md:h-[650px] lg:h-[750px] flex items-center justify-center overflow-hidden relative">
+        <div class="absolute inset-0 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 px-4 sm:px-6 md:px-8">
+            <div class="w-full md:w-[500px] lg:w-[600px] flex-shrink-0 order-2 md:order-1">
+                <div class="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border-2 border-accent-gold/30 shadow-xl">
+                    <img id="actor-imagen" alt="Humberto Dupeyron" class="w-full h-full object-cover transition-opacity duration-500" src="img/HUMBERTO DUPEYRON/1.JPG" onerror="this.style.display='none'"/>
+                </div>
+            </div>
+            <div class="flex-1 max-w-2xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left space-y-3 sm:space-y-4 order-1 md:order-2">
+                <h2 class="mb-4 sm:mb-6 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left">El Actor</h2>
+                <p>
+                    Humberto Dupeyron es actor, director y dramaturgo mexicano con una trayectoria consolidada en teatro, cine y televisión.
+                </p>
+                <p>
+                    Con formación actoral sólida y experiencia en múltiples proyectos, Dupeyron ha desarrollado un estilo personal que combina la reflexión filosófica con el humor, creando obras que invitan al público a pensar mientras se divierte.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="scroll-mt-20 mb-4 rounded-lg bg-rich-dark/60 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/10" id="faq">
+<div class="flex flex-col items-center justify-center">
+<svg class="h-8 w-8 sm:h-10 sm:w-10 text-accent-gold mb-3 sm:mb-4 opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<h2 class="mb-3 sm:mb-4 text-center font-display text-2xl sm:text-3xl md:text-4xl text-white">Preguntas Frecuentes</h2>
+</div>
+<div class="mx-auto max-w-3xl divide-y divide-accent-gold/20">
+<details class="group py-3 sm:py-4">
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Dónde se presenta la obra?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30">
+                La obra se presenta en el Gran Teatro del Centro Histórico. Puede encontrar la dirección y un mapa en nuestra sección de contacto.
+              </p>
+</details>
+<details class="group py-3 sm:py-4">
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Cuáles son los horarios de las funciones?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30">
+                Las funciones son de jueves a sábado a las 8:00 PM, y los domingos a las 6:00 PM. Recomendamos llegar 30 minutos antes.
+              </p>
+</details>
+<details class="group py-3 sm:py-4">
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Hay descuentos disponibles?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30">
+                Ofrecemos descuentos para estudiantes, personas de la tercera edad y grupos de más de 10 personas. Por favor, póngase en contacto para más detalles.
+              </p>
+</details>
+<details class="group py-3 sm:py-4">
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Cómo puedo comprar boletos?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30">
+                Los boletos se adquieren directamente en la taquilla física (Carpa Geodésica) antes de cada función. Consulte nuestra sección de contacto para más información sobre ubicación y horarios.
+              </p>
+</details>
+</div>
+</section>
+<section class="mb-4 scroll-mt-20" id="contacto">
+<div class="relative overflow-hidden rounded-xl bg-rich-dark/60 backdrop-blur-md shadow-2xl ring-1 ring-accent-gold/10">
+<div class="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-primary/20 blur-[100px] mix-blend-screen pointer-events-none"></div>
+<div class="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-accent-gold/10 blur-[100px] mix-blend-screen pointer-events-none"></div>
+<div class="relative z-10 flex flex-col md:flex-row items-center justify-between p-4 sm:p-6 md:p-8 lg:p-14 gap-6 sm:gap-8 md:gap-16">
+<div class="flex-1 text-center md:text-left">
+<h2 class="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-accent-gold mb-4 sm:mb-6 drop-shadow-sm">Contacto</h2>
+<p class="font-body text-text-dark/90 text-sm sm:text-base md:text-lg leading-relaxed max-w-lg mx-auto md:mx-0 font-light">
+             Para consultas generales, prensa o asistencia con su visita, nuestro equipo está listo para ayudarle. La comunicación es el primer paso hacia la comprensión.
+          </p>
+</div>
+<div class="hidden md:block w-px h-32 bg-gradient-to-b from-transparent via-accent-gold/40 to-transparent"></div>
+<div class="flex flex-col gap-5 w-full max-w-md">
+<a class="group flex items-center gap-3 sm:gap-5 p-3 sm:p-5 rounded-lg bg-black/20 border border-white/10 hover:bg-black/40 hover:border-accent-gold/50 active:bg-black/50 transition-all duration-300 shadow-lg hover:shadow-accent-gold/5 touch-manipulation" href="mailto:info@elgorila.com" style="-webkit-tap-highlight-color: transparent;">
+<span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-gold/10 text-accent-gold border border-accent-gold/20 group-hover:scale-110 group-hover:bg-accent-gold group-hover:text-background-dark transition-all duration-300">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</span>
+<div class="text-left">
+<span class="block text-xs uppercase tracking-widest text-text-dark/60 group-hover:text-accent-gold transition-colors font-semibold">Escríbenos</span>
+<span class="block font-body text-lg font-medium text-text-dark group-hover:text-white transition-colors">info@elgorila.com</span>
+</div>
+</a>
+<a class="group flex items-center gap-3 sm:gap-5 p-3 sm:p-5 rounded-lg bg-black/20 border border-white/10 hover:bg-black/40 hover:border-accent-gold/50 active:bg-black/50 transition-all duration-300 shadow-lg hover:shadow-accent-gold/5 touch-manipulation" href="tel:+1234567890" style="-webkit-tap-highlight-color: transparent;">
+<span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent-gold/10 text-accent-gold border border-accent-gold/20 group-hover:scale-110 group-hover:bg-accent-gold group-hover:text-background-dark transition-all duration-300">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</span>
+<div class="text-left">
+<span class="block text-xs uppercase tracking-widest text-text-dark/60 group-hover:text-accent-gold transition-colors font-semibold">Llámanos</span>
+<span class="block font-body text-lg font-medium text-text-dark group-hover:text-white transition-colors">+1 (234) 567-890</span>
+</div>
+</a>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-rich-dark/90 py-10 backdrop-blur-md text-center border-t border-accent-gold/10">
+<div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-text-dark">
+<div class="md:text-left">
+<h3 class="font-bold uppercase tracking-wider text-accent-gold mb-3 flex items-center gap-2">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Contacto</span>
+</h3>
+<a class="block transition-colors hover:text-accent-gold" href="mailto:info@elgorila.com">info@elgorila.com</a>
+<p class="mt-1">+1 (234) 567-890</p>
+</div>
+<div class="flex flex-col items-center space-y-2">
+<a class="flex items-center gap-2 transition-colors hover:text-accent-gold" href="#faq">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Preguntas Frecuentes</span>
+</a>
+<a class="transition-colors hover:text-accent-gold" href="#faq">Términos y Condiciones</a>
+<a class="transition-colors hover:text-accent-gold" href="#faq">Política de Privacidad</a>
+</div>
+<div class="md:text-right">
+<p class="font-display text-lg text-accent-gold">El Gorila de Franz Kafka</p>
+<p class="text-text-dark/60 mt-2">© 2024. Todos los derechos reservados.</p>
+</div>
+</div>
+</div>
+</footer>
+</div>
+</div>
+<script src="js/imagenes.js"></script>
+</body></html>

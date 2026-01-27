@@ -1,0 +1,26 @@
+⚠️ IMPORTANTE ⚠️
+
+Este proyecto está en:
+~/Documents/ElGorila-Boletaje/
+
+NO uses la carpeta de Dropbox, esa será eliminada.
+
+Para ver los cambios:
+
+1. Abre Terminal
+2. Ejecuta:
+   cd ~/Documents/ElGorila-Boletaje
+   ./INICIAR_SERVIDOR.sh
+
+3. Abre en el navegador:
+   http://localhost:8000
+
+4. Si no ves los cambios, presiona:
+   Cmd + Shift + R (Mac) o Ctrl + Shift + R (Windows)
+   Para forzar la recarga sin caché
+
+Los cambios realizados:
+✅ Eliminado "37 años en escena"
+✅ Eliminado marco del cartel
+✅ Reducido padding (pt-4 en lugar de py-8)
+✅ Fondos configurados para rotar aleatoriamente
