@@ -5,12 +5,12 @@
 El sistema de compra de boletos sigue este flujo:
 
 ```
-Index.html → boletos.html → checkout.html → confirmacion.html
+index.html → boletos.html → checkout.html → confirmacion.html
 ```
 
 ## 🔄 Flujo Detallado Paso a Paso
 
-### 1. **Página Principal (Index.html)**
+### 1. **Página Principal (index.html)**
 - Usuario ve la información de la obra
 - Hace clic en el botón **"Boletos"**
 - Redirige a `boletos.html`
@@ -117,7 +117,7 @@ Index.html → boletos.html → checkout.html → confirmacion.html
    - Presentar código QR en el teatro
 
 4. **Botón "Volver al Inicio"**
-   - Regresa a `Index.html`
+   - Regresa a `index.html`
 
 ## 🔒 Sistema de Reservas Temporales
 

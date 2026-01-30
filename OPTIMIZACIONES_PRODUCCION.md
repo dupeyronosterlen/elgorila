@@ -29,12 +29,12 @@ location ~* \.(jpg|jpeg|png|gif|webp|ico|css|js|woff2?)$ {
 
 ## Open Graph (compartir en redes)
 
-En `Index.html` ya están configurados `og:image` y `og:url` con el dominio **elgorilateatro.com.mx**:
+En `index.html` ya están configurados `og:image` y `og:url` con el dominio **elgorilateatro.com.mx**:
 
 - `og:url`: `https://elgorilateatro.com.mx/`
 - `og:image`: `https://elgorilateatro.com.mx/img/LOGO/1.jpg`
 
-Así Facebook, Twitter, WhatsApp, etc. mostrarán bien la imagen y la URL al compartir. Si cambias de dominio, actualiza esas dos meta en el `<head>` de Index.html.
+Así Facebook, Twitter, WhatsApp, etc. mostrarán bien la imagen y la URL al compartir. Si cambias de dominio, actualiza esas dos meta en el `<head>` de index.html.
 
 ## Seguridad antes de subir
 

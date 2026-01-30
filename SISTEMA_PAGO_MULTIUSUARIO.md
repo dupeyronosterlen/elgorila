@@ -3,7 +3,7 @@
 ## ✅ Cambios Implementados
 
 ### 1. Headers Unificados
-- **Index.html** y **boletos.html** tienen el mismo header
+- **index.html** y **boletos.html** tienen el mismo header
 - El enlace "Giras" (elgorila.com.mx) fue eliminado
 - "Adquiere tus entradas" y compra de boletos redirigen a la página de la Nueva Carpa Geodésica
 - Header con altura de 85px

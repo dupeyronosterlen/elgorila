@@ -65,7 +65,7 @@ Se ha implementado un sistema completo de venta de boletos con las siguientes ca
 ### 🔄 Flujo de Usuario
 
 ```
-1. Index.html (Inicio)
+1. index.html (Inicio)
    ↓
 2. boletos.html (Selección)
    - Selecciona fecha → Crea reserva temporal (10 min)
@@ -166,7 +166,7 @@ El sistema maneja múltiples usuarios comprando simultáneamente mediante:
 - `boletos.html` - Campo de descuento, indicador de disponibilidad
 - `checkout.html` - Carga de datos reales, formulario de email
 - `confirmacion.html` - Muestra datos reales de compra
-- `Index.html` - Enlaces corregidos
+- `index.html` - Enlaces corregidos
 
 ### 🚀 Próximos Pasos Recomendados
 

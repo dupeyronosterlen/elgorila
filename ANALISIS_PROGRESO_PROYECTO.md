@@ -37,7 +37,7 @@
 | **Sistema de Acomodadores** (`acomodadores.js` + `acomodadores.html`) | ✅ Completo | Validación QR, información de función, contador de personas con discapacidad |
 | **Validación de Boletos** (`verificar.js` + `verificar.html`) | ✅ Completo | Escaneo y validación de códigos QR |
 | **Sistema de Certificados** (`certificado.js`) | ⚠️ Necesita revisión | Mencionado en documentación, implementación pendiente de revisar |
-| **Landing Page** (`Index.html`) | ✅ Completo | Página principal con información, galería, secciones "La Obra" y "El Actor" |
+| **Landing Page** (`index.html`) | ✅ Completo | Página principal con información, galería, secciones "La Obra" y "El Actor" |
 | **Optimización de Imágenes** (`imagenes.js`) | ✅ Completo | Sistema de rotación y carga optimizada |
 
 ---

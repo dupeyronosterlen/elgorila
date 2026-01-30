@@ -2,7 +2,7 @@
 
 ## 1. Cambios en el FAQ (taquilla, sin "el día de la función")
 
-**Archivo:** `Index.html`
+**Archivo:** `index.html`
 
 - En la respuesta **"¿Cómo compro boletos?"** (aprox. línea 730):
   - Quitar *"También puedes comprar directamente en taquilla el día de la función."*

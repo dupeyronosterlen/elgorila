@@ -24,5 +24,5 @@
 3. **Abre la consola del navegador (F12)** y busca mensajes que empiecen con 🎨 o ✅
 
 4. **Verifica la ruta en el navegador:**
-   - Debe ser: `file:///Users/osterlendupeyron/Documents/ElGorila-Boletaje/Index.html`
-   - O si usas servidor: `http://localhost:8000/Index.html`
+   - Debe ser: `file:///Users/osterlendupeyron/Documents/ElGorila-Boletaje/index.html`
+   - O si usas servidor: `http://localhost:8000/index.html`

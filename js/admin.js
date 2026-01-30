@@ -191,7 +191,7 @@ function actualizarPanel() {
     if (AuthManager.puedeHacerCambios()) cargarMensajes();
 }
 
-// Métricas de la landing (visitas y clics desde Index.html, mismo navegador)
+// Métricas de la landing (visitas y clics desde index.html, mismo navegador)
 function cargarActividadLanding() {
     const KEY = 'elgorila_landing_events';
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
@@ -398,7 +398,7 @@ function cargarEstadisticas() {
     document.getElementById('total-boletos-vendidos').textContent = `${totalBoletos} boletos vendidos`;
 }
 
-// Botones de compra: URL o ventana con mensaje - usada en Index.html
+// Botones de compra: URL o ventana con mensaje - usada en index.html
 var URL_VENTA_KEY = 'elgorila_url_venta';
 var VENTA_MODO_KEY = 'elgorila_venta_modo';
 var VENTA_MENSAJE_KEY = 'elgorila_venta_mensaje';
@@ -462,7 +462,7 @@ function guardarUrlVenta() {
     setTimeout(function() { cargarUrlVenta(); }, 4000);
 }
 
-// Instagram - usada en Index.html (sección contacto)
+// Instagram - usada en index.html (sección contacto)
 var INSTAGRAM_KEY = 'elgorila_instagram_url';
 
 function cargarInstagram() {

@@ -6,7 +6,7 @@ Estado del proyecto **El Gorila – elgorilateatro.com.mx** a fecha de este aná
 
 ## ✅ Listo (contenido y técnica)
 
-### Landing (Index.html)
+### Landing (index.html)
 - **Dominio:** elgorilateatro.com.mx en canonical, og:url, og:image, twitter:image y enlaces.
 - **SEO:** Meta description, Open Graph completo, Twitter Card, canonical, robots.txt.
 - **Sinopsis:** Texto único actualizado (“Un simio se presenta… El simio tiene su informe listo.”), sin carrusel.

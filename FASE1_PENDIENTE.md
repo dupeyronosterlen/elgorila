@@ -53,7 +53,7 @@
 
 #### Pruebas End-to-End:
 - [ ] **Probar flujo completo de compra**
-  - Desde Index.html hasta confirmacion.html
+  - Desde index.html hasta confirmacion.html
   - Verificar que todos los pasos funcionen
   - Probar con diferentes cantidades
   - Probar con códigos de descuento

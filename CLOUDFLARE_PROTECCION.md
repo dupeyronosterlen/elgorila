@@ -52,7 +52,7 @@ Si tienes plan de pago:
 
 | Capa | Dónde | Qué hace |
 |------|--------|----------|
-| Cliente | Index.html | Throttle de clics (umbral alto, enfriamiento corto, mensaje "Demasiados clics; espere un momento"). Reduce impacto de scripts simples. |
+| Cliente | index.html | Throttle de clics (umbral alto, enfriamiento corto, mensaje "Demasiados clics; espere un momento"). Reduce impacto de scripts simples. |
 | Cloudflare | Rate limiting | Limita peticiones por IP (p. ej. 60–120/min). Frena sobresaturación y abuso desde una misma IP. |
 | Cloudflare | Bot Fight Mode | Filtra tráfico automatizado. |
 

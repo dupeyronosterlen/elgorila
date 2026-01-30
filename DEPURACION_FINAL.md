@@ -5,7 +5,7 @@
 1. **imagenes.js – cartel rotatorio**  
    Fallback en `onerror` usaba `cartelRotatorioActual` sin cero a la izquierda; la carpeta tiene `01.png`, `02.png`, etc. Ahora se usa `padStart(2, '0')` para que el fallback sea correcto.
 
-2. **Index.html – LOGO DOS**  
+2. **index.html – LOGO DOS**  
    El `onerror` del logo del header apuntaba a `img/LOGO DOS/1.png`, que no existe. Cambiado a `img/LOGO DOS/2.png` (sí existe).
 
 3. **Formulario “Dejar un mensaje”**  
@@ -32,7 +32,7 @@
 ## Pendiente por ti (antes de cerrar o al publicar)
 
 1. **WhatsApp**  
-   En Index.html hay un comentario: reemplaza `5215512345678` por tu número real (código país + número, sin espacios) en el `href` del enlace de WhatsApp.
+   En index.html hay un comentario: reemplaza `5215512345678` por tu número real (código país + número, sin espacios) en el `href` del enlace de WhatsApp.
 
 2. **Email**  
    `info@elgorilateatro.com.mx` está en contacto, footer y formulario (mailto). Cámbialo si usas otro correo.

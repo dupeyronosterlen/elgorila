@@ -6,7 +6,7 @@
 
 - ✅ El archivo existe y está funcional
 - ✅ Se mantiene para uso futuro si se necesita conectar
-- ❌ NO es accesible desde `Index.html` (landing page)
+- ❌ NO es accesible desde `index.html` (landing page)
 - ❌ Los usuarios NO pueden acceder desde los botones públicos
 
 ## 🎯 Propósito
@@ -25,7 +25,7 @@ Si necesitas acceder a `boletos.html` en el futuro:
 
 ## 🔄 Cambios Aplicados
 
-- `Index.html` ahora dirige a taquilla física (carpa geodésica)
+- `index.html` ahora dirige a taquilla física (carpa geodésica)
 - Botones muestran información de ubicación/horarios
 - `boletos.html` se mantiene intacta y funcional
 
