@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Verificar Boleto - El Gorila de Franz Kafka</title>
+    <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#b89025",
+                        "background-light": "#fdf8ef",
+                        "background-dark": "#1a1a1a",
+                        'brand-garnet': '#800020',
+                        'brand-mustard': '#c8a951',
+                        'brand-cream': '#fdf8ef'
+                    },
+                    fontFamily: {
+                        display: ["Cormorant Garamond", "serif"],
+                        sans: ["Work Sans", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .background-gradient {
+            background-image: url('img/FONDOS/2.png');
+            background-size: 100% auto;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: scroll;
+            position: relative;
+        }
+        .background-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 0;
+            pointer-events: none;
+        }
+        .background-gradient > * {
+            position: relative;
+            z-index: 1;
+        }
+        body {
+            font-family: 'Work Sans', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Cormorant Garamond', serif;
+        }
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 300,
+          'GRAD' 0,
+          'opsz' 24
+        }
+        #qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="bg-background-light font-sans">
+    <div class="background-gradient">
+        <div class="bg-black/50 dark:bg-black/70 min-h-screen flex flex-col">
+            <header class="fixed top-0 left-0 right-0 z-10 bg-black/60 backdrop-blur-sm border-b border-white/10">
+                <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-center h-20">
+                        <a class="flex items-center" href="Index.html">
+                            <img alt="Logo de El Gorila de Franzkafka" class="h-10 w-auto" src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png"/>
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-grow flex items-center justify-center p-4 sm:p-6 md:p-8 pt-24 pb-10">
+                <div class="w-full max-w-2xl mx-auto">
+                    <h1 class="text-4xl font-bold mb-6 text-white font-display text-center">Verificar Boleto</h1>
+                    
+                    <!-- Formulario de verificación -->
+                    <div class="bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-6">
+                        <div class="mb-6">
+                            <label for="codigo-qr-input" class="block text-sm text-white/80 mb-2 font-semibold">
+                                Código QR del Boleto
+                            </label>
+                            <div class="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    id="codigo-qr-input" 
+                                    placeholder="Escanee o ingrese el código QR (CERT-...)" 
+                                    class="flex-1 px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary"
+                                    autocomplete="off"
+                                />
+                                <button 
+                                    id="btn-verificar" 
+                                    type="button"
+                                    class="px-6 py-3 bg-gradient-to-br from-[#4a0010] to-[#800020] text-[#ffdf80] font-bold rounded-lg hover:from-[#66001a] hover:to-[#990026] transition-all duration-300"
+                                >
+                                    Verificar
+                                </button>
+                            </div>
+                            <p class="text-xs text-white/60 mt-2">Ingrese el código QR del boleto para verificar su validez</p>
+                        </div>
+
+                        <!-- Botón para escanear con cámara (futuro) -->
+                        <div class="text-center">
+                            <button 
+                                id="btn-escanear" 
+                                type="button"
+                                class="text-white/60 hover:text-white text-sm underline"
+                                disabled
+                            >
+                                <span class="material-symbols-outlined align-middle text-lg">qr_code_scanner</span>
+                                Escanear con cámara (próximamente)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Resultado de verificación -->
+                    <div id="resultado-verificacion" class="hidden">
+                        <!-- Resultado válido -->
+                        <div id="resultado-valido" class="bg-green-900/50 backdrop-blur-sm border border-green-500/30 rounded-lg p-6 mb-6 hidden">
+                            <div class="flex items-start gap-4">
+                                <span class="material-symbols-outlined text-green-400 text-4xl">check_circle</span>
+                                <div class="flex-grow">
+                                    <h3 class="text-2xl font-bold text-white mb-4 font-display">Boleto Válido</h3>
+                                    <div class="space-y-2 text-white/90">
+                                        <div class="flex justify-between">
+                                            <span class="text-white/70">Código:</span>
+                                            <span class="font-semibold" id="resultado-codigo">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-white/70">Función:</span>
+                                            <span class="font-semibold" id="resultado-fecha">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-white/70">Número de Orden:</span>
+                                            <span class="font-semibold" id="resultado-orden">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-white/70">Email:</span>
+                                            <span class="font-semibold" id="resultado-email">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-white/70">Estado:</span>
+                                            <span class="font-semibold text-green-400" id="resultado-estado">Activo</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-6 pt-6 border-t border-white/20">
+                                        <button 
+                                            id="btn-marcar-usado" 
+                                            type="button"
+                                            class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all duration-300"
+                                        >
+                                            <span class="material-symbols-outlined align-middle">check</span>
+                                            Marcar como Usado (Entrada)
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resultado inválido -->
+                        <div id="resultado-invalido" class="bg-red-900/50 backdrop-blur-sm border border-red-500/30 rounded-lg p-6 mb-6 hidden">
+                            <div class="flex items-start gap-4">
+                                <span class="material-symbols-outlined text-red-400 text-4xl">cancel</span>
+                                <div class="flex-grow">
+                                    <h3 class="text-2xl font-bold text-white mb-2 font-display">Boleto Inválido</h3>
+                                    <p class="text-white/90" id="resultado-error">-</p>
+                                    <div id="resultado-info-adicional" class="mt-4 space-y-2 text-white/70 text-sm hidden">
+                                        <!-- Información adicional si el boleto existe pero está usado -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+            <!-- Estadísticas rápidas -->
+            <div class="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-4">
+                <div class="flex justify-between items-center text-white/60 text-sm mb-2">
+                    <span>Total certificados:</span>
+                    <span id="stats-total" class="font-semibold text-white">-</span>
+                </div>
+                <div class="flex justify-between items-center text-white/60 text-sm mb-2">
+                    <span>Activos:</span>
+                    <span id="stats-activos" class="font-semibold text-green-400">-</span>
+                </div>
+                <div class="flex justify-between items-center text-white/60 text-sm">
+                    <span>Usados:</span>
+                    <span id="stats-usados" class="font-semibold text-yellow-400">-</span>
+                </div>
+            </div>
+                </div>
+            </main>
+
+            <footer class="bg-black/60 backdrop-blur-sm text-white/80 py-8 border-t border-white/10">
+                <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex flex-col md:flex-row justify-between items-center text-center md:text-left space-y-6 md:space-y-0">
+                        <div class="text-xs text-white/50">
+                            <p>© 2024 Teatro El Laberinto. Todos los derechos reservados.</p>
+                        </div>
+                        <nav class="flex items-center space-x-6">
+                            <a class="text-white hover:text-brand-mustard transition-colors" href="Index.html" title="Inicio">
+                                <span class="material-symbols-outlined text-3xl">home</span>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="js/certificado.js"></script>
+    <script src="js/taquilla.js"></script>
+    <script src="js/verificar.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+/* RESET BÁSICO */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* TIPOGRAFÍA BASE */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #1e1b16;
+    color: #f2e6c9;
+    line-height: 1.6;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background-color: rgba(30, 27, 22, 0.9);
+}
+
+.logo {
+    font-family: "Georgia", serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+}
+
+.cta-header {
+    text-decoration: none;
+    color: #f2e6c9;
+    border: 1px solid #f2e6c9;
+    padding: 8px 16px;
+}
+
+/* HOME */
+.hero {
+    min-height: 80vh;
+    padding: 80px 40px;
+    max-width: 900px;
+}
+
+.hero h1 {
+    font-family: "Georgia", serif;
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.hero h2 {
+    font-size: 22px;
+    margin-bottom: 30px;
+    color: #c7b07b;
+}
+
+.sinopsis-breve {
+    max-width: 600px;
+    margin-bottom: 40px;
+}
+
+/* CTA PRINCIPAL */
+.cta-principal {
+    display: inline-block;
+    background-color: #6b2d1a; /* granate */
+    color: #f2e6c9;
+    padding: 14px 28px;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+/* FOOTER */
+.footer {
+    padding: 20px 40px;
+    font-size: 14px;
+    opacity: 0.7;
+}

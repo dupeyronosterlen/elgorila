@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="theme-color" content="#800020"/>
+    <title>Acomodadores - El Gorila</title>
+    <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#b89025",
+                        'brand-garnet': '#800020',
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Estilo tipo app */
+        @media (display-mode: standalone) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Header fijo -->
+    <header class="bg-brand-garnet sticky top-0 z-50 shadow-lg">
+        <div class="px-4 py-3">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-bold">Acomodadores</h1>
+                <button onclick="actualizarDatos()" class="p-2 bg-white/20 rounded-full">
+                    <span class="material-symbols-outlined text-white">refresh</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Selector de Función -->
+    <div class="bg-gray-800 border-b border-gray-700 sticky top-[57px] z-40">
+        <div class="px-4 py-3">
+            <select id="selector-funcion" class="w-full bg-gray-700 text-white rounded-lg px-4 py-3 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="viernes">Viernes 20 Oct - 20:30</option>
+                <option value="sabado">Sábado 21 Oct - 19:00</option>
+                <option value="domingo">Domingo 22 Oct</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="p-4 space-y-3">
+        <div class="bg-gray-800 rounded-xl p-4">
+            <h2 class="text-sm text-gray-400 mb-3 uppercase tracking-wide">Resumen de la Función</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gray-700/50 rounded-lg p-3">
+                    <p class="text-xs text-gray-400 mb-1">Total Esperado</p>
+                    <p class="text-2xl font-bold" id="total-esperado">-</p>
+                </div>
+                <div class="bg-gray-700/50 rounded-lg p-3">
+                    <p class="text-xs text-gray-400 mb-1">Ingresados</p>
+                    <p class="text-2xl font-bold text-green-400" id="total-ingresados">-</p>
+                </div>
+                <div class="bg-gray-700/50 rounded-lg p-3">
+                    <p class="text-xs text-gray-400 mb-1">Pendientes</p>
+                    <p class="text-2xl font-bold text-yellow-400" id="total-pendientes">-</p>
+                </div>
+                <div class="bg-gray-700/50 rounded-lg p-3">
+                    <p class="text-xs text-gray-400 mb-1">Con Discapacidad</p>
+                    <p class="text-2xl font-bold text-blue-400" id="total-discapacidad">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta de Discapacidad -->
+        <div id="alerta-discapacidad" class="bg-blue-900/50 border border-blue-500/50 rounded-xl p-4 hidden">
+            <div class="flex items-start gap-3">
+                <span class="material-symbols-outlined text-blue-400 text-3xl">accessible</span>
+                <div>
+                    <h3 class="font-bold text-lg mb-1">Atención Especial</h3>
+                    <p class="text-sm text-gray-300" id="info-discapacidad">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verificador de Boletos -->
+    <div class="px-4 mb-4">
+        <div class="bg-gray-800 rounded-xl p-4">
+            <h2 class="text-lg font-bold mb-3">Verificar Boleto</h2>
+            <div class="flex gap-2">
+                <input 
+                    type="text" 
+                    id="codigo-verificar" 
+                    placeholder="Escanear o ingresar código"
+                    class="flex-1 bg-gray-700 text-white rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    autocomplete="off"
+                />
+                <button 
+                    onclick="verificarBoleto()" 
+                    class="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors"
+                >
+                    <span class="material-symbols-outlined align-middle">search</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultado de Verificación -->
+    <div id="resultado-verificacion" class="px-4 mb-4 hidden">
+        <div id="resultado-valido" class="bg-green-900/50 border border-green-500/50 rounded-xl p-4 hidden">
+            <div class="flex items-start gap-3 mb-4">
+                <span class="material-symbols-outlined text-green-400 text-4xl">check_circle</span>
+                <div class="flex-grow">
+                    <h3 class="font-bold text-xl mb-2">Boleto Válido</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Código:</span>
+                            <span class="font-mono font-semibold" id="res-codigo">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Función:</span>
+                            <span class="font-semibold" id="res-fecha">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Cantidad:</span>
+                            <span class="font-semibold" id="res-cantidad">-</span>
+                        </div>
+                        <div id="res-discapacidad-container" class="hidden">
+                            <div class="bg-blue-900/30 rounded-lg p-2 mt-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-blue-400">accessible</span>
+                                    <span class="text-blue-300 font-semibold">Persona con discapacidad</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button 
+                onclick="marcarIngreso()" 
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg transition-colors"
+            >
+                <span class="material-symbols-outlined align-middle">check</span>
+                Confirmar Ingreso
+            </button>
+        </div>
+
+        <div id="resultado-invalido" class="bg-red-900/50 border border-red-500/50 rounded-xl p-4 hidden">
+            <div class="flex items-start gap-3">
+                <span class="material-symbols-outlined text-red-400 text-4xl">cancel</span>
+                <div>
+                    <h3 class="font-bold text-xl mb-2">Boleto Inválido</h3>
+                    <p class="text-sm" id="res-error">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Boletos Pendientes -->
+    <div class="px-4 mb-4">
+        <h2 class="text-lg font-bold mb-3">Pendientes de Ingreso</h2>
+        <div id="lista-pendientes" class="space-y-2">
+            <!-- Se llenará con JavaScript -->
+        </div>
+    </div>
+
+    <!-- Footer fijo para descarga -->
+    <footer class="bg-gray-800 border-t border-gray-700 sticky bottom-0 p-4">
+        <button onclick="instalarApp()" class="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-primary/90 transition-colors">
+            <span class="material-symbols-outlined align-middle">download</span>
+            Instalar App
+        </button>
+    </footer>
+
+    <script src="js/certificado.js"></script>
+    <script src="js/fechas.js"></script>
+    <script src="js/taquilla.js"></script>
+    <script src="js/acomodadores.js"></script>
+</body>
+</html>

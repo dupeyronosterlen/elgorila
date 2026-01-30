@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!-- En producción puedes relajar caché, ej. content="max-age=3600, must-revalidate" para cachear 1h -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<meta name="description" content="EL GORILA - Obra teatral con Humberto Dupeyrón"/>
+<meta property="og:title" content="EL GORILA"/>
+<meta property="og:description" content="Obra teatral con Humberto Dupeyrón. Nueva Carpa Geodésica."/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://elgorilateatro.com.mx/"/>
+<meta property="og:image" content="https://elgorilateatro.com.mx/img/LOGO/1.jpg"/>
+<meta property="og:locale" content="es_MX"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="EL GORILA"/>
+<meta name="twitter:description" content="Obra teatral con Humberto Dupeyrón. Nueva Carpa Geodésica."/>
+<meta name="twitter:image" content="https://elgorilateatro.com.mx/img/LOGO/1.jpg"/>
+<title>EL GORILA</title>
+<link rel="canonical" href="https://elgorilateatro.com.mx/"/>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography" defer></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link rel="preload" as="image" href="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png"/>
+<link rel="preload" as="image" href="img/LOGO DOS/Artboard 11.png"/>
+<link rel="preload" as="image" href="img/CARTEL ROTATORIO/01.png"/>
+<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/1.png"/>
+<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/2.png"/>
+<style type="text/tailwindcss">
+    body {
+      padding-top: 85px;
+      position: relative;
+      background-color: #1a150e;
+    }
+    @media (max-width: 640px) {
+      body { padding-top: 4rem; } /* 64px = h-16 header */
+    }
+    @media (min-width: 641px) and (max-width: 768px) {
+      body { padding-top: 5rem; } /* 80px = h-20 header */
+    }
+    /* Asegurar que el contenido no quede debajo del header */
+    main {
+      scroll-margin-top: 5rem;
+    }
+    @media (max-width: 640px) {
+      main { scroll-margin-top: 4rem; }
+    }
+    /* Evitar que el texto se corte en móvil */
+    p, .text-text-dark, .text-white, .text-accent-gold, summary span, h1, h2, h3, h4, h5, h6 {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
+      hyphens: auto;
+    }
+    @media (max-width: 480px) {
+      p, .text-text-dark { 
+        font-size: clamp(0.875rem, 2.5vw, 1rem); 
+        line-height: 1.6; 
+      }
+      h2 { 
+        font-size: clamp(1.25rem, 5vw, 1.5rem); 
+        margin-bottom: 1rem;
+        padding: 0 0.25rem;
+      }
+      h3 { 
+        font-size: clamp(1.125rem, 4vw, 1.25rem); 
+        padding: 0 0.25rem;
+      }
+    }
+    .main-container {
+      background-color: #0a0a0a;
+      position: relative;
+      min-height: 100vh;
+    }
+    /* Cuadros decorativos SINOPSIS solo en vista extendida: ocultos en móvil */
+    .decorativo-sinopsis {
+      display: none;
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+    @media (min-width: 768px) {
+      .decorativo-sinopsis {
+        display: block;
+      }
+      .cuadro-decorativo {
+        position: fixed;
+        background-size: cover;
+        background-position: center;
+        border-radius: 6px;
+        opacity: 0.09;
+        filter: blur(1px);
+        transition: opacity 0.3s ease;
+        will-change: transform;
+        /* tamaño por defecto; JS asigna width/height distintos a cada uno */
+      }
+      .cuadro-decorativo:hover {
+        opacity: 0.14;
+      }
+    }
+    /* Fondos blurry para secciones - mejor contraste */
+    .section-with-bg {
+      position: relative;
+      overflow: hidden;
+    }
+    .section-with-bg::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      left: -20%;
+      right: -20%;
+      bottom: -20%;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      filter: blur(60px) brightness(0.3) contrast(0.8) saturate(0.45);
+      opacity: 0.7;
+      z-index: 0;
+      transform: scale(1.3);
+      pointer-events: none;
+    }
+    .section-with-bg > * {
+      position: relative;
+      z-index: 1;
+    }
+    /* La Obra: filtro más oscuro y desaturado sobre el fondo Kafka (SINOPSIS/2) */
+    .obra-fondo-kafka.section-with-bg::before {
+      filter: blur(60px) brightness(0.2) contrast(0.85) saturate(0.3);
+      opacity: 0.82;
+    }
+    .obra-fondo-kafka.section-with-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      z-index: 0;
+      border-radius: inherit;
+    }
+    /* Mejorar contraste de texto sobre fondos blurry - máximo contraste */
+    .section-with-bg .text-text-dark,
+    .section-with-bg p {
+      text-shadow: 0 3px 8px rgba(0, 0, 0, 0.98), 0 5px 12px rgba(0, 0, 0, 0.95), 0 0 15px rgba(0, 0, 0, 0.9), 0 0 8px rgba(212, 175, 55, 0.15);
+      color: #f5f3ed !important;
+    }
+    .section-with-bg .text-white,
+    .section-with-bg h2,
+    .section-with-bg h3 {
+      text-shadow: 0 3px 10px rgba(0, 0, 0, 0.98), 0 5px 15px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 0, 0, 0.9), 0 0 25px rgba(212, 175, 55, 0.3);
+      color: #ffffff !important;
+    }
+    .section-with-bg .text-accent-gold {
+      text-shadow: 0 3px 10px rgba(0, 0, 0, 0.98), 0 5px 15px rgba(0, 0, 0, 0.95), 0 0 25px rgba(212, 175, 55, 0.5), 0 0 35px rgba(212, 175, 55, 0.3);
+      color: #d4af37 !important;
+    }
+    /* Iluminación escenográfica para textos - alto contraste */
+    h1, h2, h3, h4, h5, h6 {
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.98), 0 4px 12px rgba(0, 0, 0, 0.95), 0 0 15px rgba(212, 175, 55, 0.25);
+      color: #ffffff !important;
+    }
+    .text-white {
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.98), 0 4px 10px rgba(0, 0, 0, 0.95), 0 0 12px rgba(212, 175, 55, 0.15);
+      color: #ffffff !important;
+    }
+    .text-accent-gold {
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.98), 0 4px 12px rgba(0, 0, 0, 0.95), 0 0 18px rgba(212, 175, 55, 0.4), 0 0 25px rgba(212, 175, 55, 0.2);
+      color: #d4af37 !important;
+    }
+    .text-text-dark {
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.98), 0 4px 10px rgba(0, 0, 0, 0.95), 0 0 8px rgba(212, 175, 55, 0.12);
+      color: #e8e6e0 !important;
+    }
+    p {
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.95), 0 4px 8px rgba(0, 0, 0, 0.9), 0 0 6px rgba(212, 175, 55, 0.1);
+      color: #e8e6e0 !important;
+    }
+    /* La Obra / El Actor: en vista extendida, más espacio para texto (8% hacia afuera) e imagen 8% más pequeña */
+    @media (min-width: 768px) {
+      .seccion-obra-actor .contenedor-obra-actor {
+        max-width: 69.12rem; /* 8% más que max-w-5xl (64rem) */
+      }
+      .seccion-obra-actor .imagen-obra-actor {
+        width: 460px !important;
+        max-width: 460px;
+      }
+      .seccion-obra-actor .imagen-obra-actor-inner {
+        height: 460px !important;
+      }
+    }
+    @media (min-width: 1024px) {
+      .seccion-obra-actor .imagen-obra-actor {
+        width: 552px !important;
+        max-width: 552px;
+      }
+      .seccion-obra-actor .imagen-obra-actor-inner {
+        height: 552px !important;
+      }
+    }
+    /* Loading state para evitar pantalla blanca */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #1a150e;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s ease-out;
+    }
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* Estilos para cartel informativo en móvil - sobre rotatorio, máximo mitad */
+    @media (max-width: 767px) {
+      #cartel-container {
+        position: relative;
+        overflow: visible;
+      }
+      #cartel-container > div {
+        position: relative;
+        height: 100%;
+        width: 100%;
+      }
+      /* Contenedor del cartel rotatorio en móvil - mantiene tamaño completo, 25% más grande */
+      .cartel-rotatorio-container {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 10 !important;
+        order: 1 !important;
+        opacity: 1 !important;
+      }
+      #cartel-rotatorio {
+        width: 120% !important;
+        height: 120% !important;
+        background-position: center center !important;
+        background-size: contain !important;
+        opacity: 1 !important;
+        display: block !important;
+        transform: scale(1.2);
+      }
+      /* Contenedor del cartel informativo en móvil - superpuesto sobre rotatorio, 3/4 más abajo, sin tapar sinopsis */
+      .cartel-informativo-container {
+        position: absolute !important;
+        top: 65% !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: 18% !important;
+        z-index: 20 !important;
+        padding: 0.5rem 0.75rem !important;
+        pointer-events: none;
+        order: 2 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      #cartel-informativo-mobile {
+        width: auto !important;
+        height: auto !important;
+        max-height: 16% !important;
+        max-width: 80% !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+        margin: 0 auto;
+        transform: scale(0.7);
+        display: block !important;
+      }
+      #cartel-informativo {
+        display: none !important;
+      }
+    }
+    @media (min-width: 768px) {
+      .cartel-informativo-container {
+        position: relative !important;
+        height: 100% !important;
+        padding: 0 !important;
+        pointer-events: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      #cartel-informativo {
+        height: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain !important;
+        width: 100% !important;
+        transform: none !important;
+        margin-top: 0 !important;
+        display: block !important;
+      }
+      #cartel-informativo-mobile {
+        display: none !important;
+      }
+      .cartel-rotatorio-container {
+        position: static !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        order: 1 !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: 50% !important;
+        opacity: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: visible !important;
+      }
+      #cartel-rotatorio {
+        height: 274% !important;
+        width: 274% !important;
+        min-height: 360px !important;
+        background-size: contain !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        opacity: 1 !important;
+        display: block !important;
+        visibility: visible !important;
+        transform: scale(2.001); /* +18% (1.696 × 1.18) */
+      }
+    }
+    /* Hero cartel: en desktop bajar un poco para no chocar con el 37 */
+    @media (min-width: 768px) {
+      .hero-cartel-desktop { margin-top: 1.5rem; }
+    }
+    /* Cursor lupa grande sobre periódico (cartel informativo) y fotos de galería - solo desktop */
+    @media (min-width: 768px) {
+      .cursor-lupa {
+        cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="20" cy="20" r="14" fill="none" stroke="%23D4AF37" stroke-width="2.5"/><line x1="28" y1="28" x2="38" y2="38" stroke="%23D4AF37" stroke-width="2.5" stroke-linecap="round"/></svg>') 24 24, zoom-in;
+      }
+    }
+    /* Lens zoom: solo en modal 37 (primera imagen); por encima del modal en todas las vistas */
+    .zoom-lens {
+      position: fixed;
+      width: 320px;
+      height: 320px;
+      border-radius: 8px;
+      border: 3px solid rgba(212, 175, 55, 0.9);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.1);
+      pointer-events: none;
+      z-index: 9999;
+      display: none;
+      overflow: hidden;
+      background-repeat: no-repeat;
+      background-color: #1a150e;
+    }
+    .zoom-lens.visible { display: block; }
+    @media (min-width: 768px) {
+      #modal-37 .zoomable-img {
+        cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="20" cy="20" r="14" fill="none" stroke="%23D4AF37" stroke-width="2.5"/><line x1="28" y1="28" x2="38" y2="38" stroke="%23D4AF37" stroke-width="2.5" stroke-linecap="round"/></svg>') 24 24, zoom-in;
+      }
+    }
+    .frame-maze-1 {
+        -webkit-mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(90deg,#0000 25%,#000 0 calc(75%),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0);
+        -webkit-mask-composite: source-in, xor, destination-in;
+        mask-composite: intersect;
+        mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(90deg,#0000 25%,#000 0 calc(75%),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0);
+        mask-composite: intersect;
+    }
+    .frame-maze-2 {
+        -webkit-mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(90deg,#0000 2px, #000 0 calc(100% - 25%), #0000 0),
+            linear-gradient(#000 25%, #0000 0 calc(100% - 2px));
+        -webkit-mask-composite: source-in, xor, destination-in, destination-in;
+        mask-composite: intersect;
+        mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(90deg,#0000 2px, #000 0 calc(100% - 25%), #0000 0),
+            linear-gradient(#000 25%, #0000 0 calc(100% - 2px));
+        mask-composite: intersect;
+    }
+    .frame-maze-3 {
+        -webkit-mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 25%,#000 0 calc(100% - 2px)),
+            linear-gradient(90deg,#000 75%, #0000 0 calc(100% - 2px));
+        -webkit-mask-composite: source-in, xor, destination-in, destination-in;
+        mask-composite: intersect;
+        mask:
+            linear-gradient(90deg,#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 2px,#000 0 #000 calc(100% - 2px),#0000 0),
+            linear-gradient(#0000 25%,#000 0 calc(100% - 2px)),
+            linear-gradient(90deg,#000 75%, #0000 0 calc(100% - 2px));
+        mask-composite: intersect;
+    }
+    .bg-kafka-rich {
+        background: linear-gradient(180deg, rgba(60, 10, 10, 0.85) 0%, rgba(20, 45, 25, 0.85) 50%, rgba(80, 60, 10, 0.85) 100%);
+        filter: saturate(0.55);
+        -webkit-filter: saturate(0.55);
+    }
+    /* Header tono gris */
+    .header-gris {
+      background: rgba(52, 52, 55, 0.96) !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      overflow: visible;
+    }
+    /* 37 tipo sello: más grande (~46%) y mitad por debajo de la línea del header */
+    .logo-37-sello {
+      align-self: flex-end;
+      transform: translateY(50%);
+    }
+    .logo-37-sello img {
+      height: 4.8rem;    /* ~77px, +45% sobre tamaño anterior */
+      max-height: none;
+    }
+    @media (min-width: 640px) {
+      .logo-37-sello img { height: 6.4rem; }  /* ~102px */
+    }
+    @media (min-width: 768px) {
+      .logo-37-sello img { height: 7.5rem; }  /* ~120px */
+    }
+    /* Botón Adquiere tus entradas: granate tipo terciopelo */
+    .btn-granate-terciopelo {
+      background: linear-gradient(165deg, #8B3A42 0%, #6B2D35 50%, #5A252C 100%) !important;
+      color: #f5f0e8 !important;
+      font-weight: 700;
+      box-shadow: 0 2px 0 rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12);
+      border: 1px solid rgba(0,0,0,0.2);
+      transition: box-shadow 0.2s ease, transform 0.15s ease;
+    }
+    .btn-granate-terciopelo:hover {
+      box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 6px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .btn-granate-terciopelo:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.25);
+    }
+    /* Saltar al contenido: oculto hasta foco (accesibilidad) */
+    .skip-link {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .skip-link:focus {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 9999;
+      width: auto;
+      height: auto;
+      padding: 0.75rem 1.25rem;
+      margin: 0;
+      overflow: visible;
+      clip: auto;
+      background: #D4AF37;
+      color: #1a150e;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+    /* Contacto: título+texto centrado; medios de contacto en fila centrada */
+    @media (min-width: 768px) {
+      .seccion-contacto-wide .texto-contacto {
+        max-width: 40rem;
+        padding: 1.25rem 1.5rem;
+        line-height: 1.75;
+      }
+    }
+    /* Carrusel "Lo que dicen": casillas laterales, rotación derecha a izquierda */
+    .comentarios-carrusel-wrap {
+      overflow: hidden;
+      mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    }
+    .comentarios-carrusel-track {
+      display: flex;
+      width: max-content;
+      gap: 1rem;
+      animation: comentarios-scroll 140s linear infinite;
+      padding: 0.5rem 0;
+    }
+    .comentarios-carrusel-track:hover {
+      animation-play-state: paused;
+    }
+    @keyframes comentarios-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .comentarios-casilla {
+      flex-shrink: 0;
+      width: 280px;
+      min-height: 120px;
+      padding: 1rem 1.25rem;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(212,175,55,0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .comentarios-casilla:hover {
+      border-color: rgba(212, 175, 55, 0.5);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.4), 0 0 20px rgba(212,175,55,0.1);
+    }
+    .comentarios-casilla p {
+      margin: 0;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      flex: 1;
+    }
+    .comentarios-casilla cite,
+    .comentarios-autor {
+      font-style: normal;
+      font-size: 0.8125rem;
+      color: rgba(212, 175, 55, 0.95);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .comentarios-casilla .comentarios-autor {
+      display: block;
+      margin-top: 0.5rem;
+      padding-top: 0.35rem;
+      border-top: 1px solid rgba(212, 175, 55, 0.25);
+    }
+    /* Pregunta destacada (dirección Carpa Geodésica) */
+    .faq-destacado summary { font-weight: 600; }
+    .faq-destacado[open] summary { margin-bottom: 0.25rem; }
+    /* Fotos Odila y Ariel: filtro kafkiano (grises, sepia suave, saturación baja) */
+    .foto-equipo-kafka img {
+      filter: grayscale(0.5) sepia(0.15) saturate(0.6) contrast(1.08) brightness(0.94);
+      transition: filter 0.45s ease;
+    }
+    .foto-equipo-kafka:hover img {
+      filter: grayscale(0.2) sepia(0.06) saturate(0.85) contrast(1.04) brightness(0.98);
+    }
+    /* Móvil: página con scroll vertical; texto dentro de recuadros con scroll interno */
+    html { overflow-y: auto; overflow-x: hidden; }
+    body { overflow-x: hidden; }
+    @media (max-width: 768px) {
+      .contenedor-texto-scroll {
+        overflow-y: auto;
+        max-height: 70vh;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+      }
+      /* La Obra, El Actor, Odila, Ariel: si el texto se compacta, barra para bajar dentro del recuadro */
+      .obra-texto-slide,
+      .actor-texto-slide,
+      .odila-texto-slide,
+      .ariel-texto-slide {
+        overflow-y: auto !important;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+    /* Flecha "bajar": solo en pantalla angosta; se oculta al hacer scroll o si hay espacio */
+    .scroll-indicator {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 25;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(212, 175, 55, 0.9);
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 50%;
+      pointer-events: none;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+      visibility: visible;
+    }
+    .scroll-indicator.oculto {
+      opacity: 0;
+      visibility: hidden;
+    }
+    @media (min-width: 769px) {
+      .scroll-indicator { display: none !important; }
+    }
+    /* Modal 37: en pantalla expandida (md+), tamaño +100% (doble) */
+    @media (min-width: 768px) {
+      #modal-37 { max-width: 84rem; width: 92%; }
+      .modal-37-carrusel { min-height: 80vh; }
+      #modal-37-slides { min-height: 75vh; }
+      .modal-37-slide img { max-height: 520px; }
+    }
+    /* Galería: móvil 6 fotos reducidas; wide 12 fotos, 4 columnas con hilos granate */
+    .galeria-reducida { max-width: 21.76rem; }
+    @media (min-width: 768px) {
+      .galeria-reducida { max-width: 64rem; }
+      .galeria-wrap { position: relative; }
+      .galeria-hilo {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: linear-gradient(180deg, transparent 0%, rgba(107, 45, 53, 0.9) 15%, rgba(107, 45, 53, 0.95) 50%, rgba(107, 45, 53, 0.9) 85%, transparent 100%);
+        pointer-events: none;
+        z-index: 5;
+      }
+      .galeria-hilo-1 { left: 25%; }
+      .galeria-hilo-2 { left: 50%; }
+      .galeria-hilo-3 { left: 75%; }
+    }
+  </style>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#8B0000",
+            "background-light": "#F5F5DC",
+            "background-dark": "#1a150e",
+            "text-light": "#333333",
+            "text-dark": "#D4CFC3",
+            "accent-gold": "#D4AF37",
+            "rich-dark": "#2a1e12",
+            "deep-forest": "#1e2a1e",
+            "granate": "#6B2D35",
+          },
+          fontFamily: {
+            display: ["Lora", "serif"],
+            body: ["Inter", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "8px",
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="font-body bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark antialiased" id="inicio">
+<a href="#main-content" class="skip-link">Saltar al contenido</a>
+<div class="loading-overlay" id="loading-overlay">
+<div class="text-accent-gold text-xl">Cargando...</div>
+</div>
+<header class="header-gris fixed top-0 left-0 right-0 z-20 h-16 sm:h-20 md:h-[85px] flex items-center">
+<div class="mx-auto flex h-full w-full max-w-5xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
+<div class="flex items-center min-w-0 flex-shrink">
+<a href="#inicio" aria-label="Ir al inicio" class="block focus:outline-none focus:ring-2 focus:ring-accent-gold/50 rounded">
+<img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="h-10 sm:h-14 md:h-16 w-auto max-w-[120px] sm:max-w-none object-contain object-left hover:opacity-90 transition-opacity" loading="eager">
+</a>
+</div>
+<div class="flex items-center justify-center flex-1 min-w-0 px-1 logo-37-sello">
+                    <button type="button" id="abrir-popup-37" class="logo-37-btn flex items-center justify-center p-0 rounded transition-transform duration-200 hover:scale-110 focus:scale-110 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Ver 37 aniversario">
+                        <img src="img/LOGO DOS/Artboard 11.png" alt="37 años sobre los laureles" class="w-auto object-contain opacity-90 flex-shrink-0 pointer-events-none" loading="eager" decoding="async" onerror="this.src='img/LOGO DOS/2.png'; this.onerror=null;"/>
+                    </button>
+</div>
+<div class="flex items-center flex-shrink-0">
+<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm touch-manipulation whitespace-nowrap" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent;">
+  Adquiere tus entradas
+</a>
+</div>
+</div>
+</header>
+<div id="zoom-lens" class="zoom-lens" aria-hidden="true" role="presentation"></div>
+<div class="main-container">
+<div id="scroll-indicator" class="scroll-indicator" aria-hidden="true" role="presentation">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+</div>
+<div class="absolute inset-0 bg-kafka-rich mix-blend-multiply z-0 opacity-25"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-black/15 via-black/8 to-black/35 z-0 pointer-events-none"></div>
+<!-- Cuadros decorativos SINOPSIS: 10 cuadros PNG, sin repetir imagen, tamaños variados (solo vista extendida) -->
+<div id="decorativo-sinopsis" class="decorativo-sinopsis" aria-hidden="true">
+  <div class="cuadro-decorativo" id="cuadro-decorativo-1"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-2"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-3"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-4"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-5"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-6"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-7"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-8"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-9"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-10"></div>
+</div>
+<div class="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+<main id="main-content" class="pt-6 sm:pt-8 md:pt-10 pb-12">
+<!-- Cartel Rotatorio - Primero después del header -->
+<section class="mb-14 sm:mb-16 md:mb-14 text-center scroll-mt-24 hero-cartel-desktop" id="hero-cartel">
+<div class="relative min-h-[250px] h-[45vw] max-h-[350px] sm:min-h-[300px] sm:h-[50vw] sm:max-h-[450px] md:min-h-[450px] md:h-[65vw] md:max-h-[900px] lg:max-h-[960px] flex items-center justify-center overflow-visible pt-2.5 sm:pt-4 md:pt-10 md:pb-8 pb-8 sm:pb-10 md:pb-4" id="cartel-container">
+<div class="absolute inset-0 flex flex-col md:flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6 px-3 sm:px-4 relative">
+<!-- Lado Izquierdo: Imagen Rotatoria (prioridad en móvil, izquierda en desktop) -->
+<div class="cartel-rotatorio-container w-full md:w-1/2 h-full flex items-center justify-center relative group order-1">
+<div class="w-full h-full flex items-center justify-center" id="cartel-rotatorio" style="background-image: url('img/CARTEL ROTATORIO/01.png'); background-size: contain; background-position: center center; background-repeat: no-repeat; transition: opacity 0.15s ease-in-out; opacity: 1; display: block; min-height: 200px; will-change: opacity;">
+</div>
+<!-- Flecha izquierda -->
+<button onclick="cambiarCartelRotatorio(-1)" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white p-2 sm:p-3 rounded-full transition-all opacity-70 md:opacity-0 md:group-hover:opacity-100 touch-manipulation" aria-label="Imagen anterior" style="-webkit-tap-highlight-color: transparent;">
+<svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Flecha derecha -->
+<button onclick="cambiarCartelRotatorio(1)" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white p-2 sm:p-3 rounded-full transition-all opacity-70 md:opacity-0 md:group-hover:opacity-100 touch-manipulation" aria-label="Siguiente imagen" style="-webkit-tap-highlight-color: transparent;">
+<svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+<!-- Lado Derecho: Imagen Informativa Fija (sobre rotatorio en móvil, derecha en desktop) -->
+<div class="cartel-informativo-container w-full md:w-1/2 h-full flex items-center justify-center relative order-1 md:order-2" id="cartel-informativo-wrap">
+    <!-- Imagen para móvil (2.png con máscara) -->
+    <img id="cartel-informativo-mobile" alt="Información importante" class="w-full h-full object-contain md:hidden" src="img/CARTEL INFORMATIVO/2.png" loading="eager" onerror="this.style.display='none';"/>
+    <!-- Imagen para desktop (1.png) - zoom solo en modal 37, primera imagen (estreno) -->
+    <img id="cartel-informativo" alt="Información importante" class="hidden md:block w-full h-full object-contain" src="img/CARTEL INFORMATIVO/1.png" loading="eager" onerror="this.style.display='none';"/>
+</div>
+    </div>
+</div>
+</section>
+<section class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-10 sm:mt-12 md:mt-10 section-with-bg" style="background-image: url('img/SINOPSIS/1.png');">
+<h2 class="mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
+            <div class="mx-auto max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left break-words bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 relative contenedor-texto-scroll">
+                <p id="sinopsis-texto" class="w-full">Un simio se presenta ante una academia de científicos para rendir un informe. Ya no es un animal: viste de frac, articula. Relata su captura, su encierro, el viaje en barco donde entendió algo: no había salida, lo que sí había: un inventario. Escupir, beber, imitar. Gestos que lo volvieron tolerable, luego aceptable, después respetable. No perseguía la libertad —esa ya no venía en el paquete—, perseguía solo un lugar donde estar sin barrotes. Lo consiguió. Ahora cobra por poder decirlo. Pero mientras rinde su informe con una cortesía impecable, algo rechina. El simio tiene su informe listo.</p>
+            </div>
+</section>
+<section class="mb-8 sm:mb-10 scroll-mt-24 mt-4 sm:mt-6">
+<div class="max-w-5xl galeria-reducida mx-auto galeria-wrap">
+<div class="galeria-hilo galeria-hilo-1 hidden md:block" aria-hidden="true"></div>
+<div class="galeria-hilo galeria-hilo-2 hidden md:block" aria-hidden="true"></div>
+<div class="galeria-hilo galeria-hilo-3 hidden md:block" aria-hidden="true"></div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+<div class="group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-accent-gold frame-maze-1"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-1" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/01.jpeg" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-primary frame-maze-2"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-2" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/02.png" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-accent-gold frame-maze-3"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-3" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/03.jpeg" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-primary frame-maze-1"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-4" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/04.png" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-accent-gold frame-maze-2"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-5" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/05.jpeg" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-primary frame-maze-3"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-6" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/06.png" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-accent-gold frame-maze-1"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-7" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/07.jpeg" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-primary frame-maze-2"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-8" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/08.png" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-accent-gold frame-maze-3"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-9" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/09.jpeg" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-primary frame-maze-1"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-10" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/011.jpeg" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-accent-gold frame-maze-2"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-11" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/013.jpeg" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
+<div class="absolute inset-0 bg-primary frame-maze-3"></div>
+<div class="absolute inset-0.5">
+<img alt="Escena de la obra" id="galeria-img-12" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/014.png" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Letrero: venta de boletos (Carpa Geodésica). El botón "Adquiere tus entradas" usa la URL/mensaje configurado en el admin. -->
+<section class="mb-8 sm:mb-10 scroll-mt-24 mt-4 sm:mt-6 rounded-lg p-4 sm:p-6 md:p-8" id="venta-boletos">
+<div class="relative overflow-hidden rounded-lg bg-rich-dark/90 backdrop-blur-md border-2 border-accent-gold/50 p-5 sm:p-6 md:p-8 shadow-[0_0_0_1px_rgba(212,175,55,0.2),inset_0_0_0_1px_rgba(212,175,55,0.08)]">
+<div class="max-w-2xl mx-auto text-center space-y-4 contenedor-texto-scroll">
+<p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
+La venta de boletos se realiza a través de la <strong>Nueva Carpa Geodésica</strong>. Para comprar en línea o consultar horarios de taquilla, visite la página oficial del recinto.
+</p>
+<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-4 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base tracking-wide touch-manipulation inline-flex items-center justify-center" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
+</div>
+</div>
+</section>
+<!-- Sección La Obra (fondo Kafka más oscuro y desaturado) -->
+<section class="seccion-obra-actor obra-fondo-kafka mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" style="background-image: url('img/SINOPSIS/2.png');">
+    <div class="min-h-[400px] py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
+        <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
+            <div class="flex-1 w-full min-w-0 order-2 md:order-1 flex flex-col min-h-[300px] sm:min-h-[380px] md:min-h-[500px] lg:min-h-[600px] bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
+                <h2 class="mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">La Obra</h2>
+                <div class="flex-1 min-h-0 flex flex-col">
+                <div id="obra-texto-carrusel" class="relative flex-1 min-h-0 cursor-pointer select-none text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (3 en total)">
+                    <div class="obra-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center" data-index="0">
+                        <p class="w-full">El Gorila está basado en Informe para una Academia de Franz Kafka (1917), relato en el que un simio, ya humanizado, relata ante un auditorio de científicos cómo abandonó su vida salvaje para adaptarse a la civilización. Kafka escribió este texto como una parábola sobre la asimilación forzada, la renuncia a la autenticidad y el precio de la aceptación social.</p>
+                    </div>
+                    <div class="obra-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center" data-index="1">
+                        <p class="w-full">El simio no celebra su transformación: la describe con ironía, como quien enumera los pasos de una derrota disfrazada de triunfo. La adaptación teatral mantiene la estructura del monólogo kafkiano —un discurso que comienza ordenado y va revelando sus grietas— pero lo actualiza con humor filoso, lenguaje directo y referencias al contexto mexicano contemporáneo.</p>
+                    </div>
+                    <div class="obra-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center" data-index="2">
+                        <p class="w-full">Lo que en Kafka era crítica a la pérdida de libertad por conveniencia, aquí se vuelve un espejo incómodo: el gorila habla de su propia jaula, pero el público reconoce las propias. La obra no explica ni moraliza; deja que la risa haga el trabajo sucio de la conciencia.</p>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="imagen-obra-actor w-full md:w-[500px] lg:w-[600px] flex-shrink-0 order-1 md:order-2">
+                <div class="imagen-obra-actor-inner relative w-full aspect-[4/3] sm:aspect-[5/4] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border-2 border-accent-gold/30 max-h-[300px] sm:max-h-[380px] md:max-h-none shadow-lg">
+                    <img id="obra-imagen" alt="La Obra" class="w-full h-full object-cover transition-opacity duration-150" src="img/OBRA/2.jpg" loading="lazy" decoding="async" fetchpriority="low" style="will-change: opacity;" onerror="this.src='img/OBRA/3.jpg'; this.onerror=function(){this.src='img/OBRA/4.jpg'; this.onerror=function(){this.style.display='none';};};"/>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sección El Actor -->
+<section class="seccion-obra-actor mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" style="background-image: url('img/SINOPSIS/3.png');">
+    <div class="min-h-[400px] py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
+        <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
+            <div class="imagen-obra-actor w-full md:w-[500px] lg:w-[600px] flex-shrink-0 order-1 md:order-1">
+                <div class="imagen-obra-actor-inner relative w-full aspect-[4/3] sm:aspect-[5/4] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border-2 border-accent-gold/30 max-h-[300px] sm:max-h-[380px] md:max-h-none shadow-lg">
+                    <img id="actor-imagen" alt="Humberto Dupeyrón" class="w-full h-full object-cover transition-opacity duration-150" src="img/HUMBERTO DUPEYRON/01.JPG" loading="lazy" decoding="async" fetchpriority="low" onerror="this.src='img/HUMBERTO DUPEYRON/03.jpg'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/04.JPG'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/05.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/06.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/07.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/08.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/09.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/010.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/011.jpg'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/013.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/014.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/015.jpg'; this.onerror=null;};};};};};};};};};};};"/>
+                </div>
+            </div>
+            <div class="flex-1 w-full min-w-0 order-2 md:order-2 flex flex-col min-h-[300px] sm:min-h-[380px] md:min-h-[500px] lg:min-h-[600px] bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
+                <h2 class="mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">El Actor</h2>
+                <div class="flex-1 min-h-0 flex flex-col">
+                <div id="actor-texto-carrusel" class="relative flex-1 min-h-0 cursor-pointer select-none text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (3 en total)">
+                    <div class="actor-texto-slide absolute top-0 left-0 right-0 bottom-10 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center" data-index="0">
+                        <p class="w-full">Humberto Dupeyrón (México, 1947) es actor, comediante y director teatral con más de 60 años de trayectoria. Formado en la Academia de Andrés Soler de la ANDA, ganó el Premio Emilio Brillas como mejor actor de comedia en 1983. Desde 1989 ha interpretado El Gorila, monólogo basado en Informe para una Academia de Franz Kafka, convirtiéndolo en una de las obras más longevas del teatro mexicano.</p>
+                    </div>
+                    <div class="actor-texto-slide absolute top-0 left-0 right-0 bottom-10 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center" data-index="1">
+                        <p class="w-full">Su trabajo se caracteriza por una intensidad física y emocional que combina humor afilado con crítica social, creando un personaje que confronta al espectador con preguntas incómodas sobre libertad, poder y lo que significa ser humano.</p>
+                    </div>
+                    <div class="actor-texto-slide absolute top-0 left-0 right-0 bottom-10 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center" data-index="2">
+                        <p class="w-full">A pesar de padecer esclerosis múltiple, Dupeyrón sigue eligiendo el escenario como un acto de voluntad, convirtiendo cada función en un recordatorio de que la vitalidad no depende del cuerpo, sino de la decisión de estar vivo.</p>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 flex items-center justify-between pt-2">
+                        <span class="text-text-dark/60 text-xs uppercase tracking-wide">Toca para ver más</span>
+                        <span id="actor-texto-indicator" class="text-accent-gold/80 text-xs font-medium">1/3</span>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sección Equipo -->
+    <section class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-6 sm:mt-8 section-with-bg" style="background-image: url('img/SINOPSIS/4.png');">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
+        <!-- Columna Izquierda: Odila Dupeyrón -->
+        <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4">
+                <div class="foto-equipo-kafka w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 rounded-lg overflow-hidden border border-accent-gold/20">
+                    <img src="img/ODILA DUPEYRON/1.jpg" alt="Odila Dupeyrón" class="w-full h-full object-cover" loading="lazy" onerror="this.src='img/ODILA DUPEYRON/2.jpg'; this.onerror=null;"/>
+                </div>
+                <div class="flex-1 text-center md:text-left">
+                    <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Odila Dupeyrón</h3>
+                    <p class="text-sm sm:text-base text-accent-gold/80 font-medium italic">Música Original</p>
+                </div>
+            </div>
+            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative min-h-[200px] sm:min-h-[240px]">
+                <div id="odila-texto-carrusel" class="relative min-h-[180px] sm:min-h-[220px] cursor-pointer select-none text-center md:text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (2 en total)">
+                    <div class="odila-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center p-0" data-index="0">
+                        <p class="w-full text-center md:text-left">Compositora y cantante formada en el Instituto Nacional de Bellas Artes, con trayectoria destacada en la creación de atmósferas sonoras para teatro. Fundó el estudio Antropocosmic, especializado en música contemplativa y orgánica.</p>
+                    </div>
+                    <div class="odila-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
+                        <p class="w-full text-center md:text-left">Su trabajo en El Gorila aporta una dimensión auditiva que sostiene el ritmo interno del monólogo, acompañando los silencios y las rupturas del discurso sin competir con la palabra. La música no decora: profundiza la experiencia, creando un diálogo íntimo entre la voz del gorila y el espacio sonoro que lo rodea.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Columna Derecha: Ariel de la Peña -->
+        <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4">
+                <div class="foto-equipo-kafka w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 rounded-lg overflow-hidden border border-accent-gold/20">
+                    <img src="img/ARIEL DE LA PEÑA/1.png" alt="Ariel de la Peña" class="w-full h-full object-cover" loading="lazy" onerror="this.src='img/ARIEL DE LA PEÑA/2.jpg'; this.onerror=function(){this.src='img/ARIEL DE LA PEÑA/3.png'; this.onerror=null;};"/>
+                </div>
+                <div class="flex-1 text-center md:text-left">
+                    <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Ariel de la Peña</h3>
+                    <p class="text-sm sm:text-base text-accent-gold/80 font-medium italic">Escultor</p>
+                </div>
+            </div>
+            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative min-h-[200px] sm:min-h-[240px]">
+                <div id="ariel-texto-carrusel" class="relative min-h-[180px] sm:min-h-[220px] cursor-pointer select-none text-center md:text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (2 en total)">
+                    <div class="ariel-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center p-0" data-index="0">
+                        <p class="w-full text-center md:text-left">Escultor formado en el oficio de la figura humana y el espacio público. Autor de la réplica de la Diana Cazadora con rostro original en la Zona Rosa (2001), obra que rescata la memoria de Helvia Martínez como modelo.</p>
+                    </div>
+                    <div class="ariel-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
+                        <p class="w-full text-center md:text-left">Su colaboración en El Gorila aporta elementos escultóricos que habitan el espacio sin competir con la palabra. Las piezas acompañan el discurso del simio, creando puntos de anclaje visual que sostienen la tensión del monólogo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gabriel Ponzanelli (RIP) -->
+    <div class="mt-6 md:mt-8 max-w-3xl mx-auto">
+        <div class="rounded-lg bg-black/60 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/30 text-center contenedor-texto-scroll">
+            <h3 class="mb-2 sm:mb-3 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Gabriel Ponzanelli</h3>
+            <p class="mb-3 sm:mb-4 text-sm sm:text-base text-accent-gold/80 font-medium italic">(RIP)</p>
+            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide">
+                <p>
+                    Recordamos a Gabriel Ponzanelli, cuyas esculturas acompañaron El Gorila durante décadas. Su trabajo sigue presente en el escenario, manteniendo viva la visión original de la obra.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Enlace a venta (Carpa Geodésica) - Antes de FAQ -->
+<section class="mb-8 sm:mb-10 flex justify-center gap-3 flex-wrap scroll-mt-24 mt-6 sm:mt-8">
+<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-4 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base tracking-wide touch-manipulation text-center min-h-[44px] flex items-center justify-center" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
+</section>
+
+<section class="scroll-mt-24 mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 mt-6 sm:mt-8 section-with-bg" id="faq" style="background-image: url('img/SINOPSIS/5.png');">
+<div class="flex flex-col items-center justify-center">
+<svg class="h-8 w-8 sm:h-10 sm:w-10 text-accent-gold mb-3 sm:mb-4 opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<h2 class="mb-3 sm:mb-4 text-center font-display text-2xl sm:text-3xl md:text-4xl text-white">Preguntas Frecuentes</h2>
+</div>
+<div class="mx-auto max-w-3xl divide-y divide-accent-gold/20 contenedor-texto-scroll">
+<details class="group py-3 sm:py-4 faq-destacado" open>
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base font-semibold text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Dónde se presenta la obra?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<div class="mt-3 pl-4 border-l-2 border-accent-gold/40 bg-black/40 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/25">
+<p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
+<strong class="text-accent-gold/95">Nueva Carpa Geodésica</strong><br/>
+Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de México (frente al Parque de la Bombilla).
+</p>
+<p class="mt-2">
+<a class="inline-flex items-center gap-2 text-accent-gold hover:text-white font-medium text-sm transition-colors underline underline-offset-2" href="https://www.google.com/maps/search/Insurgentes+Sur+2135+San+Angel+Ciudad+de+Mexico" target="_blank" rel="noopener noreferrer">Ver en Google Maps</a>
+</p>
+</div>
+</details>
+<details class="group py-3 sm:py-4">
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Hay estacionamiento?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
+                Sí, hay <strong>valet parking</strong> en la Nueva Carpa Geodésica.
+              </p>
+</details>
+<details class="group py-3 sm:py-4">
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Cómo llego en transporte público? ¿Hay Metrobús cercano?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
+                La zona cuenta con opciones de <strong>Metrobús</strong> y transporte público. Para la ruta y estación más cercana a la Carpa Geodésica, consulte la página oficial del recinto o escríbanos en la sección de <a href="#contacto" class="text-accent-gold hover:text-white underline">Contacto</a>.
+              </p>
+</details>
+<details class="group py-3 sm:py-4">
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Cuáles son los horarios?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
+                Funciones los <strong>viernes a las 8:30 PM</strong>. Te recomendamos llegar con unos minutos de anticipación.
+              </p>
+</details>
+<details class="group py-3 sm:py-4">
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Cómo compro boletos?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
+                Desde esta página: al dar clic en &quot;Adquiere tus entradas&quot; serás redirigido a la taquilla de la <strong>Nueva Carpa Geodésica</strong>. También puedes comprar en taquilla. Página del recinto: <a href="https://nuevacarpageodesica.com.mx" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">nuevacarpageodesica.com.mx</a>.
+              </p>
+</details>
+<details class="group py-3 sm:py-4">
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Hay precios o reservas para grupos?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
+                Para <strong>grupos de más de 10 personas</strong> (escuelas, empresas, asociaciones), escribanos a <a href="mailto:info@elgorilateatro.com.mx" class="text-accent-gold hover:text-white underline">info@elgorilateatro.com.mx</a> o use la sección de <a href="#contacto" class="text-accent-gold hover:text-white underline">Contacto</a> para precios especiales y reservas.
+              </p>
+</details>
+<details class="group py-3 sm:py-4">
+<summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
+<span>¿Hay descuentos?</span>
+<span class="transition-transform group-open:rotate-180">
+<svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+</span>
+</summary>
+<p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
+                Sí. Los descuentos (estudiantes, tercera edad, grupos) se aplican en <strong>taquilla</strong>. Para grupos grandes, contacte por correo (ver pregunta anterior).
+              </p>
+</details>
+</div>
+</section>
+<section class="seccion-contacto-wide mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" id="contacto" style="background-image: url('img/SINOPSIS/7.png');">
+<div class="relative overflow-hidden rounded-lg bg-rich-dark/85 backdrop-blur-md border border-accent-gold/20 contenedor-texto-scroll">
+<div class="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-primary/10 blur-[120px] mix-blend-screen pointer-events-none"></div>
+<div class="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-accent-gold/5 blur-[120px] mix-blend-screen pointer-events-none"></div>
+<div class="relative z-10 p-4 sm:p-6 md:p-8 lg:p-10">
+  <!-- Grupo 1: Título centrado con su texto -->
+  <div class="contacto-grupo-1 text-center mb-6 sm:mb-8">
+    <h2 class="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-accent-gold mb-4 sm:mb-6 drop-shadow-sm">Contacto</h2>
+    <p class="texto-contacto font-body text-text-dark/90 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto font-light bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-accent-gold/20">
+      Para consultas generales, prensa o asistencia con su visita, nuestro equipo está listo para ayudarle. La comunicación es el primer paso hacia la comprensión.
+    </p>
+  </div>
+  <!-- Grupo 2: Medios de contacto (Escríbenos, WhatsApp, IG, Música, Dejar mensaje) -->
+  <div class="contacto-grupo-2 flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-5">
+      <a class="group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 hover:bg-black/50 hover:border-accent-gold/50 active:bg-black/60 transition-all duration-150 touch-manipulation w-full md:w-auto md:min-w-[200px] text-left" href="mailto:info@elgorilateatro.com.mx" style="-webkit-tap-highlight-color: transparent;">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-gold/10 text-accent-gold border border-accent-gold/20 group-hover:scale-105 group-hover:bg-accent-gold group-hover:text-background-dark transition-all duration-150">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </span>
+        <div class="text-left">
+          <span class="block text-xs uppercase tracking-widest text-text-dark/90 group-hover:text-accent-gold transition-colors font-semibold">Escríbenos</span>
+          <span class="block font-body text-sm sm:text-base font-medium text-white group-hover:text-accent-gold transition-colors">info@elgorilateatro.com.mx</span>
+        </div>
+      </a>
+      <a class="group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-black/70 backdrop-blur-md border border-white/40 hover:bg-black/80 hover:border-accent-gold/60 active:bg-black/90 transition-all duration-150 touch-manipulation w-full md:w-auto md:min-w-[200px] text-left" href="https://wa.me/5215512037223" target="_blank" rel="noopener noreferrer" style="-webkit-tap-highlight-color: transparent;">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-green-400 border border-green-500/30 group-hover:scale-105 group-hover:bg-green-500/30 transition-all duration-150">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </span>
+        <div class="text-left">
+          <span class="block text-xs uppercase tracking-widest text-text-dark/90 group-hover:text-accent-gold transition-colors font-semibold">WhatsApp</span>
+          <span class="block font-body text-sm sm:text-base font-medium text-white group-hover:text-accent-gold transition-colors">Envíanos un mensaje</span>
+        </div>
+      </a>
+      <a id="link-instagram" class="group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 hover:bg-black/50 hover:border-accent-gold/50 active:bg-black/60 transition-all duration-150 touch-manipulation w-full md:w-auto md:min-w-[200px] text-left hidden" href="#" target="_blank" rel="noopener noreferrer" style="-webkit-tap-highlight-color: transparent;">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pink-500/20 text-pink-400 border border-pink-500/30 group-hover:scale-105 group-hover:bg-pink-500/30 transition-all duration-150">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.265.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.058 1.645-.07 4.849-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </span>
+        <div class="text-left">
+          <span class="block text-xs uppercase tracking-widest text-text-dark/90 group-hover:text-accent-gold transition-colors font-semibold">Instagram</span>
+          <span class="block font-body text-sm sm:text-base font-medium text-white group-hover:text-accent-gold transition-colors">Síguenos</span>
+        </div>
+      </a>
+      <a id="link-musica" class="group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 hover:bg-black/50 hover:border-accent-gold/50 active:bg-black/60 transition-all duration-150 touch-manipulation w-full md:w-auto md:min-w-[200px] text-left hidden" href="#" target="_blank" rel="noopener noreferrer" style="-webkit-tap-highlight-color: transparent;">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-violet-400 border border-violet-500/30 group-hover:scale-105 group-hover:bg-violet-500/30 transition-all duration-150">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        </span>
+        <div class="text-left">
+          <span class="block text-xs uppercase tracking-widest text-text-dark/90 group-hover:text-accent-gold transition-colors font-semibold">Música</span>
+          <span class="block font-body text-sm sm:text-base font-medium text-white group-hover:text-accent-gold transition-colors">Escucha la música</span>
+        </div>
+      </a>
+      <button type="button" id="abrir-mensaje" class="group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-black/40 backdrop-blur-sm border border-white/20 hover:bg-black/50 hover:border-accent-gold/50 active:bg-black/60 transition-all duration-150 touch-manipulation w-full md:w-auto md:min-w-[200px] text-left" style="-webkit-tap-highlight-color: transparent;">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-gold/10 text-accent-gold border border-accent-gold/20 group-hover:scale-105 group-hover:bg-accent-gold group-hover:text-background-dark transition-all duration-150">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </span>
+        <div class="text-left">
+          <span class="block text-xs uppercase tracking-widest text-text-dark/90 group-hover:text-accent-gold transition-colors font-semibold">Dejar un mensaje</span>
+          <span class="block font-body text-sm sm:text-base font-medium text-white group-hover:text-accent-gold transition-colors">Escríbenos y te responderemos</span>
+        </div>
+      </button>
+  </div>
+</div>
+</div>
+</section>
+<section class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg p-4 sm:p-6 md:p-8" id="comentarios">
+<div class="comentarios-seccion-frame relative overflow-hidden rounded-lg bg-rich-dark/90 backdrop-blur-md border-2 border-accent-gold/50 p-5 sm:p-6 md:p-8 shadow-[0_0_0_1px_rgba(212,175,55,0.2),inset_0_0_0_1px_rgba(212,175,55,0.08)]">
+<div class="comentarios-carrusel-wrap" aria-label="Comentarios del público en rotación">
+<div class="comentarios-carrusel-track" id="comentarios-track">
+<!-- Comentarios reales del público (inicial + apellido para privacidad) -->
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Excelente obra, la recomiendo.</p><cite class="comentarios-autor">— M. Huerta</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Maravillosa, conmovedora.</p><cite class="comentarios-autor">— N. Garcia Schlegel</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Muy buena. 👏</p><cite class="comentarios-autor">— L. Anaya</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Está padrísima, la súper recomiendo!</p><cite class="comentarios-autor">— J. Cortés</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Excelente obra e interpretación!</p><cite class="comentarios-autor">— R. Meza</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Excelente actuación.</p><cite class="comentarios-autor">— M. Nava</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">100% recomendable, la personificación es magnífica.</p><cite class="comentarios-autor">— I. Milian</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Imperdible con la actuación del Gran maestro Dupeyrón.</p><cite class="comentarios-autor">— P. Pasten</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Me gustaría poder verla, se ve que es una gran obra!!!</p><cite class="comentarios-autor">— R. Almanza</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Quiero verla.</p><cite class="comentarios-autor">— M. Fernandez</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Yo no he ido a verla, nada más de ver quién es el gorila 🦍 me emocioné mucho y ya compré mis boletos, voy a ir con mis 3 hij@s sé que vamos a salir con un gran mensaje 🙏💕 gracias.</p><cite class="comentarios-autor">— M. Pacheco</cite></blockquote>
+<!-- Comentarios existentes -->
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">La gente termina llorando, riendo y se quedan impresionados.</p><cite class="comentarios-autor">— H. Dupeyrón</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">No solo te entretienes, también sales pensando en mil cosas. Dupeyrón está muy bien en el escenario.</p><cite class="comentarios-autor">— E. D.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">35 años llevando el monólogo a escena.</p><cite class="comentarios-autor">— El Universal</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Para mí esta obra es vivir; me lleno de energía cada vez que la hago.</p><cite class="comentarios-autor">— H. Dupeyrón</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Humberto Dupeyrón hace una interpretación memorable. Es una de esas obras que te dejan pensando y con ganas de más.</p><cite class="comentarios-autor">— A. G.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Se entrega completamente en el escenario. Es un monólogo de esos que te hacen sentir acompañado en todo momento.</p><cite class="comentarios-autor">— L. V.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Humberto Dupeyrón entrega una de sus mejores actuaciones. Es un monólogo intenso, divertido y hasta educativo.</p><cite class="comentarios-autor">— R. V.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Se refiere a la libertad y al ego del hombre, un mal actual.</p><cite class="comentarios-autor">— H. Dupeyrón</cite></blockquote>
+<!-- Duplicado para bucle infinito -->
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Excelente obra, la recomiendo.</p><cite class="comentarios-autor">— M. Huerta</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Maravillosa, conmovedora.</p><cite class="comentarios-autor">— N. Garcia Schlegel</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Muy buena. 👏</p><cite class="comentarios-autor">— L. Anaya</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Está padrísima, la súper recomiendo!</p><cite class="comentarios-autor">— J. Cortés</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Excelente obra e interpretación!</p><cite class="comentarios-autor">— R. Meza</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Excelente actuación.</p><cite class="comentarios-autor">— M. Nava</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">100% recomendable, la personificación es magnífica.</p><cite class="comentarios-autor">— I. Milian</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Imperdible con la actuación del Gran maestro Dupeyrón.</p><cite class="comentarios-autor">— P. Pasten</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Me gustaría poder verla, se ve que es una gran obra!!!</p><cite class="comentarios-autor">— R. Almanza</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Quiero verla.</p><cite class="comentarios-autor">— M. Fernandez</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Yo no he ido a verla, nada más de ver quién es el gorila 🦍 me emocioné mucho y ya compré mis boletos, voy a ir con mis 3 hij@s sé que vamos a salir con un gran mensaje 🙏💕 gracias.</p><cite class="comentarios-autor">— M. Pacheco</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">La gente termina llorando, riendo y se quedan impresionados.</p><cite class="comentarios-autor">— H. Dupeyrón</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">No solo te entretienes, también sales pensando en mil cosas. Dupeyrón está muy bien en el escenario.</p><cite class="comentarios-autor">— E. D.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">35 años llevando el monólogo a escena.</p><cite class="comentarios-autor">— El Universal</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Para mí esta obra es vivir; me lleno de energía cada vez que la hago.</p><cite class="comentarios-autor">— H. Dupeyrón</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Humberto Dupeyrón hace una interpretación memorable. Es una de esas obras que te dejan pensando y con ganas de más.</p><cite class="comentarios-autor">— A. G.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Se entrega completamente en el escenario. Es un monólogo de esos que te hacen sentir acompañado en todo momento.</p><cite class="comentarios-autor">— L. V.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Humberto Dupeyrón entrega una de sus mejores actuaciones. Es un monólogo intenso, divertido y hasta educativo.</p><cite class="comentarios-autor">— R. V.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Se refiere a la libertad y al ego del hombre, un mal actual.</p><cite class="comentarios-autor">— H. Dupeyrón</cite></blockquote>
+<!-- Duplicado para bucle infinito -->
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Excelente obra, la recomiendo.</p><cite class="comentarios-autor">— M. Huerta</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Maravillosa, conmovedora.</p><cite class="comentarios-autor">— N. Garcia Schlegel</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Muy buena. 👏</p><cite class="comentarios-autor">— L. Anaya</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Está padrísima, la súper recomiendo!</p><cite class="comentarios-autor">— J. Cortés</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Excelente obra e interpretación!</p><cite class="comentarios-autor">— R. Meza</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Excelente actuación.</p><cite class="comentarios-autor">— M. Nava</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">100% recomendable, la personificación es magnífica.</p><cite class="comentarios-autor">— I. Milian</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Imperdible con la actuación del Gran maestro Dupeyrón.</p><cite class="comentarios-autor">— P. Pasten</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Me gustaría poder verla, se ve que es una gran obra!!!</p><cite class="comentarios-autor">— R. Almanza</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Quiero verla.</p><cite class="comentarios-autor">— M. Fernandez</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Yo no he ido a verla, nada más de ver quién es el gorila 🦍 me emocioné mucho y ya compré mis boletos, voy a ir con mis 3 hij@s sé que vamos a salir con un gran mensaje 🙏💕 gracias.</p><cite class="comentarios-autor">— M. Pacheco</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">La gente termina llorando, riendo y se quedan impresionados.</p><cite class="comentarios-autor">— H. Dupeyrón</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">No solo te entretienes, también sales pensando en mil cosas. Dupeyrón está muy bien en el escenario.</p><cite class="comentarios-autor">— E. D.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">35 años llevando el monólogo a escena.</p><cite class="comentarios-autor">— El Universal</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Para mí esta obra es vivir; me lleno de energía cada vez que la hago.</p><cite class="comentarios-autor">— H. Dupeyrón</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Humberto Dupeyrón hace una interpretación memorable. Es una de esas obras que te dejan pensando y con ganas de más.</p><cite class="comentarios-autor">— A. G.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Se entrega completamente en el escenario. Es un monólogo de esos que te hacen sentir acompañado en todo momento.</p><cite class="comentarios-autor">— L. V.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Humberto Dupeyrón entrega una de sus mejores actuaciones. Es un monólogo intenso, divertido y hasta educativo.</p><cite class="comentarios-autor">— R. V.</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Se refiere a la libertad y al ego del hombre, un mal actual.</p><cite class="comentarios-autor">— H. Dupeyrón</cite></blockquote>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Modal 37 aniversario: solo imagen y textos flotando, sin recuadros -->
+<div id="modal-37-overlay" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm" aria-hidden="true"></div>
+<div id="modal-37" class="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-2xl max-h-[90vh] overflow-y-auto hidden rounded-xl bg-transparent" role="dialog" aria-modal="true">
+  <div class="p-6 sm:p-8 flex flex-col min-h-0">
+    <button type="button" id="cerrar-modal-37" class="absolute right-2 top-2 sm:right-4 sm:top-4 p-1.5 rounded-full text-text-dark/80 hover:text-accent-gold hover:bg-white/10 transition-colors z-30" aria-label="Cerrar">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <div class="modal-37-carrusel flex flex-col relative min-h-[60vh]">
+      <div id="modal-37-slides" class="relative w-full min-h-[55vh] pt-10 sm:pt-14 md:pt-16">
+        <div class="modal-37-slide absolute inset-0 flex flex-col items-center justify-start pt-10 sm:pt-14 md:pt-16 p-2 sm:p-4 opacity-0 transition-opacity duration-400" data-index="0">
+          <div class="relative">
+            <img src="img/37/1.png" alt="1989" class="max-h-[200px] sm:max-h-[260px] md:max-h-[520px] w-auto object-contain rounded-lg shadow-xl flex-shrink-0 modal-37-img zoomable-img" data-zoom="5" loading="lazy" decoding="async"/>
+            <p class="hidden md:block absolute bottom-2 left-1/2 -translate-x-1/2 text-accent-gold/80 text-xs font-medium whitespace-nowrap pointer-events-none">Pasa el cursor para ampliar</p>
+          </div>
+          <p class="mt-4 font-display text-accent-gold font-semibold text-sm sm:text-base">1989</p>
+          <p class="text-accent-gold/90 text-center text-xs sm:text-sm font-medium mt-0.5">Estreno oficial</p>
+          <p class="text-text-dark/90 text-center text-xs sm:text-sm mt-2 max-w-md leading-relaxed">El inicio. La primera función que marca el camino de estas casi cuatro décadas en escena.</p>
+        </div>
+        <div class="modal-37-slide absolute inset-0 flex flex-col items-center justify-start pt-10 sm:pt-14 md:pt-16 p-2 sm:p-4 opacity-0 transition-opacity duration-400" data-index="1">
+          <img src="img/37/2.png" alt="Años 90" class="max-h-[200px] sm:max-h-[260px] md:max-h-[520px] w-auto object-contain rounded-lg shadow-xl flex-shrink-0 modal-37-img" loading="lazy" decoding="async"/>
+          <p class="mt-4 font-display text-accent-gold font-semibold text-sm sm:text-base">Años 90</p>
+          <p class="text-accent-gold/90 text-center text-xs sm:text-sm font-medium mt-0.5">Primera década en escena</p>
+          <p class="text-text-dark/90 text-center text-xs sm:text-sm mt-2 max-w-md leading-relaxed">Consolidación en teatros y giras. El público descubre un estilo que ya se convertiría en referencia.</p>
+        </div>
+        <div class="modal-37-slide absolute inset-0 flex flex-col items-center justify-start pt-10 sm:pt-14 md:pt-16 p-2 sm:p-4 opacity-0 transition-opacity duration-400" data-index="2">
+          <img src="img/37/3.png" alt="2000s" class="max-h-[200px] sm:max-h-[260px] md:max-h-[520px] w-auto object-contain rounded-lg shadow-xl flex-shrink-0 modal-37-img" loading="lazy" decoding="async"/>
+          <p class="mt-4 font-display text-accent-gold font-semibold text-sm sm:text-base">2000s</p>
+          <p class="text-accent-gold/90 text-center text-xs sm:text-sm font-medium mt-0.5">Reconocimiento y giras</p>
+          <p class="text-text-dark/90 text-center text-xs sm:text-sm mt-2 max-w-md leading-relaxed">Premios, crítica y presencia en todo el país. La obra crece y se instala en el imaginario del teatro mexicano.</p>
+        </div>
+        <div class="modal-37-slide absolute inset-0 flex flex-col items-center justify-start pt-10 sm:pt-14 md:pt-16 p-2 sm:p-4 opacity-0 transition-opacity duration-400" data-index="3">
+          <img src="img/37/4.png" alt="2010s" class="max-h-[200px] sm:max-h-[260px] md:max-h-[520px] w-auto object-contain rounded-lg shadow-xl flex-shrink-0 modal-37-img" loading="lazy" decoding="async"/>
+          <p class="mt-4 font-display text-accent-gold font-semibold text-sm sm:text-base">2010s</p>
+          <p class="text-accent-gold/90 text-center text-xs sm:text-sm font-medium mt-0.5">Consolidación y obra de culto</p>
+          <p class="text-text-dark/90 text-center text-xs sm:text-sm mt-2 max-w-md leading-relaxed">La obra se consolida en cartelera, se rediseña y se mantiene viva. El público la reconoce como un clásico del teatro mexicano.</p>
+        </div>
+        <div class="modal-37-slide absolute inset-0 flex flex-col items-center justify-start pt-10 sm:pt-14 md:pt-16 p-2 sm:p-4 opacity-0 transition-opacity duration-400" data-index="4">
+          <img src="img/37/5.png" alt="37 años" class="max-h-[200px] sm:max-h-[260px] md:max-h-[520px] w-auto object-contain rounded-lg shadow-xl flex-shrink-0 modal-37-img" loading="lazy" decoding="async"/>
+          <p class="mt-4 font-display text-accent-gold font-semibold text-sm sm:text-base">2025-2026</p>
+          <p class="text-accent-gold/90 text-center text-xs sm:text-sm font-medium mt-0.5">37 años sobre los laureles</p>
+          <p class="text-text-dark/90 text-center text-xs sm:text-sm mt-2 max-w-md leading-relaxed">Casi cuatro décadas después del estreno de 1989, la trayectoria sigue viva.</p>
+        </div>
+      </div>
+      <button type="button" id="modal-37-prev" class="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/70 text-accent-gold transition-colors z-20" aria-label="Anterior">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <button type="button" id="modal-37-next" class="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/70 text-accent-gold transition-colors z-20" aria-label="Siguiente">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <div class="flex justify-center gap-1.5 mt-4" id="modal-37-dots"></div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-venta-info-overlay" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm" aria-hidden="true"></div>
+<div id="modal-venta-info" class="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-lg max-h-[85vh] overflow-auto hidden rounded-lg bg-rich-dark border border-accent-gold/30 shadow-xl p-4 sm:p-6" role="dialog" aria-labelledby="modal-venta-info-titulo" aria-modal="true">
+<button type="button" id="cerrar-venta-info" class="absolute right-3 top-3 p-1 rounded text-text-dark/70 hover:text-accent-gold hover:bg-white/5 transition-colors" aria-label="Cerrar">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+</button>
+<h2 id="modal-venta-info-titulo" class="font-display text-xl sm:text-2xl text-accent-gold mb-4 pr-8">Información de venta</h2>
+<div id="modal-venta-info-contenido" class="text-text-dark/90 text-sm sm:text-base leading-relaxed whitespace-pre-wrap"></div>
+</div>
+
+<div id="modal-mensaje-overlay" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm" aria-hidden="true"></div>
+<div id="modal-mensaje" class="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md hidden rounded-lg bg-rich-dark border border-accent-gold/30 shadow-xl p-4 sm:p-6" role="dialog" aria-labelledby="modal-mensaje-titulo" aria-modal="true">
+<button type="button" id="cerrar-mensaje" class="absolute right-3 top-3 p-1 rounded text-text-dark/70 hover:text-accent-gold hover:bg-white/5 transition-colors" aria-label="Cerrar">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+</button>
+<h2 id="modal-mensaje-titulo" class="font-display text-xl sm:text-2xl text-accent-gold mb-4 pr-8">Enviar un mensaje</h2>
+<form id="form-mensaje" class="space-y-4">
+<label class="block">
+<span class="block text-sm text-text-dark/90 mb-1">Nombre</span>
+<input type="text" name="nombre" required autocomplete="name" class="w-full px-3 py-2 bg-background-dark border border-accent-gold/30 rounded text-text-dark placeholder-text-dark/50 focus:outline-none focus:border-accent-gold" placeholder="Tu nombre"/>
+</label>
+<label class="block">
+<span class="block text-sm text-text-dark/90 mb-1">Email <span class="text-text-dark/60">(para responderte)</span></span>
+<input type="email" name="email" autocomplete="email" class="w-full px-3 py-2 bg-background-dark border border-accent-gold/30 rounded text-text-dark placeholder-text-dark/50 focus:outline-none focus:border-accent-gold" placeholder="tu@email.com"/>
+</label>
+<label class="block">
+<span class="block text-sm text-text-dark/90 mb-1">Mensaje</span>
+<textarea name="mensaje" required rows="4" class="w-full px-3 py-2 bg-background-dark border border-accent-gold/30 rounded text-text-dark placeholder-text-dark/50 focus:outline-none focus:border-accent-gold resize-y" placeholder="Escribe tu mensaje..."></textarea>
+</label>
+<button type="submit" class="w-full py-2.5 rounded-lg bg-accent-gold/20 hover:bg-accent-gold/30 text-accent-gold border border-accent-gold/40 font-medium transition-colors">Enviar</button>
+</form>
+</div>
+<footer class="bg-rich-dark/80 py-10 backdrop-blur-md text-center border-t border-accent-gold/10">
+<div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-text-dark">
+<div class="md:text-left">
+<h3 class="font-bold uppercase tracking-wider text-accent-gold mb-3 flex items-center gap-2">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Contacto</span>
+</h3>
+<a class="block transition-colors hover:text-accent-gold" href="mailto:info@elgorilateatro.com.mx">info@elgorilateatro.com.mx</a>
+</div>
+<div class="flex flex-col items-center space-y-2">
+<a class="flex items-center gap-2 transition-colors hover:text-accent-gold" href="#faq">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Preguntas Frecuentes</span>
+</a>
+</div>
+<div class="md:text-right">
+<p class="font-display text-lg text-accent-gold">EL GORILA</p>
+<p class="text-text-dark/60 mt-2">© 2025. Todos los derechos reservados.</p>
+<a id="footer-admin-link" href="admin.html" class="inline-block mt-3 text-xs text-text-dark/50 hover:text-accent-gold transition-colors">Administrador</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+</div>
+<script src="js/imagenes.js" defer></script>
+<script>
+  (function() {
+    var INSTAGRAM_KEY = 'elgorila_instagram_url';
+    var DEFAULT_IG = 'https://www.instagram.com/elgorilateatro/';
+    var urlIg = '';
+    try { urlIg = (localStorage.getItem(INSTAGRAM_KEY) || '').trim(); } catch (e) {}
+    if (!urlIg) urlIg = DEFAULT_IG;
+    var linkIg = document.getElementById('link-instagram');
+    if (linkIg && urlIg) {
+      linkIg.href = urlIg;
+      linkIg.classList.remove('hidden');
+    }
+    var MUSICA_KEY = 'elgorila_musica_url';
+    var urlMusica = '';
+    try { urlMusica = (localStorage.getItem(MUSICA_KEY) || '').trim(); } catch (e) {}
+    var linkMusica = document.getElementById('link-musica');
+    if (linkMusica && urlMusica) {
+      linkMusica.href = urlMusica;
+      linkMusica.classList.remove('hidden');
+    }
+    var WHATSAPP_KEY = 'elgorila_whatsapp';
+    var whatsappNum = '';
+    try { whatsappNum = (localStorage.getItem(WHATSAPP_KEY) || '').trim(); } catch (e) {}
+    if (!whatsappNum) whatsappNum = '5215512037223';
+    document.querySelectorAll('a[href^="https://wa.me/"]').forEach(function(a) { a.href = 'https://wa.me/' + whatsappNum.replace(/\D/g, ''); });
+    var EMAIL_KEY = 'elgorila_email_contacto';
+    var contactEmail = '';
+    try { contactEmail = (localStorage.getItem(EMAIL_KEY) || '').trim(); } catch (e) {}
+    if (!contactEmail) contactEmail = 'info@elgorilateatro.com.mx';
+    document.querySelectorAll('a[href^="mailto:"]').forEach(function(a) {
+      var prev = a.getAttribute('href');
+      var q = prev.indexOf('?');
+      a.href = 'mailto:' + contactEmail + (q !== -1 ? prev.slice(q) : '');
+      if (a.textContent && a.textContent.indexOf('@') !== -1) a.textContent = contactEmail;
+    });
+    var adminFooterKey = 'elgorila_mostrar_admin_footer';
+    var showAdmin = '';
+    try { showAdmin = localStorage.getItem(adminFooterKey) || ''; } catch (e) {}
+    var footerAdmin = document.getElementById('footer-admin-link');
+    if (footerAdmin && showAdmin !== '1') footerAdmin.style.display = 'none';
+    var sinopsisKey = 'elgorila_sinopsis';
+    var sinopsisText = '';
+    try { sinopsisText = (localStorage.getItem(sinopsisKey) || '').trim(); } catch (e) {}
+    if (sinopsisText) {
+      var sinopsisEl = document.getElementById('sinopsis-texto');
+      if (sinopsisEl) sinopsisEl.textContent = sinopsisText;
+    }
+  })();
+  (function() {
+    var URL_VENTA_KEY = 'elgorila_url_venta';
+    var VENTA_MODO_KEY = 'elgorila_venta_modo';
+    var VENTA_MENSAJE_KEY = 'elgorila_venta_mensaje';
+    var modo = '';
+    var urlVenta = '';
+    var mensajeVenta = '';
+    try {
+      modo = localStorage.getItem(VENTA_MODO_KEY) || 'url';
+      urlVenta = (localStorage.getItem(URL_VENTA_KEY) || '').trim();
+      mensajeVenta = localStorage.getItem(VENTA_MENSAJE_KEY) || '';
+    } catch (e) {}
+    var links = document.querySelectorAll('.link-venta-boletos');
+    if (modo === 'mensaje') {
+      links.forEach(function(a) {
+        a.href = '#';
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          var texto = '';
+          try { texto = localStorage.getItem(VENTA_MENSAJE_KEY) || ''; } catch (e) {}
+          var overlay = document.getElementById('modal-venta-info-overlay');
+          var modal = document.getElementById('modal-venta-info');
+          var contenido = document.getElementById('modal-venta-info-contenido');
+          if (contenido) contenido.textContent = texto || 'No hay mensaje configurado.';
+          if (overlay) { overlay.classList.remove('hidden'); overlay.setAttribute('aria-hidden', 'false'); }
+          if (modal) { modal.classList.remove('hidden'); modal.setAttribute('aria-modal', 'true'); }
+          document.body.style.overflow = 'hidden';
+        });
+      });
+      var cerrarVentaInfo = function() {
+        var overlay = document.getElementById('modal-venta-info-overlay');
+        var modal = document.getElementById('modal-venta-info');
+        if (overlay) { overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden', 'true'); }
+        if (modal) { modal.classList.add('hidden'); }
+        document.body.style.overflow = '';
+      };
+      document.getElementById('modal-venta-info-overlay') && document.getElementById('modal-venta-info-overlay').addEventListener('click', cerrarVentaInfo);
+      document.getElementById('cerrar-venta-info') && document.getElementById('cerrar-venta-info').addEventListener('click', cerrarVentaInfo);
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.getElementById('modal-venta-info') && !document.getElementById('modal-venta-info').classList.contains('hidden')) cerrarVentaInfo();
+      });
+    } else {
+      if (urlVenta) links.forEach(function(a) { a.href = urlVenta; });
+    }
+  })();
+  (function() {
+    var TOTAL_SLIDES = 5;
+    var modal37Index = 0;
+    var overlay37 = document.getElementById('modal-37-overlay');
+    var modal37 = document.getElementById('modal-37');
+    var slides = document.querySelectorAll('.modal-37-slide');
+    var dotsContainer = document.getElementById('modal-37-dots');
+    function showSlide37(i) {
+      modal37Index = (i + TOTAL_SLIDES) % TOTAL_SLIDES;
+      slides.forEach(function(s, k) {
+        var visible = k === modal37Index;
+        s.classList.toggle('opacity-0', !visible);
+        s.classList.toggle('opacity-100', visible);
+        s.classList.toggle('pointer-events-none', !visible);
+      });
+      if (dotsContainer) {
+        var dots = dotsContainer.querySelectorAll('button');
+        dots.forEach(function(d, k) { d.classList.toggle('bg-accent-gold', k === modal37Index); d.classList.toggle('bg-accent-gold/40', k !== modal37Index); });
+      }
+    }
+    function abrirModal37() {
+      if (overlay37) { overlay37.classList.remove('hidden'); overlay37.setAttribute('aria-hidden', 'false'); }
+      if (modal37) { modal37.classList.remove('hidden'); modal37.setAttribute('aria-modal', 'true'); }
+      document.body.style.overflow = 'hidden';
+      showSlide37(0);
+      if (dotsContainer && dotsContainer.children.length === 0) {
+        for (var d = 0; d < TOTAL_SLIDES; d++) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'w-2 h-2 rounded-full transition-colors ' + (d === 0 ? 'bg-accent-gold' : 'bg-accent-gold/40');
+          btn.setAttribute('aria-label', 'Ir a slide ' + (d + 1));
+          (function(idx) { btn.addEventListener('click', function() { showSlide37(idx); }); })(d);
+          dotsContainer.appendChild(btn);
+        }
+      }
+    }
+    function cerrarModal37() {
+      if (overlay37) { overlay37.classList.add('hidden'); overlay37.setAttribute('aria-hidden', 'true'); }
+      if (modal37) modal37.classList.add('hidden');
+      var lens = document.getElementById('zoom-lens');
+      if (lens) lens.classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('abrir-popup-37') && document.getElementById('abrir-popup-37').addEventListener('click', abrirModal37);
+    overlay37 && overlay37.addEventListener('click', cerrarModal37);
+    document.getElementById('cerrar-modal-37') && document.getElementById('cerrar-modal-37').addEventListener('click', cerrarModal37);
+    document.getElementById('modal-37-prev') && document.getElementById('modal-37-prev').addEventListener('click', function() { showSlide37(modal37Index - 1); });
+    document.getElementById('modal-37-next') && document.getElementById('modal-37-next').addEventListener('click', function() { showSlide37(modal37Index + 1); });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal37 && !modal37.classList.contains('hidden')) cerrarModal37();
+    });
+  })();
+  (function() {
+    var carrusel = document.getElementById('actor-texto-carrusel');
+    var indicator = document.getElementById('actor-texto-indicator');
+    var slides = document.querySelectorAll('.actor-texto-slide');
+    var total = slides.length;
+    var index = 0;
+    function showActorTexto(i) {
+      index = ((i % total) + total) % total;
+      slides.forEach(function(s, j) {
+        if (j === index) {
+          s.classList.remove('opacity-0', 'pointer-events-none');
+          s.classList.add('opacity-100');
+        } else {
+          s.classList.add('opacity-0', 'pointer-events-none');
+          s.classList.remove('opacity-100');
+        }
+      });
+      if (indicator) indicator.textContent = (index + 1) + '/' + total;
+    }
+    if (carrusel && total) {
+      carrusel.addEventListener('click', function() { showActorTexto(index + 1); });
+      carrusel.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showActorTexto(index + 1); }
+      });
+    }
+  })();
+  (function() {
+    var carrusel = document.getElementById('obra-texto-carrusel');
+    var indicator = document.getElementById('obra-texto-indicator');
+    var slides = document.querySelectorAll('.obra-texto-slide');
+    var total = slides.length;
+    var index = 0;
+    function showObraTexto(i) {
+      index = ((i % total) + total) % total;
+      slides.forEach(function(s, j) {
+        if (j === index) {
+          s.classList.remove('opacity-0', 'pointer-events-none');
+          s.classList.add('opacity-100');
+        } else {
+          s.classList.add('opacity-0', 'pointer-events-none');
+          s.classList.remove('opacity-100');
+        }
+      });
+      if (indicator) indicator.textContent = (index + 1) + '/' + total;
+    }
+    if (carrusel && total) {
+      carrusel.addEventListener('click', function() { showObraTexto(index + 1); });
+      carrusel.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showObraTexto(index + 1); }
+      });
+    }
+  })();
+  (function() {
+    var carrusel = document.getElementById('odila-texto-carrusel');
+    var slides = document.querySelectorAll('.odila-texto-slide');
+    var total = slides.length;
+    var index = 0;
+    function showOdilaTexto(i) {
+      index = ((i % total) + total) % total;
+      slides.forEach(function(s, j) {
+        if (j === index) {
+          s.classList.remove('opacity-0', 'pointer-events-none');
+          s.classList.add('opacity-100');
+        } else {
+          s.classList.add('opacity-0', 'pointer-events-none');
+          s.classList.remove('opacity-100');
+        }
+      });
+    }
+    if (carrusel && total) {
+      carrusel.addEventListener('click', function() { showOdilaTexto(index + 1); });
+      carrusel.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showOdilaTexto(index + 1); }
+      });
+    }
+  })();
+  (function() {
+    var carrusel = document.getElementById('ariel-texto-carrusel');
+    var slides = document.querySelectorAll('.ariel-texto-slide');
+    var total = slides.length;
+    var index = 0;
+    function showArielTexto(i) {
+      index = ((i % total) + total) % total;
+      slides.forEach(function(s, j) {
+        if (j === index) {
+          s.classList.remove('opacity-0', 'pointer-events-none');
+          s.classList.add('opacity-100');
+        } else {
+          s.classList.add('opacity-0', 'pointer-events-none');
+          s.classList.remove('opacity-100');
+        }
+      });
+    }
+    if (carrusel && total) {
+      carrusel.addEventListener('click', function() { showArielTexto(index + 1); });
+      carrusel.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showArielTexto(index + 1); }
+      });
+    }
+  })();
+  (function() {
+    var carrusel = document.getElementById('sinopsis-texto-carrusel');
+    var indicator = document.getElementById('sinopsis-texto-indicator');
+    var slides = document.querySelectorAll('.sinopsis-texto-slide');
+    var total = slides.length;
+    var index = 0;
+    function showSinopsisTexto(i) {
+      index = ((i % total) + total) % total;
+      slides.forEach(function(s, j) {
+        if (j === index) {
+          s.classList.remove('opacity-0', 'pointer-events-none');
+          s.classList.add('opacity-100');
+        } else {
+          s.classList.add('opacity-0', 'pointer-events-none');
+          s.classList.remove('opacity-100');
+        }
+      });
+      if (indicator) indicator.textContent = (index + 1) + '/' + total;
+    }
+    if (carrusel && total) {
+      carrusel.addEventListener('click', function() { showSinopsisTexto(index + 1); });
+      carrusel.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showSinopsisTexto(index + 1); }
+      });
+    }
+  })();
+  (function() {
+    var CLICK_WINDOW_MS = 10000;
+    var CLICK_THRESHOLD = 28;
+    var COOLDOWN_MS = 8000;
+    var clicks = [];
+    var cooldownUntil = 0;
+    function isSensitiveTarget(el) {
+      if (!el || !el.closest) return false;
+      return el.closest('a[href="#contacto"]') || el.closest('.link-venta-boletos') || el.closest('a[href="#venta-boletos"]') || el.closest('a[href*="carpageodesica"]') || el.closest('button') || el.closest('#abrir-mensaje');
+    }
+    function showThrottleMessage() {
+      var existing = document.getElementById('throttle-toast');
+      if (existing) return;
+      var toast = document.createElement('div');
+      toast.id = 'throttle-toast';
+      toast.setAttribute('role', 'status');
+      toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-lg bg-rich-dark border border-accent-gold/50 text-accent-gold text-sm font-body shadow-lg';
+      toast.textContent = 'Demasiados clics; espere un momento.';
+      document.body.appendChild(toast);
+      setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 2500);
+    }
+    document.addEventListener('click', function(e) {
+      if (!isSensitiveTarget(e.target)) return;
+      var now = Date.now();
+      if (now < cooldownUntil) {
+        e.preventDefault();
+        e.stopPropagation();
+        showThrottleMessage();
+        return;
+      }
+      clicks.push(now);
+      clicks = clicks.filter(function(t) { return now - t < CLICK_WINDOW_MS; });
+      if (clicks.length >= CLICK_THRESHOLD) {
+        cooldownUntil = now + COOLDOWN_MS;
+        showThrottleMessage();
+      }
+    }, true);
+  })();
+  (function() {
+    var overlay = document.getElementById('loading-overlay');
+    function hideOverlay() {
+      if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.style.display = 'none';
+      }
+    }
+    if (document.readyState === 'complete') {
+      hideOverlay();
+    } else {
+      window.addEventListener('load', function() {
+        requestAnimationFrame(hideOverlay);
+      });
+    }
+  })();
+  (function() {
+    var abrir = document.getElementById('abrir-mensaje');
+    var cerrar = document.getElementById('cerrar-mensaje');
+    var overlayModal = document.getElementById('modal-mensaje-overlay');
+    var modal = document.getElementById('modal-mensaje');
+    var form = document.getElementById('form-mensaje');
+    function abrirModal() {
+      if (overlayModal) overlayModal.classList.remove('hidden');
+      if (modal) modal.classList.remove('hidden');
+      if (overlayModal) overlayModal.setAttribute('aria-hidden', 'false');
+      if (modal) modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function cerrarModal() {
+      if (overlayModal) { overlayModal.classList.add('hidden'); overlayModal.setAttribute('aria-hidden', 'true'); }
+      if (modal) { modal.classList.add('hidden'); modal.setAttribute('aria-hidden', 'true'); }
+      document.body.style.overflow = '';
+    }
+    if (abrir) abrir.addEventListener('click', abrirModal);
+    if (cerrar) cerrar.addEventListener('click', cerrarModal);
+    if (overlayModal) overlayModal.addEventListener('click', cerrarModal);
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var nombre = (form.nombre && form.nombre.value) ? form.nombre.value.trim() : '';
+        var email = (form.email && form.email.value) ? form.email.value.trim() : '';
+        var mensaje = (form.mensaje && form.mensaje.value) ? form.mensaje.value.trim() : '';
+        if (!mensaje) return;
+        var body = 'Nombre: ' + nombre + '\n';
+        if (email) body += 'Email: ' + email + '\n';
+        body += 'Mensaje: ' + mensaje;
+        try {
+          var MENSAJES_KEY = 'elgorila_mensajes';
+          var raw = localStorage.getItem(MENSAJES_KEY);
+          var list = raw ? JSON.parse(raw) : [];
+          list.unshift({
+            id: Date.now(),
+            nombre: nombre,
+            email: email,
+            mensaje: mensaje,
+            fecha: new Date().toISOString(),
+            leido: false
+          });
+          if (list.length > 500) list = list.slice(0, 500);
+          localStorage.setItem(MENSAJES_KEY, JSON.stringify(list));
+        } catch (err) {}
+        var _email = (localStorage.getItem('elgorila_email_contacto') || '').trim() || 'info@elgorilateatro.com.mx';
+        var mailto = 'mailto:' + _email + '?subject=' + encodeURIComponent('Mensaje desde EL GORILA') + '&body=' + encodeURIComponent(body);
+        window.location.href = mailto;
+        if (form.reset) form.reset();
+        cerrarModal();
+      });
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) cerrarModal();
+    });
+  })();
+  (function() {
+    var LANDING_EVENTS_KEY = 'elgorila_landing_events';
+    var MAX_EVENTS = 500;
+    function pushEvent(type, data) {
+      try {
+        var raw = localStorage.getItem(LANDING_EVENTS_KEY);
+        var list = raw ? JSON.parse(raw) : [];
+        list.push({ t: Date.now(), type: type, data: data || {} });
+        if (list.length > MAX_EVENTS) list = list.slice(-MAX_EVENTS);
+        localStorage.setItem(LANDING_EVENTS_KEY, JSON.stringify(list));
+      } catch (e) {}
+    }
+    pushEvent('visit', { ua: navigator.userAgent.substring(0, 80), w: window.innerWidth });
+    var whatsapp = document.querySelector('a[href^="https://wa.me/"]');
+    var email = document.querySelector('a[href^="mailto:"]');
+    var abrirMsg = document.getElementById('abrir-mensaje');
+    if (whatsapp) whatsapp.addEventListener('click', function() { pushEvent('whatsapp_click'); }, true);
+    if (email) email.addEventListener('click', function() { pushEvent('email_click'); }, true);
+    if (abrirMsg) abrirMsg.addEventListener('click', function() { pushEvent('mensaje_modal_open'); }, true);
+  })();
+  (function() {
+    var lens = document.getElementById('zoom-lens');
+    var ZOOM = 4;
+    var LENS_SIZE = 320;
+    var LENS_HALF = LENS_SIZE / 2;
+    function isVisibleSlideImg(img) {
+      var slide = img && img.closest && img.closest('.modal-37-slide');
+      return slide && !slide.classList.contains('opacity-0');
+    }
+    function updateLens(img, clientX, clientY) {
+      if (!img || !lens || !img.classList.contains('zoomable-img')) return;
+      if (img.closest && img.closest('.modal-37-slide') && !isVisibleSlideImg(img)) return;
+      var rect = img.getBoundingClientRect();
+      var relX = clientX - rect.left;
+      var relY = clientY - rect.top;
+      if (relX < 0 || relX > rect.width || relY < 0 || relY > rect.height) { lens.classList.remove('visible'); return; }
+      var zoom = parseInt(img.getAttribute('data-zoom') || '5', 10) || 5;
+      var w = rect.width * zoom;
+      var h = rect.height * zoom;
+      var posX = -(relX * zoom - LENS_HALF);
+      var posY = -(relY * zoom - LENS_HALF);
+      lens.style.left = (clientX - LENS_HALF) + 'px';
+      lens.style.top = (clientY - LENS_HALF) + 'px';
+      lens.style.backgroundImage = 'url(' + (img.currentSrc || img.src) + ')';
+      lens.style.backgroundSize = w + 'px ' + h + 'px';
+      lens.style.backgroundPosition = posX + 'px ' + posY + 'px';
+      lens.classList.add('visible');
+    }
+    function onZoomMove(e) {
+      updateLens(e.currentTarget, e.clientX, e.clientY);
+    }
+    function onZoomTouch(e) {
+      if (!e.touches || !e.touches.length) return;
+      var t = e.touches[0];
+      var img = e.currentTarget;
+      updateLens(img, t.clientX, t.clientY);
+      e.preventDefault();
+    }
+    function onZoomLeave() { if (lens) lens.classList.remove('visible'); }
+    document.querySelectorAll('.zoomable-img').forEach(function(img) {
+      img.addEventListener('mousemove', onZoomMove);
+      img.addEventListener('mouseleave', onZoomLeave);
+      img.addEventListener('touchstart', onZoomTouch, { passive: false });
+      img.addEventListener('touchmove', onZoomTouch, { passive: false });
+      img.addEventListener('touchend', onZoomLeave);
+      img.addEventListener('touchcancel', onZoomLeave);
+    });
+  })();
+  (function() {
+    var el = document.getElementById('scroll-indicator');
+    var UMBRAL_SCROLL = 120;
+    var ANCHO_ANCHO = 769;
+    function actualizarFlecha() {
+      if (!el) return;
+      if (window.innerWidth >= ANCHO_ANCHO) {
+        el.classList.add('oculto');
+        return;
+      }
+      if (window.scrollY > UMBRAL_SCROLL) el.classList.add('oculto');
+      else el.classList.remove('oculto');
+    }
+    window.addEventListener('scroll', actualizarFlecha, { passive: true });
+    window.addEventListener('resize', actualizarFlecha);
+    actualizarFlecha();
+  })();
+</script>
+</body></html>

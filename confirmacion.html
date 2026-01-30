@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Confirmación - Compra Exitosa</title>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#C8A060', // Golden accent
+                        surface: '#1A1814', // Dark background for the card
+                        onSurface: '#F5EFE6', // Light text color
+                        onSurfaceMuted: '#B8AF9E', // Muted text color for secondary info
+                        success: '#82A372', // Green for success icon background
+                        successContent: '#1A1814', // Dark text on success background
+                        surfaceVariant: '#2D2923', // Darker variant for details section
+                        error: '#B00020', // Error color for icons or text
+                        errorContainer: '#4E2121', // Background for error messages
+                    },
+                    fontFamily: {
+                        display: ["Libre Baskerville", "serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0px", // Sharp edges for the kafkian style
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            background-image: url('img/FONDOS/2.png');
+            background-size: 100% auto;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #1A1814;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-onSurface font-body">
+<div class="flex flex-col min-h-screen">
+<header class="py-6 px-4 sm:px-6 lg:px-8 absolute top-0 left-0 w-full z-10">
+<div class="max-w-7xl mx-auto">
+<a aria-label="Volver a la página de inicio" class="inline-block" href="Index.html">
+<div class="font-display text-lg font-bold tracking-wider text-onSurface">EL GORILA DE</div>
+<div class="font-display text-xl font-bold tracking-widest text-onSurface">FRANZKAFKA</div>
+</a>
+</div>
+</header>
+<main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 pt-28 pb-10">
+<div class="bg-surface/80 backdrop-blur-sm shadow-2xl p-8 sm:p-12 w-full max-w-2xl mx-auto border border-primary/20" id="contenedor-pago">
+<h1 class="font-display text-3xl sm:text-4xl font-bold text-onSurface mb-6 text-center">Confirmar y Pagar</h1>
+
+<!-- Resumen de Compra -->
+<div class="bg-surfaceVariant p-6 mb-6 space-y-4">
+<h3 class="text-lg font-bold text-onSurface mb-4">Resumen de Compra</h3>
+<div class="flex justify-between items-center border-b border-onSurface/20 pb-2">
+<span class="text-sm text-onSurfaceMuted">Función:</span>
+<span class="font-bold text-sm text-onSurface" id="confirmacion-funcion">Cargando...</span>
+</div>
+<div class="flex justify-between items-center pt-2 pb-2 border-b border-onSurface/20">
+<span class="text-sm text-onSurfaceMuted">Boletos:</span>
+<span class="font-bold text-sm text-onSurface" id="confirmacion-cantidad">0</span>
+</div>
+<div class="flex justify-between items-center pt-2 pb-2 border-b border-onSurface/20">
+<span class="text-sm text-onSurfaceMuted">Subtotal:</span>
+<span class="font-bold text-sm text-onSurface" id="confirmacion-subtotal">$0.00</span>
+</div>
+<div id="confirmacion-descuento-container" class="flex justify-between items-center pt-2 pb-2 border-b border-onSurface/20 hidden">
+<span class="text-sm text-onSurfaceMuted">Descuento:</span>
+<span class="font-bold text-sm text-green-400" id="confirmacion-descuento">-$0.00</span>
+</div>
+<div class="flex justify-between items-center pt-4">
+<span class="text-lg font-bold text-onSurface">Total:</span>
+<span class="text-xl font-bold text-primary" id="confirmacion-total">$0.00 MXN</span>
+</div>
+</div>
+
+<!-- Formulario de Email -->
+<div class="mb-6">
+<label for="email-input" class="block text-sm font-semibold text-onSurface mb-2">Correo Electrónico *</label>
+<input type="email" id="email-input" required placeholder="tu@email.com" class="w-full px-4 py-3 bg-surfaceVariant border border-onSurface/20 rounded text-onSurface placeholder-onSurfaceMuted focus:outline-none focus:border-primary">
+<p class="text-xs text-onSurfaceMuted mt-1">Te enviaremos tus boletos a este correo</p>
+</div>
+
+<!-- Botón de Pago -->
+<button id="btn-pagar" type="button" onclick="procesarPago()" class="w-full bg-primary text-surface font-bold py-4 hover:bg-opacity-90 transition-colors duration-300 mb-4">
+    Pagar con Boletia
+</button>
+
+<div class="text-center">
+<p class="text-xs text-onSurfaceMuted">Al continuar, aceptas nuestros Términos y Condiciones y Política de Privacidad.</p>
+</div>
+</div>
+
+<!-- Sección de Confirmación (oculta inicialmente) -->
+<div class="bg-surface/80 backdrop-blur-sm shadow-2xl p-8 sm:p-12 w-full max-w-2xl mx-auto border border-primary/20 hidden" id="contenedor-exito">
+<div class="flex flex-col items-center text-center">
+<div class="bg-success rounded-full p-3 mb-6">
+<span class="material-symbols-outlined text-4xl text-successContent">done</span>
+</div>
+<h1 class="font-display text-4xl sm:text-5xl font-bold text-onSurface">¡Compra Exitosa!</h1>
+<p class="mt-4 text-sm sm:text-base text-onSurfaceMuted max-w-md">Hemos enviado la confirmación y tus boletos digitales al correo electrónico que nos proporcionaste.</p>
+</div>
+<div class="bg-surfaceVariant p-6 my-8 space-y-4">
+<div class="flex justify-between items-center border-b border-onSurface/20 pb-4">
+<span class="text-sm text-onSurfaceMuted">Correo electrónico:</span>
+<span class="font-bold text-sm text-onSurface" id="confirmacion-email-final">-</span>
+</div>
+<div class="flex justify-between items-center pt-2 pb-4 border-b border-onSurface/20">
+<span class="text-sm text-onSurfaceMuted">Número de orden:</span>
+<span class="font-bold text-sm text-onSurface" id="confirmacion-orden-final">-</span>
+</div>
+<div class="flex justify-between items-center pt-2">
+<span class="text-sm text-onSurfaceMuted">Boletos comprados:</span>
+<span class="font-bold text-sm text-onSurface" id="confirmacion-cantidad-final">-</span>
+</div>
+</div>
+<div class="bg-primary/10 border border-primary/30 rounded-lg p-6 mb-8 hidden" id="certificado-info">
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-primary text-3xl">verified</span>
+<div class="flex-grow">
+<h3 class="font-display text-xl font-bold text-onSurface mb-2">Certificado Digital Único</h3>
+<p class="text-sm text-onSurfaceMuted mb-4">Cada boleto incluye un certificado digital único con código QR para verificación. Los certificados han sido enviados a tu correo electrónico.</p>
+<div class="flex flex-wrap gap-2" id="certificados-lista">
+<!-- Los certificados se generarán aquí -->
+</div>
+</div>
+</div>
+</div>
+<div class="text-center mb-8">
+<h2 class="font-display text-2xl font-bold text-onSurface">Siguientes Pasos</h2>
+</div>
+<ul class="space-y-6 mb-8">
+<li class="flex items-start space-x-4">
+<span class="material-symbols-outlined text-primary mt-1">mail</span>
+<p class="text-sm sm:text-base text-onSurfaceMuted">Revisa tu bandeja de entrada. Si no lo encuentras, busca en la carpeta de correo no deseado.</p>
+</li>
+<li class="flex items-start space-x-4">
+<span class="material-symbols-outlined text-primary mt-1">qr_code_2</span>
+<p class="text-sm sm:text-base text-onSurfaceMuted">Guarda tus boletos. Encontrarás un código QR único para cada entrada.</p>
+</li>
+<li class="flex items-start space-x-4">
+<span class="material-symbols-outlined text-primary mt-1">confirmation_number</span>
+<p class="text-sm sm:text-base text-onSurfaceMuted">Presenta el código QR en la entrada del teatro el día de la función. ¡Disfruta del espectáculo!</p>
+</li>
+</ul>
+<div class="mt-10">
+<a class="block w-full text-center bg-primary text-surface font-bold py-4 hover:bg-opacity-90 transition-colors duration-300" href="Index.html">
+                        Volver al Inicio
+                    </a>
+</div>
+</div>
+</main>
+<footer class="bg-surface/80 backdrop-blur-sm py-8 px-4 sm:px-6 lg:px-8 border-t border-primary/20">
+<div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-6">
+<div class="text-sm text-onSurfaceMuted">
+<p>El Gorila de Franzkafka © 2024</p>
+<p>Una producción de Teatro Inmersivo S.A.</p>
+</div>
+<nav class="flex gap-x-6 gap-y-4 justify-center items-center flex-wrap">
+<a class="flex items-center gap-1.5 text-sm text-onSurface hover:text-primary transition-colors duration-300" href="Index.html#contacto">
+<span class="material-symbols-outlined text-lg">mail</span>
+                        Contacto
+                    </a>
+<a class="flex items-center gap-1.5 text-sm text-onSurface hover:text-primary transition-colors duration-300" href="Index.html#faq">
+<span class="material-symbols-outlined text-lg">help</span>
+                        Preguntas Frecuentes
+                    </a>
+</nav>
+</div>
+</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="js/inventario.js"></script>
+<script src="js/imagenes.js"></script>
+<script src="js/certificado.js"></script>
+<script src="js/confirmacion.js"></script>
+</body></html>

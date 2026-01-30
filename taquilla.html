@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="Taquilla: venta de boletos y códigos de ingreso para El Gorila de Franz Kafka."/>
+    <title>Taquilla - El Gorila de Franz Kafka</title>
+    <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#b89025",
+                        'brand-garnet': '#800020',
+                        'brand-mustard': '#c8a951',
+                        'brand-cream': '#fdf8ef'
+                    },
+                    fontFamily: {
+                        display: ["Cormorant Garamond", "serif"],
+                        sans: ["Work Sans", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Work Sans', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Cormorant Garamond', serif;
+        }
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <header class="bg-black/60 backdrop-blur-sm border-b border-white/10 sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-display font-bold text-primary">Taquilla</h1>
+                    <a href="admin.html" class="text-white/70 hover:text-white text-sm" aria-label="Volver al panel de administración">← Volver al Panel</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Disponibilidad por Función -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-display font-bold text-gray-800 mb-6">Disponibilidad por Función</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="disponibilidad-fechas">
+                    <!-- Se llenará con JavaScript -->
+                </div>
+            </div>
+
+            <!-- Generar Código de Ingreso para Efectivo -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-display font-bold text-gray-800 mb-6">Venta en Efectivo</h2>
+                <form id="form-efectivo" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Función</label>
+                            <select id="fecha-efectivo" required class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                                <option value="">Seleccione una función</option>
+                                <option value="viernes">Viernes 20 Oct - 20:30 hrs</option>
+                                <option value="sabado">Sábado 21 Oct - 19:00 hrs</option>
+                                <option value="domingo">Domingo 22 Oct - Agotada</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Cantidad de Boletos</label>
+                            <input type="number" id="cantidad-efectivo" min="1" max="10" required class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-primary" placeholder="1-10">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                <input type="checkbox" id="discapacidad-efectivo" class="rounded">
+                                Persona con discapacidad
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Acompañantes</label>
+                            <input type="number" id="acompanantes-efectivo" min="0" max="5" value="0" class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-primary">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Notas (opcional)</label>
+                        <textarea id="notas-efectivo" rows="2" class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-primary" placeholder="Notas adicionales..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="w-full md:w-auto px-8 py-3 bg-gradient-to-br from-[#4a0010] to-[#800020] text-[#ffdf80] font-bold rounded-lg hover:from-[#66001a] hover:to-[#990026] transition-all duration-300">
+                        <span class="material-symbols-outlined align-middle">confirmation_number</span>
+                        Generar Código de Ingreso
+                    </button>
+                </form>
+            </div>
+
+            <!-- Código Generado -->
+            <div id="codigo-generado" class="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 mb-6 hidden">
+                <h3 class="text-xl font-display font-bold text-gray-800 mb-4">Código de Ingreso Generado</h3>
+                <div class="bg-gray-50 border-2 border-primary rounded-lg p-6 text-center">
+                    <div id="qr-codigo-efectivo" class="mb-4 flex justify-center"></div>
+                    <p class="text-2xl font-mono font-bold text-gray-800 mb-2" id="codigo-texto">-</p>
+                    <p class="text-sm text-gray-600 mb-4" id="codigo-info">-</p>
+                    <button onclick="copiarCodigo()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                        <span class="material-symbols-outlined align-middle text-sm">content_copy</span>
+                        Copiar Código
+                    </button>
+                </div>
+            </div>
+
+            <!-- Boletos en Efectivo Generados Hoy -->
+            <div class="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-display font-bold text-gray-800 mb-6">Boletos en Efectivo (Hoy)</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-gray-300">
+                                <th class="pb-3 text-gray-700 font-semibold">Código</th>
+                                <th class="pb-3 text-gray-700 font-semibold">Función</th>
+                                <th class="pb-3 text-gray-700 font-semibold">Cantidad</th>
+                                <th class="pb-3 text-gray-700 font-semibold">Estado</th>
+                                <th class="pb-3 text-gray-700 font-semibold">Info</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-efectivo">
+                            <!-- Se llenará con JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script src="js/inventario.js"></script>
+<script src="js/fechas.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/taquilla.js"></script>
+<script src="js/taquilla-ui.js"></script>
+</body>
+</html>

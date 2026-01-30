@@ -1,0 +1,12 @@
+{
+  "name": "elgorila-boletaje",
+  "private": true,
+  "description": "Scripts de optimización de imágenes para EL GORILA",
+  "scripts": {
+    "audit-images": "node scripts/audit-images.js",
+    "optimize-images": "node scripts/optimize-images.js"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
+  }
+}

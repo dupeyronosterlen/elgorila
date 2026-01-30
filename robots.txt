@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Sitemap (cuando lo tengas, descomenta y ajusta la URL)
+# Sitemap: https://elgorilateatro.com.mx/sitemap.xml

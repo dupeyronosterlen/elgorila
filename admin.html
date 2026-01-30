@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="description" content="Panel de administración: ventas, inventario, usuarios y configuración del sitio El Gorila."/>
+    <title>Panel de Administración - El Gorila de Franzkafka</title>
+    <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#A97C22",
+                        "background-dark": "#1F1A12",
+                        "surface-dark": "#312A22",
+                        "text-dark": "#EAE0D1",
+                        "accent-gold": "#D4AF37",
+                    },
+                    fontFamily: {
+                        display: ["Cinzel", "serif"],
+                        body: ["Lato", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            background-image: url('img/FONDOS/1.png');
+            background-size: 100% auto;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        html { scroll-behavior: smooth; }
+        #admin-nav {
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+        #admin-nav .admin-nav-link { white-space: nowrap; }
+        .admin-section { display: block; }
+        .logo-home-flotante {
+            position: fixed;
+            top: 0.75rem;
+            left: 0.75rem;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            padding: 0.25rem;
+            background: rgba(31, 26, 18, 0.9);
+            border: 1px solid rgba(169, 124, 34, 0.3);
+            border-radius: 0.375rem;
+            transition: opacity 0.2s, border-color 0.2s;
+        }
+        .logo-home-flotante:hover { opacity: 0.95; border-color: rgba(169, 124, 34, 0.6); }
+        .logo-home-flotante img { height: 2rem; width: auto; max-width: 100px; object-fit: contain; }
+        #detalles-enlaces-contacto summary::-webkit-details-marker { display: none; }
+        #detalles-enlaces-contacto summary::marker { display: none; }
+    </style>
+</head>
+<body class="font-body bg-background-dark text-text-dark min-h-screen">
+    <a href="Index.html" class="logo-home-flotante" aria-label="Ir a la página principal">
+        <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" loading="lazy" decoding="async"/>
+    </a>
+    <!-- Pantalla de Login -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-surface-dark/90 backdrop-blur-sm p-8 rounded-lg border border-primary/30 max-w-md w-full mx-4">
+            <h2 class="text-3xl font-display font-bold text-primary mb-2 text-center">Acceso al Sistema</h2>
+            <div class="space-y-4 mt-6">
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Usuario ID</label>
+                    <input type="text" id="usuario-input" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="admin, gerente, taquilla1, etc." autocomplete="username">
+                </div>
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Contraseña</label>
+                    <input type="password" id="password-input" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="Ingresa la contraseña" autocomplete="current-password">
+                </div>
+                <button type="button" onclick="verificarAcceso()" class="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold py-2 px-4 rounded transition-colors" aria-label="Iniciar sesión en el panel">
+                    Acceder
+                </button>
+                <div id="error-login" class="hidden bg-red-900/30 border border-red-800/50 text-red-300 p-3 rounded text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Principal (oculto inicialmente) -->
+    <div id="admin-panel" class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-display font-bold text-primary mb-2">Panel de Administración</h1>
+                    <p class="text-text-dark/70">El Gorila de Franzkafka</p>
+                    <p class="text-sm text-text-dark/60 mt-1">
+                        Usuario: <span id="usuario-actual" class="text-accent-gold font-semibold">-</span> | 
+                        Rol: <span id="rol-actual" class="text-accent-gold font-semibold">-</span>
+                    </p>
+                </div>
+                <div class="flex gap-3 flex-wrap">
+                    <a href="taquilla.html" id="link-taquilla" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm hidden">
+                        <span class="material-symbols-outlined align-middle text-sm">confirmation_number</span>
+                        Taquilla
+                    </a>
+                    <a href="acomodadores.html" id="link-acomodadores" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm hidden">
+                        <span class="material-symbols-outlined align-middle text-sm">qr_code_scanner</span>
+                        Acomodadores
+                    </a>
+                    <button type="button" onclick="cerrarSesion()" class="px-4 py-2 bg-red-900/30 hover:bg-red-900/40 text-red-300 rounded-sm transition-colors border border-red-800/30 text-sm" aria-label="Cerrar sesión">
+                        Cerrar Sesión
+                    </button>
+                    <button type="button" id="btn-mi-cuenta" class="hidden px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm" onclick="mostrarFormularioUsuario(AuthManager.obtenerUsuarioActual().usuarioId)">
+                        Cambiar mi contraseña
+                    </button>
+                    <button type="button" onclick="window.open('Index.html', '_blank')" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm" aria-label="Abrir página principal en nueva pestaña">
+                        Ver sitio
+                    </button>
+                    <a href="Index.html" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30" aria-label="Volver a la página principal del sitio">
+                        Volver al sitio
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menú de navegación por secciones (desplazable lateralmente) -->
+        <nav id="admin-nav" class="sticky top-0 z-40 -mx-4 px-4 py-3 mb-6 bg-background-dark/95 backdrop-blur border-b border-primary/20 flex gap-2 justify-start md:justify-center">
+            <a href="#seccion-config" data-section="seccion-config" class="admin-nav-link hidden px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">1. Configuración</a>
+            <a href="#seccion-resumen" data-section="seccion-resumen" class="admin-nav-link px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">2. Resumen</a>
+            <a href="#actividad-landing" data-section="actividad-landing" class="admin-nav-link px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">3. Actividad</a>
+            <a href="#seccion-mensajes" data-section="seccion-mensajes" class="admin-nav-link hidden px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">4. Mensajes</a>
+            <a href="#seccion-inventario" data-section="seccion-inventario" class="admin-nav-link px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">5. Inventario</a>
+            <a href="#seccion-ventas" data-section="seccion-ventas" class="admin-nav-link px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">6. Ventas</a>
+            <a href="#acciones-admin" data-section="acciones-admin" class="admin-nav-link hidden px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">7. Acciones</a>
+            <a href="#mi-cuenta-block" data-section="mi-cuenta-block" class="admin-nav-link hidden px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">8. Mi cuenta</a>
+            <a href="#gestion-usuarios" data-section="gestion-usuarios" class="admin-nav-link hidden px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">9. Usuarios</a>
+            <a href="#gestion-funciones" data-section="gestion-funciones" class="admin-nav-link hidden px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">10. Funciones</a>
+            <a href="#auditoria" data-section="auditoria" class="admin-nav-link hidden px-3 py-1.5 rounded text-sm text-text-dark/80 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-colors">11. Auditoría</a>
+        </nav>
+
+        <!-- 1. Configuración del sitio (Admin/Gerente) -->
+        <section id="seccion-config" class="admin-section scroll-mt-24 mb-8 hidden">
+            <div id="bloque-config-sitio" class="mb-8">
+                <h2 class="text-xl font-display font-bold text-primary mb-1 border-b border-primary/30 pb-2">1. Configuración del sitio</h2>
+                <p class="text-text-dark/60 text-sm mb-4">Enlaces y mensajes que verán en la página principal. Configura aquí y no tendrás que tocar nada más para subir.</p>
+            </div>
+            <div id="config-url-venta" class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-6">
+            <h3 class="text-lg font-display font-bold text-primary mb-2">1.1 Botones de compra</h3>
+            <p class="text-text-dark/70 text-sm mb-4">Elige si los botones «Adquiere tus entradas», «Comprar en la Carpa Geodésica» y «Preventa con descuento» llevan a un enlace o abren una ventana con un mensaje.</p>
+            <div class="space-y-4 mb-4">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="venta-modo" value="url" id="venta-modo-url" class="rounded border-primary/50 text-primary focus:ring-primary">
+                        <span class="text-text-dark/90">Enlace externo (URL)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="venta-modo" value="mensaje" id="venta-modo-mensaje" class="rounded border-primary/50 text-primary focus:ring-primary">
+                        <span class="text-text-dark/90">Ventana con mensaje</span>
+                    </label>
+                </div>
+                <div id="bloque-url-venta" class="space-y-2">
+                    <label class="block text-text-dark/70 text-sm">URL (Carpa Geodésica o taquilla). Vacío = sección en la misma página.</label>
+                    <input type="url" id="input-url-venta" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary placeholder-text-dark/50" placeholder="https://...">
+                </div>
+                <div id="bloque-mensaje-venta" class="space-y-2 hidden">
+                    <label class="block text-text-dark/70 text-sm">Mensaje que verán al hacer clic en los botones de compra</label>
+                    <textarea id="input-mensaje-venta" rows="6" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary placeholder-text-dark/50 resize-y" placeholder="Escribe aquí la información de venta (horarios, enlaces, avisos...). Los saltos de línea se respetarán."></textarea>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button type="button" onclick="guardarUrlVenta()" class="px-4 py-2 bg-primary hover:bg-primary/90 text-background-dark font-bold rounded transition-colors text-sm">Guardar</button>
+                <span class="text-text-dark/50 text-xs" id="url-venta-guardada">—</span>
+            </div>
+            </div>
+            <details class="bg-surface-dark/80 backdrop-blur-sm rounded-sm border border-primary/20 mb-6" id="detalles-enlaces-contacto">
+                <summary class="cursor-pointer p-4 text-lg font-display font-bold text-primary hover:bg-primary/5 rounded-t-sm list-none flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-xl">link</span>
+                    1.2–1.5 Enlaces de contacto
+                </summary>
+                <div class="px-6 pb-6 pt-0 space-y-6 border-t border-primary/10">
+            <div id="config-instagram" class="pt-4">
+                <h3 class="text-lg font-display font-bold text-primary mb-2">1.2 Instagram</h3>
+                <p class="text-text-dark/70 text-sm mb-4">URL del perfil que aparece en la sección de contacto. Por defecto: <strong>elgorilateatro</strong>. Si dejas vacío, se usa ese.</p>
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-text-dark/70 mb-1 text-sm">URL de Instagram</label>
+                        <input type="url" id="input-instagram" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary placeholder-text-dark/50" placeholder="https://www.instagram.com/elgorilateatro/">
+                    </div>
+                    <button type="button" onclick="guardarInstagram()" class="px-4 py-2 bg-primary hover:bg-primary/90 text-background-dark font-bold rounded transition-colors text-sm">Guardar</button>
+                </div>
+                <p class="text-text-dark/50 text-xs mt-2" id="instagram-guardada">—</p>
+            </div>
+            <div id="config-musica">
+                <h3 class="text-lg font-display font-bold text-primary mb-2">1.3 Música</h3>
+                <p class="text-text-dark/70 text-sm mb-4">Enlace que aparece en la sección de contacto como «Música». Si dejas la URL vacía, el enlace no se muestra en la página.</p>
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-text-dark/70 mb-1 text-sm">URL de Música</label>
+                        <input type="url" id="input-musica" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary placeholder-text-dark/50" placeholder="https://... (Spotify, Bandcamp, etc.)">
+                    </div>
+                    <button type="button" onclick="guardarMusica()" class="px-4 py-2 bg-primary hover:bg-primary/90 text-background-dark font-bold rounded transition-colors text-sm">Guardar</button>
+                </div>
+                <p class="text-text-dark/50 text-xs mt-2" id="musica-guardada">—</p>
+            </div>
+            <div id="config-whatsapp">
+                <h3 class="text-lg font-display font-bold text-primary mb-2">1.4 WhatsApp</h3>
+                <p class="text-text-dark/70 text-sm mb-4">Número que aparece en la sección de contacto (enlace a WhatsApp). Código de país + número, sin + (ej. 5215512037223). Si dejas vacío, se usa 5215512037223.</p>
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-text-dark/70 mb-1 text-sm">Número WhatsApp</label>
+                        <input type="text" id="input-whatsapp" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary placeholder-text-dark/50" placeholder="5215512037223">
+                    </div>
+                    <button type="button" onclick="guardarWhatsApp()" class="px-4 py-2 bg-primary hover:bg-primary/90 text-background-dark font-bold rounded transition-colors text-sm">Guardar</button>
+                </div>
+                <p class="text-text-dark/50 text-xs mt-2" id="whatsapp-guardada">—</p>
+            </div>
+            <div id="config-email">
+                <h3 class="text-lg font-display font-bold text-primary mb-2">1.5 Email de contacto</h3>
+                <p class="text-text-dark/70 text-sm mb-4">Correo que aparece en contacto, FAQ y footer. Si dejas vacío, se usa info@elgorilateatro.com.mx.</p>
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-text-dark/70 mb-1 text-sm">Email</label>
+                        <input type="email" id="input-email" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary placeholder-text-dark/50" placeholder="info@elgorilateatro.com.mx">
+                    </div>
+                    <button type="button" onclick="guardarEmail()" class="px-4 py-2 bg-primary hover:bg-primary/90 text-background-dark font-bold rounded transition-colors text-sm">Guardar</button>
+                </div>
+                <p class="text-text-dark/50 text-xs mt-2" id="email-guardada">—</p>
+            </div>
+                </div>
+            </details>
+            <div id="config-admin-footer" class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8">
+                <h3 class="text-lg font-display font-bold text-primary mb-2">1.6 Enlace Administrador en el footer</h3>
+                <p class="text-text-dark/70 text-sm mb-4">Si está marcado, en el footer de la página principal se muestra el enlace «Administrador». Desmarca para ocultarlo en producción.</p>
+                <label class="flex items-center gap-2 cursor-pointer mb-3">
+                    <input type="checkbox" id="input-mostrar-admin-footer" class="rounded border-primary/50 text-primary focus:ring-primary">
+                    <span class="text-text-dark/90">Mostrar enlace a Administrador en el footer</span>
+                </label>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="button" onclick="guardarAdminFooter()" class="px-4 py-2 bg-primary hover:bg-primary/90 text-background-dark font-bold rounded transition-colors text-sm">Guardar</button>
+                    <span class="text-text-dark/50 text-xs" id="admin-footer-guardada">—</span>
+                </div>
+            </div>
+            <div id="config-sinopsis" class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8">
+                <h3 class="text-lg font-display font-bold text-primary mb-2">1.7 Sinopsis</h3>
+                <p class="text-text-dark/70 text-sm mb-4">Texto que se muestra en la sección Sinopsis de la página principal. Si dejas vacío, se mantiene el texto por defecto.</p>
+                <textarea id="input-sinopsis" rows="8" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary placeholder-text-dark/50 resize-y" placeholder="Texto de la sinopsis..."></textarea>
+                <div class="flex flex-wrap items-center gap-3 mt-3">
+                    <button type="button" onclick="guardarSinopsis()" class="px-4 py-2 bg-primary hover:bg-primary/90 text-background-dark font-bold rounded transition-colors text-sm">Guardar</button>
+                    <span class="text-text-dark/50 text-xs" id="sinopsis-guardada">—</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Mensajes de contacto (Admin/Gerente) -->
+        <section id="seccion-mensajes" class="admin-section scroll-mt-24 mb-8 hidden">
+            <h2 class="text-2xl font-display font-bold text-primary mb-1 border-b border-primary/30 pb-2">4. Mensajes de contacto</h2>
+            <p class="text-text-dark/60 text-sm mb-4">Mensajes enviados desde el formulario «Dejar un mensaje» en la página principal. Se guardan en este navegador; para recibir mensajes de todos los visitantes necesitarás un servidor o un servicio de formularios (p. ej. Formspree).</p>
+            <div id="mensajes-list" class="space-y-4">
+                <p class="text-text-dark/50 text-sm" id="mensajes-vacio">No hay mensajes.</p>
+            </div>
+        </section>
+
+        <!-- 2. Resumen -->
+        <section id="seccion-resumen" class="admin-section scroll-mt-24 mb-8">
+            <h2 class="text-2xl font-display font-bold text-primary mb-6">2. Resumen</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Tarjeta: Total Vendido -->
+            <div class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-text-dark">Total Vendido</h3>
+                    <span class="material-symbols-outlined text-primary text-3xl">payments</span>
+                </div>
+                <p class="text-3xl font-bold text-primary" id="total-vendido">$0.00 MXN</p>
+                <p class="text-sm text-text-dark/60 mt-2" id="total-boletos-vendidos">0 boletos vendidos</p>
+            </div>
+
+            <!-- Tarjeta: Disponibilidad -->
+            <div class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-text-dark">Disponibilidad</h3>
+                    <span class="material-symbols-outlined text-primary text-3xl">event_seat</span>
+                </div>
+                <p class="text-3xl font-bold text-text-dark" id="total-disponible">0</p>
+                <p class="text-sm text-text-dark/60 mt-2">boletos disponibles</p>
+            </div>
+
+            <!-- Tarjeta: Reservas Activas -->
+            <div class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-text-dark">Reservas Activas</h3>
+                    <span class="material-symbols-outlined text-primary text-3xl">schedule</span>
+                </div>
+                <p class="text-3xl font-bold text-text-dark" id="reservas-activas">0</p>
+                <p class="text-sm text-text-dark/60 mt-2">reservas temporales</p>
+            </div>
+            </div>
+        </section>
+
+        <!-- 3. Actividad del sitio -->
+        <section id="actividad-landing" class="admin-section bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 scroll-mt-24">
+            <h2 class="text-2xl font-display font-bold text-primary mb-4">3. Actividad del sitio</h2>
+            <p class="text-text-dark/70 text-sm mb-4">Visitas y clics en la página principal (Index). Datos en este navegador.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div class="border border-primary/20 rounded p-3">
+                    <p class="text-text-dark/60 text-xs uppercase tracking-wide">Visitas (7 días)</p>
+                    <p class="text-2xl font-bold text-primary" id="metric-visits-7">0</p>
+                </div>
+                <div class="border border-primary/20 rounded p-3">
+                    <p class="text-text-dark/60 text-xs uppercase tracking-wide">Clics WhatsApp</p>
+                    <p class="text-2xl font-bold text-primary" id="metric-whatsapp">0</p>
+                </div>
+                <div class="border border-primary/20 rounded p-3">
+                    <p class="text-text-dark/60 text-xs uppercase tracking-wide">Clics Email</p>
+                    <p class="text-2xl font-bold text-primary" id="metric-email">0</p>
+                </div>
+                <div class="border border-primary/20 rounded p-3">
+                    <p class="text-text-dark/60 text-xs uppercase tracking-wide">Modal &quot;Dejar mensaje&quot;</p>
+                    <p class="text-2xl font-bold text-primary" id="metric-mensaje">0</p>
+                </div>
+            </div>
+            <details class="text-sm">
+                <summary class="cursor-pointer text-text-dark/80 hover:text-primary">Ver últimos eventos</summary>
+                <pre id="metric-events-list" class="mt-2 p-3 bg-background-dark/50 rounded text-text-dark/80 text-xs overflow-auto max-h-40">—</pre>
+            </details>
+        </section>
+
+        <!-- 5. Inventario por Función -->
+        <section id="seccion-inventario" class="admin-section bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 scroll-mt-24">
+            <h2 class="text-2xl font-display font-bold text-primary mb-6">5. Inventario por Función</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="inventario-fechas">
+                <!-- Se llenará con JavaScript -->
+            </div>
+        </section>
+
+        <!-- 6. Ventas Recientes -->
+        <section id="seccion-ventas" class="admin-section bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 scroll-mt-24">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-primary">6. Ventas Recientes</h2>
+                <button onclick="exportarDatos()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
+                    Exportar Datos
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-primary/20">
+                            <th class="pb-3 text-text-dark/70 font-semibold">Orden</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Fecha</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Función</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Cantidad</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Total</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-ventas">
+                        <!-- Se llenará con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 7. Acciones de Administración -->
+        <section id="acciones-admin" class="admin-section bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 hidden scroll-mt-24">
+            <h2 class="text-2xl font-display font-bold text-primary mb-6">7. Acciones de Administración</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onclick="resetearInventario()" id="btn-resetear" class="px-6 py-3 bg-red-900/30 hover:bg-red-900/40 text-red-300 rounded-sm transition-colors border border-red-800/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Resetear Inventario
+                </button>
+                <button onclick="limpiarReservas()" id="btn-limpiar-reservas" class="px-6 py-3 bg-yellow-900/30 hover:bg-yellow-900/40 text-yellow-300 rounded-sm transition-colors border border-yellow-800/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Limpiar Reservas Expiradas
+                </button>
+                <button onclick="limpiarVentas()" id="btn-limpiar-ventas" class="px-6 py-3 bg-orange-900/30 hover:bg-orange-900/40 text-orange-300 rounded-sm transition-colors border border-orange-800/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Limpiar Historial de Ventas
+                </button>
+                <button onclick="actualizarPanel()" class="px-6 py-3 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30">
+                    Actualizar Panel
+                </button>
+            </div>
+        </section>
+
+        <!-- 8. Mi cuenta -->
+        <section id="mi-cuenta-block" class="admin-section bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 hidden scroll-mt-24">
+            <h2 class="text-2xl font-display font-bold text-primary mb-4">8. Mi cuenta</h2>
+            <p class="text-text-dark/70 text-sm mb-4">Puedes cambiar tu nombre y contraseña.</p>
+            <button type="button" onclick="mostrarFormularioUsuario(AuthManager.obtenerUsuarioActual().usuarioId)" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
+                Cambiar mi contraseña
+            </button>
+        </section>
+
+        <!-- 9. Gestión de Usuarios -->
+        <section id="gestion-usuarios" class="admin-section bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 hidden scroll-mt-24">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-primary">9. Gestión de Usuarios</h2>
+                <button onclick="mostrarFormularioUsuario()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
+                    <span class="material-symbols-outlined align-middle text-lg">add</span>
+                    Nuevo Usuario
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-primary/20">
+                            <th class="pb-3 text-text-dark/70 font-semibold">ID</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Nombre</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Rol</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Estado</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Último Acceso</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-usuarios">
+                        <!-- Se llenará con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 10. Funciones Especiales (Viernes) -->
+        <section id="gestion-funciones" class="admin-section bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 hidden scroll-mt-24">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-primary">10. Funciones Especiales (Viernes)</h2>
+                <button onclick="mostrarFormularioFuncion()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
+                    <span class="material-symbols-outlined align-middle text-lg">add</span>
+                    Nueva Función Especial
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-primary/20">
+                            <th class="pb-3 text-text-dark/70 font-semibold">Nombre</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Fecha y Hora</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Estado</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-funciones-especiales">
+                        <!-- Se llenará con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 11. Registro de Auditoría -->
+        <section id="auditoria" class="admin-section bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 hidden scroll-mt-24">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-display font-bold text-primary">11. Registro de Auditoría</h2>
+                <button onclick="exportarAuditoria()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
+                    Exportar Auditoría
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-primary/20">
+                            <th class="pb-3 text-text-dark/70 font-semibold">Fecha</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Usuario</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Rol</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Acción</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold">Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-auditoria">
+                        <!-- Se llenará con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal para crear/editar función especial -->
+    <div id="modal-funcion" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-surface-dark p-8 rounded-lg border border-primary/30 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-display font-bold text-primary mb-6" id="modal-funcion-titulo">Nueva Función Especial</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Nombre de la Función</label>
+                    <input type="text" id="modal-funcion-nombre" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="Ej: Viernes 15 Nov">
+                </div>
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Fecha</label>
+                    <input type="date" id="modal-funcion-fecha" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-text-dark/70 mb-2">Hora</label>
+                        <input type="number" id="modal-funcion-hora" min="0" max="23" value="20" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-text-dark/70 mb-2">Minutos</label>
+                        <input type="number" id="modal-funcion-minutos" min="0" max="59" value="30" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="guardarFuncion()" class="flex-1 bg-primary hover:bg-primary/90 text-background-dark font-bold py-2 px-4 rounded transition-colors">
+                        Guardar
+                    </button>
+                    <button onclick="cerrarModalFuncion()" class="flex-1 bg-background-dark hover:bg-background-dark/80 text-text-dark font-bold py-2 px-4 rounded transition-colors border border-primary/30">
+                        Cancelar
+                    </button>
+                </div>
+                <div id="error-funcion" class="hidden bg-red-900/30 border border-red-800/50 text-red-300 p-3 rounded text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear/editar usuario -->
+    <div id="modal-usuario" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-surface-dark p-8 rounded-lg border border-primary/30 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-display font-bold text-primary mb-6" id="modal-titulo">Nuevo Usuario</h3>
+            <div class="space-y-4">
+                <div id="modal-usuario-id-row">
+                    <label class="block text-text-dark/70 mb-2">Usuario ID</label>
+                    <input type="text" id="modal-usuario-id" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="ej: taquilla2">
+                </div>
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Nombre</label>
+                    <input type="text" id="modal-usuario-nombre" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="Nombre completo">
+                </div>
+                <div id="modal-usuario-rol-row">
+                    <label class="block text-text-dark/70 mb-2">Rol</label>
+                    <select id="modal-usuario-rol" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary">
+                        <option value="taquilla">Taquilla</option>
+                        <option value="validacion">Validación QR</option>
+                        <option value="reclamos">Reclamos</option>
+                        <option value="admin">Administrador</option>
+                        <option value="gerente">Gerente</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-text-dark/70 mb-2">Contraseña</label>
+                    <input type="password" id="modal-usuario-password" class="w-full px-4 py-2 bg-background-dark border border-primary/30 rounded text-text-dark focus:outline-none focus:border-primary" placeholder="Nueva contraseña" autocomplete="new-password">
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="guardarUsuario()" class="flex-1 bg-primary hover:bg-primary/90 text-background-dark font-bold py-2 px-4 rounded transition-colors">
+                        Guardar
+                    </button>
+                    <button onclick="cerrarModalUsuario()" class="flex-1 bg-background-dark hover:bg-background-dark/80 text-text-dark font-bold py-2 px-4 rounded transition-colors border border-primary/30">
+                        Cancelar
+                    </button>
+                </div>
+                <div id="error-usuario" class="hidden bg-red-900/30 border border-red-800/50 text-red-300 p-3 rounded text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+<script src="js/inventario.js"></script>
+<script src="js/fechas.js"></script>
+<script src="js/imagenes.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
