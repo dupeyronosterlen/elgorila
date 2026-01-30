@@ -20,6 +20,31 @@
 <title>EL GORILA</title>
 <link rel="canonical" href="https://elgorilateatro.com.mx/"/>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
+<style id="loader-critical">
+  /* Pantalla de carga: crítica, sin Tailwind, se pinta al instante */
+  #loading-overlay {
+    position: fixed; inset: 0; background: #1a150e; z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem;
+    transition: opacity 0.35s ease-out;
+  }
+  #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .loader-title { color: #D4AF37; font-size: clamp(1.25rem, 4vw, 1.75rem); font-family: Georgia, serif; letter-spacing: 0.08em; }
+  .loader-gorila-run {
+    display: flex; align-items: flex-end; justify-content: center; gap: 0.35rem; height: 24px;
+  }
+  .loader-gorila-run span {
+    width: 8px; height: 8px; border-radius: 50%; background: #D4AF37;
+    animation: loader-step 0.5s ease-in-out infinite;
+  }
+  .loader-gorila-run span:nth-child(1) { animation-delay: 0s; }
+  .loader-gorila-run span:nth-child(2) { animation-delay: 0.12s; }
+  .loader-gorila-run span:nth-child(3) { animation-delay: 0.24s; }
+  .loader-gorila-run span:nth-child(4) { animation-delay: 0.36s; }
+  @keyframes loader-step {
+    0%, 100% { transform: scale(0.85); opacity: 0.6; }
+    50% { transform: scale(1.2); opacity: 1; }
+  }
+</style>
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography" defer></script>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -668,7 +693,10 @@
 <body class="font-body bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark antialiased" id="inicio">
 <a href="#main-content" class="skip-link">Saltar al contenido</a>
 <div class="loading-overlay" id="loading-overlay">
-<div class="text-accent-gold text-xl">Cargando...</div>
+  <span class="loader-title" aria-hidden="true">EL GORILA</span>
+  <div class="loader-gorila-run" aria-hidden="true" role="presentation">
+    <span></span><span></span><span></span><span></span>
+  </div>
 </div>
 <header class="header-gris fixed top-0 left-0 right-0 z-20 h-16 sm:h-20 md:h-[85px] flex items-center">
 <div class="mx-auto flex h-full w-full max-w-5xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
@@ -1623,19 +1651,22 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   })();
   (function() {
     var overlay = document.getElementById('loading-overlay');
+    var minShowMs = 600;
+    var shownAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    var done = false;
     function hideOverlay() {
-      if (overlay) {
+      if (!overlay || done) return;
+      done = true;
+      var elapsed = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - shownAt;
+      var wait = Math.max(0, minShowMs - elapsed);
+      setTimeout(function() {
         overlay.classList.add('hidden');
-        overlay.style.display = 'none';
-      }
+        setTimeout(function() { overlay.style.display = 'none'; }, 350);
+      }, wait);
     }
-    if (document.readyState === 'complete') {
-      hideOverlay();
-    } else {
-      window.addEventListener('load', function() {
-        requestAnimationFrame(hideOverlay);
-      });
-    }
+    document.addEventListener('DOMContentLoaded', hideOverlay);
+    if (document.readyState !== 'loading') hideOverlay();
+    else window.addEventListener('load', hideOverlay);
   })();
   (function() {
     var abrir = document.getElementById('abrir-mensaje');
