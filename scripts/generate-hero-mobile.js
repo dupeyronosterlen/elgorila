@@ -80,6 +80,21 @@ async function main() {
     console.log(name + '.webp:', formatBytes(before), '->', formatBytes(after));
   }
 
+  const modal37Dir = path.join(IMG_DIR, '37');
+  const modal37MobileDir = path.join(modal37Dir, 'mobile');
+  ensureDir(modal37MobileDir);
+  console.log('--- MODAL 37 (1-5) ---');
+  for (let i = 1; i <= 5; i++) {
+    const input = path.join(modal37Dir, i + '.png');
+    const output = path.join(modal37MobileDir, i + '.webp');
+    if (!fs.existsSync(input)) {
+      console.log('Saltar (no existe):', input);
+      continue;
+    }
+    const { before, after } = await generateWebP(input, output);
+    console.log(i + '.webp:', formatBytes(before), '->', formatBytes(after));
+  }
+
   console.log(DRY_RUN ? '(dry-run: no se escribieron archivos)' : 'Listo.');
 }
 
