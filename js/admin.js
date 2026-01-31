@@ -588,8 +588,8 @@ function cargarAdminFooter() {
     try { val = localStorage.getItem(ADMIN_FOOTER_KEY) || ''; } catch (e) {}
     var cb = document.getElementById('input-mostrar-admin-footer');
     var status = document.getElementById('admin-footer-guardada');
-    if (cb) cb.checked = (val === '1');
-    if (status) status.textContent = (val === '1') ? 'En la página se muestra el enlace Administrador.' : 'En la página el enlace Administrador está oculto.';
+    if (cb) cb.checked = (val !== '0');
+    if (status) status.textContent = (val === '0') ? 'En la página el enlace Administrador está oculto.' : 'En la página se muestra el enlace Administrador.';
 }
 
 function guardarAdminFooter() {
@@ -598,7 +598,7 @@ function guardarAdminFooter() {
     if (!cb) return;
     try {
         if (cb.checked) localStorage.setItem(ADMIN_FOOTER_KEY, '1');
-        else localStorage.removeItem(ADMIN_FOOTER_KEY);
+        else localStorage.setItem(ADMIN_FOOTER_KEY, '0');
     } catch (e) {
         if (status) status.textContent = 'Error al guardar.';
         return;

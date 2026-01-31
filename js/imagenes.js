@@ -127,28 +127,50 @@ function siguienteImagenGaleria(imgElement) {
     preload.src = src;
 }
 
+var galeriaMobileBreakpoint = 768;
+
 function setupGaleriaClic() {
     for (var i = 1; i <= 12; i++) {
         var el = document.getElementById('galeria-img-' + i);
-        if (el) {
-            el.style.cursor = 'pointer';
-            el.style.transition = 'opacity 0.2s ease';
-            el.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                siguienteImagenGaleria(this);
-            });
-        }
+        if (!el) continue;
+        el.style.cursor = 'pointer';
+        el.style.transition = 'opacity 0.2s ease';
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var img = this;
+            var isMobile = window.innerWidth < galeriaMobileBreakpoint;
+            if (isMobile) {
+                if (img.classList.contains('galeria-img-color')) {
+                    img.classList.remove('galeria-img-color');
+                    siguienteImagenGaleria(img);
+                } else {
+                    img.classList.add('galeria-img-color');
+                }
+            } else {
+                siguienteImagenGaleria(img);
+            }
+        });
     }
 }
 
-// Sistema de carrusel de cartel rotatorio (lado izquierdo) - 01 al 09 en PNG
+// Sistema de carrusel de cartel rotatorio (lado izquierdo) - 01 al 09; móvil: WebP en mobile/, desktop: PNG
 let cartelRotatorioActual = 1;
 const totalCartelesRotatorios = 9; // Del 01 al 09
 let intervaloCartelRotatorio = null;
+const CARTEL_ROTATORIO_MOBILE_BREAKPOINT = 768;
 
 // Cachear referencia al elemento
 let cartelRotatorioElement = null;
+
+// Devuelve la ruta de la imagen del cartel rotatorio según viewport (móvil: WebP, desktop: PNG)
+function getCartelRotatorioRuta(numeroFormateado) {
+    var isMobile = typeof window !== 'undefined' && window.innerWidth < CARTEL_ROTATORIO_MOBILE_BREAKPOINT;
+    if (isMobile) {
+        return 'img/CARTEL ROTATORIO/mobile/' + numeroFormateado + '.webp';
+    }
+    return 'img/CARTEL ROTATORIO/' + numeroFormateado + '.png';
+}
 
 function cambiarCartelRotatorio(direccion) {
     // Obtener elemento una sola vez y cachearlo
@@ -167,23 +189,22 @@ function cambiarCartelRotatorio(direccion) {
         cartelRotatorioActual = 9;
     }
     
-    // Aplicar el cambio con transición optimizada
+    const numeroFormateado = cartelRotatorioActual.toString().padStart(2, '0');
+    const ruta = getCartelRotatorioRuta(numeroFormateado);
+    const prevIndex = cartelRotatorioActual - direccion;
+    const prevNum = (prevIndex < 1 ? 9 : prevIndex > 9 ? 1 : prevIndex).toString().padStart(2, '0');
+    const rutaPrev = getCartelRotatorioRuta(prevNum);
+
     cartelRotatorioElement.style.opacity = '0';
-    
-    // Usar requestAnimationFrame para mejor rendimiento
-    requestAnimationFrame(() => {
-        const numeroFormateado = cartelRotatorioActual.toString().padStart(2, '0');
-        const ruta = `img/CARTEL ROTATORIO/${numeroFormateado}.png`;
-        
-        // Preload de imagen
+    requestAnimationFrame(function () {
         const img = new Image();
-        img.onload = () => {
-            cartelRotatorioElement.style.backgroundImage = `url('${ruta}')`;
+        img.onload = function () {
+            cartelRotatorioElement.style.backgroundImage = "url('" + ruta + "')";
             cartelRotatorioElement.style.opacity = '1';
         };
-        img.onerror = () => {
-            const fallbackNum = cartelRotatorioActual.toString().padStart(2, '0');
-            cartelRotatorioElement.style.backgroundImage = `url('img/CARTEL ROTATORIO/${fallbackNum}.png')`;
+        img.onerror = function () {
+            cartelRotatorioActual = prevIndex < 1 ? 9 : prevIndex > 9 ? 1 : prevIndex;
+            cartelRotatorioElement.style.backgroundImage = "url('" + rutaPrev + "')";
             cartelRotatorioElement.style.opacity = '1';
         };
         img.src = ruta;
@@ -204,16 +225,22 @@ function reiniciarIntervaloCartelRotatorio() {
 
 function inicializarCartelRotatorio() {
     const cartelRotatorio = document.getElementById('cartel-rotatorio');
-    if (cartelRotatorio) {
-        // Iniciar con cartel 01.png (primera imagen)
-        cartelRotatorioActual = 1;
-        cartelRotatorio.style.backgroundImage = `url('img/CARTEL ROTATORIO/01.png')`;
+    if (!cartelRotatorio || cartelRotatorio.getAttribute('data-cartel-loaded') === '1') return;
+    // Cargar solo la primera imagen (móvil: WebP, desktop: PNG); 02-09 se cargan al hacer clic
+    cartelRotatorioActual = 1;
+    const ruta01 = getCartelRotatorioRuta('01');
+    const img = new Image();
+    img.onload = function () {
+        cartelRotatorio.style.backgroundImage = "url('" + ruta01 + "')";
         cartelRotatorio.style.opacity = '1';
-        cartelRotatorio.style.display = 'block';
-        
-        // NO hay cambio automático - solo manual con botones
-        reiniciarIntervaloCartelRotatorio();
-    }
+        cartelRotatorio.setAttribute('data-cartel-loaded', '1');
+    };
+    img.onerror = function () {
+        cartelRotatorio.style.opacity = '1';
+        cartelRotatorio.setAttribute('data-cartel-loaded', '1');
+    };
+    img.src = ruta01;
+    reiniciarIntervaloCartelRotatorio();
 }
 
 // Rotación de imágenes de La Obra - detecta automáticamente
@@ -530,9 +557,13 @@ function inicializarImagenes() {
     const cartelRotatorio = document.getElementById('cartel-rotatorio');
     const galeriaImg1 = document.getElementById('galeria-img-1');
     
-    // Inicializar carrusel de cartel rotatorio si estamos en Index
+    // Cartel rotatorio: cargar solo la primera imagen después del primer pintado; 02-09 se cargan al hacer clic
     if (cartelRotatorio) {
-        inicializarCartelRotatorio();
+        if (window.requestIdleCallback) {
+            requestIdleCallback(function () { inicializarCartelRotatorio(); }, { timeout: 120 });
+        } else {
+            setTimeout(inicializarCartelRotatorio, 0);
+        }
     }
     
     // Aplicar imágenes aleatorias a la galería si estamos en la página principal; clic cambia de foto
