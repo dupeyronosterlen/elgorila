@@ -19,8 +19,8 @@ try {
 }
 
 const IMG_DIR = path.join(__dirname, '..', 'img');
-const MOBILE_MAX_WIDTH = 960;
-const WEBP_QUALITY = 80;
+const MOBILE_MAX_WIDTH = 800;
+const WEBP_QUALITY = 75;
 const DRY_RUN = process.argv.includes('--dry-run');
 
 function ensureDir(dir) {

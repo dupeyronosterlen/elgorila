@@ -48,7 +48,8 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography" defer></script>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/></noscript>
 <!-- Solo preload logo y sello 37 para móvil; cartel hero móvil (WebP) para primera pantalla rápida -->
 <link rel="preload" as="image" href="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png"/>
 <link rel="preload" as="image" href="img/LOGO DOS/Artboard 11.png"/>
@@ -1825,7 +1826,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   })();
   (function() {
     var overlay = document.getElementById('loading-overlay');
-    var minShowMs = 600;
+    var minShowMs = 1100;
     var shownAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
     var done = false;
     function hideOverlay() {
