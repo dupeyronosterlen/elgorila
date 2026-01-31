@@ -1993,17 +1993,18 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     if (abrirMsg) abrirMsg.addEventListener('click', function() { pushEvent('mensaje_modal_open'); }, true);
   })();
   (function() {
-    /* En móvil no usar zoom personalizado; el usuario puede hacer zoom con gestos */
-    if (window.innerWidth < 768) return;
+    /* Zoom solo en desktop (>=768px); en móvil la lupa no se muestra (CSS + comprobación aquí) */
     var lens = document.getElementById('zoom-lens');
     var ZOOM = 4;
     var LENS_SIZE = 320;
     var LENS_HALF = LENS_SIZE / 2;
+    function isMobile() { return window.innerWidth < 768; }
     function isVisibleSlideImg(img) {
       var slide = img && img.closest && img.closest('.modal-37-slide');
       return slide && !slide.classList.contains('opacity-0');
     }
     function updateLens(img, clientX, clientY) {
+      if (isMobile()) { if (lens) lens.classList.remove('visible'); return; }
       if (!img || !lens || !img.classList.contains('zoomable-img')) return;
       if (img.closest && img.closest('.modal-37-slide') && !isVisibleSlideImg(img)) return;
       var rect = img.getBoundingClientRect();
