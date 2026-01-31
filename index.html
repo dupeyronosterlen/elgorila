@@ -201,6 +201,11 @@
       z-index: 0;
       border-radius: inherit;
     }
+    /* Tono rojizo muy suave: cuarto oscuro con luz roja sumamente débil */
+    .fondo-rojo-suave {
+      background: rgba(95, 28, 28, 0.055);
+      mix-blend-mode: multiply;
+    }
     /* Cuadros decorativos SINOPSIS solo en vista extendida: ocultos en móvil */
     .decorativo-sinopsis {
       display: none;
@@ -219,14 +224,12 @@
         background-size: cover;
         background-position: center;
         border-radius: 6px;
-        opacity: 0.09;
-        filter: blur(1px);
         transition: opacity 0.3s ease;
         will-change: transform;
-        /* tamaño por defecto; JS asigna width/height distintos a cada uno */
+        /* opacity y filter los asigna JS (variable: unas más difuminadas que otras) */
       }
       .cuadro-decorativo:hover {
-        opacity: 0.14;
+        opacity: 0.14 !important;
       }
     }
     /* Fondos blurry para secciones - mejor contraste */
@@ -234,6 +237,7 @@
       position: relative;
       overflow: hidden;
     }
+    /* Fondos: partes más centrales de las imágenes SINOPSIS para dar más contexto a la textura */
     .section-with-bg::before {
       content: '';
       position: absolute;
@@ -241,7 +245,7 @@
       left: -20%;
       right: -20%;
       bottom: -20%;
-      background-size: cover;
+      background-size: 150% 150%;
       background-position: center center;
       background-repeat: no-repeat;
       filter: blur(60px) brightness(0.3) contrast(0.8) saturate(0.45);
@@ -383,14 +387,14 @@
         height: 100% !important;
       }
     }
-    /* Móvil: hero como referencia (cartel ~90–95% pantalla, informativo en parte baja) */
+    /* Móvil: cartel al 75% del espacio, pegado al header; 37 sobre el rotatorio; informativo anclado al rotatorio */
     @media (max-width: 767px) {
       #cartel-container {
         position: relative;
         overflow: visible;
-        min-height: 90vh !important;
-        height: 90vh !important;
-        max-height: 90vh !important;
+        min-height: 75vh !important;
+        height: 75vh !important;
+        max-height: 75vh !important;
         padding-left: 0.25rem !important;
         padding-right: 0.25rem !important;
       }
@@ -399,7 +403,7 @@
         height: 100%;
         width: 100%;
       }
-      /* Cartel rotatorio: ocupa casi toda la pantalla, centrado */
+      /* Cartel rotatorio: ocupa todo el contenedor (75vh), centrado */
       .cartel-rotatorio-container {
         position: absolute !important;
         top: 0 !important;
@@ -415,14 +419,14 @@
       #cartel-rotatorio {
         width: 100% !important;
         height: 100% !important;
-        min-height: 200px !important;
+        min-height: 180px !important;
         background-position: center center !important;
         background-size: contain !important;
         opacity: 1 !important;
         display: block !important;
         transform: none !important;
       }
-      /* Cartel informativo: anclado al borde inferior del rotatorio (como referencia), sin hueco */
+      /* Cartel informativo: anclado al borde inferior del rotatorio, se mueve con él (40% del contenedor) */
       .cartel-informativo-container {
         position: absolute !important;
         top: auto !important;
@@ -430,8 +434,8 @@
         left: 0 !important;
         right: 0 !important;
         width: 100% !important;
-        height: 42vh !important;
-        max-height: 42vh !important;
+        height: 40% !important;
+        max-height: 40% !important;
         z-index: 20 !important;
         padding: 0.25rem 0.5rem !important;
         pointer-events: none;
@@ -443,7 +447,7 @@
       #cartel-informativo-mobile {
         width: auto !important;
         height: auto !important;
-        max-height: 40vh !important;
+        max-height: 95% !important;
         max-width: 94% !important;
         object-fit: contain !important;
         object-position: center center !important;
@@ -455,19 +459,18 @@
         display: none !important;
       }
     }
-    /* Pantallas muy angostas: menos huecos negros, informativo un poco más compacto */
     @media (max-width: 480px) {
       #cartel-container {
-        min-height: 88vh !important;
-        height: 88vh !important;
-        max-height: 88vh !important;
+        min-height: 75vh !important;
+        height: 75vh !important;
+        max-height: 75vh !important;
       }
       .cartel-informativo-container {
-        height: 38vh !important;
-        max-height: 38vh !important;
+        height: 40% !important;
+        max-height: 40% !important;
       }
       #cartel-informativo-mobile {
-        max-height: 36vh !important;
+        max-height: 95% !important;
       }
       #cartel-informativo {
         display: none !important;
@@ -632,14 +635,14 @@
     @media (min-width: 768px) {
       .logo-37-sello img { height: 7.5rem; }  /* ~120px */
     }
-    /* Móvil: 37 en esquina superior derecha del cartel rotatorio (top = altura header) */
+    /* Móvil: botón 37 sobre el cartel rotatorio (entra en el área del cartel) */
     @media (max-width: 767px) {
       .logo-37-sello {
         position: fixed !important;
         top: min(10vh, 4.5rem) !important;
         right: 0.75rem !important;
         left: auto !important;
-        transform: none !important;
+        transform: translateY(6px) !important;
         align-self: auto !important;
         z-index: 30;
       }
@@ -973,7 +976,9 @@
 </div>
 <div class="absolute inset-0 bg-kafka-rich mix-blend-multiply z-0 opacity-25"></div>
 <div class="absolute inset-0 bg-gradient-to-b from-black/15 via-black/8 to-black/35 z-0 pointer-events-none"></div>
-<!-- Cuadros decorativos SINOPSIS: 10 cuadros PNG, sin repetir imagen, tamaños variados (solo vista extendida) -->
+<!-- Tono rojizo muy suave: cuarto oscuro con luz roja sumamente débil -->
+<div class="fondo-rojo-suave absolute inset-0 z-0 pointer-events-none" aria-hidden="true"></div>
+<!-- Cuadros decorativos SINOPSIS: 20 cuadros, distribuidos aleatoriamente, difuminado variable (solo vista extendida) -->
 <div id="decorativo-sinopsis" class="decorativo-sinopsis" aria-hidden="true">
   <div class="cuadro-decorativo" id="cuadro-decorativo-1"></div>
   <div class="cuadro-decorativo" id="cuadro-decorativo-2"></div>
@@ -985,6 +990,16 @@
   <div class="cuadro-decorativo" id="cuadro-decorativo-8"></div>
   <div class="cuadro-decorativo" id="cuadro-decorativo-9"></div>
   <div class="cuadro-decorativo" id="cuadro-decorativo-10"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-11"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-12"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-13"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-14"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-15"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-16"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-17"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-18"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-19"></div>
+  <div class="cuadro-decorativo" id="cuadro-decorativo-20"></div>
 </div>
 <div class="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
 <main id="main-content" class="pt-6 sm:pt-8 md:pt-10 pb-12">

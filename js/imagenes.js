@@ -500,7 +500,7 @@ function inicializarRotacionImagenes() {
     }
 }
 
-// Cuadros decorativos SINOPSIS: 10 cuadros PNG, sin repetir (1-7 únicos + 3 extra), tamaños kafkianos
+// Cuadros decorativos SINOPSIS: 20 cuadros (el doble), distribuidos aleatoriamente, difuminado variable
 function shuffleArray(arr) {
     const a = arr.slice();
     for (let i = a.length - 1; i > 0; i--) {
@@ -512,29 +512,34 @@ function shuffleArray(arr) {
 function inicializarCuadrosDecorativos() {
     if (window.innerWidth < 768) return;
     const sinopsisTotal = 7;
-    // 10 imágenes: las 7 sin repetir (shuffle) + 3 elegidas al azar de 1-7
-    const unicos = shuffleArray([1, 2, 3, 4, 5, 6, 7]);
-    const extra = [
-        Math.floor(Math.random() * sinopsisTotal) + 1,
-        Math.floor(Math.random() * sinopsisTotal) + 1,
-        Math.floor(Math.random() * sinopsisTotal) + 1
-    ];
-    const numeros = unicos.concat(extra);
+    // 20 imágenes: dos rondas de 1-7 mezcladas + 6 extra al azar
+    const ronda1 = shuffleArray([1, 2, 3, 4, 5, 6, 7]);
+    const ronda2 = shuffleArray([1, 2, 3, 4, 5, 6, 7]);
+    const extra = Array.from({ length: 6 }, () => Math.floor(Math.random() * sinopsisTotal) + 1);
+    const numeros = ronda1.concat(ronda2).concat(extra);
 
-    // Tamaños variados (kafkiano): [ancho, alto] en vw y max px
+    // Tamaños variados: 20 combinaciones [ancho vw, alto vw] y max px
     const tamanos = [
         [12, 14], [18, 11], [10, 18], [16, 16], [14, 10],
-        [11, 16], [20, 12], [13, 20], [15, 13], [9, 15]
+        [11, 16], [20, 12], [13, 20], [15, 13], [9, 15],
+        [17, 9], [8, 19], [19, 14], [11, 12], [14, 17],
+        [10, 15], [16, 11], [13, 18], [15, 10], [9, 16]
     ];
-    const maxPx = [140, 200, 160, 180, 130, 170, 220, 190, 150, 120];
+    const maxPx = [140, 200, 160, 180, 130, 170, 220, 190, 150, 120, 165, 155, 205, 125, 175, 145, 185, 195, 135, 115];
 
-    // Posiciones repartidas en el espacio negro (10 cuadros)
-    const posiciones = [
-        [4, 8], [68, 5], [32, 62], [82, 28], [12, 72],
-        [58, 18], [88, 55], [22, 35], [75, 78], [45, 42]
-    ];
+    // 20 posiciones aleatorias (porcentaje left, top) para distribución aleatoria
+    const posiciones = [];
+    for (let i = 0; i < 20; i++) {
+        const left = Math.floor(Math.random() * 82) + 4;   // 4–85%
+        const top = Math.floor(Math.random() * 82) + 4;    // 4–85%
+        posiciones.push([left, top]);
+    }
 
-    for (let i = 1; i <= 10; i++) {
+    // Blur variable: 1–4px (unas más difuminadas que otras); opacidad 0.06–0.11
+    const blurs = shuffleArray([1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 1, 2, 2, 3, 1, 3, 2, 4, 2]);
+    const opacidades = shuffleArray([0.06, 0.07, 0.07, 0.08, 0.08, 0.08, 0.09, 0.09, 0.09, 0.10, 0.10, 0.11, 0.07, 0.08, 0.09, 0.06, 0.10, 0.08, 0.07, 0.09]);
+
+    for (let i = 1; i <= 20; i++) {
         const el = document.getElementById('cuadro-decorativo-' + i);
         if (!el) continue;
         el.style.backgroundImage = "url('img/SINOPSIS/" + numeros[i - 1] + ".png')";
@@ -545,6 +550,8 @@ function inicializarCuadrosDecorativos() {
         const mx = maxPx[i - 1];
         el.style.width = "min(" + w + "vw, " + mx + "px)";
         el.style.height = "min(" + h + "vw, " + Math.round(mx * 0.9) + "px)";
+        el.style.filter = "blur(" + (blurs[i - 1] || 2) + "px)";
+        el.style.opacity = String(opacidades[i - 1] ?? 0.08);
     }
 }
 
