@@ -57,8 +57,19 @@ const imagenesGaleria = [
     '072.png', '073.png', '074.png', '075.png', '076.png'
 ];
 const galeriaFallback = 'img/GALERIA/02.png'; // imagen de respaldo si alguna falla
+const galeriaFallbackMobile = 'img/GALERIA/mobile/02.webp';
+const GALERIA_MOBILE_BREAKPOINT = 768;
 
-// Aplicar imágenes aleatorias a la galería: 6 en móvil, 12 en wide; ninguna repetida
+function galeriaRuta(filename) {
+    var isMobile = typeof window !== 'undefined' && window.innerWidth < GALERIA_MOBILE_BREAKPOINT;
+    if (isMobile) {
+        var base = filename.replace(/\.(jpe?g|png)$/i, '');
+        return 'img/GALERIA/mobile/' + base + '.webp';
+    }
+    return 'img/GALERIA/' + filename;
+}
+
+// Aplicar imágenes aleatorias a la galería: móvil usa WebP en mobile/, desktop usa original
 function aplicarGaleriaAleatoria() {
     const cantidadMostrar = 12;
     const numerosSeleccionados = new Set();
@@ -66,15 +77,17 @@ function aplicarGaleriaAleatoria() {
         numerosSeleccionados.add(Math.floor(Math.random() * imagenesGaleria.length));
     }
     const indices = Array.from(numerosSeleccionados);
+    const fallback = window.innerWidth < GALERIA_MOBILE_BREAKPOINT ? galeriaFallbackMobile : galeriaFallback;
     for (let i = 0; i < cantidadMostrar; i++) {
         const imgElement = document.getElementById(`galeria-img-${i + 1}`);
         if (imgElement) {
             const idx = indices[i];
-            imgElement.src = `img/GALERIA/${imagenesGaleria[idx]}`;
+            imgElement.src = galeriaRuta(imagenesGaleria[idx]);
             imgElement.setAttribute('data-galeria-index', String(idx));
+            imgElement.setAttribute('data-galeria-filename', imagenesGaleria[idx]);
             imgElement.onerror = function () {
                 this.onerror = null;
-                this.src = galeriaFallback;
+                this.src = fallback;
             };
         }
     }
@@ -109,19 +122,20 @@ function siguienteImagenGaleria(imgElement) {
         intentos++;
     }
     imgElement.setAttribute('data-galeria-index', String(next));
+    imgElement.setAttribute('data-galeria-filename', imagenesGaleria[next]);
     imgElement.style.opacity = '0';
-    var src = 'img/GALERIA/' + imagenesGaleria[next];
+    var src = galeriaRuta(imagenesGaleria[next]);
     var preload = new Image();
     preload.onload = function () {
         imgElement.src = src;
         imgElement.onerror = function () {
             this.onerror = null;
-            this.src = galeriaFallback;
+            this.src = (window.innerWidth < GALERIA_MOBILE_BREAKPOINT ? galeriaFallbackMobile : galeriaFallback);
         };
         imgElement.style.opacity = '1';
     };
     preload.onerror = function () {
-        imgElement.src = galeriaFallback;
+        imgElement.src = (window.innerWidth < GALERIA_MOBILE_BREAKPOINT ? galeriaFallbackMobile : galeriaFallback);
         imgElement.style.opacity = '1';
     };
     preload.src = src;

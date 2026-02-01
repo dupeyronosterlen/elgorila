@@ -50,10 +50,12 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
 <noscript><link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/></noscript>
-<!-- Solo preload logo y sello 37 para móvil; cartel hero móvil (WebP) para primera pantalla rápida -->
-<link rel="preload" as="image" href="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png"/>
-<link rel="preload" as="image" href="img/LOGO DOS/Artboard 11.png"/>
-<link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" media="(max-width: 767px)"/>
+<!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
+<link rel="preload" as="image" href="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/LOGO DOS/Artboard 11.png" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" media="(max-width: 767px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp" media="(max-width: 767px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL ROTATORIO/01.png" media="(min-width: 768px)" fetchpriority="high"/>
 <style type="text/tailwindcss">
     body {
       padding-top: 85px;
@@ -635,6 +637,15 @@
     @media (min-width: 768px) {
       .logo-37-sello img { height: 7.5rem; }  /* ~120px */
     }
+    /* 37 años: visible solo cuando la imagen ya cargó (evita parpadeo/hueco) */
+    .logo-37-sello.logo-37-cargando {
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+    }
+    .logo-37-sello.logo-37-loaded,
+    .logo-37-sello:not(.logo-37-cargando) {
+      opacity: 1;
+    }
     /* Móvil: botón 37 sobre el cartel rotatorio (entra en el área del cartel) */
     @media (max-width: 767px) {
       .logo-37-sello {
@@ -954,12 +965,12 @@
 <div class="mx-auto flex h-full w-full max-w-5xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
 <div class="flex items-center min-w-0 flex-shrink">
 <a href="#inicio" aria-label="Ir al inicio" class="block focus:outline-none focus:ring-2 focus:ring-accent-gold/50 rounded">
-<img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="h-10 sm:h-14 md:h-16 w-auto max-w-[120px] sm:max-w-none object-contain object-left hover:opacity-90 transition-opacity" loading="eager" decoding="async">
+<img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="h-10 sm:h-14 md:h-16 w-auto max-w-[120px] sm:max-w-none object-contain object-left hover:opacity-90 transition-opacity" loading="eager" decoding="async" fetchpriority="high">
 </a>
 </div>
-<div class="flex items-center justify-center flex-1 min-w-0 px-1 logo-37-sello">
+<div class="flex items-center justify-center flex-1 min-w-0 px-1 logo-37-sello logo-37-cargando" id="logo-37-wrap">
                     <button type="button" id="abrir-popup-37" class="logo-37-btn flex items-center justify-center p-0 rounded transition-transform duration-200 hover:scale-110 focus:scale-110 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Ver 37 aniversario">
-                        <img src="img/LOGO DOS/Artboard 11.png" alt="37 años" class="w-auto object-contain opacity-90 flex-shrink-0 pointer-events-none" loading="eager" decoding="async" onerror="this.src='img/LOGO DOS/2.png'; this.onerror=null;"/>
+                        <img src="img/LOGO DOS/Artboard 11.png" alt="37 años" class="w-auto object-contain opacity-90 flex-shrink-0 pointer-events-none" loading="eager" decoding="async" fetchpriority="high" onload="this.closest('.logo-37-sello').classList.remove('logo-37-cargando'); this.closest('.logo-37-sello').classList.add('logo-37-loaded');" onerror="this.src='img/LOGO DOS/2.png'; this.onerror=null; this.closest('.logo-37-sello').classList.remove('logo-37-cargando'); this.closest('.logo-37-sello').classList.add('logo-37-loaded');"/>
                     </button>
 </div>
 <div class="flex items-center flex-shrink-0">
@@ -1029,15 +1040,15 @@
     <!-- Imagen para móvil: WebP ligero cuando existe, fallback PNG -->
     <picture class="w-full h-full flex items-center justify-center md:hidden">
         <source srcset="img/CARTEL INFORMATIVO/mobile/2.webp" type="image/webp"/>
-        <img id="cartel-informativo-mobile" alt="Información importante" class="w-full h-full object-contain" src="img/CARTEL INFORMATIVO/2.png" loading="lazy" decoding="async" onerror="this.style.display='none';"/>
+        <img id="cartel-informativo-mobile" alt="Información importante" class="w-full h-full object-contain" src="img/CARTEL INFORMATIVO/2.png" loading="eager" decoding="async" fetchpriority="high" onerror="this.style.display='none';"/>
     </picture>
     <!-- Imagen para desktop -->
-    <img id="cartel-informativo" alt="Información importante" class="hidden md:block w-full h-full object-contain" src="img/CARTEL INFORMATIVO/1.png" loading="lazy" decoding="async" onerror="this.style.display='none';"/>
+    <img id="cartel-informativo" alt="Información importante" class="hidden md:block w-full h-full object-contain" data-src-desktop="img/CARTEL INFORMATIVO/1.png" loading="lazy" decoding="async" onerror="this.style.display='none';"/>
 </div>
     </div>
 </div>
 </section>
-<section id="seccion-sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-10 sm:mt-12 md:mt-10 section-with-bg" data-bg-sinopsis="img/SINOPSIS/1.png">
+<section id="seccion-sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-10 sm:mt-12 md:mt-10 section-with-bg" data-bg-sinopsis="img/SINOPSIS/1.png" data-bg-sinopsis-mobile="img/SINOPSIS/mobile/1.webp">
 <h2 class="mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
             <div class="mx-auto max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left break-words bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 relative contenedor-texto-scroll">
                 <p id="sinopsis-texto" class="w-full">Un simio se presenta ante una academia de científicos para rendir un informe. Ya no es un animal: viste de frac, articula. Relata su captura, su encierro, el viaje en barco donde entendió algo: no había salida, lo que sí había: un inventario. Escupir, beber, imitar. Gestos que lo volvieron tolerable, luego aceptable, después respetable. No perseguía la libertad —esa ya no venía en el paquete—, perseguía solo un lugar donde estar sin barrotes. Lo consiguió. Ahora cobra por poder decirlo. Pero mientras rinde su informe con una cortesía impecable, algo rechina. El simio tiene su informe listo.</p>
@@ -1052,73 +1063,73 @@
 <div class="group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-accent-gold frame-maze-1"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-1" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/01.jpeg" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-1" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
 </div>
 </div>
 <div class="group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-primary frame-maze-2"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-2" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/02.png" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-2" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
 </div>
 </div>
 <div class="group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-accent-gold frame-maze-3"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-3" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/03.jpeg" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-3" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
 </div>
 </div>
 <div class="group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-primary frame-maze-1"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-4" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/04.png" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-4" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
 </div>
 </div>
 <div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-accent-gold frame-maze-2"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-5" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/05.jpeg" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-5" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
 </div>
 </div>
 <div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-primary frame-maze-3"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-6" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/06.png" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-6" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
 </div>
 </div>
 <div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-accent-gold frame-maze-1"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-7" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/07.jpeg" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-7" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
 </div>
 </div>
 <div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-primary frame-maze-2"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-8" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/08.png" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-8" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
 </div>
 </div>
 <div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-accent-gold frame-maze-3"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-9" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/09.jpeg" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-9" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
 </div>
 </div>
 <div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-primary frame-maze-1"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-10" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/011.jpeg" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-10" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
 </div>
 </div>
 <div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-accent-gold frame-maze-2"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-11" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/013.jpeg" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-11" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
 </div>
 </div>
 <div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-primary frame-maze-3"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena de la obra" id="galeria-img-12" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/014.png" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='img/GALERIA/02.png';"/>
+<img alt="Escena de la obra" id="galeria-img-12" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
 </div>
 </div>
 </div>
@@ -1571,12 +1582,25 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
 <script src="js/imagenes.js" defer></script>
 <script>
   (function() {
+    var wrap = document.getElementById('logo-37-wrap');
+    if (wrap) {
+      var img = wrap.querySelector('img');
+      if (img && img.complete) {
+        wrap.classList.remove('logo-37-cargando');
+        wrap.classList.add('logo-37-loaded');
+      }
+    }
+  })();
+  (function() {
     var sec = document.getElementById('seccion-sinopsis');
     var bg = sec && sec.getAttribute('data-bg-sinopsis');
+    var bgMobile = sec && sec.getAttribute('data-bg-sinopsis-mobile');
     if (!sec || !bg) return;
     function aplicarFondo() {
-      sec.style.backgroundImage = "url('" + bg + "')";
+      var url = (window.innerWidth < 768 && bgMobile) ? bgMobile : bg;
+      sec.style.backgroundImage = "url('" + url + "')";
       sec.removeAttribute('data-bg-sinopsis');
+      if (bgMobile) sec.removeAttribute('data-bg-sinopsis-mobile');
     }
     if ('IntersectionObserver' in window) {
       var io = new IntersectionObserver(function(entries) {
@@ -1590,6 +1614,38 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     } else {
       requestIdleCallback ? requestIdleCallback(aplicarFondo, { timeout: 600 }) : setTimeout(aplicarFondo, 400);
     }
+  })();
+  (function() {
+    var cartelDesktop = document.getElementById('cartel-informativo');
+    if (!cartelDesktop) return;
+    function setSrc() {
+      if (window.innerWidth >= 768) {
+        var src = cartelDesktop.getAttribute('data-src-desktop');
+        if (src && !cartelDesktop.src) { cartelDesktop.src = src; }
+      }
+    }
+    setSrc();
+    window.addEventListener('resize', setSrc);
+  })();
+  (function() {
+    function usarFondosMobile() {
+      if (window.innerWidth >= 768) return;
+      var sections = document.querySelectorAll('.section-with-bg[style*="background-image"]');
+      sections.forEach(function(sec) {
+        var url = (sec.getAttribute('style') || '').match(/url\(['"]?([^'")]+)['"]?\)/);
+        if (!url || url[1].indexOf('SINOPSIS/') === -1) return;
+        var num = url[1].replace(/.*SINOPSIS\/(\d+)\.png.*/, '$1');
+        if (num && url[1].indexOf('mobile') === -1) {
+          sec.style.backgroundImage = "url('img/SINOPSIS/mobile/" + num + ".webp')";
+        }
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', usarFondosMobile);
+    } else {
+      usarFondosMobile();
+    }
+    window.addEventListener('resize', usarFondosMobile);
   })();
   (function() {
     var INSTAGRAM_KEY = 'elgorila_instagram_url';
@@ -1684,19 +1740,24 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     }
   })();
   (function() {
-    var TOTAL_SLIDES = 5;
-    var modal37Index = 0;
-    var overlay37 = document.getElementById('modal-37-overlay');
-    var modal37 = document.getElementById('modal-37');
-    var slides = document.querySelectorAll('.modal-37-slide');
-    var dotsContainer = document.getElementById('modal-37-dots');
-    function loadSlide37Img(idx) {
-      if (idx < 0 || idx >= TOTAL_SLIDES || !slides[idx]) return;
-      var img = slides[idx].querySelector('.modal-37-img');
-      if (!img || !img.getAttribute('data-src') || img.getAttribute('data-loaded') === '1') return;
-      var url = window.innerWidth < 768 ? img.getAttribute('data-src-mobile') : img.getAttribute('data-src');
-      if (url) { img.src = url; img.setAttribute('data-loaded', '1'); }
-    }
+    function initModal37() {
+      var TOTAL_SLIDES = 5;
+      var modal37Index = 0;
+      var overlay37 = document.getElementById('modal-37-overlay');
+      var modal37 = document.getElementById('modal-37');
+      var slides = document.querySelectorAll('.modal-37-slide');
+      var dotsContainer = document.getElementById('modal-37-dots');
+      if (!slides.length) return;
+      function loadSlide37Img(idx) {
+        if (idx < 0 || idx >= TOTAL_SLIDES || !slides[idx]) return;
+        var img = slides[idx].querySelector('.modal-37-img');
+        if (!img || !img.getAttribute('data-src') || img.getAttribute('data-loaded') === '1') return;
+        var url = window.innerWidth < 768 ? img.getAttribute('data-src-mobile') : img.getAttribute('data-src');
+        if (!url) return;
+        var base = window.location.href.replace(/[#?].*$/, '').replace(/\/[^/]*$/, '/');
+        img.src = (url.indexOf('/') === 0 || url.indexOf('http') === 0) ? url : (base + url);
+        img.setAttribute('data-loaded', '1');
+      }
     function showSlide37(i) {
       modal37Index = (i + TOTAL_SLIDES) % TOTAL_SLIDES;
       slides.forEach(function(s, k) {
@@ -1748,6 +1809,12 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && modal37 && !modal37.classList.contains('hidden')) cerrarModal37();
     });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initModal37);
+    } else {
+      initModal37();
+    }
   })();
   (function() {
     var carrusel = document.getElementById('actor-texto-carrusel');
