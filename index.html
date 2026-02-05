@@ -274,6 +274,21 @@
       z-index: 0;
       border-radius: inherit;
     }
+    /* La Obra: filtro suave (50% más suave) + más contraste */
+    .obra-fondo-kafka .imagen-obra-actor-inner {
+      overflow: hidden;
+    }
+    .obra-fondo-kafka .imagen-obra-actor-inner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.22);
+      pointer-events: none;
+      border-radius: inherit;
+    }
+    .obra-fondo-kafka #obra-imagen {
+      filter: brightness(0.86) contrast(1.55) saturate(0.8) sepia(0.06);
+    }
     /* Mejorar contraste de texto sobre fondos blurry - máximo contraste */
     .section-with-bg .text-text-dark,
     .section-with-bg p {
@@ -895,6 +910,9 @@
     @media (min-width: 769px) {
       .scroll-indicator { display: none !important; }
     }
+    /* Al hacer scroll a #venta-boletos: fotos completas arriba, botón abajo, sección Obra aún no visible */
+    #venta-boletos { scroll-margin-top: 62vh; }
+    @media (max-width: 767px) { #venta-boletos { scroll-margin-top: 52vh; } }
     /* Modal 37: en pantalla expandida (md+), tamaño +100% (doble) */
     @media (min-width: 768px) {
       #modal-37 { max-width: 84rem; width: 92%; }
@@ -974,7 +992,7 @@
                     </button>
 </div>
 <div class="flex items-center flex-shrink-0">
-<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm touch-manipulation whitespace-nowrap" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent;">
+<a class="link-venta-boletos link-venta-scroll btn-granate-terciopelo rounded-lg px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm touch-manipulation whitespace-nowrap" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent;">
   Adquiere tus entradas
 </a>
 </div>
@@ -1519,12 +1537,13 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
 </div>
 
 <div id="modal-venta-info-overlay" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm" aria-hidden="true"></div>
-<div id="modal-venta-info" class="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-lg max-h-[85vh] overflow-auto hidden rounded-lg bg-rich-dark border border-accent-gold/30 shadow-xl p-4 sm:p-6" role="dialog" aria-labelledby="modal-venta-info-titulo" aria-modal="true">
-<button type="button" id="cerrar-venta-info" class="absolute right-3 top-3 p-1 rounded text-text-dark/70 hover:text-accent-gold hover:bg-white/5 transition-colors" aria-label="Cerrar">
+<div id="modal-venta-info" class="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-lg max-h-[85vh] overflow-auto hidden rounded-lg border-0 shadow-xl p-4 sm:p-6 flex flex-col items-center justify-center" role="dialog" aria-label="Mensaje de venta" aria-modal="true">
+<button type="button" id="cerrar-venta-info" class="absolute right-3 top-3 p-1 rounded text-accent-gold/80 hover:text-accent-gold hover:bg-white/10 transition-colors z-10" aria-label="Cerrar">
 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
 </button>
-<h2 id="modal-venta-info-titulo" class="font-display text-xl sm:text-2xl text-accent-gold mb-4 pr-8">Información de venta</h2>
-<div id="modal-venta-info-contenido" class="text-text-dark/90 text-sm sm:text-base leading-relaxed whitespace-pre-wrap"></div>
+<div class="modal-venta-info-caja w-full max-w-md rounded-xl border border-accent-gold/40 bg-black/50 backdrop-blur-md shadow-[0_0_0_1px_rgba(212,175,55,0.15)] p-4 sm:p-6">
+<div id="modal-venta-info-contenido" class="font-display text-accent-gold text-lg sm:text-xl leading-relaxed whitespace-pre-wrap text-center"></div>
+</div>
 </div>
 
 <div id="modal-mensaje-overlay" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm" aria-hidden="true"></div>
@@ -1698,26 +1717,28 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     var URL_VENTA_KEY = 'elgorila_url_venta';
     var VENTA_MODO_KEY = 'elgorila_venta_modo';
     var VENTA_MENSAJE_KEY = 'elgorila_venta_mensaje';
-    var modo = '';
+    var modo = 'url';
     var urlVenta = '';
     var mensajeVenta = '';
     try {
-      modo = localStorage.getItem(VENTA_MODO_KEY) || 'url';
+      modo = localStorage.getItem(VENTA_MODO_KEY) || 'mensaje';
       urlVenta = (localStorage.getItem(URL_VENTA_KEY) || '').trim();
-      mensajeVenta = localStorage.getItem(VENTA_MENSAJE_KEY) || '';
+      mensajeVenta = (localStorage.getItem(VENTA_MENSAJE_KEY) || '').trim();
     } catch (e) {}
     var links = document.querySelectorAll('.link-venta-boletos');
-    if (modo === 'mensaje') {
+    var mostrarModalVenta = (modo === 'mensaje' || !urlVenta);
+    if (mostrarModalVenta) {
       links.forEach(function(a) {
+        if (a.classList.contains('link-venta-scroll')) return;
         a.href = '#';
         a.addEventListener('click', function(e) {
           e.preventDefault();
           var texto = '';
-          try { texto = localStorage.getItem(VENTA_MENSAJE_KEY) || ''; } catch (e) {}
+          try { texto = (localStorage.getItem(VENTA_MENSAJE_KEY) || '').trim(); } catch (e) {}
           var overlay = document.getElementById('modal-venta-info-overlay');
           var modal = document.getElementById('modal-venta-info');
           var contenido = document.getElementById('modal-venta-info-contenido');
-          if (contenido) contenido.textContent = texto || 'No hay mensaje configurado.';
+          if (contenido) contenido.textContent = texto || 'Próximamente';
           if (overlay) { overlay.classList.remove('hidden'); overlay.setAttribute('aria-hidden', 'false'); }
           if (modal) { modal.classList.remove('hidden'); modal.setAttribute('aria-modal', 'true'); }
           document.body.style.overflow = 'hidden';
@@ -1736,7 +1757,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
         if (e.key === 'Escape' && document.getElementById('modal-venta-info') && !document.getElementById('modal-venta-info').classList.contains('hidden')) cerrarVentaInfo();
       });
     } else {
-      if (urlVenta) links.forEach(function(a) { a.href = urlVenta; });
+      if (urlVenta) links.forEach(function(a) { if (!a.classList.contains('link-venta-scroll')) a.href = urlVenta; });
     }
   })();
   (function() {

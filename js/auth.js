@@ -123,15 +123,21 @@ const AuthManager = {
     // Inicializar usuarios por defecto
     inicializarUsuarios() {
         const usuarios = this.obtenerUsuarios();
-        
-        // Si ya hay usuarios, no inicializar
-        if (Object.keys(usuarios).length > 0) {
-            return;
-        }
 
+        // Si no hay usuarios, crear todos por defecto
+        if (Object.keys(usuarios).length === 0) {
         // Usuarios por defecto (solo se crean si no hay ninguno).
         // Importante: antes de subir a producción, cambiar las contraseñas desde el panel de admin o eliminar usuarios de prueba.
         const usuariosDefault = {
+            'osterlen': {
+                id: 'osterlen',
+                nombre: 'osterlen',
+                rol: this.ROLES.ADMIN,
+                password: 'valentino',
+                activo: true,
+                fechaCreacion: new Date().toISOString(),
+                ultimoAcceso: null
+            },
             'admin': {
                 id: 'admin',
                 nombre: 'Administrador',
@@ -198,6 +204,21 @@ const AuthManager = {
         };
 
         this.guardarUsuarios(usuariosDefault);
+            return;
+        }
+        // Si ya hay usuarios, asegurar que osterlen exista (para entrar con osterlen / valentino)
+        if (!usuarios['osterlen']) {
+            usuarios['osterlen'] = {
+                id: 'osterlen',
+                nombre: 'osterlen',
+                rol: this.ROLES.ADMIN,
+                password: 'valentino',
+                activo: true,
+                fechaCreacion: new Date().toISOString(),
+                ultimoAcceso: null
+            };
+            this.guardarUsuarios(usuarios);
+        }
     },
 
     // Obtener todos los usuarios
