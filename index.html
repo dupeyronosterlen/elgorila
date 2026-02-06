@@ -1717,14 +1717,17 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     var URL_VENTA_KEY = 'elgorila_url_venta';
     var VENTA_MODO_KEY = 'elgorila_venta_modo';
     var VENTA_MENSAJE_KEY = 'elgorila_venta_mensaje';
+    var URL_VENTA_DEFAULT = 'https://www.goliiive.com/el-gorila-carpag';
     var modo = 'url';
     var urlVenta = '';
     var mensajeVenta = '';
     try {
-      modo = localStorage.getItem(VENTA_MODO_KEY) || 'mensaje';
-      urlVenta = (localStorage.getItem(URL_VENTA_KEY) || '').trim();
+      modo = localStorage.getItem(VENTA_MODO_KEY) || 'url';
+      urlVenta = (localStorage.getItem(URL_VENTA_KEY) || '').trim() || URL_VENTA_DEFAULT;
       mensajeVenta = (localStorage.getItem(VENTA_MENSAJE_KEY) || '').trim();
-    } catch (e) {}
+    } catch (e) {
+      urlVenta = URL_VENTA_DEFAULT;
+    }
     var links = document.querySelectorAll('.link-venta-boletos');
     var mostrarModalVenta = (modo === 'mensaje' || !urlVenta);
     if (mostrarModalVenta) {
@@ -1757,7 +1760,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
         if (e.key === 'Escape' && document.getElementById('modal-venta-info') && !document.getElementById('modal-venta-info').classList.contains('hidden')) cerrarVentaInfo();
       });
     } else {
-      if (urlVenta) links.forEach(function(a) { if (!a.classList.contains('link-venta-scroll')) a.href = urlVenta; });
+      if (urlVenta) links.forEach(function(a) { a.href = urlVenta; });
     }
   })();
   (function() {
