@@ -53,17 +53,17 @@
 <!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
 <link rel="preload" as="image" href="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" fetchpriority="high"/>
 <link rel="preload" as="image" href="img/LOGO DOS/Artboard 11.png" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" media="(max-width: 767px)" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp" media="(max-width: 767px)" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/CARTEL ROTATORIO/01.png" media="(min-width: 768px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" media="(max-width: 1023px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp" media="(max-width: 1023px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL ROTATORIO/01.png" media="(min-width: 1024px)" fetchpriority="high"/>
 <style type="text/tailwindcss">
     body {
       padding-top: 85px;
       position: relative;
       background-color: #1a150e;
     }
-    /* Móvil: encabezado y cartel pegados; mismo valor en body y header para que no se vea línea café */
-    @media (max-width: 767px) {
+    /* Móvil y tablet: encabezado y cartel pegados; versión ligera hasta 1024px */
+    @media (max-width: 1023px) {
       body { padding-top: min(10vh, 4.5rem) !important; }
       .header-gris {
         height: min(10vh, 4.5rem) !important;
@@ -85,7 +85,7 @@
     main {
       scroll-margin-top: 5rem;
     }
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       main { scroll-margin-top: min(10vh, 4.5rem); }
     }
     /* Evitar que el texto se corte: quepan en recuadros y recuadros se ajusten al texto */
@@ -156,7 +156,7 @@
       min-height: 100vh;
     }
     /* Móvil: fondo menos oscuro para que se vean las imágenes de secciones */
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       .main-container {
         background-color: #1a150e;
       }
@@ -217,7 +217,7 @@
       z-index: 0;
       overflow: hidden;
     }
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       .decorativo-sinopsis {
         display: block;
       }
@@ -327,7 +327,7 @@
       color: #e8e6e0 !important;
     }
     /* La Obra / El Actor: en vista extendida, más espacio para texto (8% hacia afuera) e imagen 8% más pequeña */
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       .seccion-obra-actor .contenedor-obra-actor {
         max-width: 69.12rem; /* 8% más que max-w-5xl (64rem) */
       }
@@ -387,7 +387,7 @@
       max-height: 100% !important;
       max-width: 100% !important;
     }
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       body.reading-mode .reading-mode-solo.cartel-informativo-container {
         height: 100% !important;
         max-height: 100% !important;
@@ -397,7 +397,7 @@
         max-width: 95% !important;
       }
     }
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       body.reading-mode .reading-mode-solo.cartel-informativo-container {
         position: relative !important;
         width: 100% !important;
@@ -405,7 +405,7 @@
       }
     }
     /* Móvil: cartel al 75% del espacio, pegado al header; 37 sobre el rotatorio; informativo anclado al rotatorio */
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       #cartel-container {
         position: relative;
         overflow: visible;
@@ -493,7 +493,7 @@
         display: none !important;
       }
     }
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       .cartel-informativo-container {
         position: relative !important;
         height: 100% !important;
@@ -545,11 +545,11 @@
       }
     }
     /* Hero cartel: en desktop bajar un poco para no chocar con el 37 */
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       .hero-cartel-desktop { margin-top: 1.5rem; }
     }
     /* Cursor lupa grande sobre periódico (cartel informativo) y fotos de galería - solo desktop */
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       .cursor-lupa {
         cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="20" cy="20" r="14" fill="none" stroke="%23D4AF37" stroke-width="2.5"/><line x1="28" y1="28" x2="38" y2="38" stroke="%23D4AF37" stroke-width="2.5" stroke-linecap="round"/></svg>') 24 24, zoom-in;
       }
@@ -571,10 +571,10 @@
     }
     .zoom-lens.visible { display: block; }
     /* Móvil: sin zoom personalizado; se puede hacer zoom con gestos nativos */
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       #zoom-lens { display: none !important; }
     }
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       #modal-37 .zoomable-img {
         cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="20" cy="20" r="14" fill="none" stroke="%23D4AF37" stroke-width="2.5"/><line x1="28" y1="28" x2="38" y2="38" stroke="%23D4AF37" stroke-width="2.5" stroke-linecap="round"/></svg>') 24 24, zoom-in;
       }
@@ -649,7 +649,7 @@
     @media (min-width: 640px) {
       .logo-37-sello img { height: 6.4rem; }  /* ~102px */
     }
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       .logo-37-sello img { height: 7.5rem; }  /* ~120px */
     }
     /* 37 años: visible solo cuando la imagen ya cargó (evita parpadeo/hueco) */
@@ -662,7 +662,7 @@
       opacity: 1;
     }
     /* Móvil: botón 37 sobre el cartel rotatorio (entra en el área del cartel) */
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       .logo-37-sello {
         position: fixed !important;
         top: min(10vh, 4.5rem) !important;
@@ -724,7 +724,7 @@
       outline-offset: 2px;
     }
     /* Contacto: título+texto centrado; medios de contacto en fila centrada */
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       .seccion-contacto-wide .texto-contacto {
         max-width: 40rem;
         padding: 1.25rem 1.5rem;
@@ -732,7 +732,7 @@
       }
     }
     /* Contacto en móvil: sin movimiento que bloquee scroll; tamaño al contenido; si entra Música/IG, se ajusta solo */
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       #contacto.section-with-bg {
         overflow: visible !important;
         min-height: 0;
@@ -771,7 +771,7 @@
       }
     }
     /* Móvil: fondos de cuadros con ~40% menos saturación (opacidad reducida) para que se vean las imágenes */
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       #seccion-sinopsis,
       #faq,
       #contacto,
@@ -875,7 +875,7 @@
     /* Página con scroll vertical; recuadros que se ajustan al texto y no muerden información */
     html { overflow-y: auto; overflow-x: hidden; }
     body { overflow-x: hidden; }
-    @media (max-width: 768px) {
+    @media (max-width: 1023px) {
       .contenedor-texto-scroll {
         overflow-y: visible;
         overflow-x: hidden;
@@ -912,9 +912,9 @@
     }
     /* Al hacer scroll a #venta-boletos: fotos completas arriba, botón abajo, sección Obra aún no visible */
     #venta-boletos { scroll-margin-top: 62vh; }
-    @media (max-width: 767px) { #venta-boletos { scroll-margin-top: 52vh; } }
+    @media (max-width: 1023px) { #venta-boletos { scroll-margin-top: 52vh; } }
     /* Modal 37: en pantalla expandida (md+), tamaño +100% (doble) */
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       #modal-37 { max-width: 84rem; width: 92%; }
       .modal-37-carrusel { min-height: 80vh; }
       #modal-37-slides { min-height: 75vh; }
@@ -923,10 +923,10 @@
     /* Galería: móvil 4 fotos grandes (toque 1 = color, toque 2 = cambiar); desktop 12 fotos, hover = color, clic = cambiar */
     .galeria-reducida { max-width: 100%; }
     .galeria-img-color { filter: none !important; }
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
       .galeria-reducida .grid { gap: 0.5rem; }
     }
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
       .galeria-reducida { max-width: 64rem; }
       .galeria-wrap { position: relative; }
       .galeria-hilo {
@@ -1616,7 +1616,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     var bgMobile = sec && sec.getAttribute('data-bg-sinopsis-mobile');
     if (!sec || !bg) return;
     function aplicarFondo() {
-      var url = (window.innerWidth < 768 && bgMobile) ? bgMobile : bg;
+      var url = (window.innerWidth < 1024 && bgMobile) ? bgMobile : bg;
       sec.style.backgroundImage = "url('" + url + "')";
       sec.removeAttribute('data-bg-sinopsis');
       if (bgMobile) sec.removeAttribute('data-bg-sinopsis-mobile');
@@ -1638,7 +1638,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     var cartelDesktop = document.getElementById('cartel-informativo');
     if (!cartelDesktop) return;
     function setSrc() {
-      if (window.innerWidth >= 768) {
+      if (window.innerWidth >= 1024) {
         var src = cartelDesktop.getAttribute('data-src-desktop');
         if (src && !cartelDesktop.src) { cartelDesktop.src = src; }
       }
@@ -1648,7 +1648,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   })();
   (function() {
     function usarFondosMobile() {
-      if (window.innerWidth >= 768) return;
+      if (window.innerWidth >= 1024) return;
       var sections = document.querySelectorAll('.section-with-bg[style*="background-image"]');
       sections.forEach(function(sec) {
         var url = (sec.getAttribute('style') || '').match(/url\(['"]?([^'")]+)['"]?\)/);
@@ -1776,7 +1776,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
         if (idx < 0 || idx >= TOTAL_SLIDES || !slides[idx]) return;
         var img = slides[idx].querySelector('.modal-37-img');
         if (!img || !img.getAttribute('data-src') || img.getAttribute('data-loaded') === '1') return;
-        var url = window.innerWidth < 768 ? img.getAttribute('data-src-mobile') : img.getAttribute('data-src');
+        var url = window.innerWidth < 1024 ? img.getAttribute('data-src-mobile') : img.getAttribute('data-src');
         if (!url) return;
         var base = window.location.href.replace(/[#?].*$/, '').replace(/\/[^/]*$/, '/');
         img.src = (url.indexOf('/') === 0 || url.indexOf('http') === 0) ? url : (base + url);
@@ -2099,12 +2099,12 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     if (abrirMsg) abrirMsg.addEventListener('click', function() { pushEvent('mensaje_modal_open'); }, true);
   })();
   (function() {
-    /* Zoom solo en desktop (>=768px); en móvil la lupa no se muestra (CSS + comprobación aquí) */
+    /* Zoom solo en desktop (>=1024px); en móvil/tablet la lupa no se muestra (CSS + comprobación aquí) */
     var lens = document.getElementById('zoom-lens');
     var ZOOM = 4;
     var LENS_SIZE = 320;
     var LENS_HALF = LENS_SIZE / 2;
-    function isMobile() { return window.innerWidth < 768; }
+    function isMobile() { return window.innerWidth < 1024; }
     function isVisibleSlideImg(img) {
       var slide = img && img.closest && img.closest('.modal-37-slide');
       return slide && !slide.classList.contains('opacity-0');
@@ -2164,7 +2164,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   (function() {
     var el = document.getElementById('scroll-indicator');
     var UMBRAL_SCROLL = 120;
-    var ANCHO_ANCHO = 769;
+    var ANCHO_ANCHO = 1024;
     function actualizarFlecha() {
       if (!el) return;
       if (window.innerWidth >= ANCHO_ANCHO) {
