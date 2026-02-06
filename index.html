@@ -53,17 +53,17 @@
 <!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
 <link rel="preload" as="image" href="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" fetchpriority="high"/>
 <link rel="preload" as="image" href="img/LOGO DOS/Artboard 11.png" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" media="(max-width: 1023px)" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp" media="(max-width: 1023px)" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/CARTEL ROTATORIO/01.png" media="(min-width: 1024px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" media="(max-width: 1229px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp" media="(max-width: 1229px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL ROTATORIO/01.png" media="(min-width: 1230px)" fetchpriority="high"/>
 <style type="text/tailwindcss">
     body {
       padding-top: 85px;
       position: relative;
       background-color: #1a150e;
     }
-    /* Móvil y tablet: encabezado y cartel pegados; versión ligera hasta 1024px */
-    @media (max-width: 1023px) {
+    /* Móvil y tablet: versión ligera hasta 1230px (ampliada 20% para evitar hueco del cartel informativo) */
+    @media (max-width: 1229px) {
       body { padding-top: min(10vh, 4.5rem) !important; }
       .header-gris {
         height: min(10vh, 4.5rem) !important;
@@ -85,7 +85,7 @@
     main {
       scroll-margin-top: 5rem;
     }
-    @media (max-width: 1023px) {
+    @media (max-width: 1229px) {
       main { scroll-margin-top: min(10vh, 4.5rem); }
     }
     /* Evitar que el texto se corte: quepan en recuadros y recuadros se ajusten al texto */
@@ -106,14 +106,22 @@
       word-wrap: break-word;
       max-width: 100%;
     }
-    /* Carruseles de texto (La Obra, El Actor): cuadro se ajusta al texto, sin scroll; Odila/Ariel: scroll si hace falta */
+    /* Odila / Ariel: marco que envuelve al texto, sin scroll; texto siempre completo en todas las versiones */
+    #odila-texto-carrusel,
+    #ariel-texto-carrusel {
+      display: grid;
+      grid-template-rows: auto;
+      min-height: 0;
+    }
     .odila-texto-slide,
     .ariel-texto-slide {
-      overflow-y: auto !important;
+      grid-area: 1 / 1;
+      position: relative;
+      overflow: visible;
       overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 0.75rem;
-      min-height: 3em;
+      padding-bottom: 1.75rem;
+      min-height: 0;
+      align-self: start;
     }
     /* Obra / Actor: sin scroll; el cuadro crece con el texto (grid para que la altura sea la del párrafo más largo) */
     #obra-texto-carrusel,
@@ -134,6 +142,32 @@
       min-height: 0;
       align-self: start;
       justify-content: flex-start;
+      pointer-events: none;
+      opacity: 1;
+      transition: filter 0.4s ease;
+    }
+    /* Inactivos: siempre visibles pero más oscuros y con blur; al picar se aclara el siguiente */
+    .obra-texto-slide:not(.texto-slide-activo),
+    .actor-texto-slide:not(.texto-slide-activo) {
+      filter: blur(3px) brightness(0.4);
+      z-index: 0;
+    }
+    .obra-texto-slide.texto-slide-activo,
+    .actor-texto-slide.texto-slide-activo {
+      filter: none;
+      z-index: 1;
+    }
+    /* Indicador 1/3 en esquina inferior derecha del marco (Obra y Actor): elegante, discreto */
+    .obra-actor-texto-indicator {
+      position: absolute;
+      bottom: 0.5rem;
+      right: 0.75rem;
+      font-size: 0.7rem;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      color: rgba(212, 175, 55, 0.85);
+      pointer-events: none;
+      opacity: 0.9;
     }
     @media (max-width: 480px) {
       p, .text-text-dark { 
@@ -156,7 +190,7 @@
       min-height: 100vh;
     }
     /* Móvil: fondo menos oscuro para que se vean las imágenes de secciones */
-    @media (max-width: 1023px) {
+    @media (max-width: 1229px) {
       .main-container {
         background-color: #1a150e;
       }
@@ -217,7 +251,7 @@
       z-index: 0;
       overflow: hidden;
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       .decorativo-sinopsis {
         display: block;
       }
@@ -327,7 +361,7 @@
       color: #e8e6e0 !important;
     }
     /* La Obra / El Actor: en vista extendida, más espacio para texto (8% hacia afuera) e imagen 8% más pequeña */
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       .seccion-obra-actor .contenedor-obra-actor {
         max-width: 69.12rem; /* 8% más que max-w-5xl (64rem) */
       }
@@ -339,13 +373,102 @@
         height: 460px !important;
       }
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       .seccion-obra-actor .imagen-obra-actor {
         width: 552px !important;
         max-width: 552px;
       }
       .seccion-obra-actor .imagen-obra-actor-inner {
         height: 552px !important;
+      }
+      .seccion-obra-actor .contenedor-obra-actor > div:not(.imagen-obra-actor) {
+        min-height: 552px !important;
+      }
+    }
+    /* Obra / Actor: imagen de fondo que no se repita y que cubra el espacio (solo estas secciones) */
+    .seccion-obra-actor.section-with-bg {
+      background-repeat: no-repeat !important;
+      background-size: cover !important;
+      background-position: center center !important;
+      overflow: visible !important; /* que el marco y la foto no se muerdan: no recortar contenido */
+    }
+    .seccion-obra-actor .contenedor-obra-actor,
+    .seccion-obra-actor .contenedor-obra-actor > div {
+      overflow: visible !important; /* marco y foto completos, sin recortes */
+    }
+    /* Obra / Actor: vista en fila solo cuando hay espacio para mínimo 6-7 palabras por línea; si no, vista móvil (imagen arriba, texto abajo) */
+    @media (max-width: 991px) {
+      .seccion-obra-actor .contenedor-obra-actor {
+        flex-direction: column !important;
+      }
+      .seccion-obra-actor .contenedor-obra-actor .imagen-obra-actor {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .seccion-obra-actor.obra-fondo-kafka .contenedor-obra-actor > div:first-child { order: 2 !important; }
+      .seccion-obra-actor.obra-fondo-kafka .contenedor-obra-actor > div:last-child { order: 1 !important; }
+    }
+    @media (min-width: 992px) {
+      .seccion-obra-actor .contenedor-obra-actor {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important; /* imagen y marco de texto centrados, sin exceso a los lados */
+      }
+      /* Marco de texto a doc al texto: ancho fijo de lectura (60ch), centrado en la fila; sin exceso a los lados */
+      .seccion-obra-actor .contenedor-obra-actor > div:not(.imagen-obra-actor) {
+        width: 60ch !important;
+        max-width: 60ch !important;
+        min-width: 0 !important;
+        flex: 0 0 auto !important;
+        min-height: 400px !important;
+        align-self: center !important;
+      }
+      .seccion-obra-actor .contenedor-obra-actor .imagen-obra-actor-inner {
+        max-height: 500px !important; /* límite para que marco y foto estén equilibrados */
+        min-height: 320px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(0,0,0,0.25) !important; /* fondo para letterboxing si la foto es más alta que ancha */
+      }
+      .seccion-obra-actor .contenedor-obra-actor .imagen-obra-actor-inner img,
+      .seccion-obra-actor #obra-imagen,
+      .seccion-obra-actor #actor-imagen {
+        object-fit: contain !important; /* foto completa visible, aunque quede un poco más pequeña */
+        object-position: center center !important;
+      }
+      .seccion-obra-actor.obra-fondo-kafka .contenedor-obra-actor > div:first-child { order: 1 !important; }
+      .seccion-obra-actor.obra-fondo-kafka .contenedor-obra-actor > div:last-child { order: 2 !important; }
+      /* Contenido del marco (título + texto) centrado dentro del marco ajustado al texto */
+      .seccion-obra-actor .contenedor-obra-actor > div:not(.imagen-obra-actor) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+      }
+      .seccion-obra-actor #obra-texto-carrusel,
+      .seccion-obra-actor #actor-texto-carrusel {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      .seccion-obra-actor .obra-texto-slide,
+      .seccion-obra-actor .actor-texto-slide {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0.5rem 0 !important;
+      }
+      .seccion-obra-actor .obra-texto-slide p,
+      .seccion-obra-actor .actor-texto-slide p {
+        text-align: center !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
       }
     }
     /* Loading state para evitar pantalla blanca */
@@ -387,7 +510,7 @@
       max-height: 100% !important;
       max-width: 100% !important;
     }
-    @media (max-width: 1023px) {
+    @media (max-width: 1229px) {
       body.reading-mode .reading-mode-solo.cartel-informativo-container {
         height: 100% !important;
         max-height: 100% !important;
@@ -397,7 +520,7 @@
         max-width: 95% !important;
       }
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       body.reading-mode .reading-mode-solo.cartel-informativo-container {
         position: relative !important;
         width: 100% !important;
@@ -405,7 +528,7 @@
       }
     }
     /* Móvil: cartel al 75% del espacio, pegado al header; 37 sobre el rotatorio; informativo anclado al rotatorio */
-    @media (max-width: 1023px) {
+    @media (max-width: 1229px) {
       #cartel-container {
         position: relative;
         overflow: visible;
@@ -443,7 +566,7 @@
         display: block !important;
         transform: none !important;
       }
-      /* Cartel informativo: anclado al borde inferior del rotatorio, se mueve con él (40% del contenedor) */
+      /* Cartel informativo: anclado al borde inferior del rotatorio, se mueve con él (40% del contenedor). Siempre visible en esta franja. */
       .cartel-informativo-container {
         position: absolute !important;
         top: auto !important;
@@ -458,6 +581,13 @@
         pointer-events: none;
         order: 2 !important;
         display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      .cartel-informativo-container picture {
+        display: flex !important;
+        width: 100% !important;
+        height: 100% !important;
         align-items: center !important;
         justify-content: center !important;
       }
@@ -493,7 +623,7 @@
         display: none !important;
       }
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       .cartel-informativo-container {
         position: relative !important;
         height: 100% !important;
@@ -502,6 +632,9 @@
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+      }
+      .cartel-informativo-container picture {
+        display: none !important;
       }
       #cartel-informativo {
         height: 100% !important;
@@ -545,11 +678,11 @@
       }
     }
     /* Hero cartel: en desktop bajar un poco para no chocar con el 37 */
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       .hero-cartel-desktop { margin-top: 1.5rem; }
     }
     /* Cursor lupa grande sobre periódico (cartel informativo) y fotos de galería - solo desktop */
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       .cursor-lupa {
         cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="20" cy="20" r="14" fill="none" stroke="%23D4AF37" stroke-width="2.5"/><line x1="28" y1="28" x2="38" y2="38" stroke="%23D4AF37" stroke-width="2.5" stroke-linecap="round"/></svg>') 24 24, zoom-in;
       }
@@ -571,10 +704,10 @@
     }
     .zoom-lens.visible { display: block; }
     /* Móvil: sin zoom personalizado; se puede hacer zoom con gestos nativos */
-    @media (max-width: 1023px) {
+    @media (max-width: 1229px) {
       #zoom-lens { display: none !important; }
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       #modal-37 .zoomable-img {
         cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="20" cy="20" r="14" fill="none" stroke="%23D4AF37" stroke-width="2.5"/><line x1="28" y1="28" x2="38" y2="38" stroke="%23D4AF37" stroke-width="2.5" stroke-linecap="round"/></svg>') 24 24, zoom-in;
       }
@@ -649,7 +782,7 @@
     @media (min-width: 640px) {
       .logo-37-sello img { height: 6.4rem; }  /* ~102px */
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       .logo-37-sello img { height: 7.5rem; }  /* ~120px */
     }
     /* 37 años: visible solo cuando la imagen ya cargó (evita parpadeo/hueco) */
@@ -662,7 +795,7 @@
       opacity: 1;
     }
     /* Móvil: botón 37 sobre el cartel rotatorio (entra en el área del cartel) */
-    @media (max-width: 1023px) {
+    @media (max-width: 1229px) {
       .logo-37-sello {
         position: fixed !important;
         top: min(10vh, 4.5rem) !important;
@@ -724,7 +857,7 @@
       outline-offset: 2px;
     }
     /* Contacto: título+texto centrado; medios de contacto en fila centrada */
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       .seccion-contacto-wide .texto-contacto {
         max-width: 40rem;
         padding: 1.25rem 1.5rem;
@@ -732,7 +865,7 @@
       }
     }
     /* Contacto en móvil: sin movimiento que bloquee scroll; tamaño al contenido; si entra Música/IG, se ajusta solo */
-    @media (max-width: 1023px) {
+    @media (max-width: 1229px) {
       #contacto.section-with-bg {
         overflow: visible !important;
         min-height: 0;
@@ -771,7 +904,7 @@
       }
     }
     /* Móvil: fondos de cuadros con ~40% menos saturación (opacidad reducida) para que se vean las imágenes */
-    @media (max-width: 1023px) {
+    @media (max-width: 1229px) {
       #seccion-sinopsis,
       #faq,
       #contacto,
@@ -875,7 +1008,7 @@
     /* Página con scroll vertical; recuadros que se ajustan al texto y no muerden información */
     html { overflow-y: auto; overflow-x: hidden; }
     body { overflow-x: hidden; }
-    @media (max-width: 1023px) {
+    @media (max-width: 1229px) {
       .contenedor-texto-scroll {
         overflow-y: visible;
         overflow-x: hidden;
@@ -912,9 +1045,9 @@
     }
     /* Al hacer scroll a #venta-boletos: fotos completas arriba, botón abajo, sección Obra aún no visible */
     #venta-boletos { scroll-margin-top: 62vh; }
-    @media (max-width: 1023px) { #venta-boletos { scroll-margin-top: 52vh; } }
+    @media (max-width: 1229px) { #venta-boletos { scroll-margin-top: 52vh; } }
     /* Modal 37: en pantalla expandida (md+), tamaño +100% (doble) */
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       #modal-37 { max-width: 84rem; width: 92%; }
       .modal-37-carrusel { min-height: 80vh; }
       #modal-37-slides { min-height: 75vh; }
@@ -923,10 +1056,10 @@
     /* Galería: móvil 4 fotos grandes (toque 1 = color, toque 2 = cambiar); desktop 12 fotos, hover = color, clic = cambiar */
     .galeria-reducida { max-width: 100%; }
     .galeria-img-color { filter: none !important; }
-    @media (max-width: 1023px) {
+    @media (max-width: 1229px) {
       .galeria-reducida .grid { gap: 0.5rem; }
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 1230px) {
       .galeria-reducida { max-width: 64rem; }
       .galeria-wrap { position: relative; }
       .galeria-hilo {
@@ -1153,15 +1286,10 @@
 </div>
 </div>
 </section>
-<!-- Letrero: venta de boletos (Carpa Geodésica). El botón "Adquiere tus entradas" usa la URL/mensaje configurado en el admin. -->
+<!-- Venta de boletos: solo botón (debajo de la galería) -->
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-4 sm:mt-6 rounded-lg p-4 sm:p-6 md:p-8" id="venta-boletos">
-<div class="relative overflow-hidden rounded-lg bg-rich-dark/90 backdrop-blur-md border-2 border-accent-gold/50 p-5 sm:p-6 md:p-8 shadow-[0_0_0_1px_rgba(212,175,55,0.2),inset_0_0_0_1px_rgba(212,175,55,0.08)]">
-<div class="max-w-2xl mx-auto text-center space-y-4 contenedor-texto-scroll">
-<p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
-La venta de boletos se realiza a través de la <strong>Nueva Carpa Geodésica</strong>. Para comprar en línea o consultar horarios de taquilla, visite la página oficial del recinto.
-</p>
+<div class="flex justify-center">
 <a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-4 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base tracking-wide touch-manipulation inline-flex items-center justify-center" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
-</div>
 </div>
 </section>
 <!-- Sección La Obra (fondo Kafka más oscuro y desaturado) -->
@@ -1172,15 +1300,16 @@ La venta de boletos se realiza a través de la <strong>Nueva Carpa Geodésica</s
                 <h2 class="mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">La Obra</h2>
                 <div class="flex-1 min-h-0 flex flex-col">
                 <div id="obra-texto-carrusel" class="relative flex-1 min-h-0 cursor-pointer select-none text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (3 en total)">
-                    <div class="obra-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center" data-index="0">
+                    <div class="obra-texto-slide texto-slide-activo absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-center" data-index="0">
                         <p class="w-full">El Gorila está basado en Informe para una Academia de Franz Kafka (1917), relato en el que un simio, ya humanizado, relata ante un auditorio de científicos cómo abandonó su vida salvaje para adaptarse a la civilización. Kafka escribió este texto como una parábola sobre la asimilación forzada, la renuncia a la autenticidad y el precio de la aceptación social.</p>
                     </div>
-                    <div class="obra-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center" data-index="1">
+                    <div class="obra-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-center" data-index="1">
                         <p class="w-full">El simio no celebra su transformación: la describe con ironía, como quien enumera los pasos de una derrota disfrazada de triunfo. La adaptación teatral mantiene la estructura del monólogo kafkiano —un discurso que comienza ordenado y va revelando sus grietas— pero lo actualiza con humor filoso, lenguaje directo y referencias al contexto mexicano contemporáneo.</p>
                     </div>
-                    <div class="obra-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center" data-index="2">
+                    <div class="obra-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-center" data-index="2">
                         <p class="w-full">Lo que en Kafka era crítica a la pérdida de libertad por conveniencia, aquí se vuelve un espejo incómodo: el gorila habla de su propia jaula, pero el público reconoce las propias. La obra no explica ni moraliza; deja que la risa haga el trabajo sucio de la conciencia.</p>
                     </div>
+                    <span id="obra-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/3</span>
                 </div>
                 </div>
             </div>
@@ -1206,15 +1335,16 @@ La venta de boletos se realiza a través de la <strong>Nueva Carpa Geodésica</s
                 <h2 class="mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">El Actor</h2>
                 <div class="flex-1 min-h-0 flex flex-col">
                 <div id="actor-texto-carrusel" class="relative flex-1 min-h-0 cursor-pointer select-none text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (3 en total)">
-                    <div class="actor-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-start" data-index="0">
+                    <div class="actor-texto-slide texto-slide-activo absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-start" data-index="0">
                         <p class="w-full">Humberto Dupeyrón (México, 1947) es actor, comediante y director teatral con más de 60 años de trayectoria. Formado en la Academia de Andrés Soler de la ANDA, ganó el Premio Emilio Brillas como mejor actor de comedia en 1983. Desde 1989 ha interpretado El Gorila, monólogo basado en Informe para una Academia de Franz Kafka, convirtiéndolo en una de las obras más longevas del teatro mexicano.</p>
                     </div>
-                    <div class="actor-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-start" data-index="1">
+                    <div class="actor-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-start" data-index="1">
                         <p class="w-full">Su trabajo se caracteriza por una intensidad física y emocional que combina humor afilado con crítica social, creando un personaje que confronta al espectador con preguntas incómodas sobre libertad, poder y lo que significa ser humano.</p>
                     </div>
-                    <div class="actor-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-start" data-index="2">
+                    <div class="actor-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-start" data-index="2">
                         <p class="w-full">A pesar de padecer esclerosis múltiple, Dupeyrón sigue eligiendo el escenario como un acto de voluntad, convirtiendo cada función en un recordatorio de que la vitalidad no depende del cuerpo, sino de la decisión de estar vivo.</p>
                     </div>
+                    <span id="actor-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/3</span>
                 </div>
                 </div>
             </div>
@@ -1236,14 +1366,15 @@ La venta de boletos se realiza a través de la <strong>Nueva Carpa Geodésica</s
                     <p class="text-sm sm:text-base text-accent-gold/80 font-medium italic">Música Original</p>
                 </div>
             </div>
-            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative min-h-[200px] sm:min-h-[240px]">
-                <div id="odila-texto-carrusel" class="relative min-h-[180px] sm:min-h-[220px] cursor-pointer select-none text-center md:text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (2 en total)">
-                    <div class="odila-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center p-0" data-index="0">
+            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative">
+                <div id="odila-texto-carrusel" class="relative cursor-pointer select-none text-center md:text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (2 en total)">
+                    <div class="odila-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center p-0" data-index="0">
                         <p class="w-full text-center md:text-left">Compositora y cantante formada en el Instituto Nacional de Bellas Artes, con trayectoria destacada en la creación de atmósferas sonoras para teatro. Fundó el estudio Antropocosmic, especializado en música contemplativa y orgánica.</p>
                     </div>
-                    <div class="odila-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
+                    <div class="odila-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
                         <p class="w-full text-center md:text-left">Su trabajo en El Gorila aporta una dimensión auditiva que sostiene el ritmo interno del monólogo, acompañando los silencios y las rupturas del discurso sin competir con la palabra. La música no decora: profundiza la experiencia, creando un diálogo íntimo entre la voz del gorila y el espacio sonoro que lo rodea.</p>
                     </div>
+                    <span id="odila-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/2</span>
                 </div>
             </div>
         </div>
@@ -1258,14 +1389,15 @@ La venta de boletos se realiza a través de la <strong>Nueva Carpa Geodésica</s
                     <p class="text-sm sm:text-base text-accent-gold/80 font-medium italic">Escultor</p>
                 </div>
             </div>
-            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative min-h-[200px] sm:min-h-[240px]">
-                <div id="ariel-texto-carrusel" class="relative min-h-[180px] sm:min-h-[220px] cursor-pointer select-none text-center md:text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (2 en total)">
-                    <div class="ariel-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center p-0" data-index="0">
+            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative">
+                <div id="ariel-texto-carrusel" class="relative cursor-pointer select-none text-center md:text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (2 en total)">
+                    <div class="ariel-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center p-0" data-index="0">
                         <p class="w-full text-center md:text-left">Escultor formado en el oficio de la figura humana y el espacio público. Autor de la réplica de la Diana Cazadora con rostro original en la Zona Rosa (2001), obra que rescata la memoria de Helvia Martínez como modelo.</p>
                     </div>
-                    <div class="ariel-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
+                    <div class="ariel-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
                         <p class="w-full text-center md:text-left">Su colaboración en El Gorila aporta elementos escultóricos que habitan el espacio sin competir con la palabra. Las piezas acompañan el discurso del simio, creando puntos de anclaje visual que sostienen la tensión del monólogo.</p>
                     </div>
+                    <span id="ariel-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/2</span>
                 </div>
             </div>
         </div>
@@ -1616,7 +1748,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     var bgMobile = sec && sec.getAttribute('data-bg-sinopsis-mobile');
     if (!sec || !bg) return;
     function aplicarFondo() {
-      var url = (window.innerWidth < 1024 && bgMobile) ? bgMobile : bg;
+      var url = (window.innerWidth < 1230 && bgMobile) ? bgMobile : bg;
       sec.style.backgroundImage = "url('" + url + "')";
       sec.removeAttribute('data-bg-sinopsis');
       if (bgMobile) sec.removeAttribute('data-bg-sinopsis-mobile');
@@ -1638,7 +1770,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     var cartelDesktop = document.getElementById('cartel-informativo');
     if (!cartelDesktop) return;
     function setSrc() {
-      if (window.innerWidth >= 1024) {
+      if (window.innerWidth >= 1230) {
         var src = cartelDesktop.getAttribute('data-src-desktop');
         if (src && !cartelDesktop.src) { cartelDesktop.src = src; }
       }
@@ -1648,7 +1780,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   })();
   (function() {
     function usarFondosMobile() {
-      if (window.innerWidth >= 1024) return;
+      if (window.innerWidth >= 1230) return;
       var sections = document.querySelectorAll('.section-with-bg[style*="background-image"]');
       sections.forEach(function(sec) {
         var url = (sec.getAttribute('style') || '').match(/url\(['"]?([^'")]+)['"]?\)/);
@@ -1776,7 +1908,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
         if (idx < 0 || idx >= TOTAL_SLIDES || !slides[idx]) return;
         var img = slides[idx].querySelector('.modal-37-img');
         if (!img || !img.getAttribute('data-src') || img.getAttribute('data-loaded') === '1') return;
-        var url = window.innerWidth < 1024 ? img.getAttribute('data-src-mobile') : img.getAttribute('data-src');
+        var url = window.innerWidth < 1230 ? img.getAttribute('data-src-mobile') : img.getAttribute('data-src');
         if (!url) return;
         var base = window.location.href.replace(/[#?].*$/, '').replace(/\/[^/]*$/, '/');
         img.src = (url.indexOf('/') === 0 || url.indexOf('http') === 0) ? url : (base + url);
@@ -1842,20 +1974,16 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   })();
   (function() {
     var carrusel = document.getElementById('actor-texto-carrusel');
+    var indicator = document.getElementById('actor-texto-indicator');
     var slides = document.querySelectorAll('.actor-texto-slide');
     var total = slides.length;
     var index = 0;
     function showActorTexto(i) {
       index = ((i % total) + total) % total;
       slides.forEach(function(s, j) {
-        if (j === index) {
-          s.classList.remove('opacity-0', 'pointer-events-none');
-          s.classList.add('opacity-100');
-        } else {
-          s.classList.add('opacity-0', 'pointer-events-none');
-          s.classList.remove('opacity-100');
-        }
+        s.classList.toggle('texto-slide-activo', j === index);
       });
+      if (indicator) indicator.textContent = (index + 1) + '/' + total;
     }
     if (carrusel && total) {
       carrusel.addEventListener('click', function() { showActorTexto(index + 1); });
@@ -1873,13 +2001,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     function showObraTexto(i) {
       index = ((i % total) + total) % total;
       slides.forEach(function(s, j) {
-        if (j === index) {
-          s.classList.remove('opacity-0', 'pointer-events-none');
-          s.classList.add('opacity-100');
-        } else {
-          s.classList.add('opacity-0', 'pointer-events-none');
-          s.classList.remove('opacity-100');
-        }
+        s.classList.toggle('texto-slide-activo', j === index);
       });
       if (indicator) indicator.textContent = (index + 1) + '/' + total;
     }
@@ -1892,6 +2014,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   })();
   (function() {
     var carrusel = document.getElementById('odila-texto-carrusel');
+    var indicator = document.getElementById('odila-texto-indicator');
     var slides = document.querySelectorAll('.odila-texto-slide');
     var total = slides.length;
     var index = 0;
@@ -1906,6 +2029,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
           s.classList.remove('opacity-100');
         }
       });
+      if (indicator) indicator.textContent = (index + 1) + '/' + total;
     }
     if (carrusel && total) {
       carrusel.addEventListener('click', function() { showOdilaTexto(index + 1); });
@@ -1916,6 +2040,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   })();
   (function() {
     var carrusel = document.getElementById('ariel-texto-carrusel');
+    var indicator = document.getElementById('ariel-texto-indicator');
     var slides = document.querySelectorAll('.ariel-texto-slide');
     var total = slides.length;
     var index = 0;
@@ -1930,6 +2055,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
           s.classList.remove('opacity-100');
         }
       });
+      if (indicator) indicator.textContent = (index + 1) + '/' + total;
     }
     if (carrusel && total) {
       carrusel.addEventListener('click', function() { showArielTexto(index + 1); });
@@ -2099,12 +2225,12 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     if (abrirMsg) abrirMsg.addEventListener('click', function() { pushEvent('mensaje_modal_open'); }, true);
   })();
   (function() {
-    /* Zoom solo en desktop (>=1024px); en móvil/tablet la lupa no se muestra (CSS + comprobación aquí) */
+    /* Zoom solo en desktop (>=1230px); en móvil/tablet la lupa no se muestra */
     var lens = document.getElementById('zoom-lens');
     var ZOOM = 4;
     var LENS_SIZE = 320;
     var LENS_HALF = LENS_SIZE / 2;
-    function isMobile() { return window.innerWidth < 1024; }
+    function isMobile() { return window.innerWidth < 1230; }
     function isVisibleSlideImg(img) {
       var slide = img && img.closest && img.closest('.modal-37-slide');
       return slide && !slide.classList.contains('opacity-0');
@@ -2164,7 +2290,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   (function() {
     var el = document.getElementById('scroll-indicator');
     var UMBRAL_SCROLL = 120;
-    var ANCHO_ANCHO = 1024;
+    var ANCHO_ANCHO = 1230;
     function actualizarFlecha() {
       if (!el) return;
       if (window.innerWidth >= ANCHO_ANCHO) {

@@ -58,7 +58,7 @@ const imagenesGaleria = [
 ];
 const galeriaFallback = 'img/GALERIA/02.png'; // imagen de respaldo si alguna falla
 const galeriaFallbackMobile = 'img/GALERIA/mobile/02.webp';
-const GALERIA_MOBILE_BREAKPOINT = 1024;
+const GALERIA_MOBILE_BREAKPOINT = 1230;
 
 function galeriaRuta(filename) {
     var isMobile = typeof window !== 'undefined' && window.innerWidth < GALERIA_MOBILE_BREAKPOINT;
@@ -141,7 +141,7 @@ function siguienteImagenGaleria(imgElement) {
     preload.src = src;
 }
 
-var galeriaMobileBreakpoint = 1024;
+var galeriaMobileBreakpoint = 1230;
 
 function setupGaleriaClic() {
     for (var i = 1; i <= 12; i++) {
@@ -172,7 +172,7 @@ function setupGaleriaClic() {
 let cartelRotatorioActual = 1;
 const totalCartelesRotatorios = 9; // Del 01 al 09
 let intervaloCartelRotatorio = null;
-const CARTEL_ROTATORIO_MOBILE_BREAKPOINT = 1024;
+const CARTEL_ROTATORIO_MOBILE_BREAKPOINT = 1230;
 
 // Cachear referencia al elemento
 let cartelRotatorioElement = null;
@@ -524,7 +524,7 @@ function shuffleArray(arr) {
     return a;
 }
 function inicializarCuadrosDecorativos() {
-    if (window.innerWidth < 1024) return;
+    if (window.innerWidth < 1230) return;
     const sinopsisTotal = 7;
     // 20 imágenes: dos rondas de 1-7 mezcladas + 6 extra al azar
     const ronda1 = shuffleArray([1, 2, 3, 4, 5, 6, 7]);
@@ -607,7 +607,7 @@ function inicializarImagenes() {
     var lastWidth = window.innerWidth;
     window.addEventListener('resize', function () {
         var w = window.innerWidth;
-        if (lastWidth < 1024 && w >= 1024) {
+        if (lastWidth < 1230 && w >= 1230) {
             inicializarCuadrosDecorativos();
         }
         lastWidth = w;
