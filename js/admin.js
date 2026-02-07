@@ -530,7 +530,7 @@ function cargarWhatsApp() {
     var input = document.getElementById('input-whatsapp');
     var status = document.getElementById('whatsapp-guardada');
     if (input) input.value = num;
-    if (status) status.textContent = num ? 'En uso: ' + num : 'Vacío: en la página se usará ' + DEFAULT_WHATSAPP + ' por defecto.';
+    if (status) status.textContent = num ? 'En uso: ' + num : 'Vacío: en la página no se mostrará el enlace de WhatsApp.';
 }
 
 function guardarWhatsApp() {
@@ -552,7 +552,7 @@ function guardarWhatsApp() {
 
 // Email de contacto - mailto y textos en Index
 var EMAIL_KEY = 'elgorila_email_contacto';
-var DEFAULT_EMAIL = 'info@elgorilateatro.com.mx';
+var DEFAULT_EMAIL = 'elgorilateatro@gmail.com';
 
 function cargarEmail() {
     var email = '';
