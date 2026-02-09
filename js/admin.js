@@ -89,14 +89,16 @@ function configurarPermisos(rol) {
     if (AuthManager.puedeHacerCambios()) {
         if (sectionConfig) sectionConfig.classList.remove('hidden');
         if (sectionMensajes) sectionMensajes.classList.remove('hidden');
-        cargarUrlVenta();
-        cargarInstagram();
-        cargarMusica();
-        cargarWhatsApp();
-        cargarEmail();
-        cargarAdminFooter();
-        cargarSinopsis();
-        cargarMensajes();
+        loadConfigFromServer(function() {
+            cargarUrlVenta();
+            cargarInstagram();
+            cargarMusica();
+            cargarWhatsApp();
+            cargarEmail();
+            cargarAdminFooter();
+            cargarSinopsis();
+            cargarMensajes();
+        });
     } else {
         if (sectionConfig) sectionConfig.classList.add('hidden');
         if (sectionMensajes) sectionMensajes.classList.add('hidden');
@@ -403,6 +405,46 @@ var URL_VENTA_KEY = 'elgorila_url_venta';
 var VENTA_MODO_KEY = 'elgorila_venta_modo';
 var VENTA_MENSAJE_KEY = 'elgorila_venta_mensaje';
 
+// Envía la config actual (localStorage) al servidor para que todos los visitantes vean lo mismo
+function syncConfigToServer() {
+    try {
+        var payload = {
+            instagram: (localStorage.getItem('elgorila_instagram_url') || '').trim(),
+            musica: (localStorage.getItem('elgorila_musica_url') || '').trim(),
+            whatsapp: (localStorage.getItem('elgorila_whatsapp') || '').trim(),
+            email: (localStorage.getItem('elgorila_email_contacto') || '').trim(),
+            mostrar_admin_footer: localStorage.getItem('elgorila_mostrar_admin_footer') || '1',
+            sinopsis: (localStorage.getItem('elgorila_sinopsis') || '').trim(),
+            url_venta: (localStorage.getItem(URL_VENTA_KEY) || '').trim(),
+            venta_modo: localStorage.getItem(VENTA_MODO_KEY) || 'url',
+            venta_mensaje: (localStorage.getItem(VENTA_MENSAJE_KEY) || '').trim()
+        };
+        fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(function() {});
+    } catch (e) {}
+}
+
+// Al cargar el admin, traer config del servidor para que el formulario muestre los valores globales
+function loadConfigFromServer(done) {
+    fetch('/api/config').then(function(r) { return r.ok ? r.json() : Promise.reject(); }).then(function(cfg) {
+        try {
+            if (cfg.instagram !== undefined) localStorage.setItem('elgorila_instagram_url', cfg.instagram || '');
+            if (cfg.musica !== undefined) localStorage.setItem('elgorila_musica_url', cfg.musica || '');
+            if (cfg.whatsapp !== undefined) localStorage.setItem('elgorila_whatsapp', cfg.whatsapp || '');
+            if (cfg.email !== undefined) localStorage.setItem('elgorila_email_contacto', cfg.email || '');
+            if (cfg.mostrar_admin_footer !== undefined) localStorage.setItem('elgorila_mostrar_admin_footer', cfg.mostrar_admin_footer || '1');
+            if (cfg.sinopsis !== undefined) localStorage.setItem('elgorila_sinopsis', cfg.sinopsis || '');
+            if (cfg.url_venta !== undefined) localStorage.setItem(URL_VENTA_KEY, cfg.url_venta || '');
+            if (cfg.venta_modo !== undefined) localStorage.setItem(VENTA_MODO_KEY, cfg.venta_modo || 'url');
+            if (cfg.venta_mensaje !== undefined) localStorage.setItem(VENTA_MENSAJE_KEY, cfg.venta_mensaje || '');
+        } catch (e) {}
+        if (typeof done === 'function') done();
+    }).catch(function() { if (typeof done === 'function') done(); });
+}
+
 function actualizarBloquesVenta() {
     var modoUrl = document.getElementById('venta-modo-url');
     var bloqueUrl = document.getElementById('bloque-url-venta');
@@ -458,6 +500,7 @@ function guardarUrlVenta() {
         return;
     }
     cargarUrlVenta();
+    syncConfigToServer();
     if (status) status.textContent = 'Guardado a las ' + new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
     setTimeout(function() { cargarUrlVenta(); }, 4000);
 }
@@ -487,6 +530,7 @@ function guardarInstagram() {
         return;
     }
     cargarInstagram();
+    syncConfigToServer();
     if (status) status.textContent = 'Guardado a las ' + new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
     setTimeout(function() { cargarInstagram(); }, 4000);
 }
@@ -516,6 +560,7 @@ function guardarMusica() {
         return;
     }
     cargarMusica();
+    syncConfigToServer();
     if (status) status.textContent = 'Guardado a las ' + new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
     setTimeout(function() { cargarMusica(); }, 4000);
 }
@@ -546,6 +591,7 @@ function guardarWhatsApp() {
         return;
     }
     cargarWhatsApp();
+    syncConfigToServer();
     if (status) status.textContent = 'Guardado a las ' + new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
     setTimeout(function() { cargarWhatsApp(); }, 4000);
 }
@@ -576,6 +622,7 @@ function guardarEmail() {
         return;
     }
     cargarEmail();
+    syncConfigToServer();
     if (status) status.textContent = 'Guardado a las ' + new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
     setTimeout(function() { cargarEmail(); }, 4000);
 }
@@ -604,6 +651,7 @@ function guardarAdminFooter() {
         return;
     }
     cargarAdminFooter();
+    syncConfigToServer();
     if (status) status.textContent = 'Guardado a las ' + new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
     setTimeout(function() { cargarAdminFooter(); }, 4000);
 }
@@ -634,6 +682,7 @@ function guardarSinopsis() {
         return;
     }
     cargarSinopsis();
+    syncConfigToServer();
     if (status) status.textContent = 'Guardado a las ' + new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
     setTimeout(function() { cargarSinopsis(); }, 4000);
 }

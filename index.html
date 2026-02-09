@@ -1772,106 +1772,98 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     window.addEventListener('resize', usarFondosMobile);
   })();
   (function() {
-    var INSTAGRAM_KEY = 'elgorila_instagram_url';
-    var urlIg = '';
-    try { urlIg = (localStorage.getItem(INSTAGRAM_KEY) || '').trim(); } catch (e) {}
-    var linkIg = document.getElementById('link-instagram');
-    if (linkIg) {
-      if (urlIg) {
-        linkIg.href = urlIg;
-        linkIg.classList.remove('hidden');
+    var URL_VENTA_DEFAULT = 'https://www.goliiive.com/el-gorila-cg';
+    function getLocalConfig() {
+      var c = {};
+      try {
+        c.instagram = (localStorage.getItem('elgorila_instagram_url') || '').trim();
+        c.musica = (localStorage.getItem('elgorila_musica_url') || '').trim();
+        c.whatsapp = (localStorage.getItem('elgorila_whatsapp') || '').trim();
+        c.email = (localStorage.getItem('elgorila_email_contacto') || '').trim();
+        c.mostrar_admin_footer = localStorage.getItem('elgorila_mostrar_admin_footer') || '1';
+        c.sinopsis = (localStorage.getItem('elgorila_sinopsis') || '').trim();
+        c.url_venta = (localStorage.getItem('elgorila_url_venta') || '').trim();
+        c.venta_modo = localStorage.getItem('elgorila_venta_modo') || 'url';
+        c.venta_mensaje = (localStorage.getItem('elgorila_venta_mensaje') || '').trim();
+      } catch (e) {}
+      return c;
+    }
+    function applyContacto(cfg) {
+      var linkIg = document.getElementById('link-instagram');
+      if (linkIg) {
+        if ((cfg.instagram || '').trim()) {
+          linkIg.href = (cfg.instagram || '').trim();
+          linkIg.classList.remove('hidden');
+        }
+      }
+      var linkMusica = document.getElementById('link-musica');
+      if (linkMusica && (cfg.musica || '').trim()) {
+        linkMusica.href = (cfg.musica || '').trim();
+        linkMusica.classList.remove('hidden');
+      }
+      var whatsappNum = (cfg.whatsapp || '').trim().replace(/\D/g, '');
+      var waLinks = document.querySelectorAll('a[href^="https://wa.me/"]');
+      if (whatsappNum.length > 0) {
+        waLinks.forEach(function(a) { a.href = 'https://wa.me/' + whatsappNum; a.classList.remove('hidden'); });
+      } else {
+        waLinks.forEach(function(a) { a.classList.add('hidden'); });
+      }
+      var contactEmail = (cfg.email || '').trim() || 'elgorilateatro@gmail.com';
+      document.querySelectorAll('a[href^="mailto:"]').forEach(function(a) {
+        var prev = a.getAttribute('href');
+        var q = prev.indexOf('?');
+        a.href = 'mailto:' + contactEmail + (q !== -1 ? prev.slice(q) : '');
+        if (a.textContent && a.textContent.indexOf('@') !== -1) a.textContent = contactEmail;
+      });
+      var footerAdmin = document.getElementById('footer-admin-link');
+      if (footerAdmin && (cfg.mostrar_admin_footer || '') === '0') footerAdmin.style.display = 'none';
+      if ((cfg.sinopsis || '').trim()) {
+        var sinopsisEl = document.getElementById('sinopsis-texto');
+        if (sinopsisEl) sinopsisEl.textContent = (cfg.sinopsis || '').trim();
       }
     }
-    var MUSICA_KEY = 'elgorila_musica_url';
-    var urlMusica = '';
-    try { urlMusica = (localStorage.getItem(MUSICA_KEY) || '').trim(); } catch (e) {}
-    var linkMusica = document.getElementById('link-musica');
-    if (linkMusica && urlMusica) {
-      linkMusica.href = urlMusica;
-      linkMusica.classList.remove('hidden');
-    }
-    var WHATSAPP_KEY = 'elgorila_whatsapp';
-    var whatsappNum = '';
-    try { whatsappNum = (localStorage.getItem(WHATSAPP_KEY) || '').trim(); } catch (e) {}
-    var waLinks = document.querySelectorAll('a[href^="https://wa.me/"]');
-    if (whatsappNum && whatsappNum.replace(/\D/g, '').length > 0) {
-      var num = whatsappNum.replace(/\D/g, '');
-      waLinks.forEach(function(a) { a.href = 'https://wa.me/' + num; a.classList.remove('hidden'); });
-    } else {
-      waLinks.forEach(function(a) { a.classList.add('hidden'); });
-    }
-    var EMAIL_KEY = 'elgorila_email_contacto';
-    var contactEmail = '';
-    try { contactEmail = (localStorage.getItem(EMAIL_KEY) || '').trim(); } catch (e) {}
-    if (!contactEmail) contactEmail = 'elgorilateatro@gmail.com';
-    document.querySelectorAll('a[href^="mailto:"]').forEach(function(a) {
-      var prev = a.getAttribute('href');
-      var q = prev.indexOf('?');
-      a.href = 'mailto:' + contactEmail + (q !== -1 ? prev.slice(q) : '');
-      if (a.textContent && a.textContent.indexOf('@') !== -1) a.textContent = contactEmail;
-    });
-    var adminFooterKey = 'elgorila_mostrar_admin_footer';
-    var showAdmin = '';
-    try { showAdmin = localStorage.getItem(adminFooterKey) || ''; } catch (e) {}
-    var footerAdmin = document.getElementById('footer-admin-link');
-    if (footerAdmin && showAdmin === '0') footerAdmin.style.display = 'none';
-    var sinopsisKey = 'elgorila_sinopsis';
-    var sinopsisText = '';
-    try { sinopsisText = (localStorage.getItem(sinopsisKey) || '').trim(); } catch (e) {}
-    if (sinopsisText) {
-      var sinopsisEl = document.getElementById('sinopsis-texto');
-      if (sinopsisEl) sinopsisEl.textContent = sinopsisText;
-    }
-  })();
-  (function() {
-    var URL_VENTA_KEY = 'elgorila_url_venta';
-    var VENTA_MODO_KEY = 'elgorila_venta_modo';
-    var VENTA_MENSAJE_KEY = 'elgorila_venta_mensaje';
-    var URL_VENTA_DEFAULT = 'https://www.goliiive.com/el-gorila-carpag';
-    var modo = 'url';
-    var urlVenta = '';
-    var mensajeVenta = '';
-    try {
-      modo = localStorage.getItem(VENTA_MODO_KEY) || 'url';
-      urlVenta = (localStorage.getItem(URL_VENTA_KEY) || '').trim() || URL_VENTA_DEFAULT;
-      mensajeVenta = (localStorage.getItem(VENTA_MENSAJE_KEY) || '').trim();
-    } catch (e) {
-      urlVenta = URL_VENTA_DEFAULT;
-    }
-    var links = document.querySelectorAll('.link-venta-boletos');
-    var mostrarModalVenta = (modo === 'mensaje' || !urlVenta);
-    if (mostrarModalVenta) {
-      links.forEach(function(a) {
-        if (a.classList.contains('link-venta-scroll')) return;
-        a.href = '#';
-        a.addEventListener('click', function(e) {
-          e.preventDefault();
-          var texto = '';
-          try { texto = (localStorage.getItem(VENTA_MENSAJE_KEY) || '').trim(); } catch (e) {}
+    function applyVenta(cfg) {
+      var modo = (cfg.venta_modo || 'url');
+      var urlVenta = (cfg.url_venta || '').trim() || URL_VENTA_DEFAULT;
+      var mensajeVenta = (cfg.venta_mensaje || '').trim();
+      var links = document.querySelectorAll('.link-venta-boletos');
+      var mostrarModalVenta = (modo === 'mensaje' || !(cfg.url_venta || '').trim());
+      if (mostrarModalVenta) {
+        links.forEach(function(a) {
+          if (a.classList.contains('link-venta-scroll')) return;
+          a.href = '#';
+          a.addEventListener('click', function(e) {
+            e.preventDefault();
+            var overlay = document.getElementById('modal-venta-info-overlay');
+            var modal = document.getElementById('modal-venta-info');
+            var contenido = document.getElementById('modal-venta-info-contenido');
+            if (contenido) contenido.textContent = mensajeVenta || 'Próximamente';
+            if (overlay) { overlay.classList.remove('hidden'); overlay.setAttribute('aria-hidden', 'false'); }
+            if (modal) { modal.classList.remove('hidden'); modal.setAttribute('aria-modal', 'true'); }
+            document.body.style.overflow = 'hidden';
+          });
+        });
+        var cerrarVentaInfo = function() {
           var overlay = document.getElementById('modal-venta-info-overlay');
           var modal = document.getElementById('modal-venta-info');
-          var contenido = document.getElementById('modal-venta-info-contenido');
-          if (contenido) contenido.textContent = texto || 'Próximamente';
-          if (overlay) { overlay.classList.remove('hidden'); overlay.setAttribute('aria-hidden', 'false'); }
-          if (modal) { modal.classList.remove('hidden'); modal.setAttribute('aria-modal', 'true'); }
-          document.body.style.overflow = 'hidden';
+          if (overlay) { overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden', 'true'); }
+          if (modal) { modal.classList.add('hidden'); }
+          document.body.style.overflow = '';
+        };
+        document.getElementById('modal-venta-info-overlay') && document.getElementById('modal-venta-info-overlay').addEventListener('click', cerrarVentaInfo);
+        document.getElementById('cerrar-venta-info') && document.getElementById('cerrar-venta-info').addEventListener('click', cerrarVentaInfo);
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && document.getElementById('modal-venta-info') && !document.getElementById('modal-venta-info').classList.contains('hidden')) cerrarVentaInfo();
         });
-      });
-      var cerrarVentaInfo = function() {
-        var overlay = document.getElementById('modal-venta-info-overlay');
-        var modal = document.getElementById('modal-venta-info');
-        if (overlay) { overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden', 'true'); }
-        if (modal) { modal.classList.add('hidden'); }
-        document.body.style.overflow = '';
-      };
-      document.getElementById('modal-venta-info-overlay') && document.getElementById('modal-venta-info-overlay').addEventListener('click', cerrarVentaInfo);
-      document.getElementById('cerrar-venta-info') && document.getElementById('cerrar-venta-info').addEventListener('click', cerrarVentaInfo);
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && document.getElementById('modal-venta-info') && !document.getElementById('modal-venta-info').classList.contains('hidden')) cerrarVentaInfo();
-      });
-    } else {
-      if (urlVenta) links.forEach(function(a) { a.href = urlVenta; });
+      } else {
+        if (urlVenta) links.forEach(function(a) { a.href = urlVenta; });
+      }
     }
+    function run(cfg) {
+      applyContacto(cfg);
+      applyVenta(cfg);
+    }
+    fetch('/api/config').then(function(r) { return r.ok ? r.json() : Promise.reject(); }).then(run).catch(function() { run(getLocalConfig()); });
   })();
   (function() {
     function initModal37() {
