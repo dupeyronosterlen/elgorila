@@ -1827,10 +1827,9 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
       var urlVenta = (cfg.url_venta || '').trim() || URL_VENTA_DEFAULT;
       var mensajeVenta = (cfg.venta_mensaje || '').trim();
       var links = document.querySelectorAll('.link-venta-boletos');
-      var mostrarModalVenta = (modo === 'mensaje' || !(cfg.url_venta || '').trim());
+      var mostrarModalVenta = (modo === 'mensaje');
       if (mostrarModalVenta) {
         links.forEach(function(a) {
-          if (a.classList.contains('link-venta-scroll')) return;
           a.href = '#';
           a.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1856,7 +1855,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
           if (e.key === 'Escape' && document.getElementById('modal-venta-info') && !document.getElementById('modal-venta-info').classList.contains('hidden')) cerrarVentaInfo();
         });
       } else {
-        if (urlVenta) links.forEach(function(a) { a.href = urlVenta; });
+        if (urlVenta) links.forEach(function(a) { a.href = urlVenta; a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener noreferrer'); });
       }
     }
     function run(cfg) {
