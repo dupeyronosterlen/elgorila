@@ -54,7 +54,7 @@
 <link rel="preload" as="image" href="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" fetchpriority="high"/>
 <link rel="preload" as="image" href="img/LOGO DOS/Artboard 11.png" fetchpriority="high"/>
 <link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" media="(max-width: 1229px)" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp" media="(max-width: 1229px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp?v=2" media="(max-width: 1229px)" fetchpriority="high"/>
 <link rel="preload" as="image" href="img/CARTEL ROTATORIO/01.png" media="(min-width: 1230px)" fetchpriority="high"/>
 <style type="text/tailwindcss">
     body {
@@ -583,6 +583,7 @@
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        overflow: visible !important;
       }
       .cartel-informativo-container picture {
         display: flex !important;
@@ -599,7 +600,7 @@
         object-fit: contain !important;
         object-position: center center !important;
         margin: 0 auto;
-        transform: none !important;
+        transform: scale(1.05) !important;
         display: block !important;
       }
       #cartel-informativo {
@@ -618,6 +619,7 @@
       }
       #cartel-informativo-mobile {
         max-height: 95% !important;
+        transform: scale(1.05) !important;
       }
       #cartel-informativo {
         display: none !important;
@@ -632,6 +634,7 @@
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        overflow: visible !important;
       }
       .cartel-informativo-container picture {
         display: none !important;
@@ -641,7 +644,7 @@
         max-height: 100% !important;
         object-fit: contain !important;
         width: 100% !important;
-        transform: none !important;
+        transform: scale(1.05) !important;
         margin-top: 0 !important;
         display: block !important;
       }
@@ -1190,11 +1193,11 @@
 <div class="cartel-informativo-container reading-mode-solo w-full md:w-1/2 h-full flex items-center justify-center relative order-1 md:order-2" id="cartel-informativo-wrap">
     <!-- Imagen para móvil: WebP ligero cuando existe, fallback PNG -->
     <picture class="w-full h-full flex items-center justify-center md:hidden">
-        <source srcset="img/CARTEL INFORMATIVO/mobile/2.webp" type="image/webp"/>
-        <img id="cartel-informativo-mobile" alt="Información importante" class="w-full h-full object-contain" src="img/CARTEL INFORMATIVO/2.png" loading="eager" decoding="async" fetchpriority="high" onerror="this.style.display='none';"/>
+        <source srcset="img/CARTEL INFORMATIVO/mobile/2.webp?v=2" type="image/webp"/>
+        <img id="cartel-informativo-mobile" alt="Información importante" class="w-full h-full object-contain" src="img/CARTEL INFORMATIVO/2.png?v=2" loading="eager" decoding="async" fetchpriority="high" onerror="this.style.display='none';"/>
     </picture>
     <!-- Imagen para desktop -->
-    <img id="cartel-informativo" alt="Información importante" class="hidden md:block w-full h-full object-contain" data-src-desktop="img/CARTEL INFORMATIVO/1.png" loading="lazy" decoding="async" onerror="this.style.display='none';"/>
+    <img id="cartel-informativo" alt="Información importante" class="hidden md:block w-full h-full object-contain" data-src-desktop="img/CARTEL INFORMATIVO/1.png?v=2" loading="lazy" decoding="async" onerror="this.style.display='none';"/>
 </div>
     </div>
 </div>
