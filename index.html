@@ -58,13 +58,37 @@
 <link rel="preload" as="image" href="img/CARTEL ROTATORIO/01.png" media="(min-width: 1230px)" fetchpriority="high"/>
 <style type="text/tailwindcss">
     body {
-      padding-top: 85px;
+      padding-top: 123px;
       position: relative;
       background-color: #1a150e;
     }
+    .banner-estreno {
+      position: fixed;
+      top: 85px;
+      left: 0;
+      right: 0;
+      z-index: 19;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #c9a84b 0%, #b8923a 100%);
+      color: #1a150e;
+      font-family: Lora, Georgia, serif;
+      font-size: 1.25rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid rgba(180, 150, 60, 0.5);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.15);
+    }
+    @media (max-width: 767px) {
+      .banner-estreno { top: 64px; font-size: 1.05rem; height: 42px; }
+    }
     /* Móvil y tablet: versión ligera hasta 1230px (ampliada 20% para evitar hueco del cartel informativo) */
     @media (max-width: 1229px) {
-      body { padding-top: min(10vh, 4.5rem) !important; }
+      body { padding-top: calc(min(10vh, 4.5rem) + 38px) !important; }
+      .banner-estreno { top: min(10vh, 4.5rem); }
       .header-gris {
         height: min(10vh, 4.5rem) !important;
         min-height: 3rem;
@@ -81,12 +105,12 @@
         padding-bottom: 0.5rem !important;
       }
     }
-    /* Asegurar que el contenido no quede debajo del header */
+    /* Asegurar que el contenido no quede debajo del header + banner */
     main {
-      scroll-margin-top: 5rem;
+      scroll-margin-top: 8rem;
     }
     @media (max-width: 1229px) {
-      main { scroll-margin-top: min(10vh, 4.5rem); }
+      main { scroll-margin-top: calc(min(10vh, 4.5rem) + 2.5rem); }
     }
     /* Evitar que el texto se corte: quepan en recuadros y recuadros se ajusten al texto */
     p, .text-text-dark, .text-white, .text-accent-gold, summary span, h1, h2, h3, h4, h5, h6 {
@@ -600,7 +624,7 @@
         object-fit: contain !important;
         object-position: center center !important;
         margin: 0 auto;
-        transform: scale(1.05) !important;
+        transform: scale(1.20) !important;
         display: block !important;
       }
       #cartel-informativo {
@@ -619,7 +643,7 @@
       }
       #cartel-informativo-mobile {
         max-height: 95% !important;
-        transform: scale(1.05) !important;
+        transform: scale(1.20) !important;
       }
       #cartel-informativo {
         display: none !important;
@@ -635,6 +659,7 @@
         align-items: center !important;
         justify-content: center !important;
         overflow: visible !important;
+        transform: translateX(6%);
       }
       .cartel-informativo-container picture {
         display: none !important;
@@ -644,7 +669,7 @@
         max-height: 100% !important;
         object-fit: contain !important;
         width: 100% !important;
-        transform: scale(1.05) !important;
+        transform: scale(1.20) !important;
         margin-top: 0 !important;
         display: block !important;
       }
@@ -666,6 +691,7 @@
         align-items: center !important;
         justify-content: center !important;
         overflow: visible !important;
+        transform: translateX(-6%);
       }
       #cartel-rotatorio {
         height: 274% !important;
@@ -677,12 +703,22 @@
         opacity: 1 !important;
         display: block !important;
         visibility: visible !important;
-        transform: scale(2.001); /* +18% (1.696 × 1.18) */
+        transform: scale(2.36); /* +18% sobre tamaño anterior (2.001 × 1.18) */
       }
     }
-    /* Hero cartel: en desktop bajar un poco para no chocar con el 37 */
+    /* Hero cartel: en desktop reducir hueco banner-carteles ~80% (móvil no se toca) */
     @media (min-width: 1230px) {
-      .hero-cartel-desktop { margin-top: 1.5rem; }
+      #main-content { padding-top: 0.5rem !important; }
+      .hero-cartel-desktop { margin-top: 0.5rem; }
+      #cartel-container { padding-top: 0.5rem !important; }
+      /* Carteles no interactivos en desktop hasta que se unan */
+      #cartel-container,
+      .cartel-rotatorio-container,
+      .cartel-informativo-container,
+      #cartel-rotatorio,
+      #cartel-informativo,
+      .cartel-informativo-container img,
+      .cartel-informativo-container picture { pointer-events: none !important; }
     }
     /* Cursor lupa grande sobre periódico (cartel informativo) y fotos de galería - solo desktop */
     @media (min-width: 1230px) {
@@ -773,20 +809,23 @@
       border-bottom: 1px solid rgba(255,255,255,0.08);
       overflow: visible;
     }
-    /* 37 tipo sello: más grande (~46%) y mitad por debajo de la línea del header */
+    /* 37 tipo sello: fijo arriba a la derecha (igual en móvil y desktop), debajo del header y al lado del banner */
     .logo-37-sello {
-      align-self: flex-end;
-      transform: translateY(50%);
+      position: fixed !important;
+      right: 0.75rem !important;
+      left: auto !important;
+      transform: translateY(6px) !important;
+      z-index: 30;
     }
     .logo-37-sello img {
-      height: 4.8rem;    /* ~77px, +45% sobre tamaño anterior */
+      height: 4.8rem !important;
       max-height: none;
     }
-    @media (min-width: 640px) {
-      .logo-37-sello img { height: 6.4rem; }  /* ~102px */
+    @media (max-width: 1229px) {
+      .logo-37-sello { top: min(10vh, 4.5rem) !important; }
     }
     @media (min-width: 1230px) {
-      .logo-37-sello img { height: 7.5rem; }  /* ~120px */
+      .logo-37-sello { top: 85px !important; }
     }
     /* 37 años: visible solo cuando la imagen ya cargó (evita parpadeo/hueco) */
     .logo-37-sello.logo-37-cargando {
@@ -796,21 +835,6 @@
     .logo-37-sello.logo-37-loaded,
     .logo-37-sello:not(.logo-37-cargando) {
       opacity: 1;
-    }
-    /* Móvil: botón 37 sobre el cartel rotatorio (entra en el área del cartel) */
-    @media (max-width: 1229px) {
-      .logo-37-sello {
-        position: fixed !important;
-        top: min(10vh, 4.5rem) !important;
-        right: 0.75rem !important;
-        left: auto !important;
-        transform: translateY(6px) !important;
-        align-self: auto !important;
-        z-index: 30;
-      }
-      .logo-37-sello img {
-        height: 4.8rem !important;
-      }
     }
     /* Botón Adquiere tus entradas: granate tipo terciopelo */
     .btn-granate-terciopelo {
@@ -1134,6 +1158,7 @@
 </div>
 </div>
 </header>
+<div class="banner-estreno" role="status" aria-live="polite">Estreno 6 de marzo 2026</div>
 <div id="zoom-lens" class="zoom-lens" aria-hidden="true" role="presentation"></div>
 <div class="main-container">
 <div id="scroll-indicator" class="scroll-indicator" aria-hidden="true" role="presentation">
@@ -1176,14 +1201,13 @@
 <div class="cartel-rotatorio-container reading-mode-hidden w-full md:w-1/2 h-full flex items-center justify-center relative group order-1">
 <div class="w-full h-full flex items-center justify-center" id="cartel-rotatorio" style="background-size: contain; background-position: center center; background-repeat: no-repeat; transition: opacity 0.15s ease-in-out; display: block; min-height: 200px; will-change: opacity;" data-cartel-loaded="0">
 </div>
-<!-- Flecha izquierda -->
-<button onclick="cambiarCartelRotatorio(-1)" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white p-2 sm:p-3 rounded-full transition-all opacity-70 md:opacity-0 md:group-hover:opacity-100 touch-manipulation" aria-label="Imagen anterior" style="-webkit-tap-highlight-color: transparent;">
+<!-- Flechas ocultas: cartel fijo por ahora -->
+<button onclick="cambiarCartelRotatorio(-1)" class="hidden absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white p-2 sm:p-3 rounded-full transition-all opacity-70 md:opacity-0 md:group-hover:opacity-100 touch-manipulation" aria-hidden="true" style="-webkit-tap-highlight-color: transparent;">
 <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
 <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
 </svg>
 </button>
-<!-- Flecha derecha -->
-<button onclick="cambiarCartelRotatorio(1)" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white p-2 sm:p-3 rounded-full transition-all opacity-70 md:opacity-0 md:group-hover:opacity-100 touch-manipulation" aria-label="Siguiente imagen" style="-webkit-tap-highlight-color: transparent;">
+<button onclick="cambiarCartelRotatorio(1)" class="hidden absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white p-2 sm:p-3 rounded-full transition-all opacity-70 md:opacity-0 md:group-hover:opacity-100 touch-manipulation" aria-hidden="true" style="-webkit-tap-highlight-color: transparent;">
 <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
 <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
 </svg>
