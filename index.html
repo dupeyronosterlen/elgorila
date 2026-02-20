@@ -423,20 +423,11 @@ function gtag_report_conversion(url) {
       text-shadow: 0 2px 5px rgba(0, 0, 0, 0.95), 0 4px 8px rgba(0, 0, 0, 0.9), 0 0 6px rgba(212, 175, 55, 0.1);
       color: #e8e6e0 !important;
     }
-    /* La Obra / El Actor: en vista extendida, más espacio para texto (8% hacia afuera) e imagen 8% más pequeña */
+    /* La Obra / El Actor: layout desktop */
     @media (min-width: 1230px) {
       .seccion-obra-actor .contenedor-obra-actor {
-        max-width: 69.12rem; /* 8% más que max-w-5xl (64rem) */
+        max-width: 76rem !important;
       }
-      .seccion-obra-actor .imagen-obra-actor {
-        width: 460px !important;
-        max-width: 460px;
-      }
-      .seccion-obra-actor .imagen-obra-actor-inner {
-        height: 460px !important;
-      }
-    }
-    @media (min-width: 1230px) {
       .seccion-obra-actor .imagen-obra-actor {
         width: 552px !important;
         max-width: 552px;
@@ -448,16 +439,15 @@ function gtag_report_conversion(url) {
         min-height: 552px !important;
       }
     }
-    /* Obra / Actor: imagen de fondo que no se repita y que cubra el espacio (solo estas secciones) */
+    /* Obra / Actor: fondo */
     .seccion-obra-actor.section-with-bg {
       background-repeat: no-repeat !important;
       background-size: cover !important;
       background-position: center center !important;
-      overflow: visible !important; /* que el marco y la foto no se muerdan: no recortar contenido */
     }
     .seccion-obra-actor .contenedor-obra-actor,
     .seccion-obra-actor .contenedor-obra-actor > div {
-      overflow: visible !important; /* marco y foto completos, sin recortes */
+      overflow: visible !important;
     }
     /* Obra / Actor: vista en fila solo cuando hay espacio para mínimo 6-7 palabras por línea; si no, vista móvil (imagen arriba, texto abajo) */
     @media (max-width: 991px) {
@@ -942,6 +932,7 @@ function gtag_report_conversion(url) {
     .sobre-contenido.abierto {
       max-height: none;
       opacity: 1;
+      overflow: visible;
     }
     .sobre-linea {
       width: 60%;
@@ -1202,6 +1193,18 @@ function gtag_report_conversion(url) {
       .galeria-hilo-3 { left: 75%; }
     }
   </style>
+<style>
+  @media (min-width: 1230px) {
+    .seccion-obra-actor.section-with-bg {
+      overflow: visible !important;
+      border-radius: 0 !important;
+    }
+    .seccion-obra-actor.section-with-bg::before,
+    .seccion-obra-actor.section-with-bg::after {
+      clip-path: inset(0 round 0.5rem);
+    }
+  }
+</style>
 <script>
     tailwind.config = {
       darkMode: "class",
@@ -1316,11 +1319,16 @@ function gtag_report_conversion(url) {
     </div>
 </div>
 </section>
-<section class="flex justify-center scroll-mt-24 mt-2 sm:mt-3 mb-4 sm:mb-6">
+<section class="flex flex-col items-center scroll-mt-24 mt-2 sm:mt-3 mb-4 sm:mb-6">
+<span style="font-family: Lora, Georgia, serif; font-size: 0.8rem; letter-spacing: 0.15em; color: #c9a84b; opacity: 0.85; text-transform: uppercase; margin-bottom: 0.4rem;">Precio especial de lanzamiento</span>
 <a class="link-venta-boletos btn-granate-terciopelo rounded-xl px-7 py-4 sm:px-10 sm:py-5 text-base sm:text-lg tracking-wide touch-manipulation inline-flex flex-col items-center justify-center" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent; line-height:1.3;">
   Adquiere tus entradas<br>
   <span style="font-size:0.8em; font-weight:400; opacity:0.7; text-decoration:line-through;">$599</span> <span style="font-size:0.95em; font-weight:800; color:#c9a84b;">$370</span>
 </a>
+<span style="display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem; font-family: Inter, sans-serif; font-size: 0.7rem; color: rgba(201,168,75,0.6); letter-spacing: 0.05em;">
+  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+  Compra segura a través de Goliiive
+</span>
 </section>
 <div class="sobre-dorado" id="sobre-dorado">
   <div class="sobre-linea"></div>
@@ -1830,6 +1838,14 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
 <p class="text-text-dark/60 mt-2">© 2025. Todos los derechos reservados.</p>
 <a id="footer-admin-link" href="admin.html" class="inline-block mt-3 text-xs text-text-dark/50 hover:text-accent-gold transition-colors">Administrador</a>
 </div>
+</div>
+<div class="flex items-center justify-center gap-5 mt-8 pt-6 border-t border-accent-gold/10">
+<a href="https://www.facebook.com/p/El-Gorila-100088695462813/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-11 w-11 rounded-full bg-accent-gold/15 hover:bg-accent-gold/30 text-accent-gold border border-accent-gold/30 hover:border-accent-gold/50 transition-all" aria-label="Facebook">
+<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+</a>
+<a id="footer-instagram" href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-11 w-11 rounded-full bg-accent-gold/15 hover:bg-accent-gold/30 text-accent-gold border border-accent-gold/30 hover:border-accent-gold/50 transition-all" aria-label="Instagram">
+<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.919 0 3.274-.011 3.584-.069 4.919-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.85-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.919 0-3.274.012-3.584.07-4.919.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+</a>
 </div>
 </div>
 </footer>
