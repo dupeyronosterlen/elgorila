@@ -336,10 +336,6 @@ function actualizarPantalla() {
 
 // --- FUNCIÓN 4: IR A CONFIRMACIÓN (PAGO FINAL) ---
 function irAConfirmacion() {
-    console.log('irAConfirmacion llamada');
-    console.log('fechaSeleccionada:', fechaSeleccionada);
-    console.log('cantidadActual:', cantidadActual);
-    
     if (fechaSeleccionada === null) {
         alert("Por favor selecciona una fecha para continuar");
         return false;
@@ -350,34 +346,24 @@ function irAConfirmacion() {
         return false;
     }
 
-    // Verificar disponibilidad una última vez
-    console.log('Verificando disponibilidad...');
     verificarDisponibilidad();
-    console.log('reservaId después de verificar:', reservaId);
     
-    // Si no hay reservaId, intentar crear una
     if (!reservaId) {
-        console.log('No hay reservaId, intentando crear reserva...');
         const resultado = InventarioManager.crearReserva(fechaSeleccionada, cantidadActual);
         if (resultado.exito) {
             reservaId = resultado.reservaId;
-            console.log('Reserva creada:', reservaId);
         } else {
-            console.error('Error al crear reserva:', resultado.mensaje);
             alert("No se pudo crear la reserva. Por favor intenta de nuevo.");
             return false;
         }
     }
 
-    // Calcular precios finales
     const calculoPrecio = InventarioManager.calcularPrecioConDescuento(
         precioUnitario, 
         cantidadActual, 
         codigoDescuento
     );
-    console.log('Cálculo de precio:', calculoPrecio);
 
-    // Guardamos los datos en LocalStorage
     let orden = {
         fecha: nombreFecha,
         clave: fechaSeleccionada,
@@ -392,14 +378,8 @@ function irAConfirmacion() {
         timestamp: Date.now()
     };
     
-    console.log('Orden a guardar:', orden);
-    
     try {
         localStorage.setItem('orden_compra', JSON.stringify(orden));
-        console.log('Orden guardada en localStorage');
-        
-        // Nos vamos a la página de checkout (pago)
-        console.log('Redirigiendo a checkout.html...');
         window.location.href = 'checkout.html';
         return true;
     } catch (error) {
@@ -417,7 +397,6 @@ function limpiarReserva() {
     }
 }
 
-// Limpiar reserva cuando el usuario sale de la página
 window.addEventListener('beforeunload', limpiarReserva);
 
 // --- FUNCIÓN: CARGAR FECHAS DINÁMICAS ---
@@ -434,7 +413,6 @@ function cargarFechas() {
 
     let html = '';
 
-    // Agregar funciones especiales (viernes) primero si están activas
     funciones.especiales.forEach(funcion => {
         const bloqueada = funcion.bloqueada;
         const esSeleccionada = fechaSeleccionada === funcion.clave;
@@ -463,7 +441,6 @@ function cargarFechas() {
         `;
     });
 
-    // Agregar sábados regulares
     funciones.regulares.forEach(funcion => {
         const bloqueada = funcion.bloqueada;
         const esSeleccionada = fechaSeleccionada === funcion.clave;
@@ -494,7 +471,6 @@ function cargarFechas() {
 
     botonesContainer.innerHTML = html;
     
-    // Resaltar botón seleccionado si hay uno
     if (fechaSeleccionada) {
         resaltarBotonFecha(fechaSeleccionada);
     }
@@ -502,15 +478,12 @@ function cargarFechas() {
 
 // --- INICIALIZACIÓN AL CARGAR LA PÁGINA ---
 function inicializar() {
-    // Inicializar sistema de inventario
     if (typeof InventarioManager !== 'undefined') {
         InventarioManager.inicializar();
     }
     
-    // Cargar fechas dinámicas
     cargarFechas();
     
-    // Inicializar inventario para todas las funciones
     if (typeof FechasManager !== 'undefined') {
         const funciones = FechasManager.obtenerFunciones();
         [...funciones.regulares, ...funciones.especiales].forEach(funcion => {
@@ -518,10 +491,8 @@ function inicializar() {
         });
     }
     
-    // Actualizar pantalla con valores iniciales
     actualizarPantalla();
     
-    // Limpiar reservas expiradas periódicamente (cada 30 segundos)
     setInterval(() => {
         if (fechaSeleccionada) {
             verificarDisponibilidad();
@@ -529,15 +500,12 @@ function inicializar() {
         }
     }, 30000);
     
-    // Actualizar fechas cada minuto (por si cambia el estado de bloqueo)
     setInterval(() => {
         cargarFechas();
     }, 60000);
     
-    // Configurar evento para código de descuento (solo Enter, no input automático)
     const inputCodigo = document.getElementById('codigo-descuento-input');
     if (inputCodigo) {
-        // Solo aplicar cuando presionen Enter, no mientras escriben
         inputCodigo.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -547,16 +515,13 @@ function inicializar() {
     }
 }
 
-// Exportar funciones al scope global para uso en HTML
 window.irAConfirmacion = irAConfirmacion;
 window.cambiarCantidad = cambiarCantidad;
 window.seleccionarFecha = seleccionarFecha;
 window.aplicarCodigoDescuento = aplicarCodigoDescuento;
 
-// Ejecutar cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', inicializar);
 } else {
-    // DOM ya está listo
     inicializar();
 }

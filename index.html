@@ -79,56 +79,13 @@ function gtag_report_conversion(url) {
 <link rel="preload" as="image" href="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" fetchpriority="high"/>
 <link rel="preload" as="image" href="img/LOGO DOS/Artboard 11.png" fetchpriority="high"/>
 <link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" media="(max-width: 1229px)" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp?v=3" media="(max-width: 1229px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp?v=4" media="(max-width: 1229px)" fetchpriority="high"/>
 <link rel="preload" as="image" href="img/CARTEL ROTATORIO/01.png" media="(min-width: 1230px)" fetchpriority="high"/>
 <style type="text/tailwindcss">
     body {
       padding-top: 0;
       position: relative;
       background-color: #1a150e;
-    }
-    .banner-estreno {
-      position: fixed;
-      top: -60px;
-      left: 0;
-      right: 0;
-      z-index: 25;
-      height: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(180deg, #c9a84b 0%, #b8923a 100%);
-      color: #1a150e;
-      font-family: Lora, Georgia, serif;
-      font-size: 1.35rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      border-bottom: 1px solid rgba(180, 150, 60, 0.5);
-      box-shadow: 0 2px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.15);
-      text-decoration: none;
-      cursor: pointer;
-      transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .banner-estreno.visible { top: 0; }
-    .banner-zona-hover {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      z-index: 39;
-    }
-    .banner-zona-hover:hover ~ .banner-estreno,
-    .banner-estreno:hover,
-    .banner-estreno.visible {
-      top: 0;
-    }
-    .banner-estreno.saliendo {
-      transition: top 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.8s;
-    }
-    @media (max-width: 767px) {
-      .banner-estreno { font-size: 1.1rem; height: 46px; }
     }
     /* Logo EL GORILA: fijo arriba a la izquierda */
     .logo-gorila-sello {
@@ -286,11 +243,11 @@ function gtag_report_conversion(url) {
         background: linear-gradient(180deg, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.04) 50%, rgba(0,0,0,0.18) 100%) !important;
       }
       .section-with-bg::before {
-        filter: blur(30px) brightness(0.5) contrast(0.85) saturate(0.5);
+        filter: blur(24px) brightness(0.5) contrast(0.85) saturate(0.5);
         opacity: 0.8;
       }
       .obra-fondo-kafka.section-with-bg::before {
-        filter: blur(30px) brightness(0.35) contrast(0.85) saturate(0.4);
+        filter: blur(24px) brightness(0.35) contrast(0.85) saturate(0.4);
         opacity: 0.8;
       }
     }
@@ -710,7 +667,6 @@ function gtag_report_conversion(url) {
         align-items: center !important;
         justify-content: center !important;
         overflow: visible !important;
-        transform: translateX(6%);
       }
       .cartel-informativo-container picture {
         display: none !important;
@@ -720,7 +676,7 @@ function gtag_report_conversion(url) {
         max-height: 100% !important;
         object-fit: contain !important;
         width: 100% !important;
-        transform: scale(1.20) !important;
+        max-width: 100% !important;
         margin-top: 0 !important;
         display: block !important;
       }
@@ -1319,8 +1275,6 @@ function gtag_report_conversion(url) {
     <span></span><span></span><span></span><span></span>
   </div>
 </div>
-<div class="banner-zona-hover" aria-hidden="true"></div>
-<a class="banner-estreno visible" id="banner-estreno" href="#venta-boletos">Estreno 6 de marzo 2026</a>
 <div class="logo-gorila-sello" id="logo-gorila-wrap">
   <button type="button" id="btn-gorila-inicio" class="flex items-center justify-center p-0 rounded transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Ir al inicio">
     <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="w-auto object-contain flex-shrink-0 pointer-events-none" loading="eager" decoding="async">
@@ -1389,11 +1343,11 @@ function gtag_report_conversion(url) {
 <div class="cartel-informativo-container reading-mode-solo w-full md:w-1/2 h-full flex items-center justify-center relative order-1 md:order-2" id="cartel-informativo-wrap">
     <!-- Imagen para móvil: WebP ligero cuando existe, fallback PNG -->
     <picture class="w-full h-full flex items-center justify-center md:hidden">
-        <source srcset="img/CARTEL INFORMATIVO/mobile/2.webp?v=3" type="image/webp"/>
-        <img id="cartel-informativo-mobile" alt="Información importante" class="w-full h-full object-contain" src="img/CARTEL INFORMATIVO/2.png?v=3" loading="eager" decoding="async" fetchpriority="high" onerror="this.style.display='none';"/>
+        <source srcset="img/CARTEL INFORMATIVO/mobile/2.webp?v=4" type="image/webp"/>
+        <img id="cartel-informativo-mobile" alt="Información importante" class="w-full h-full object-contain" src="img/CARTEL INFORMATIVO/2.png?v=4" loading="eager" decoding="async" fetchpriority="high" onerror="this.style.display='none';"/>
     </picture>
     <!-- Imagen para desktop -->
-    <img id="cartel-informativo" alt="Información importante" class="hidden md:block w-full h-full object-contain" data-src-desktop="img/CARTEL INFORMATIVO/1.png?v=3" loading="lazy" decoding="async" onerror="this.style.display='none';"/>
+    <img id="cartel-informativo" alt="Información importante" class="hidden md:block w-full h-full object-contain" data-src-desktop="img/CARTEL INFORMATIVO/1.png?v=4" loading="lazy" decoding="async" onerror="this.style.display='none';"/>
 </div>
     </div>
 </div>
@@ -1401,10 +1355,10 @@ function gtag_report_conversion(url) {
 <section class="flex items-center justify-center scroll-mt-24 mt-2 sm:mt-3 mb-4 sm:mb-6 gap-4 sm:gap-6">
 <div class="indicador-lateral" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
 <div class="flex flex-col items-center">
-<span style="font-family: Lora, Georgia, serif; font-size: 0.8rem; letter-spacing: 0.15em; color: #c9a84b; opacity: 0.85; text-transform: uppercase; margin-bottom: 0.4rem;">Estreno 6 de marzo 2026</span>
+<span style="font-family: Lora, Georgia, serif; font-size: 0.8rem; letter-spacing: 0.12em; color: #c9a84b; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;" role="status">Temporada en curso</span>
 <a class="link-venta-boletos btn-granate-terciopelo rounded-xl px-7 py-4 sm:px-10 sm:py-5 text-base sm:text-lg tracking-wide touch-manipulation inline-flex flex-col items-center justify-center" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent; line-height:1.3;">
   Adquiere tus entradas<br>
-  <span style="font-size:0.8em; font-weight:400; opacity:0.7; text-decoration:line-through;">$599</span> <span style="font-size:0.95em; font-weight:800; color:#c9a84b;">$370</span>
+  <span style="font-size:0.95em; font-weight:800; color:#c9a84b;">$370</span>
 </a>
 <span style="display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem; font-family: Inter, sans-serif; font-size: 0.7rem; color: rgba(201,168,75,0.6); letter-spacing: 0.05em;">
   <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
@@ -1538,7 +1492,7 @@ function gtag_report_conversion(url) {
             </div>
             <div class="imagen-obra-actor w-full md:w-[500px] lg:w-[600px] flex-shrink-0 order-1 md:order-2">
                 <div class="imagen-obra-actor-inner relative w-full aspect-[4/3] sm:aspect-[5/4] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border-2 border-accent-gold/30 max-h-[300px] sm:max-h-[380px] md:max-h-none shadow-lg">
-                    <img id="obra-imagen" alt="La Obra" class="w-full h-full object-cover transition-opacity duration-150" src="img/OBRA/2.jpg" loading="lazy" decoding="async" fetchpriority="low" style="will-change: opacity;" onerror="this.src='img/OBRA/3.jpg'; this.onerror=function(){this.src='img/OBRA/4.jpg'; this.onerror=function(){this.style.display='none';};};"/>
+                    <img id="obra-imagen" alt="La Obra" class="w-full h-full object-cover transition-opacity duration-150" src="img/OBRA/2.jpg" loading="lazy" decoding="async" fetchpriority="low" onerror="this.src='img/OBRA/3.jpg'; this.onerror=function(){this.src='img/OBRA/4.jpg'; this.onerror=function(){this.style.display='none';};};"/>
                 </div>
             </div>
         </div>
@@ -1833,7 +1787,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
         </div>
         <div class="modal-37-slide absolute inset-0 flex flex-col items-center justify-start pt-10 sm:pt-14 md:pt-16 p-2 sm:p-4 opacity-0 transition-opacity duration-400" data-index="4">
           <img data-src="img/37/5.png" data-src-mobile="img/37/mobile/5.webp" alt="37 años" class="max-h-[200px] sm:max-h-[260px] md:max-h-[520px] w-auto object-contain rounded-lg shadow-xl flex-shrink-0 modal-37-img" decoding="async"/>
-          <p class="mt-4 font-display text-accent-gold font-semibold text-sm sm:text-base">2025-2026</p>
+          <p class="mt-4 font-display text-accent-gold font-semibold text-sm sm:text-base">2026</p>
           <p class="text-accent-gold/90 text-center text-xs sm:text-sm font-medium mt-0.5">37 años sobre los laureles</p>
           <p class="text-text-dark/90 text-center text-xs sm:text-sm mt-2 max-w-md leading-relaxed">Casi cuatro décadas después del estreno de 1989, la trayectoria sigue viva.</p>
         </div>
@@ -1881,7 +1835,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
 </div>
 <div class="md:text-right">
 <p class="font-display text-lg text-accent-gold">EL GORILA</p>
-<p class="text-text-dark/60 mt-2">© 2025. Todos los derechos reservados.</p>
+<p class="text-text-dark/60 mt-2">© 2026. Todos los derechos reservados.</p>
 <a id="footer-admin-link" href="admin.html" class="inline-block mt-3 text-xs text-text-dark/50 hover:text-accent-gold transition-colors">Administrador</a>
 </div>
 </div>
@@ -1899,44 +1853,6 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
 </div>
 <script src="js/imagenes.js" defer></script>
 <script>
-  (function() {
-    var banner = document.getElementById('banner-estreno');
-    if (banner) {
-      setTimeout(function() {
-        banner.classList.add('saliendo');
-        banner.classList.remove('visible');
-        setTimeout(function() { banner.classList.remove('saliendo'); }, 2500);
-      }, 5000);
-      var zona = document.querySelector('.banner-zona-hover');
-      var hideTimer;
-      function showBanner() {
-        clearTimeout(hideTimer);
-        banner.classList.remove('saliendo');
-        banner.classList.add('visible');
-      }
-      function hideBanner() {
-        hideTimer = setTimeout(function() {
-          banner.classList.add('saliendo');
-          banner.classList.remove('visible');
-          setTimeout(function() { banner.classList.remove('saliendo'); }, 2500);
-        }, 600);
-      }
-      if (zona) {
-        zona.addEventListener('mouseenter', showBanner);
-        banner.addEventListener('mouseenter', showBanner);
-        zona.addEventListener('mouseleave', hideBanner);
-        banner.addEventListener('mouseleave', hideBanner);
-      }
-      banner.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (typeof gtag_report_conversion === 'function') {
-          gtag_report_conversion(banner.href);
-        } else {
-          window.location.href = banner.href;
-        }
-      });
-    }
-  })();
   (function() {
     var wrap = document.getElementById('logo-37-wrap');
     if (wrap) {
