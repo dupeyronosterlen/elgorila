@@ -716,6 +716,9 @@ function gtag_report_conversion(url) {
       #main-content { padding-top: 0 !important; }
       .hero-cartel-desktop { margin-top: 0; margin-bottom: -3.5rem; }
       #cartel-container { padding-top: 0 !important; padding-bottom: 0 !important; max-height: 75vh !important; overflow: hidden !important; }
+      /* Imagen del retrato: ancho fijo 480px en desktop; texto toma el resto */
+      .cartel-rotatorio-container { width: 480px !important; max-width: 480px !important; flex: 0 0 480px !important; margin: 0 !important; }
+      .cartel-informativo-container { flex: 1 !important; min-width: 0 !important; }
       /* Carteles no interactivos en desktop hasta que se unan */
       #cartel-container,
       .cartel-rotatorio-container,
@@ -843,11 +846,13 @@ function gtag_report_conversion(url) {
       transform: translateY(1px);
       box-shadow: 0 1px 0 rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.25);
     }
-    /* Sobre dorado: solapa que oculta el contenido inferior */
+    /* Sobre dorado: sobre en el centro, lengüeta en "Descubre más"; al presionar se abre el contenido */
     .sobre-dorado {
       position: relative;
       width: 100%;
       display: flex;
+      flex-direction: column;
+      align-items: center;
       justify-content: center;
       margin-top: 1.5rem;
       perspective: 800px;
@@ -1123,6 +1128,13 @@ function gtag_report_conversion(url) {
       pointer-events: none;
       user-select: none;
     }
+    .indicador-mas.indicador-mas-izquierda {
+      position: fixed;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 20;
+    }
     .indicador-mas svg {
       width: 26px;
       height: 26px;
@@ -1339,30 +1351,34 @@ function gtag_report_conversion(url) {
 </svg>
 </button>
 </div>
-<!-- Lado Derecho: Imagen Informativa Fija (sobre rotatorio en móvil, derecha en desktop). En reading mode: solo esta imagen 1. -->
+<!-- Lado Derecho: Solo bloque de texto (cartel informativo sustituido por texto). -->
 <div class="cartel-informativo-container reading-mode-solo w-full md:w-1/2 h-full flex items-center justify-center relative order-1 md:order-2" id="cartel-informativo-wrap">
-    <!-- Imagen para móvil: WebP ligero cuando existe, fallback PNG -->
-    <picture class="w-full h-full flex items-center justify-center md:hidden">
-        <source srcset="img/CARTEL INFORMATIVO/mobile/2.webp?v=5" type="image/webp"/>
-        <img id="cartel-informativo-mobile" alt="Información importante" class="w-full h-full object-contain" src="img/CARTEL INFORMATIVO/2.png?v=4" loading="eager" decoding="async" fetchpriority="high" onerror="this.style.display='none';"/>
-    </picture>
-    <!-- Imagen para desktop -->
-    <img id="cartel-informativo" alt="Información importante" class="hidden md:block w-full h-full object-contain" data-src-desktop="img/CARTEL INFORMATIVO/1.png?v=4" loading="lazy" decoding="async" onerror="this.style.display='none';"/>
+    <div class="cartel-texto-block" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:clamp(9px,1.8vw,18px); max-width:360px; padding:1rem 1rem 1.5rem; font-family: Lora, Georgia, serif;">
+      <p style="font-size:clamp(27px,4.8vw,33px); color:rgba(242,237,228,0.6); font-style:italic; letter-spacing:0.05em; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">Humberto Dupeyron en</p>
+      <h1 style="font-size:clamp(42px, 9.2vw, 64px); color:#B85C38; line-height:0.9; letter-spacing:-0.02em; margin:0; font-weight:700; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">EL GORILA</h1>
+      <p style="font-size:clamp(20px,3vw,22px); color:rgba(242,237,228,0.5); letter-spacing:0.15em; text-transform:uppercase; margin:0; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">de Franz Kafka</p>
+      <div style="width:60px; height:1.5px; background:#B85C38; opacity:0.6; margin:6px 0;"></div>
+    </div>
 </div>
     </div>
 </div>
 </section>
-<section class="flex items-center justify-center scroll-mt-24 mt-2 sm:mt-3 mb-4 sm:mb-6">
-<div class="flex flex-col items-center">
-<a class="link-venta-boletos btn-granate-terciopelo rounded-xl px-9 py-5 sm:px-12 sm:py-6 text-base sm:text-lg tracking-wide touch-manipulation inline-flex flex-col items-center justify-center" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent; line-height:1.3;">
-  Adquiere tus entradas<br>
-  <span style="font-size:0.95em; font-weight:800; color:#c9a84b;">$370</span>
-</a>
-<span style="display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem; font-family: Inter, sans-serif; font-size: 0.7rem; color: rgba(201,168,75,0.6); letter-spacing: 0.05em;">
-  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-  Compra segura a través de Goliiive
-</span>
-</div>
+<section class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-2 sm:mt-3 mb-4 sm:mb-6 px-4">
+  <div style="text-align:center; padding:12px 0; display:flex; justify-content:center; gap:24px; flex-wrap:wrap;">
+    <span style="font-size:15px; color:rgba(242,237,228,0.55);">Viernes · 8:30 pm</span>
+    <span style="font-size:15px; color:rgba(242,237,228,0.25);">|</span>
+    <span style="font-size:15px; color:rgba(242,237,228,0.55);">Nueva Carpa Geodésica</span>
+  </div>
+  <div class="flex flex-col items-center">
+    <a class="link-venta-boletos btn-granate-terciopelo rounded-xl px-9 py-5 sm:px-12 sm:py-6 text-base sm:text-lg tracking-wide touch-manipulation inline-flex flex-col items-center justify-center" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent; line-height:1.3;">
+      Adquiere tus entradas<br>
+      <span style="font-size:0.95em; font-weight:800; color:#c9a84b;">$370</span>
+    </a>
+    <span style="display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem; font-family: Inter, sans-serif; font-size: 0.7rem; color: rgba(201,168,75,0.6); letter-spacing: 0.05em;">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      Compra segura a través de Goliiive
+    </span>
+  </div>
 </section>
 <div class="sobre-dorado" id="sobre-dorado">
   <div class="sobre-linea"></div>
@@ -1465,7 +1481,7 @@ function gtag_report_conversion(url) {
 <a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-5 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base tracking-wide touch-manipulation inline-flex items-center justify-center whitespace-nowrap" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
 </div>
 </section>
-<div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+<div class="indicador-mas indicador-mas-izquierda" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
 <!-- Sección La Obra (fondo Kafka más oscuro y desaturado) -->
 <section class="seccion-obra-actor obra-fondo-kafka mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" style="background-image: url('img/SINOPSIS/2.png');">
     <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
