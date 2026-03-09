@@ -887,6 +887,20 @@ function gtag_report_conversion(url) {
     }
     .sobre-texto:hover { opacity: 1; }
     .sobre-dorado.abierto .sobre-texto { opacity: 0; pointer-events: none; }
+    /* Misma tipografía que "Descubre la obra" para horario y sala */
+    .texto-portada-horario {
+      font-family: Lora, Georgia, serif;
+      font-size: clamp(0.7rem, 2.8vw, 1.14rem);
+      letter-spacing: 0.12em;
+      color: #c9a84b;
+      opacity: 0.75;
+      white-space: nowrap;
+    }
+    .texto-portada-horario span { color: inherit; }
+    /* Stroke dorado en EL GORILA (mismo tono que Descubre la obra) */
+    .titulo-el-gorila {
+      -webkit-text-stroke: 1px #c9a84b;
+    }
     .sobre-solapa-icono {
       position: absolute;
       top: 12px;
@@ -1278,6 +1292,23 @@ function gtag_report_conversion(url) {
       },
     };
   </script>
+<!-- Google Ads Outbound Click Conversion -->
+<script>
+function gtag_report_conversion(url) {
+  var callback = function () {
+    if (typeof(url) != 'undefined') {
+      window.location = url;
+    }
+  };
+  gtag('event', 'conversion', {
+      'send_to': 'AW-17961021514/1Q6tCLSBxYUcEMrgvfRC',
+      'value': 370.0,
+      'currency': 'MXN',
+      'event_callback': callback
+  });
+  return false;
+}
+</script>
 </head>
 <body class="font-body bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark antialiased" id="inicio">
 <a href="#main-content" class="skip-link">Saltar al contenido</a>
@@ -1355,7 +1386,7 @@ function gtag_report_conversion(url) {
 <div class="cartel-informativo-container reading-mode-solo w-full md:w-1/2 h-full flex items-center justify-center relative order-1 md:order-2" id="cartel-informativo-wrap">
     <div class="cartel-texto-block" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:clamp(9px,1.8vw,18px); max-width:360px; padding:1rem 1rem 1.5rem; font-family: Lora, Georgia, serif;">
       <p style="font-size:clamp(27px,4.8vw,33px); color:rgba(242,237,228,0.6); font-style:italic; letter-spacing:0.05em; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">Humberto Dupeyron en</p>
-      <h1 style="font-size:clamp(42px, 9.2vw, 64px); color:#B85C38; line-height:0.9; letter-spacing:-0.02em; margin:0; font-weight:700; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">EL GORILA</h1>
+      <h1 class="titulo-el-gorila" style="font-size:clamp(50px, 11vw, 77px); color:#B85C38; line-height:0.9; letter-spacing:-0.02em; margin:0; font-weight:700; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">EL GORILA</h1>
       <p style="font-size:clamp(20px,3vw,22px); color:rgba(242,237,228,0.5); letter-spacing:0.15em; text-transform:uppercase; margin:0; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">de Franz Kafka</p>
       <div style="width:60px; height:1.5px; background:#B85C38; opacity:0.6; margin:6px 0;"></div>
     </div>
@@ -1364,13 +1395,13 @@ function gtag_report_conversion(url) {
 </div>
 </section>
 <section class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-2 sm:mt-3 mb-4 sm:mb-6 px-4">
-  <div style="text-align:center; padding:12px 0; display:flex; justify-content:center; gap:24px; flex-wrap:wrap;">
-    <span style="font-size:15px; color:rgba(242,237,228,0.55);">Viernes · 8:30 pm</span>
-    <span style="font-size:15px; color:rgba(242,237,228,0.25);">|</span>
-    <span style="font-size:15px; color:rgba(242,237,228,0.55);">Nueva Carpa Geodésica</span>
+  <div class="texto-portada-horario" style="text-align:center; padding:12px 0; display:flex; justify-content:center; gap:24px; flex-wrap:nowrap;">
+    <span>Viernes · 8:30 pm</span>
+    <span style="opacity:0.5;">|</span>
+    <span>Nueva Carpa Geodésica</span>
   </div>
   <div class="flex flex-col items-center">
-    <a class="link-venta-boletos btn-granate-terciopelo rounded-xl px-9 py-5 sm:px-12 sm:py-6 text-base sm:text-lg tracking-wide touch-manipulation inline-flex flex-col items-center justify-center" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent; line-height:1.3;">
+    <a class="link-venta-boletos btn-granate-terciopelo rounded-xl px-9 py-5 sm:px-12 sm:py-6 text-base sm:text-lg tracking-wide touch-manipulation inline-flex flex-col items-center justify-center" href="#venta-boletos" onclick="return gtag_report_conversion(this.href)" style="-webkit-tap-highlight-color: transparent; line-height:1.3;">
       Adquiere tus entradas<br>
       <span style="font-size:0.95em; font-weight:800; color:#c9a84b;">$370</span>
     </a>
@@ -1478,7 +1509,7 @@ function gtag_report_conversion(url) {
 <!-- Venta de boletos: solo botón (debajo de la galería) -->
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-4 sm:mt-6 rounded-lg p-4 sm:p-6 md:p-8" id="venta-boletos">
 <div class="flex justify-center">
-<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-5 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base tracking-wide touch-manipulation inline-flex items-center justify-center whitespace-nowrap" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
+<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-5 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base tracking-wide touch-manipulation inline-flex items-center justify-center whitespace-nowrap" href="#venta-boletos" onclick="return gtag_report_conversion(this.href)" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
 </div>
 </section>
 <div class="indicador-mas indicador-mas-izquierda" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
@@ -1639,7 +1670,7 @@ function gtag_report_conversion(url) {
 
 <!-- Enlace a venta (Carpa Geodésica) - Antes de FAQ -->
 <section class="mb-8 sm:mb-10 flex justify-center gap-3 flex-wrap scroll-mt-24 mt-6 sm:mt-8">
-<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-5 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base tracking-wide touch-manipulation text-center min-h-[44px] flex items-center justify-center whitespace-nowrap" href="#venta-boletos" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
+<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-5 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base tracking-wide touch-manipulation text-center min-h-[44px] flex items-center justify-center whitespace-nowrap" href="#venta-boletos" onclick="return gtag_report_conversion(this.href)" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
 </section>
 
 <section class="scroll-mt-24 mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 mt-6 sm:mt-8 section-with-bg" id="faq" style="background-image: url('img/SINOPSIS/5.png');">
@@ -2071,11 +2102,8 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
           a.setAttribute('target', '_blank');
           a.setAttribute('rel', 'noopener noreferrer');
           a.addEventListener('click', function(e) {
-            if (typeof gtag_report_conversion === 'function') {
-              e.preventDefault();
-              gtag_report_conversion(urlVenta);
-              window.open(urlVenta, '_blank');
-            }
+            e.preventDefault();
+            window.open(urlVenta, '_blank');
           });
         });
       }
