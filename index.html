@@ -2099,11 +2099,10 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
       } else {
         if (urlVenta) links.forEach(function(a) {
           a.href = urlVenta;
-          a.setAttribute('target', '_blank');
-          a.setAttribute('rel', 'noopener noreferrer');
+          a.removeAttribute('target');
           a.addEventListener('click', function(e) {
             e.preventDefault();
-            window.open(urlVenta, '_blank');
+            window.location.href = urlVenta;
           });
         });
       }
