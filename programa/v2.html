@@ -280,65 +280,6 @@ body {
 }
 .difunto::after { content: ' †'; font-size: 0.75em; opacity: 0.35; }
 
-/* ── HAN ESTADO AQUÍ ─────────────────────────────── */
-.colab-intro {
-  font-family: var(--cuerpo);
-  font-size: 17px;
-  font-style: italic;
-  color: rgba(242,237,228,0.38);
-  line-height: 1.65;
-  margin-bottom: 18px;
-}
-.colab-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-}
-.colab-btn {
-  all: unset;
-  cursor: pointer;
-  font-family: var(--cuerpo);
-  font-size: 21px;
-  color: rgba(242,237,228,0.62);
-  border-bottom: 0.5px solid rgba(242,237,228,0.16);
-  padding-bottom: 2px;
-  transition: all 0.18s;
-  -webkit-tap-highlight-color: transparent;
-}
-.colab-btn.activo {
-  color: var(--crema);
-  border-bottom-color: var(--rojo);
-}
-.colab-info {
-  display: none;
-  margin-top: 16px;
-  padding: 14px 16px;
-  background: rgba(212,58,26,0.04);
-  border: 0.5px solid rgba(212,58,26,0.2);
-}
-.colab-info.visible { display: block; }
-.colab-info-nombre {
-  font-family: var(--display);
-  font-size: 21px;
-  color: var(--crema);
-  margin-bottom: 6px;
-}
-.colab-info-desc {
-  font-family: var(--cuerpo);
-  font-size: 17px;
-  font-style: italic;
-  color: rgba(242,237,228,0.55);
-  line-height: 1.65;
-}
-.colab-info-relacion {
-  font-family: var(--mono);
-  font-size: 21px;
-  letter-spacing: 0.18em;
-  color: var(--rojo-dim);
-  text-transform: uppercase;
-  margin-top: 8px;
-}
-
 /* ── CONTACTO ────────────────────────────────────── */
 .contacto-lista { display: flex; flex-direction: column; gap: 14px; }
 .contacto-fila {
@@ -549,32 +490,10 @@ body {
   </div>
 </section>
 
-<!-- ══ HAN ESTADO AQUÍ ══════════════════════════════════════ -->
-<section class="seccion">
-  <div class="seccion-label">Han estado aquí</div>
-  <p class="colab-intro">Treinta y siete años de funciones han reunido voces extraordinarias. Toca un nombre.</p>
-  <div class="colab-grid">
-    <button class="colab-btn" onclick="toggleColab(this,'jodorowsky')">Alejandro Jodorowsky</button>
-    <button class="colab-btn" onclick="toggleColab(this,'lopezdtarso')">Ignacio López Tarso</button>
-    <button class="colab-btn" onclick="toggleColab(this,'angelica')">Angélica María</button>
-    <button class="colab-btn" onclick="toggleColab(this,'narciso')">Narciso Busquets</button>
-    <button class="colab-btn" onclick="toggleColab(this,'helmuth')">Helmuth Greizer</button>
-    <button class="colab-btn" onclick="toggleColab(this,'odila')">Odila Dupeyron</button>
-    <button class="colab-btn" onclick="toggleColab(this,'natasha')">Natasha Dupeyron</button>
-    <button class="colab-btn" onclick="toggleColab(this,'odin')">Odin Dupeyron</button>
-    <button class="colab-btn" onclick="toggleColab(this,'elizabeth')">Elizabeth Dupeyron</button>
-  </div>
-  <div id="colabPanel" class="colab-info">
-    <div class="colab-info-nombre" id="colabNombre"></div>
-    <div class="colab-info-desc" id="colabDesc"></div>
-    <div class="colab-info-relacion" id="colabRelacion"></div>
-  </div>
-</section>
-
 <!-- ══ TEXTO Y DERECHOS ═════════════════════════════════════ -->
 <section class="seccion">
   <div class="seccion-label">Texto y derechos</div>
-  <p class="texto-pequeño">Texto original de Franz Kafka. Adaptación escénica inicial de Alejandro Jodorowsky. Versión actual desarrollada por Humberto Dupeyron a lo largo de décadas de interpretación e improvisación continua.</p>
+  <p class="texto-pequeño">Texto original de Franz Kafka. Adaptación escénica inicial. Versión actual desarrollada por Humberto Dupeyron a lo largo de décadas de interpretación e improvisación continua.</p>
 </section>
 
 <!-- ══ CONTACTO ═════════════════════════════════════════════ -->
@@ -596,74 +515,5 @@ body {
   </div>
 </div>
 
-<script>
-const colabs = {
-  jodorowsky: {
-    nombre: 'Alejandro Jodorowsky',
-    desc: 'Artista multidisciplinario chileno-mexicano. Director de cine, escritor y creador de la psicomagia. Realizó la adaptación original del texto de Kafka para esta puesta en escena.',
-    relacion: 'Adaptación escénica original'
-  },
-  lopezdtarso: {
-    nombre: 'Ignacio López Tarso',
-    desc: 'Uno de los grandes del teatro y cine mexicano. Premio Nacional de Ciencias y Artes. Presencia insustituible en la historia escénica del país.',
-    relacion: 'Ha develado placa en El Gorila'
-  },
-  angelica: {
-    nombre: 'Angélica María',
-    desc: 'La novia de México. Actriz y cantante con más de seis décadas en el espectáculo mexicano. Figura central de la cultura popular del país.',
-    relacion: 'Ha develado placa en El Gorila'
-  },
-  natasha: {
-    nombre: 'Natasha Dupeyron',
-    desc: 'Actriz mexicana con trayectoria en teatro, telenovela y cine. Ha construido una carrera sólida e independiente dentro y fuera de México.',
-    relacion: 'Familia Dupeyron · Ha acompañado la obra'
-  },
-  odin: {
-    nombre: 'Odin Dupeyron',
-    desc: 'Actor, director y escritor mexicano. Autor de obras de gran impacto popular, ha explorado los límites entre el humor y la profundidad humana.',
-    relacion: 'Familia Dupeyron · Ha acompañado la obra'
-  },
-  odila: {
-    nombre: 'Odila Dupeyron',
-    desc: 'Compositora y música mexicana. Autora de la música original que acompaña El Gorila desde su origen, pieza fundamental en la atmósfera de la obra.',
-    relacion: 'Música original de la obra'
-  },
-  helmuth: {
-    nombre: 'Helmuth Greizer',
-    desc: 'Diseñador gráfico y artista visual. Responsable del diseño clásico de los carteles originales de El Gorila, identidad visual que acompañó décadas de cartelera.',
-    relacion: 'Diseño gráfico histórico de la obra'
-  },
-  narciso: {
-    nombre: 'Narciso Busquets',
-    desc: 'Actor mexicano de amplia trayectoria en teatro y televisión. Figura querida del espectáculo nacional, presente en la historia de esta obra desde sus primeras versiones.',
-    relacion: 'Colaborador histórico de la obra'
-  },
-  elizabeth: {
-    nombre: 'Elizabeth Dupeyron',
-    desc: 'Parte de la familia Dupeyron, ha acompañado la obra a lo largo de sus décadas en escena.',
-    relacion: 'Familia Dupeyron · Develación documentada'
-  }
-};
-
-let activeBtn = null;
-function toggleColab(btn, key) {
-  const panel = document.getElementById('colabPanel');
-  if (activeBtn === btn && panel.classList.contains('visible')) {
-    panel.classList.remove('visible');
-    btn.classList.remove('activo');
-    activeBtn = null;
-    return;
-  }
-  document.querySelectorAll('.colab-btn').forEach(b => b.classList.remove('activo'));
-  const d = colabs[key];
-  document.getElementById('colabNombre').textContent = d.nombre;
-  document.getElementById('colabDesc').textContent = d.desc;
-  document.getElementById('colabRelacion').textContent = d.relacion;
-  panel.classList.add('visible');
-  btn.classList.add('activo');
-  activeBtn = btn;
-  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-}
-</script>
 </body>
 </html>
