@@ -809,16 +809,18 @@ function gtag_report_conversion(url) {
         filter: saturate(0.55);
         -webkit-filter: saturate(0.55);
     }
-    /* 37 tipo sello: fijo arriba a la derecha */
+    /* 37 tipo sello: fijo arriba a la derecha, 50% más grande que antes, sin recorte */
     .logo-37-sello {
       position: fixed !important;
-      top: 0.5rem !important;
-      right: 0.75rem !important;
+      top: max(0.5rem, env(safe-area-inset-top)) !important;
+      right: max(0.75rem, env(safe-area-inset-right)) !important;
       left: auto !important;
       z-index: 30;
+      padding: 2px;
+      overflow: visible;
     }
     .logo-37-sello img {
-      height: 4.8rem !important;
+      height: 7.2rem !important; /* 50% más que 4.8rem (desktop y móvil) */
       max-height: none;
     }
     /* 37 años: visible solo cuando la imagen ya cargó (evita parpadeo/hueco) */
