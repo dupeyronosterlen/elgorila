@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>El Gorila · Programa de Mano · 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
@@ -308,19 +308,11 @@ body {
 
 /* ── PIE ─────────────────────────────────────────── */
 .pie {
-  padding: 28px 24px 56px;
+  padding: 14px 24px 32px;
   border-top: 0.5px solid var(--crema-faint);
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-.pie-texto {
-  font-family: var(--mono);
-  font-size: 21px;
-  letter-spacing: 0.15em;
-  color: rgba(242,237,228,0.16);
-  text-transform: uppercase;
-  line-height: 2.2;
+  justify-content: flex-end;
+  align-items: center;
 }
 .pie-numero {
   font-family: var(--display);
@@ -328,14 +320,9 @@ body {
   color: rgba(242,237,228,0.04);
   line-height: 1;
 }
-.pie-num-sub {
-  font-family: var(--mono);
-  font-size: 21px;
-  letter-spacing: 0.18em;
-  color: rgba(242,237,228,0.1);
-  text-transform: uppercase;
-  text-align: right;
-  margin-top: 3px;
+.pie-numero--mini {
+  font-size: 24px;
+  color: rgba(242,237,228,0.06);
 }
 
 /* ── DIVISOR ─────────────────────────────────────── */
@@ -389,6 +376,85 @@ body {
   font-size: 22px;
   line-height: 1;
 }
+
+:root {
+  --negro: #080808;
+  --rojo: #D43A1A;
+  --crema: #F2EDE4;
+  --crema-dim: rgba(242,237,228,0.45);
+  --crema-faint: rgba(242,237,228,0.08);
+  --rojo-dim: rgba(212,58,26,0.6);
+  --display: 'IM Fell English', serif;
+  --cuerpo: 'Cormorant Garamond', serif;
+  --mono: 'Courier Prime', monospace;
+}
+
+@media (max-width: 540px) {
+  body {
+    max-width: 100%;
+  }
+
+  .seccion {
+    padding: 26px 18px;
+  }
+
+  .texto-cuerpo,
+  .bio-texto,
+  .bio-texto-cont {
+    font-size: 17px;
+    line-height: 1.72;
+  }
+
+  .seccion-label,
+  .contacto-etiq,
+  .bio-fechas {
+    font-size: 15px;
+    letter-spacing: 0.18em;
+  }
+
+  .dato-etiq {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+  }
+
+  .ficha-fila {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .ficha-rol {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  .contacto-fila {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .bio-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .bio-foto {
+    width: 90px;
+    height: 110px;
+  }
+
+  .portada-titulo {
+    font-size: clamp(52px, 18vw, 72px);
+  }
+
+  .cta-btn {
+    font-size: 18px;
+    padding: 16px 18px;
+  }
+
+  .texto-pequeño {
+    font-size: 18px;
+  }
+}
 </style>
 </head>
 <body>
@@ -401,7 +467,7 @@ body {
   </div>
   <div class="portada-numero-fantasma">37</div>
   <div class="portada-exp">
-    <div class="exp-num">Expediente 2026·01<br>Informe para una Academia</div>
+    <div class="exp-num">Expediente 2026·03<br>Informe para una Academia</div>
   </div>
   <div class="portada-contenido">
     <div class="linea-roja-corta"></div>
@@ -428,7 +494,7 @@ body {
 <!-- ══ ARGUMENTO ════════════════════════════════════════════ -->
 <section class="seccion">
   <div class="seccion-label">Argumento</div>
-  <p class="texto-cuerpo">Pedro el Rojo fue capturado en la costa de Guinea. A bordo del barco, entre dos opciones —la muerte o la jaula—, descubrió una tercera: imitar. Imitar a los hombres. No porque deseara ser uno de ellos, sino porque necesitaba una salida. Cualquier salida.</p>
+  <p class="texto-cuerpo">Peter fue capturado en la costa de Guinea. A bordo del barco, entre dos opciones —la muerte o la jaula—, descubrió una tercera: imitar. Imitar a los hombres. No porque deseara ser uno de ellos, sino porque necesitaba una salida. Cualquier salida.</p>
   <p class="texto-cuerpo">Años después, desde una tribuna académica, el ex simio rinde su informe. Describe con precisión clínica su propio proceso de transformación: el aguardiente, el tabaco, el lenguaje aprendido a golpes. La civilización como táctica de sobrevivencia.</p>
 </section>
 
@@ -482,7 +548,7 @@ body {
     <div class="ficha-fila"><span class="ficha-rol">Música original</span><span class="ficha-nombre">Odila Dupeyron</span></div>
     <div class="ficha-fila"><span class="ficha-rol">Bustos escénicos</span><span class="ficha-nombre">Ariel de la Peña</span></div>
     <div class="ficha-fila"><span class="ficha-rol">Busto del Gorila</span><span class="ficha-nombre difunto">Gabriel Ponzanelli</span></div>
-    <div class="ficha-fila"><span class="ficha-rol">Escenografía</span><span class="ficha-nombre">Osterlen Dupeyron<span class="sub">basado en diseño original de Humberto Dupeyron</span></span></div>
+    <div class="ficha-fila"><span class="ficha-rol">Escenografía</span><span class="ficha-nombre">Osterlen Dupeyron</span></div>
     <div class="ficha-fila"><span class="ficha-rol">Vestuario</span><span class="ficha-nombre">Bulmaro Corona Castillo<span class="sub">adaptación para silla de ruedas</span></span></div>
     <div class="ficha-fila"><span class="ficha-rol">Iluminación y sonido</span><span class="ficha-nombre">Uriel Espinosa Jiménez</span></div>
     <div class="ficha-fila"><span class="ficha-rol">Dirección de producción</span><span class="ficha-nombre">Osterlen Dupeyron</span></div>
@@ -501,19 +567,15 @@ body {
 <section class="seccion">
   <div class="seccion-label">Contacto e informes</div>
   <div class="contacto-lista">
-    <div class="contacto-fila"><span class="contacto-etiq">Instagram</span><span class="contacto-val">@ElGorilateatro</span></div>
-    <div class="contacto-fila"><span class="contacto-etiq">Web</span><span class="contacto-val">elgorilateatro.com.mx</span></div>
-    <div class="contacto-fila"><span class="contacto-etiq">Boletos</span><span class="contacto-val"><a href="https://www.goliiive.com/el-gorila-cg" style="color:var(--crema);text-decoration:underline;">goliiive.com/el-gorila-cg</a></span></div>
+    <div class="contacto-fila"><span class="contacto-etiq">Instagram</span><span class="contacto-val"><a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener" style="color:var(--crema);text-decoration:underline;">@ElGorilateatro</a></span></div>
+    <div class="contacto-fila"><span class="contacto-etiq">Web</span><span class="contacto-val"><a href="https://elgorilateatro.com.mx" target="_blank" rel="noopener" style="color:var(--crema);text-decoration:underline;">elgorilateatro.com.mx</a></span></div>
+    <div class="contacto-fila"><span class="contacto-etiq">Boletos</span><span class="contacto-val"><a href="https://www.goliiive.com/el-gorila-cg" target="_blank" rel="noopener" style="color:var(--crema);text-decoration:underline;">goliiive.com/el-gorila-cg</a></span></div>
   </div>
 </section>
 
 <!-- ══ PIE ══════════════════════════════════════════════════ -->
 <div class="pie">
-  <div class="pie-texto">El Gorila<br>Temporada 2026<br>En escena desde 1989</div>
-  <div>
-    <div class="pie-numero">37</div>
-    <div class="pie-num-sub">años en escena</div>
-  </div>
+  <div class="pie-numero pie-numero--mini">37</div>
 </div>
 
 </body>
