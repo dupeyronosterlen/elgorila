@@ -1403,12 +1403,12 @@ function gtag_report_conversion(url) {
     <span>Nueva Carpa Geodésica</span>
   </div>
   <div class="flex flex-col items-center">
-    <a class="link-venta-boletos btn-granate-terciopelo rounded-xl px-9 py-5 sm:px-12 sm:py-6 text-base sm:text-lg tracking-wide touch-manipulation inline-flex flex-col items-center justify-center" href="#venta-boletos" onclick="return gtag_report_conversion(this.href)" style="-webkit-tap-highlight-color: transparent; line-height:1.3;">
+    <a class="link-venta-boletos btn-granate-terciopelo rounded-xl px-9 py-5 sm:px-12 sm:py-6 text-base sm:text-lg tracking-wide touch-manipulation inline-flex flex-col items-center justify-center" href="#venta-boletos" data-venta-scroll="true" onclick="return gtag_report_conversion(this.href)" style="-webkit-tap-highlight-color: transparent; line-height:1.3;">
       Adquiere tus entradas
     </a>
     <span style="display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem; font-family: Inter, sans-serif; font-size: 0.7rem; color: rgba(201,168,75,0.6); letter-spacing: 0.05em;">
       <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-      Compra segura a través de Goliiive
+      Compra segura · Boletos en línea
     </span>
   </div>
 </section>
@@ -1507,11 +1507,9 @@ function gtag_report_conversion(url) {
 </div>
 </div>
 </section>
-<!-- Venta de boletos: solo botón (debajo de la galería) -->
+<!-- Venta de boletos: Ticket Tailor Widget (debajo de la galería) -->
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-4 sm:mt-6 rounded-lg p-4 sm:p-6 md:p-8" id="venta-boletos">
-<div class="flex justify-center">
-<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-5 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base tracking-wide touch-manipulation inline-flex items-center justify-center whitespace-nowrap" href="#venta-boletos" onclick="return gtag_report_conversion(this.href)" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
-</div>
+<div class="tt-widget"><div class="tt-widget-fallback"><p><a href="https://boletos.elgorilateatro.com.mx/all-tickets/elgorila/?ref=website_widget&show_search_filter=true&show_date_filter=true&show_sort=true" target="_blank">Click here to buy tickets</a><br /><small><a href="https://www.tickettailor.com?rf=wdg_299208" class="tt-widget-powered">Sell tickets online with Ticket Tailor</a></small></p></div><script src="https://cdn.tickettailor.com/js/widgets/min/widget.js" data-url="https://boletos.elgorilateatro.com.mx/all-tickets/elgorila/?ref=website_widget&show_search_filter=true&show_date_filter=true&show_sort=true" data-type="inline" data-inline-minimal="true" data-inline-show-logo="false" data-inline-bg-fill="false" data-inline-inherit-ref-from-url-param="" data-inline-ref="website_widget"></script></div>
 </section>
 <div class="indicador-mas indicador-mas-izquierda" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
 <!-- Sección La Obra (fondo Kafka más oscuro y desaturado) -->
@@ -1671,7 +1669,7 @@ function gtag_report_conversion(url) {
 
 <!-- Enlace a venta (Carpa Geodésica) - Antes de FAQ -->
 <section class="mb-8 sm:mb-10 flex justify-center gap-3 flex-wrap scroll-mt-24 mt-6 sm:mt-8">
-<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-5 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base tracking-wide touch-manipulation text-center min-h-[44px] flex items-center justify-center whitespace-nowrap" href="#venta-boletos" onclick="return gtag_report_conversion(this.href)" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
+<a class="link-venta-boletos btn-granate-terciopelo rounded-lg px-5 py-3 sm:px-7 sm:py-3.5 text-sm sm:text-base tracking-wide touch-manipulation text-center min-h-[44px] flex items-center justify-center whitespace-nowrap" href="#venta-boletos" data-venta-scroll="true" onclick="return gtag_report_conversion(this.href)" style="-webkit-tap-highlight-color: transparent;">Adquiere tus entradas</a>
 </section>
 
 <section class="scroll-mt-24 mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 mt-6 sm:mt-8 section-with-bg" id="faq" style="background-image: url('img/SINOPSIS/5.png');">
@@ -2073,6 +2071,10 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
       var mostrarModalVenta = (modo === 'mensaje');
       if (mostrarModalVenta) {
         links.forEach(function(a) {
+          if (a.getAttribute('data-venta-scroll') === 'true') {
+            a.href = '#venta-boletos';
+            return;
+          }
           a.href = '#';
           a.addEventListener('click', function(e) {
             e.preventDefault();
@@ -2099,6 +2101,11 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
         });
       } else {
         if (urlVenta) links.forEach(function(a) {
+          if (a.getAttribute('data-venta-scroll') === 'true') {
+            a.href = '#venta-boletos';
+            a.removeAttribute('target');
+            return;
+          }
           a.href = urlVenta;
           a.removeAttribute('target');
           a.addEventListener('click', function(e) {
