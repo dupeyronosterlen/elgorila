@@ -162,97 +162,12 @@
 <span class="text-white">El Gorila de Franzkafka</span>
 </div>
 <div class="space-y-10">
-<!-- SECCIÓN COMPLETA DE SELECCIÓN Y COMPRA -->
+<!-- Venta de boletos: Goliiive -->
 <section class="bg-surface-light/80 dark:bg-surface-dark/80 p-4 sm:p-6 md:p-8 rounded-lg shadow-lg mb-4">
 <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-text-light dark:text-white font-display text-center">Adquiere tus boletos</h2>
-
-<!-- FECHAS DISPONIBLES -->
-<div class="mb-6">
-<h3 class="text-lg font-semibold mb-3 text-text-light dark:text-white">Elige Fecha y Hora</h3>
-<div id="botones-fecha" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-    <!-- Botones de fecha se generan dinámicamente con JavaScript -->
-</div>
-</div>
-
-<!-- SELECCIÓN DE CANTIDAD -->
-<div class="mb-6">
-<h3 class="text-lg font-semibold mb-3 text-text-light dark:text-white">Cantidad de Boletos</h3>
-<div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 bg-surface-dark/40 dark:bg-surface-dark/60 p-4 rounded-lg">
-<div class="text-center">
-<p class="text-xs sm:text-sm text-text-muted-light dark:text-text-muted-dark mb-1 sm:mb-2">Precio por boleto</p>
-<p class="text-xl sm:text-2xl font-bold text-text-light dark:text-white">$389.00 MXN</p>
-</div>
-<div class="flex items-center gap-3 sm:gap-4">
-    <!-- Botón Menos -->
-    <button type="button" onclick="cambiarCantidad(-1)" class="w-14 h-14 sm:w-12 sm:h-12 flex items-center justify-center text-2xl sm:text-xl text-text-dark border-2 border-primary rounded-lg hover:bg-primary/20 active:bg-primary/30 transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
-        <span class="material-symbols-outlined">remove</span>
-    </button>
-    
-    <!-- El número que cambia -->
-    <div class="text-center min-w-[60px] sm:min-w-0">
-        <span id="cantidad-boletos" class="text-5xl sm:text-4xl font-bold text-text-light dark:text-white block">0</span>
-        <span class="text-xs text-text-muted-light dark:text-text-muted-dark">boletos</span>
-    </div>
-    
-    <!-- Botón Más -->
-    <button type="button" onclick="cambiarCantidad(1)" class="w-14 h-14 sm:w-12 sm:h-12 flex items-center justify-center text-2xl sm:text-xl text-text-dark border-2 border-primary rounded-lg hover:bg-primary/20 active:bg-primary/30 transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
-        <span class="material-symbols-outlined">add</span>
-    </button>
-</div>
-<div id="disponibilidad-info" class="mt-4 text-center">
-<p class="text-sm text-text-muted-dark">Selecciona una fecha para ver disponibilidad</p>
-</div>
-</div>
-
-<!-- RESUMEN Y PAGO -->
-<div class="bg-surface-dark/80 p-4 sm:p-6 rounded-lg border border-primary/20">
-<h3 class="text-lg font-semibold mb-4 text-white font-display">Resumen</h3>
-<div class="space-y-3 mb-4">
-<div>
-<p class="text-sm text-text-muted-dark">Función</p>
-<p class="font-bold text-text-dark text-sm">El Gorila de Franz Kafka</p>
-</div>
-<div>
-<p class="text-sm text-text-muted-dark">Fecha y Hora</p>
-<p class="font-bold text-text-dark text-sm" id="fecha-seleccionada-texto">Selecciona una fecha</p>
-</div>
-<div id="cantidad-boletos-container" style="display: none;">
-<p class="text-sm text-text-muted-dark">Boletos</p>
-<p class="font-bold text-text-dark text-sm" id="cantidad-boletos-resumen">0x boleto</p>
-</div>
-<!-- Código de Descuento -->
-<div class="mt-3">
-<p class="text-sm text-text-muted-dark mb-2">Código de Descuento (opcional)</p>
-<div class="flex gap-2">
-<input type="text" id="codigo-descuento-input" placeholder="Ej: ESTUDIANTE10" class="flex-1 px-3 py-2 bg-surface-dark border border-gray-600 rounded text-text-dark text-sm focus:outline-none focus:border-primary" />
-<button type="button" onclick="aplicarCodigoDescuento()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 active:bg-primary/40 text-primary rounded transition-colors text-sm font-semibold touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
-Aplicar
-</button>
-</div>
-<div id="mensaje-codigo" class="hidden mt-2"></div>
-</div>
-<div id="mensaje-agotado" class="mt-3 p-3 rounded-lg bg-accent-maroon-dark/20 text-amber-200 border border-accent-maroon-dark/80 flex items-start gap-3 text-sm hidden">
-<span class="material-symbols-outlined text-base mt-0.5 text-amber-400">error</span>
-<p class="font-body text-xs">Función agotada. Por favor, seleccione otra fecha.</p>
-</div>
-<hr class="my-4 border-gray-700"/>
-<div class="space-y-2 mb-4">
-<div class="flex justify-between items-center text-sm">
-<span class="text-text-muted-dark">Subtotal:</span>
-<span class="text-text-dark font-semibold" id="subtotal-precio">$0.00</span>
-</div>
-<div id="contenedor-descuento" class="flex justify-between items-center text-sm text-green-400 hidden">
-<span class="text-text-muted-dark">Descuento:</span>
-<span class="font-semibold" id="descuento-precio">-$0.00</span>
-</div>
-<div class="flex justify-between items-baseline font-bold pt-2 border-t border-gray-700">
-<span class="text-text-dark">Total:</span>
-<span class="text-xl text-white" id="total-precio">$0.00 MXN</span>
-</div>
-</div>
-<button id="btn-continuar" type="button" onclick="irAConfirmacion()" class="w-full bg-gray-600 text-gray-400 font-bold py-3.5 sm:py-3 rounded-lg cursor-not-allowed transition-all duration-200 active:scale-[0.98] touch-manipulation" disabled style="-webkit-tap-highlight-color: transparent; background-color: #4B5563; color: #9CA3AF;">
-    Selecciona una fecha
-</button>
+<div class="flex flex-col items-center justify-center gap-4">
+<a href="https://www.goliiive.com/el-gorila-cg" target="_blank" rel="noopener" class="inline-flex items-center justify-center px-8 py-4 rounded-lg font-display font-bold text-lg text-white bg-primary hover:opacity-90 transition-opacity shadow-lg">Comprar en Goliiive</a>
+<p class="text-sm text-text-muted-light dark:text-text-muted-dark">Compra segura a través de Goliiive · La vida es en vivo</p>
 </div>
 </section>
 
