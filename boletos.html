@@ -2,10 +2,11 @@
 <html class="dark" lang="es"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Boletos - Contacto Reubicado</title>
+<title>Boletos - EL GORILA</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 <script>
@@ -14,27 +15,28 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#A97C22", // Golden Yellow for accents, buttons
-                        "background-light": "#F5EFE6", // A very light, warm beige for light mode background
-                        "background-dark": "#1F1A12", // The deep brown/black from the image
-                        "surface-light": "#FFFFFF", // White for light mode cards
-                        "surface-dark": "#312A22", // Rich brown for dark mode cards
-                        "text-light": "#2D2D2D", // Dark text for light mode
-                        "text-dark": "#EAE0D1", // Off-white/beige text for dark mode
-                        "text-muted-light": "#6B7280", // Muted gray for light mode secondary text
-                        "text-muted-dark": "#B8AFAF", // Muted beige for dark mode secondary text
-                        "accent-gold": "#D4AF37", // Gold accent color
+                        primary: "#8B0000",
+                        "background-light": "#F5F5DC",
+                        "background-dark": "#1a150e",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#312A22",
+                        "text-light": "#333333",
+                        "text-dark": "#D4CFC3",
+                        "text-muted-light": "#6B7280",
+                        "text-muted-dark": "#B8AFAF",
+                        "accent-gold": "#D4AF37",
+                        "rich-dark": "#2a1e12",
                         "accent-green-light": "#2A5B4F",
                         "accent-green-dark": "#346F63",
                         "accent-maroon-light": "#8C2D51",
                         "accent-maroon-dark": "#A6365F",
                     },
                     fontFamily: {
-                        display: ["Cinzel", "serif"],
-                        body: ["Lato", "sans-serif"],
+                        display: ["Lora", "serif"],
+                        body: ["Inter", "sans-serif"],
                     },
                     borderRadius: {
-                        DEFAULT: "0.5rem", // 8px
+                        DEFAULT: "8px",
                     },
                 },
             },
@@ -42,29 +44,71 @@
     </script>
 <style>
         body {
-            padding-top: 85px;
+            padding-top: 0;
             position: relative;
-            background-color: #1F1A12;
+            background-color: #1a150e;
+        }
+        main {
+            scroll-margin-top: 5rem;
+        }
+        /* Logo EL GORILA: fijo arriba a la izquierda (como index) */
+        .logo-gorila-sello {
+            position: fixed !important;
+            top: 0.5rem !important;
+            left: 0.75rem !important;
+            right: auto !important;
+            transform: translateY(6px) !important;
+            z-index: 30;
+            cursor: pointer;
+        }
+        .logo-gorila-sello img {
+            height: 4.8rem !important;
+            max-height: none;
+            opacity: 0.9;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .logo-gorila-sello:hover img { opacity: 1; transform: scale(1.05); }
+        @media (max-width: 767px) {
+            .logo-gorila-sello { left: 0.5rem !important; }
+            .logo-gorila-sello img { height: clamp(2.5rem, 7vw, 3.5rem) !important; }
+        }
+        /* 37 tipo sello: fijo arriba a la derecha (como index) */
+        .logo-37-sello {
+            position: fixed !important;
+            top: max(0.5rem, env(safe-area-inset-top)) !important;
+            right: max(0.75rem, env(safe-area-inset-right)) !important;
+            left: auto !important;
+            z-index: 30;
+            padding: 2px;
+            overflow: visible;
+        }
+        .logo-37-sello img {
+            height: 7.2rem !important;
+            max-height: none;
+        }
+        .logo-37-sello.logo-37-cargando {
+            opacity: 0;
+            transition: opacity 0.2s ease-out;
+        }
+        .logo-37-sello.logo-37-loaded,
+        .logo-37-sello:not(.logo-37-cargando) {
+            opacity: 1;
         }
         .main-container {
-            background-image: url('img/FONDOS/1.png');
-            background-size: 100% auto;
-            background-position: top center;
-            background-attachment: scroll;
-            background-repeat: no-repeat;
+            background-color: #1a150e;
             position: relative;
             min-height: 100vh;
         }
         .main-container::before {
             content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 0;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 180px 180px;
+            opacity: 0.035;
             pointer-events: none;
+            z-index: 0;
         }
         .backdrop-blur-sm {
             backdrop-filter: blur(4px);
@@ -73,9 +117,73 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
         }
+        /* Botón Adquiere tus entradas: granate tipo terciopelo (como index) */
+        .btn-granate-terciopelo {
+            background: linear-gradient(165deg, #8B3A42 0%, #6B2D35 50%, #5A252C 100%) !important;
+            color: #f5f0e8 !important;
+            font-weight: 700;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12), 0 0 12px rgba(201,168,75,0.3);
+            border: 1px solid rgba(201,168,75,0.6);
+            transition: box-shadow 0.2s ease, transform 0.15s ease;
+        }
+        .btn-granate-terciopelo:hover {
+            box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 6px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), 0 0 20px rgba(201,168,75,0.45);
+        }
+        .btn-granate-terciopelo:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.25);
+        }
+        /* Tipografía móvil (alineado con index) */
+        @media (max-width: 480px) {
+            p, .text-text-dark {
+                font-size: clamp(0.875rem, 2.5vw, 1rem);
+                line-height: 1.6;
+            }
+            h2 {
+                font-size: clamp(1.25rem, 5vw, 1.5rem);
+                margin-bottom: 1rem;
+                padding: 0 0.25rem;
+            }
+            h3 {
+                font-size: clamp(1.125rem, 4vw, 1.25rem);
+                padding: 0 0.25rem;
+            }
+        }
+        /* Skip link (accesibilidad, como index) */
+        .skip-link {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .skip-link:focus {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 9999;
+            width: auto;
+            height: auto;
+            padding: 0.75rem 1.25rem;
+            margin: 0;
+            overflow: visible;
+            clip: auto;
+            background: #D4AF37;
+            color: #1a150e;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            outline: 2px solid #fff;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body class="font-body bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark relative">
+<a href="#main-content" class="skip-link">Saltar al contenido</a>
 <input class="peer hidden" id="modal-croquis" type="checkbox"/>
 <div class="fixed inset-0 z-[100] hidden peer-checked:flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-all duration-300">
 <label class="absolute inset-0 cursor-pointer" for="modal-croquis"></label>
@@ -142,37 +250,30 @@
 </div>
 </div>
 </div>
+<div class="logo-gorila-sello" id="logo-gorila-wrap">
+  <a href="index.html" aria-label="Ir al inicio">
+    <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="w-auto object-contain flex-shrink-0 pointer-events-none" loading="eager" decoding="async">
+  </a>
+</div>
+<div class="logo-37-sello logo-37-cargando" id="logo-37-wrap">
+  <a href="index.html" aria-label="37 aniversario">
+    <img src="img/LOGO DOS/Artboard 11.png" alt="37 años" class="w-auto object-contain opacity-90 flex-shrink-0 pointer-events-none" loading="eager" decoding="async" fetchpriority="high" onload="this.closest('.logo-37-sello').classList.remove('logo-37-cargando'); this.closest('.logo-37-sello').classList.add('logo-37-loaded');" onerror="this.src='img/LOGO DOS/2.png'; this.onerror=null; this.closest('.logo-37-sello').classList.remove('logo-37-cargando'); this.closest('.logo-37-sello').classList.add('logo-37-loaded');"/>
+  </a>
+</div>
 <div class="main-container min-h-screen flex flex-col">
-<header class="fixed top-0 left-0 right-0 z-20 bg-background-dark/85 backdrop-blur-sm shadow-sm border-b border-accent-gold/10" style="height: 85px;">
-<div class="mx-auto flex h-full max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
-<div class="flex items-center space-x-2">
-<a href="index.html" class="hover:opacity-80 transition-opacity">
-<img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="El Gorila de Franz Kafka" class="h-14 md:h-16 w-auto object-contain">
-</a>
-</div>
-</div>
-</header>
-<div class="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-16 flex-grow">
-<main>
-<div class="text-xs text-gray-400 mb-12">
-<span>Inicio</span>
-<span class="mx-2">/</span>
-<span>Cartelera</span>
-<span class="mx-2">/</span>
-<span class="text-white">El Gorila de Franzkafka</span>
-</div>
+<div class="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-16 flex-grow">
+<main id="main-content" class="scroll-mt-24">
 <div class="space-y-10">
-<!-- Venta de boletos: Goliiive -->
-<section class="bg-surface-light/80 dark:bg-surface-dark/80 p-4 sm:p-6 md:p-8 rounded-lg shadow-lg mb-4">
-<h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-text-light dark:text-white font-display text-center">Adquiere tus boletos</h2>
-<div class="flex flex-col items-center justify-center gap-4">
-<a href="https://www.goliiive.com/el-gorila-cg" target="_blank" rel="noopener" class="inline-flex items-center justify-center px-8 py-4 rounded-lg font-display font-bold text-lg text-white bg-primary hover:opacity-90 transition-opacity shadow-lg">Comprar en Goliiive</a>
-<p class="text-sm text-text-muted-light dark:text-text-muted-dark">Compra segura a través de Goliiive · La vida es en vivo</p>
+<!-- Venta de boletos: Ticket Tailor Widget -->
+<section class="rounded-lg shadow-lg mb-4 p-4 sm:p-6 md:p-8 bg-rich-dark/85 backdrop-blur-md border border-accent-gold/20">
+<h2 class="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-white font-display text-center">Adquiere tus boletos</h2>
+<div class="mx-auto max-w-2xl">
+<div class="tt-widget"><div class="tt-widget-fallback"><p><a href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139/select-date?ref=website_widget" target="_blank">Click here to buy tickets</a><br /><small><a href="https://www.tickettailor.com?rf=wdg_299208" class="tt-widget-powered">Sell tickets online with Ticket Tailor</a></small></p></div><script src="https://cdn.tickettailor.com/js/widgets/min/widget.js" data-url="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139/select-date?ref=website_widget" data-type="inline" data-inline-minimal="true" data-inline-show-logo="false" data-inline-bg-fill="false" data-inline-inherit-ref-from-url-param="" data-inline-ref="website_widget"></script></div>
 </div>
 </section>
 
 <!-- INFORMACIÓN DE LA OBRA / SINOPSIS -->
-<section id="seccion-sinopsis" class="bg-surface-light/80 dark:bg-surface-dark/80 p-8 rounded-lg shadow-lg relative">
+<section id="seccion-sinopsis" class="rounded-lg shadow-lg relative p-4 sm:p-6 md:p-8 bg-rich-dark/85 backdrop-blur-md border border-accent-gold/20">
 <div class="pr-0 md:pr-32">
 <h3 class="text-sm font-light text-primary font-display mb-4 tracking-wider uppercase">Sinopsis</h3>
 <div class="space-y-4 text-text-light dark:text-[#EAE0D1] font-body text-base leading-relaxed text-justify">
@@ -190,8 +291,8 @@
 <img alt="Imagen de sinopsis" class="hidden md:block absolute -right-8 -top-8 w-48 h-auto transform rotate-6 shadow-2xl border-8 border-yellow-800/50 z-10" id="imagen-sinopsis" src="img/SINOPSIS/1.png" loading="lazy" decoding="async" style="pointer-events: none;"/>
 </section>
 
-<section class="bg-[#1A150F] p-8 sm:p-12 rounded-lg" id="faq">
-<h2 class="text-4xl font-bold font-display text-white text-center mb-10">Preguntas Frecuentes</h2>
+<section class="rounded-lg p-4 sm:p-6 md:p-8 lg:p-12 bg-rich-dark/85 backdrop-blur-md border border-accent-gold/20" id="faq">
+<h2 class="text-2xl sm:text-3xl md:text-4xl font-bold font-display text-white text-center mb-8 sm:mb-10">Preguntas Frecuentes</h2>
 <div class="max-w-3xl mx-auto space-y-4">
 <details class="group border-b border-white/20 pb-4">
 <summary class="flex justify-between items-center cursor-pointer list-none">
@@ -255,14 +356,14 @@
 <span class="material-symbols-outlined text-primary text-xl group-hover:scale-110 transition-transform">mail</span>
 <div class="overflow-hidden min-w-0">
 <p class="text-[10px] uppercase tracking-wider text-text-muted-dark font-bold">Correo</p>
-<p class="text-text-dark font-body font-bold text-xs truncate" title="contacto@goriladefranzkafka.com">contacto@goriladefranzkafka.com</p>
+<p class="text-text-dark font-body font-bold text-xs truncate" title="elgorilateatro@gmail.com">elgorilateatro@gmail.com</p>
 </div>
 </div>
 <div class="flex items-center gap-3 bg-[#1F1A12] p-3 rounded-lg border border-primary/10 hover:border-primary/40 transition-colors group">
 <span class="material-symbols-outlined text-primary text-xl group-hover:scale-110 transition-transform">call</span>
 <div>
 <p class="text-[10px] uppercase tracking-wider text-text-muted-dark font-bold">Teléfono</p>
-<p class="text-text-dark font-body font-bold text-xs">+52 55 9876 5432</p>
+<p class="text-text-dark font-body font-bold text-xs">+52 55 1203 7223</p>
 </div>
 </div>
 </div>
@@ -272,42 +373,34 @@
 </div>
 </main>
 </div>
-<footer class="bg-background-dark/90 backdrop-blur-sm border-t border-white/10 text-text-dark">
-<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-<div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-<div class="md:col-span-1">
-<h3 class="text-lg font-bold font-display text-white mb-4">El Gorila de Franzkafka</h3>
-<p class="text-sm text-text-muted-dark leading-relaxed">Una producción teatral que explora las profundidades de la condición humana a través de una lente kafkiana.</p>
+<footer class="bg-rich-dark/80 py-10 backdrop-blur-md text-center border-t border-accent-gold/10">
+<div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-text-dark">
+<div class="md:text-left">
+<h3 class="font-bold uppercase tracking-wider text-accent-gold mb-3 flex items-center gap-2">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span>Contacto</span>
+</h3>
+<a class="block transition-colors hover:text-accent-gold" href="mailto:elgorilateatro@gmail.com">elgorilateatro@gmail.com</a>
 </div>
-<div class="md:col-span-1">
-<h3 class="text-lg font-bold font-display text-white mb-4">Contacto</h3>
-<ul class="space-y-3 text-sm font-body">
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-primary text-base">mail</span>
-<span class="text-text-muted-dark">contacto@goriladefranzkafka.com</span>
-</li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-primary text-base">call</span>
-<span class="text-text-muted-dark">+52 55 9876 5432</span>
-</li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-primary text-base">location_on</span>
-<span class="text-text-muted-dark">Teatro del Absurdo, Calle Ficción 123, CDMX</span>
-</li>
-</ul>
+<div class="flex flex-col items-center space-y-2">
+<a class="flex items-center gap-2 transition-colors hover:text-accent-gold" href="#faq">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span>Preguntas Frecuentes</span>
+</a>
 </div>
-<div class="md:col-span-1">
-<h3 class="text-lg font-bold font-display text-white mb-4">Preguntas Frecuentes</h3>
-<ul class="space-y-3 text-sm font-body">
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-primary text-base">help</span>
-<a class="text-text-muted-dark hover:text-primary transition-colors" href="#faq">Ver todas las preguntas frecuentes</a>
-</li>
-</ul>
+<div class="md:text-right">
+<p class="font-display text-lg text-accent-gold">EL GORILA</p>
+<p class="text-text-dark/60 mt-2">© 2026. Todos los derechos reservados.</p>
 </div>
 </div>
-<div class="mt-12 border-t border-white/10 pt-8 text-center text-sm text-text-muted-dark">
-<p>© 2024 El Gorila de Franzkafka. Todos los derechos reservados.</p>
+<div class="flex items-center justify-center gap-5 mt-8 pt-6 border-t border-accent-gold/10">
+<a href="https://www.facebook.com/p/El-Gorila-100088695462813/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-11 w-11 rounded-full bg-accent-gold/15 hover:bg-accent-gold/30 text-accent-gold border border-accent-gold/30 hover:border-accent-gold/50 transition-all" aria-label="Facebook">
+<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+</a>
+<a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-11 w-11 rounded-full bg-accent-gold/15 hover:bg-accent-gold/30 text-accent-gold border border-accent-gold/30 hover:border-accent-gold/50 transition-all" aria-label="Instagram">
+<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.919 0 3.274-.011 3.584-.069 4.919-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.85-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.919 0-3.274.012-3.584.07-4.919.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+</a>
 </div>
 </div>
 </footer>
@@ -316,4 +409,16 @@
 <script src="js/fechas.js"></script>
 <script src="js/imagenes.js"></script>
 <script src="js/main.js"></script>
+<script>
+(function() {
+  var wrap = document.getElementById('logo-37-wrap');
+  if (wrap) {
+    var img = wrap.querySelector('img');
+    if (img && img.complete) {
+      wrap.classList.remove('logo-37-cargando');
+      wrap.classList.add('logo-37-loaded');
+    }
+  }
+})();
+</script>
 </body></html>

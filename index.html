@@ -437,8 +437,8 @@ function gtag_report_conversion(url) {
     .seccion-obra-actor .contenedor-obra-actor > div {
       overflow: visible !important;
     }
-    /* Obra / Actor: vista en fila solo cuando hay espacio para mínimo 6-7 palabras por línea; si no, vista móvil (imagen arriba, texto abajo) */
-    @media (max-width: 991px) {
+    /* Obra / Actor: vista apilada (móvil) hasta 1229px; vista en fila (desktop) a partir de 1230px */
+    @media (max-width: 1229px) {
       .seccion-obra-actor .contenedor-obra-actor {
         flex-direction: column !important;
       }
@@ -446,10 +446,19 @@ function gtag_report_conversion(url) {
         width: 100% !important;
         max-width: 100% !important;
       }
+      .seccion-obra-actor .contenedor-obra-actor .imagen-obra-actor-inner {
+        max-height: 380px !important;
+        height: auto !important;
+      }
+      .seccion-obra-actor .contenedor-obra-actor > div:not(.imagen-obra-actor) {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 0 !important;
+      }
       .seccion-obra-actor.obra-fondo-kafka .contenedor-obra-actor > div:first-child { order: 2 !important; }
       .seccion-obra-actor.obra-fondo-kafka .contenedor-obra-actor > div:last-child { order: 1 !important; }
     }
-    @media (min-width: 992px) {
+    @media (min-width: 1230px) {
       .seccion-obra-actor .contenedor-obra-actor {
         flex-direction: row !important;
         align-items: center !important;
@@ -865,7 +874,7 @@ function gtag_report_conversion(url) {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin-top: 1.5rem;
+      margin-top: 5rem;
       perspective: 800px;
     }
     .sobre-solapa {
@@ -1263,6 +1272,86 @@ function gtag_report_conversion(url) {
       .galeria-hilo-2 { left: 50%; }
       .galeria-hilo-3 { left: 75%; }
     }
+    /* Widget de boletos desplegable */
+    .widget-boletos-panel {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, margin 0.4s ease;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+    .widget-boletos-panel.abierto {
+      max-height: 1200px;
+      opacity: 1;
+      margin-top: 2rem;
+      margin-bottom: 5rem;
+    }
+    .widget-boletos-panel .widget-boletos-inner {
+      position: relative;
+      overflow: hidden;
+      background: rgba(26, 21, 14, 0.95);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 0.75rem;
+      padding: 1.5rem 1rem;
+    }
+    .widget-boletos-panel .widget-boletos-inner::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      left: -20%;
+      right: -20%;
+      bottom: -20%;
+      background-image: url('img/SINOPSIS/3.png');
+      background-size: 150% 150%;
+      background-position: center center;
+      background-repeat: no-repeat;
+      filter: blur(50px) brightness(0.28) contrast(0.8) saturate(0.4);
+      opacity: 0.75;
+      z-index: 0;
+      transform: scale(1.3);
+      pointer-events: none;
+    }
+    .widget-boletos-panel .widget-boletos-inner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23t)' opacity='0.35'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 120px 120px;
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 0;
+      border-radius: inherit;
+    }
+    .widget-boletos-panel .widget-boletos-inner > * {
+      position: relative;
+      z-index: 1;
+    }
+    #widget-boletos-contenido .tt-widget {
+      filter: invert(1) hue-rotate(180deg);
+    }
+    @media (min-width: 640px) {
+      .widget-boletos-panel .widget-boletos-inner { padding: 2rem 1.5rem; }
+    }
+    .widget-boletos-cerrar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: rgba(212, 175, 55, 0.45);
+      cursor: pointer;
+      transition: color 0.2s, transform 0.2s;
+      padding: 0;
+    }
+    .widget-boletos-cerrar:hover {
+      color: #d4af37;
+      transform: scale(1.15);
+    }
   </style>
 <style>
   @media (min-width: 1230px) {
@@ -1426,10 +1515,21 @@ function gtag_report_conversion(url) {
     </a>
     <span style="display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem; font-family: Inter, sans-serif; font-size: 0.7rem; color: rgba(201,168,75,0.6); letter-spacing: 0.05em;">
       <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-      Compra segura a través de Goliiive
+      Compra segura
     </span>
   </div>
 </section>
+<!-- Widget de boletos desplegable (se mueve al botón que lo activa) -->
+<div id="widget-boletos-panel" class="widget-boletos-panel scroll-mt-24 px-4">
+  <div class="widget-boletos-inner mx-auto max-w-2xl">
+    <div class="flex justify-end mb-1" style="margin-top:-0.5rem; margin-right:-0.25rem;">
+      <button id="cerrar-widget-boletos" class="widget-boletos-cerrar" aria-label="Cerrar widget de boletos">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="widget-boletos-contenido"></div>
+  </div>
+</div>
 <div class="sobre-dorado" id="sobre-dorado">
   <div class="sobre-linea"></div>
   <span class="sobre-texto">Descubre la obra</span>
@@ -2116,18 +2216,84 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
           if (e.key === 'Escape' && document.getElementById('modal-venta-info') && !document.getElementById('modal-venta-info').classList.contains('hidden')) cerrarVentaInfo();
         });
       } else {
-        if (urlVenta) links.forEach(function(a) {
-          a.href = urlVenta;
-          if (urlVenta.indexOf('http') === 0) {
-            a.setAttribute('target', '_blank');
-            a.setAttribute('rel', 'noopener');
-          } else {
-            a.removeAttribute('target');
-            a.addEventListener('click', function(e) {
-              e.preventDefault();
-              window.location.href = urlVenta;
-            });
+        var widgetPanel = document.getElementById('widget-boletos-panel');
+        var widgetContenido = document.getElementById('widget-boletos-contenido');
+        var widgetCargado = false;
+        var botonActivo = null;
+        var WIDGET_URL = 'https://boletos.elgorilateatro.com.mx/events/elgorila/2124139/select-date?ref=website_widget';
+
+        function cargarWidget() {
+          if (widgetCargado) return;
+          widgetContenido.innerHTML = '<div class="tt-widget"><div class="tt-widget-fallback"><p><a href="' + WIDGET_URL + '" target="_blank">Comprar boletos</a><br/><small><a href="https://www.tickettailor.com?rf=wdg_299208" class="tt-widget-powered">Sell tickets online with Ticket Tailor</a></small></p></div></div>';
+          var s = document.createElement('script');
+          s.src = 'https://cdn.tickettailor.com/js/widgets/min/widget.js';
+          s.setAttribute('data-url', WIDGET_URL);
+          s.setAttribute('data-type', 'inline');
+          s.setAttribute('data-inline-minimal', 'true');
+          s.setAttribute('data-inline-show-logo', 'false');
+          s.setAttribute('data-inline-bg-fill', 'false');
+          s.setAttribute('data-inline-inherit-ref-from-url-param', '');
+          s.setAttribute('data-inline-ref', 'website_widget');
+          widgetContenido.querySelector('.tt-widget').appendChild(s);
+          widgetCargado = true;
+        }
+
+        function cerrarWidget() {
+          if (!widgetPanel) return;
+          widgetPanel.classList.remove('abierto');
+          botonActivo = null;
+        }
+
+        function toggleWidget(btn) {
+          if (!widgetPanel) return;
+          var section = btn.closest('section');
+          if (!section) return;
+          var estaAbierto = widgetPanel.classList.contains('abierto');
+          var mismoBoton = (botonActivo === btn);
+          if (estaAbierto && mismoBoton) {
+            cerrarWidget();
+            return;
           }
+          if (estaAbierto) {
+            widgetPanel.classList.remove('abierto');
+            setTimeout(function() {
+              section.parentNode.insertBefore(widgetPanel, section.nextSibling);
+              widgetPanel.classList.add('abierto');
+              botonActivo = btn;
+              cargarWidget();
+              setTimeout(function() { widgetPanel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
+            }, 350);
+          } else {
+            section.parentNode.insertBefore(widgetPanel, section.nextSibling);
+            widgetPanel.classList.add('abierto');
+            botonActivo = btn;
+            cargarWidget();
+            setTimeout(function() { widgetPanel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
+          }
+        }
+
+        links.forEach(function(a) {
+          a.href = '#';
+          a.removeAttribute('target');
+          a.removeAttribute('rel');
+          a.removeAttribute('onclick');
+          a.addEventListener('click', function(e) {
+            e.preventDefault();
+            try {
+              gtag('event', 'conversion', {
+                'send_to': 'AW-17961021514/ghTjCLOgxfobEMrgvfRC',
+                'value': 1.0,
+                'currency': 'MXN'
+              });
+            } catch(err) {}
+            toggleWidget(a);
+          });
+        });
+
+        var cerrarBtn = document.getElementById('cerrar-widget-boletos');
+        if (cerrarBtn) cerrarBtn.addEventListener('click', cerrarWidget);
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && widgetPanel && widgetPanel.classList.contains('abierto')) cerrarWidget();
         });
       }
     }
