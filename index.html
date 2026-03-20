@@ -945,6 +945,29 @@ function gtag_report_conversion(url) {
     .titulo-el-gorila {
       -webkit-text-stroke: 1px #c9a84b;
     }
+    /* ≤414px: compactos (casi todo Android + iPhone estándar); Plus/Pro Max (~428–430) siguen en una línea */
+    @media (max-width: 414px) {
+      #cartel-informativo-wrap .cartel-texto-block > p:first-of-type,
+      #cartel-informativo-wrap .cartel-texto-block > h1.titulo-el-gorila {
+        white-space: normal !important;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+        padding-inline: 0.35rem;
+        box-sizing: border-box;
+      }
+      #cartel-informativo-wrap .cartel-texto-block > h1.titulo-el-gorila {
+        line-height: 0.92;
+      }
+      .texto-portada-horario {
+        white-space: normal !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        row-gap: 0.2rem;
+        column-gap: 0.5rem;
+        max-width: 100%;
+      }
+    }
     .sobre-solapa-icono {
       position: absolute;
       top: 12px;
@@ -1268,6 +1291,11 @@ function gtag_report_conversion(url) {
     @media (max-width: 768px) {
       .scroll-indicator {
         bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
+      }
+    }
+    @media (max-width: 480px) {
+      .scroll-indicator {
+        bottom: calc(10.75rem + env(safe-area-inset-bottom, 0px));
       }
     }
     /* Al hacer scroll a #venta-boletos: fotos completas arriba, botón abajo, sección Obra aún no visible */
@@ -2704,19 +2732,35 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   })();
   (function() {
     var el = document.getElementById('scroll-indicator');
+    var cta = document.querySelector('#portada-venta-boletos .link-venta-boletos');
     var UMBRAL_SCROLL = 120;
     var ANCHO_ANCHO = 1230;
+    var ZONA_INFERIOR_PX = 112;
     function actualizarFlecha() {
       if (!el) return;
       if (window.innerWidth >= ANCHO_ANCHO) {
         el.classList.add('oculto');
         return;
       }
-      if (window.scrollY > UMBRAL_SCROLL) el.classList.add('oculto');
+      if (window.scrollY > UMBRAL_SCROLL) {
+        el.classList.add('oculto');
+        return;
+      }
+      var ctaTapa = false;
+      if (cta && window.innerWidth < 769) {
+        var r = cta.getBoundingClientRect();
+        var vh = window.innerHeight;
+        ctaTapa = r.top < vh && r.bottom > vh - ZONA_INFERIOR_PX;
+      }
+      if (ctaTapa) el.classList.add('oculto');
       else el.classList.remove('oculto');
     }
     window.addEventListener('scroll', actualizarFlecha, { passive: true });
     window.addEventListener('resize', actualizarFlecha);
+    if (window.ResizeObserver && cta) {
+      var ro = new ResizeObserver(actualizarFlecha);
+      ro.observe(cta);
+    }
     actualizarFlecha();
   })();
 </script>
