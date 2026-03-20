@@ -127,11 +127,14 @@ function gtag_report_conversion(url) {
       }
       #hero-cartel {
         margin-top: 0 !important;
-        margin-bottom: 0.5rem !important;
+        margin-bottom: 0.25rem !important;
       }
       #cartel-container {
         padding-top: 0 !important;
-        padding-bottom: 0.15rem !important;
+        padding-bottom: 0.05rem !important;
+      }
+      #portada-venta-boletos {
+        margin-top: 0 !important;
       }
     }
     /* Asegurar que el contenido no quede debajo del header + banner */
@@ -579,14 +582,15 @@ function gtag_report_conversion(url) {
         height: 100% !important;
       }
     }
-    /* Móvil: cartel al 75% del espacio, pegado al header; 37 sobre el rotatorio; informativo anclado al rotatorio */
+    /* Móvil: cartel alto pero dejando sitio para horario + botón en la primera pantalla (svh ≈ área visible con barras del navegador) */
     @media (max-width: 1229px) {
       #cartel-container {
         position: relative;
         overflow: visible;
-        min-height: 75vh !important;
-        height: 75vh !important;
-        max-height: 75vh !important;
+        --portada-cta-reserva: calc(15.5rem + env(safe-area-inset-bottom, 0px));
+        min-height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
+        height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
+        max-height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
         padding-left: 0.25rem !important;
         padding-right: 0.25rem !important;
       }
@@ -595,7 +599,7 @@ function gtag_report_conversion(url) {
         height: 100%;
         width: 100%;
       }
-      /* Cartel rotatorio: ocupa todo el contenedor (75vh), centrado */
+      /* Cartel rotatorio: ocupa el contenedor (altura capada arriba), centrado */
       .cartel-rotatorio-container {
         position: absolute !important;
         top: 0 !important;
@@ -661,9 +665,10 @@ function gtag_report_conversion(url) {
     }
     @media (max-width: 480px) {
       #cartel-container {
-        min-height: 75vh !important;
-        height: 75vh !important;
-        max-height: 75vh !important;
+        --portada-cta-reserva: calc(16rem + env(safe-area-inset-bottom, 0px));
+        min-height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
+        height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
+        max-height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
       }
       .cartel-informativo-container {
         height: 40% !important;
@@ -675,6 +680,23 @@ function gtag_report_conversion(url) {
       }
       #cartel-informativo {
         display: none !important;
+      }
+    }
+    /* Después de los breakpoints base: svh pisa vh donde el navegador lo soporta */
+    @supports (height: 100svh) {
+      @media (max-width: 1229px) {
+        #cartel-container {
+          min-height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
+          height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
+          max-height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
+        }
+      }
+      @media (max-width: 480px) {
+        #cartel-container {
+          min-height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
+          height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
+          max-height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
+        }
       }
     }
     @media (min-width: 1230px) {
@@ -1242,6 +1264,12 @@ function gtag_report_conversion(url) {
     @media (min-width: 769px) {
       .scroll-indicator { display: none !important; }
     }
+    /* Que la flecha no se superponga al botón de entradas en móvil */
+    @media (max-width: 768px) {
+      .scroll-indicator {
+        bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
+      }
+    }
     /* Al hacer scroll a #venta-boletos: fotos completas arriba, botón abajo, sección Obra aún no visible */
     #venta-boletos { scroll-margin-top: 62vh; }
     @media (max-width: 1229px) { #venta-boletos { scroll-margin-top: 52vh; } }
@@ -1522,8 +1550,8 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
     </div>
 </div>
 </section>
-<section class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-2 sm:mt-3 mb-1 sm:mb-2 px-4">
-  <div class="texto-portada-horario" style="text-align:center; padding:12px 0; display:flex; justify-content:center; gap:24px; flex-wrap:nowrap;">
+<section id="portada-venta-boletos" class="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-8 mt-0 sm:mt-3 mb-1 sm:mb-2 px-4">
+  <div class="texto-portada-horario" style="text-align:center; padding:6px 0; display:flex; justify-content:center; gap:24px; flex-wrap:nowrap;">
     <span>Viernes · 8:30 pm</span>
     <span style="opacity:0.5;">|</span>
     <span>Nueva Carpa Geodésica</span>
