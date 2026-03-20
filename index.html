@@ -2235,7 +2235,9 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
           if (e.key === 'Escape' && document.getElementById('modal-venta-info') && !document.getElementById('modal-venta-info').classList.contains('hidden')) cerrarVentaInfo();
         });
       } else {
-        var USAR_WIDGET_INLINE = false; /* Cambiar a true para reactivar el widget de Ticket Tailor */
+        var ua = navigator.userAgent || '';
+        var esInAppBrowser = /FBAN|FBAV|FB_IAB|Instagram/i.test(ua);
+        var USAR_WIDGET_INLINE = !esInAppBrowser; /* Widget en web normal; goliiive desde IG/FB */
         if (USAR_WIDGET_INLINE) {
         var widgetPanel = document.getElementById('widget-boletos-panel');
         var widgetContenido = document.getElementById('widget-boletos-contenido');
