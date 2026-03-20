@@ -1405,8 +1405,21 @@ function gtag_report_conversion(url) {
       position: relative;
       z-index: 1;
     }
+    #widget-boletos-contenido {
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
     #widget-boletos-contenido .tt-widget {
       filter: invert(1) hue-rotate(180deg);
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    #widget-boletos-contenido .tt-widget iframe,
+    #widget-boletos-contenido .tt-widget > div {
+      max-width: 100% !important;
+      width: 100% !important;
+      box-sizing: border-box;
     }
     @media (min-width: 640px) {
       .widget-boletos-panel .widget-boletos-inner { padding: 2rem 1.5rem; }
