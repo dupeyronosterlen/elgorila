@@ -948,7 +948,7 @@ function gtag_report_conversion(url) {
     /* Misma tipografía que "Descubre la obra" para horario y sala */
     .texto-portada-horario {
       font-family: Lora, Georgia, serif;
-      font-size: clamp(0.82rem, 3.3vw, 1.3rem);
+      font-size: clamp(0.6rem, 3.3vw, 1.3rem);
       letter-spacing: 0.12em;
       color: #c9a84b;
       opacity: 0.75;
@@ -959,29 +959,7 @@ function gtag_report_conversion(url) {
     .titulo-el-gorila {
       -webkit-text-stroke: 1px #c9a84b;
     }
-    /* ≤430px: texto y horario pueden partir línea (incl. Plus ~428); >430 una línea */
-    @media (max-width: 430px) {
-      #cartel-informativo-wrap .cartel-texto-block > p:first-of-type,
-      #cartel-informativo-wrap .cartel-texto-block > h1.titulo-el-gorila {
-        white-space: normal !important;
-        overflow-wrap: break-word;
-        word-break: break-word;
-        max-width: 100%;
-        padding-inline: 0.35rem;
-        box-sizing: border-box;
-      }
-      #cartel-informativo-wrap .cartel-texto-block > h1.titulo-el-gorila {
-        line-height: 0.92;
-      }
-      .texto-portada-horario {
-        white-space: normal !important;
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-        row-gap: 0.2rem;
-        column-gap: 0.5rem;
-        max-width: 100%;
-      }
-    }
+    /* Móvil: textos siempre en una línea, se achican con clamp/vw — nunca saltan de renglón */
     .sobre-solapa-icono {
       position: absolute;
       top: 12px;
@@ -1317,6 +1295,45 @@ function gtag_report_conversion(url) {
         bottom: calc(11.75rem + env(safe-area-inset-bottom, 0px));
       }
     }
+    /* WhatsApp flotante: confianza / contacto directo */
+    .fab-whatsapp {
+      position: fixed;
+      right: max(0.85rem, env(safe-area-inset-right, 0px));
+      bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
+      z-index: 35;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 3.35rem;
+      height: 3.35rem;
+      border-radius: 50%;
+      background: #25d366;
+      color: #fff;
+      box-shadow: 0 3px 14px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .fab-whatsapp:hover {
+      transform: scale(1.06);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+    }
+    .fab-whatsapp:focus-visible {
+      outline: 2px solid #c9a84b;
+      outline-offset: 3px;
+    }
+    .fab-whatsapp svg {
+      width: 1.85rem;
+      height: 1.85rem;
+      flex-shrink: 0;
+    }
+    @media (min-width: 769px) {
+      .fab-whatsapp {
+        width: 3.5rem;
+        height: 3.5rem;
+        right: max(1.1rem, env(safe-area-inset-right, 0px));
+        bottom: max(1.1rem, env(safe-area-inset-bottom, 0px));
+      }
+    }
     /* Al hacer scroll a #venta-boletos: fotos completas arriba, botón abajo, sección Obra aún no visible */
     #venta-boletos { scroll-margin-top: 62vh; }
     @media (max-width: 1229px) { #venta-boletos { scroll-margin-top: 52vh; } }
@@ -1532,6 +1549,9 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
   </button>
 </div>
 <div id="zoom-lens" class="zoom-lens" aria-hidden="true" role="presentation"></div>
+<a class="fab-whatsapp touch-manipulation" href="https://wa.me/5215512037223" target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp al 55 1203 7223" title="WhatsApp">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.883 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
 <div class="main-container">
 <div id="scroll-indicator" class="scroll-indicator" aria-hidden="true" role="presentation">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
@@ -1588,9 +1608,9 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
 <!-- Lado Derecho: Solo bloque de texto (cartel informativo sustituido por texto). -->
 <div class="cartel-informativo-container reading-mode-solo w-full md:w-1/2 h-full flex items-center justify-center relative order-1 md:order-2" id="cartel-informativo-wrap">
     <div class="cartel-texto-block" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:clamp(11px,2.2vw,18px); max-width:400px; padding:1rem 1rem 1.5rem; font-family: Lora, Georgia, serif;">
-      <p style="font-size:clamp(33px,5.8vw,36px); color:rgba(242,237,228,0.6); font-style:italic; letter-spacing:0.05em; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">Humberto Dupeyron en</p>
-      <h1 class="titulo-el-gorila" style="font-size:clamp(60px, 13.3vw, 85px); color:#B85C38; line-height:0.9; letter-spacing:-0.02em; margin:0; font-weight:700; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">EL GORILA</h1>
-      <p style="font-size:clamp(24px,3.6vw,26px); color:rgba(242,237,228,0.5); letter-spacing:0.15em; text-transform:uppercase; margin:0; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">de Franz Kafka</p>
+      <p style="font-size:clamp(21px,5.8vw,36px); color:rgba(242,237,228,0.6); font-style:italic; letter-spacing:0.05em; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">Humberto Dupeyron en</p>
+      <h1 class="titulo-el-gorila" style="font-size:clamp(40px, 13.3vw, 85px); color:#B85C38; line-height:0.9; letter-spacing:-0.02em; margin:0; font-weight:700; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">EL GORILA</h1>
+      <p style="font-size:clamp(15px,3.6vw,26px); color:rgba(242,237,228,0.5); letter-spacing:0.15em; text-transform:uppercase; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">de Franz Kafka</p>
       <div style="width:60px; height:1.5px; background:#B85C38; opacity:0.6; margin:6px 0;"></div>
     </div>
 </div>
@@ -1604,7 +1624,7 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
     <span>Nueva Carpa Geodésica</span>
   </div>
   <div class="flex flex-col items-center">
-    <a class="link-venta-boletos btn-granate-terciopelo rounded-xl px-12 py-7 sm:px-16 sm:py-8 text-xl sm:text-2xl tracking-wide touch-manipulation inline-flex flex-col items-center justify-center" href="https://www.goliiive.com/el-gorila-cg" target="_blank" rel="noopener" onclick="return gtag_report_conversion(this.href)" style="-webkit-tap-highlight-color: transparent; line-height:1.3;">
+    <a class="link-venta-boletos btn-granate-terciopelo rounded-xl px-12 py-7 sm:px-16 sm:py-8 text-xl sm:text-2xl tracking-wide touch-manipulation inline-flex items-center justify-center text-center" href="https://www.goliiive.com/el-gorila-cg" target="_blank" rel="noopener" onclick="return gtag_report_conversion(this.href)" style="-webkit-tap-highlight-color: transparent; line-height:1.3; white-space:nowrap;">
       Adquiere tus entradas
     </a>
     <span style="display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem; font-family: Inter, sans-serif; font-size: 0.7rem; color: rgba(201,168,75,0.6); letter-spacing: 0.05em;">
