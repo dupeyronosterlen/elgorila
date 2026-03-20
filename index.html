@@ -119,6 +119,11 @@ function gtag_report_conversion(url) {
       .logo-gorila-sello { left: 0.5rem !important; }
       .logo-gorila-sello img { height: clamp(2.5rem, 7vw, 3.5rem) !important; }
     }
+    /* Móvil ancho: logos un poco más contenidos para alinear con marco proporcional */
+    @media (min-width: 391px) and (max-width: 767px) {
+      .logo-gorila-sello img { height: clamp(2.4rem, 6.2vw, 3.15rem) !important; }
+      .logo-37-sello img { height: 6.4rem !important; }
+    }
     /* Móvil y tablet: versión ligera hasta 1230px (ampliada 20% para evitar hueco del cartel informativo) */
     @media (max-width: 1229px) {
       body { padding-top: 0 !important; }
@@ -582,15 +587,16 @@ function gtag_report_conversion(url) {
         height: 100% !important;
       }
     }
-    /* Móvil: cartel alto pero dejando sitio para horario + botón en la primera pantalla (svh ≈ área visible con barras del navegador) */
+    /* Móvil/tablet portrait: gamas por ancho + pantallas bajas — misma composición, cartel cede antes que el CTA */
     @media (max-width: 1229px) {
       #cartel-container {
         position: relative;
         overflow: visible;
-        --portada-cta-reserva: calc(15.5rem + env(safe-area-inset-bottom, 0px));
-        min-height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
-        height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
-        max-height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
+        --portada-cta-reserva: calc(17.25rem + env(safe-area-inset-bottom, 0px));
+        --portada-cartel-vh: 72;
+        min-height: min(calc(var(--portada-cartel-vh) * 1vh), calc(100vh - var(--portada-cta-reserva))) !important;
+        height: min(calc(var(--portada-cartel-vh) * 1vh), calc(100vh - var(--portada-cta-reserva))) !important;
+        max-height: min(calc(var(--portada-cartel-vh) * 1vh), calc(100vh - var(--portada-cta-reserva))) !important;
         padding-left: 0.25rem !important;
         padding-right: 0.25rem !important;
       }
@@ -663,13 +669,28 @@ function gtag_report_conversion(url) {
         display: none !important;
       }
     }
-    @media (max-width: 480px) {
+    /* Gama compacta: ≤390px (Android estrecho, iPhone estándar) */
+    @media (max-width: 390px) {
       #cartel-container {
-        --portada-cta-reserva: calc(16rem + env(safe-area-inset-bottom, 0px));
-        min-height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
-        height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
-        max-height: min(75vh, calc(100vh - var(--portada-cta-reserva))) !important;
+        --portada-cta-reserva: calc(19.5rem + env(safe-area-inset-bottom, 0px));
+        --portada-cartel-vh: 66;
       }
+    }
+    /* Gama ancha móvil: Plus / Pro Max / Android grandes — más reserva vertical, cartel un poco más bajo */
+    @media (min-width: 391px) and (max-width: 1229px) {
+      #cartel-container {
+        --portada-cta-reserva: calc(19.75rem + env(safe-area-inset-bottom, 0px));
+        --portada-cartel-vh: 65;
+      }
+    }
+    /* Pantalla baja (cualquier ancho móvil): prioridad al botón + barra del navegador */
+    @media (max-width: 1229px) and (max-height: 720px) {
+      #cartel-container {
+        --portada-cta-reserva: calc(20.5rem + env(safe-area-inset-bottom, 0px));
+        --portada-cartel-vh: 58;
+      }
+    }
+    @media (max-width: 480px) {
       .cartel-informativo-container {
         height: 40% !important;
         max-height: 40% !important;
@@ -682,20 +703,13 @@ function gtag_report_conversion(url) {
         display: none !important;
       }
     }
-    /* Después de los breakpoints base: svh pisa vh donde el navegador lo soporta */
+    /* svh alinea con el viewport visible (iOS/Android con barras) */
     @supports (height: 100svh) {
       @media (max-width: 1229px) {
         #cartel-container {
-          min-height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
-          height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
-          max-height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
-        }
-      }
-      @media (max-width: 480px) {
-        #cartel-container {
-          min-height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
-          height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
-          max-height: min(75vh, calc(100svh - var(--portada-cta-reserva))) !important;
+          min-height: min(calc(var(--portada-cartel-vh) * 1svh), calc(100svh - var(--portada-cta-reserva))) !important;
+          height: min(calc(var(--portada-cartel-vh) * 1svh), calc(100svh - var(--portada-cta-reserva))) !important;
+          max-height: min(calc(var(--portada-cartel-vh) * 1svh), calc(100svh - var(--portada-cta-reserva))) !important;
         }
       }
     }
@@ -945,8 +959,8 @@ function gtag_report_conversion(url) {
     .titulo-el-gorila {
       -webkit-text-stroke: 1px #c9a84b;
     }
-    /* ≤414px: compactos (casi todo Android + iPhone estándar); Plus/Pro Max (~428–430) siguen en una línea */
-    @media (max-width: 414px) {
+    /* ≤430px: texto y horario pueden partir línea (incl. Plus ~428); >430 una línea */
+    @media (max-width: 430px) {
       #cartel-informativo-wrap .cartel-texto-block > p:first-of-type,
       #cartel-informativo-wrap .cartel-texto-block > h1.titulo-el-gorila {
         white-space: normal !important;
@@ -1287,15 +1301,20 @@ function gtag_report_conversion(url) {
     @media (min-width: 769px) {
       .scroll-indicator { display: none !important; }
     }
-    /* Que la flecha no se superponga al botón de entradas en móvil */
+    /* Flecha: más arriba según gama para no tapar CTA */
     @media (max-width: 768px) {
       .scroll-indicator {
-        bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
+        bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
       }
     }
-    @media (max-width: 480px) {
+    @media (max-width: 390px) {
       .scroll-indicator {
-        bottom: calc(10.75rem + env(safe-area-inset-bottom, 0px));
+        bottom: calc(11.5rem + env(safe-area-inset-bottom, 0px));
+      }
+    }
+    @media (min-width: 391px) and (max-width: 768px) {
+      .scroll-indicator {
+        bottom: calc(11.75rem + env(safe-area-inset-bottom, 0px));
       }
     }
     /* Al hacer scroll a #venta-boletos: fotos completas arriba, botón abajo, sección Obra aún no visible */
@@ -2735,7 +2754,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     var cta = document.querySelector('#portada-venta-boletos .link-venta-boletos');
     var UMBRAL_SCROLL = 120;
     var ANCHO_ANCHO = 1230;
-    var ZONA_INFERIOR_PX = 112;
+    var ZONA_INFERIOR_PX = 140;
     function actualizarFlecha() {
       if (!el) return;
       if (window.innerWidth >= ANCHO_ANCHO) {
