@@ -1363,28 +1363,53 @@ function gtag_report_conversion(url) {
       .galeria-hilo-2 { left: 50%; }
       .galeria-hilo-3 { left: 75%; }
     }
-    /* Widget de boletos desplegable */
-    .widget-boletos-panel {
-      max-height: 0;
-      overflow: hidden;
+    /* Widget de boletos — overlay flotante */
+    .widget-boletos-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       opacity: 0;
-      transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, margin 0.4s ease;
-      margin-top: 0;
-      margin-bottom: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .widget-boletos-overlay.abierto {
+      opacity: 1;
+      visibility: visible;
+    }
+    .widget-boletos-panel {
+      position: fixed;
+      z-index: 9999;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.92);
+      width: calc(100% - 2rem);
+      max-width: 520px;
+      max-height: calc(100dvh - 6rem);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s ease;
     }
     .widget-boletos-panel.abierto {
-      max-height: 1200px;
       opacity: 1;
-      margin-top: 2rem;
-      margin-bottom: 5rem;
+      visibility: visible;
+      transform: translate(-50%, -50%) scale(1);
     }
     .widget-boletos-panel .widget-boletos-inner {
       position: relative;
       overflow: hidden;
-      background: rgba(26, 21, 14, 0.95);
-      border: 1px solid rgba(212, 175, 55, 0.2);
-      border-radius: 0.75rem;
+      background: rgba(26, 21, 14, 0.97);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 1rem;
       padding: 1.5rem 1rem;
+      box-shadow:
+        0 25px 60px rgba(0,0,0,0.6),
+        0 0 40px rgba(201,168,75,0.12),
+        0 0 0 1px rgba(212,175,55,0.08);
     }
     .widget-boletos-panel .widget-boletos-inner::before {
       content: '';
@@ -1442,18 +1467,19 @@ function gtag_report_conversion(url) {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 22px;
-      height: 22px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
-      background: transparent;
-      border: none;
-      color: rgba(212, 175, 55, 0.45);
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(212,175,55,0.2);
+      color: rgba(212, 175, 55, 0.65);
       cursor: pointer;
-      transition: color 0.2s, transform 0.2s;
+      transition: color 0.2s, transform 0.2s, background 0.2s;
       padding: 0;
     }
     .widget-boletos-cerrar:hover {
       color: #d4af37;
+      background: rgba(0,0,0,0.6);
       transform: scale(1.15);
     }
   </style>
@@ -1638,10 +1664,12 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
   </div>
 
 </section>
-<!-- Widget de boletos desplegable (se mueve al botón que lo activa) -->
-<div id="widget-boletos-panel" class="widget-boletos-panel scroll-mt-24 px-4">
-  <div class="widget-boletos-inner mx-auto max-w-2xl">
-    <div class="flex justify-end mb-1" style="margin-top:-0.5rem; margin-right:-0.25rem;">
+<!-- Overlay + Panel flotante de boletos -->
+<div id="widget-boletos-overlay" class="widget-boletos-overlay"></div>
+<div id="widget-boletos-panel" class="widget-boletos-panel">
+  <div class="widget-boletos-inner">
+    <div class="flex justify-between items-center mb-2">
+      <span style="color:rgba(212,175,55,0.85); font-weight:700; font-size:1.05rem; font-family:var(--font-display,serif);">Adquiere tus boletos</span>
       <button id="cerrar-widget-boletos" class="widget-boletos-cerrar" aria-label="Cerrar widget de boletos">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
@@ -2119,6 +2147,10 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
 </footer>
 </div>
 </div>
+<!-- Barra fija de compra -->
+<div class="barra-compra-fija">
+  <a class="link-venta-boletos" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener">Adquiere tus entradas</a>
+</div>
 <script src="js/imagenes.js" defer></script>
 <script>
   (function() {
@@ -2322,38 +2354,20 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
           widgetCargado = true;
         }
 
+        var widgetOverlay = document.getElementById('widget-boletos-overlay');
+
+        function abrirWidget() {
+          cargarWidget();
+          if (widgetOverlay) widgetOverlay.classList.add('abierto');
+          widgetPanel.classList.add('abierto');
+          document.body.style.overflow = 'hidden';
+        }
+
         function cerrarWidget() {
           if (!widgetPanel) return;
           widgetPanel.classList.remove('abierto');
-          botonActivo = null;
-        }
-
-        function toggleWidget(btn) {
-          if (!widgetPanel) return;
-          var estaAbierto = widgetPanel.classList.contains('abierto');
-          var mismoBoton = (botonActivo === btn);
-          if (estaAbierto && mismoBoton) {
-            cerrarWidget();
-            return;
-          }
-          var ancla = document.getElementById('venta-boletos') || document.getElementById('sobre-contenido');
-          if (!ancla) return;
-          if (estaAbierto) {
-            widgetPanel.classList.remove('abierto');
-            setTimeout(function() {
-              ancla.parentNode.insertBefore(widgetPanel, ancla.nextSibling);
-              widgetPanel.classList.add('abierto');
-              botonActivo = btn;
-              cargarWidget();
-              setTimeout(function() { widgetPanel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
-            }, 350);
-          } else {
-            ancla.parentNode.insertBefore(widgetPanel, ancla.nextSibling);
-            widgetPanel.classList.add('abierto');
-            botonActivo = btn;
-            cargarWidget();
-            setTimeout(function() { widgetPanel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
-          }
+          if (widgetOverlay) widgetOverlay.classList.remove('abierto');
+          document.body.style.overflow = '';
         }
 
         links.forEach(function(a) {
@@ -2370,10 +2384,15 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
                 'currency': 'MXN'
               });
             } catch(err) {}
-            toggleWidget(a);
+            if (widgetPanel.classList.contains('abierto')) {
+              cerrarWidget();
+            } else {
+              abrirWidget();
+            }
           });
         });
 
+        if (widgetOverlay) widgetOverlay.addEventListener('click', cerrarWidget);
         var cerrarBtn = document.getElementById('cerrar-widget-boletos');
         if (cerrarBtn) cerrarBtn.addEventListener('click', cerrarWidget);
         document.addEventListener('keydown', function(e) {
@@ -2778,8 +2797,4 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   }
 })();
 </script>
-<!-- Barra fija de compra -->
-<div class="barra-compra-fija">
-  <a class="link-venta-boletos" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener" onclick="return gtag_report_conversion(this.href)">Adquiere tus entradas</a>
-</div>
 </body></html>
