@@ -2330,25 +2330,25 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
 
         function toggleWidget(btn) {
           if (!widgetPanel) return;
-          var section = btn.closest('section');
-          if (!section) return;
           var estaAbierto = widgetPanel.classList.contains('abierto');
           var mismoBoton = (botonActivo === btn);
           if (estaAbierto && mismoBoton) {
             cerrarWidget();
             return;
           }
+          var ancla = document.getElementById('venta-boletos') || document.getElementById('sobre-contenido');
+          if (!ancla) return;
           if (estaAbierto) {
             widgetPanel.classList.remove('abierto');
             setTimeout(function() {
-              section.parentNode.insertBefore(widgetPanel, section.nextSibling);
+              ancla.parentNode.insertBefore(widgetPanel, ancla.nextSibling);
               widgetPanel.classList.add('abierto');
               botonActivo = btn;
               cargarWidget();
               setTimeout(function() { widgetPanel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
             }, 350);
           } else {
-            section.parentNode.insertBefore(widgetPanel, section.nextSibling);
+            ancla.parentNode.insertBefore(widgetPanel, ancla.nextSibling);
             widgetPanel.classList.add('abierto');
             botonActivo = btn;
             cargarWidget();
