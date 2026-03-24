@@ -147,13 +147,15 @@
     }
     /* Odila / Ariel: marco que envuelve al texto, sin scroll; texto siempre completo en todas las versiones */
     #odila-texto-carrusel,
-    #ariel-texto-carrusel {
+    #ariel-texto-carrusel,
+    #osterlen-texto-carrusel {
       display: grid;
       grid-template-rows: auto;
       min-height: 0;
     }
     .odila-texto-slide,
-    .ariel-texto-slide {
+    .ariel-texto-slide,
+    .osterlen-texto-slide {
       grid-area: 1 / 1;
       position: relative;
       overflow: visible;
@@ -1794,7 +1796,7 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
         <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
             <div class="imagen-obra-actor w-full md:w-[500px] lg:w-[600px] flex-shrink-0 order-1 md:order-1">
                 <div class="imagen-obra-actor-inner relative w-full aspect-[4/3] sm:aspect-[5/4] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border-2 border-accent-gold/30 max-h-[300px] sm:max-h-[380px] md:max-h-none shadow-lg">
-                    <img id="actor-imagen" alt="Humberto Dupeyrón" class="w-full h-full object-cover transition-opacity duration-150" src="img/HUMBERTO DUPEYRON/01.JPG" loading="lazy" decoding="async" fetchpriority="low" onerror="this.src='img/HUMBERTO DUPEYRON/03.jpg'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/04.JPG'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/05.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/06.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/07.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/08.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/09.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/010.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/011.jpg'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/013.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/014.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/015.jpg'; this.onerror=null;};};};};};};};};};};};"/>
+                    <img id="actor-imagen" alt="Humberto Dupeyrón" class="w-full h-full object-cover transition-opacity duration-150" src="img/HUMBERTO DUPEYRON/01.png" loading="lazy" decoding="async" fetchpriority="low" onerror="this.src='img/HUMBERTO DUPEYRON/02.JPG'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/03.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/04.png'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/05.png'; this.onerror=null;};};};"/>
                 </div>
             </div>
             <div class="flex-1 w-full min-w-0 order-2 md:order-2 flex flex-col min-h-0 bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
@@ -1892,6 +1894,32 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
         </div>
     </div>
     
+    <!-- Osterlen Dupeyron — Productor -->
+    <div class="mt-6 md:mt-8 max-w-5xl mx-auto">
+        <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4">
+                <div class="foto-equipo-kafka w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 rounded-lg overflow-hidden border border-accent-gold/20">
+                    <img src="img/OSTERLEN DUPEYRON/1.png" alt="Osterlen Dupeyron" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none';"/>
+                </div>
+                <div class="flex-1 text-center md:text-left">
+                    <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Osterlen Dupeyron</h3>
+                    <p class="text-sm sm:text-base text-accent-gold/80 font-medium italic">Productor</p>
+                </div>
+            </div>
+            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative">
+                <div id="osterlen-texto-carrusel" class="relative cursor-pointer select-none text-center md:text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (2 en total)">
+                    <div class="osterlen-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center p-0" data-index="0">
+                        <p class="w-full text-center md:text-left">Creció entre funciones, cables y escenarios. Antes de saber qué era producir, ya lo estaba viviendo. El resto lo aprendió afuera — en dirección, diseño y producción audiovisual.</p>
+                    </div>
+                    <div class="osterlen-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
+                        <p class="w-full text-center md:text-left">En 2026 ese recorrido vuelve al origen — para dotar de intención a El Gorila.</p>
+                    </div>
+                    <span id="osterlen-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Gabriel Ponzanelli (RIP) -->
     <div class="mt-6 md:mt-8 max-w-3xl mx-auto">
         <div class="rounded-lg bg-black/60 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/30 text-center contenedor-texto-scroll">
@@ -1906,6 +1934,9 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
     </div>
 </section>
 
+<div class="text-center my-6 sm:my-8 px-4">
+<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Ven a descubrirlo...</p>
+</div>
 
 <section class="scroll-mt-24 mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 mt-6 sm:mt-8 section-with-bg" id="faq" style="background-image: url('img/SINOPSIS/5.png');">
 <div class="flex flex-col items-center justify-center">
@@ -2573,6 +2604,32 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
       carrusel.addEventListener('click', function() { showArielTexto(index + 1); });
       carrusel.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showArielTexto(index + 1); }
+      });
+    }
+  })();
+  (function() {
+    var carrusel = document.getElementById('osterlen-texto-carrusel');
+    var indicator = document.getElementById('osterlen-texto-indicator');
+    var slides = document.querySelectorAll('.osterlen-texto-slide');
+    var total = slides.length;
+    var index = 0;
+    function showOsterlenTexto(i) {
+      index = ((i % total) + total) % total;
+      slides.forEach(function(s, j) {
+        if (j === index) {
+          s.classList.remove('opacity-0', 'pointer-events-none');
+          s.classList.add('opacity-100');
+        } else {
+          s.classList.add('opacity-0', 'pointer-events-none');
+          s.classList.remove('opacity-100');
+        }
+      });
+      if (indicator) indicator.textContent = (index + 1) + '/' + total;
+    }
+    if (carrusel && total) {
+      carrusel.addEventListener('click', function() { showOsterlenTexto(index + 1); });
+      carrusel.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showOsterlenTexto(index + 1); }
       });
     }
   })();
