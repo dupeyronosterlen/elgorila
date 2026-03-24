@@ -1040,12 +1040,17 @@
       animation: comentarios-scroll 126s linear infinite;
       animation-play-state: paused;
       padding: 0.5rem 0;
+      cursor: pointer;
     }
     .comentarios-carrusel-track.running {
       animation-play-state: running;
     }
-    .comentarios-carrusel-track:hover {
-      animation-play-state: paused;
+    .comentarios-carrusel-track.running:hover {
+      animation-duration: 30s;
+    }
+    .comentarios-carrusel-track.stopped {
+      animation-play-state: paused !important;
+      transition: transform 0.4s ease;
     }
     @keyframes comentarios-scroll {
       0% { transform: translateX(0); }
@@ -1760,6 +1765,9 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
 <!-- Ancla para scroll al widget -->
 <div id="venta-boletos" class="scroll-mt-24"></div>
 <div class="indicador-mas indicador-mas-izquierda" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+<div class="text-center my-6 sm:my-8 px-4">
+<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">La pieza que no envejece.</p>
+</div>
 <!-- Sección La Obra (fondo Kafka más oscuro y desaturado) -->
 <section class="seccion-obra-actor obra-fondo-kafka mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" style="background-image: url('img/SINOPSIS/2.png');">
     <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
@@ -1790,6 +1798,9 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
     </div>
 </section>
 
+<div class="text-center my-6 sm:my-8 px-4">
+<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Un hombre. Un escenario. Nada más.</p>
+</div>
 <!-- Sección El Actor -->
 <section class="seccion-obra-actor mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" style="background-image: url('img/SINOPSIS/3.png');">
     <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
@@ -1843,6 +1854,9 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
 </section>
 
 <div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+<div class="text-center my-6 sm:my-8 px-4">
+<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Detrás del telón.</p>
+</div>
 <!-- Sección Equipo -->
     <section class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-6 sm:mt-8 section-with-bg" style="background-image: url('img/SINOPSIS/4.png');">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
@@ -1903,7 +1917,7 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
                 </div>
                 <div class="flex-1 text-center md:text-left">
                     <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Osterlen Dupeyron</h3>
-                    <p class="text-sm sm:text-base text-accent-gold/80 font-medium italic">Productor</p>
+                    <p class="text-sm sm:text-base text-accent-gold/80 font-medium italic">Productor · Escenografía · Dirección de Arte</p>
                 </div>
             </div>
             <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative">
@@ -1912,7 +1926,7 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
                         <p class="w-full text-center md:text-left">Creció entre funciones, cables y escenarios. Antes de saber qué era producir, ya lo estaba viviendo. El resto lo aprendió afuera — en dirección, diseño y producción audiovisual.</p>
                     </div>
                     <div class="osterlen-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
-                        <p class="w-full text-center md:text-left">En 2026 ese recorrido vuelve al origen — para dotar de intención a El Gorila.</p>
+                        <p class="w-full text-center md:text-left">En 2026 ese recorrido vuelve al origen — escenografía, dirección de arte y lenguaje visual que argumentan la obra y potencian a su padre, que es el actor que la habita.</p>
                     </div>
                     <span id="osterlen-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/2</span>
                 </div>
@@ -2189,9 +2203,30 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     if (!track) return;
     var items = track.innerHTML;
     track.innerHTML = items + items;
+    var stopped = false;
+    var manualOffset = 0;
+    var casillas = track.querySelectorAll('.comentarios-casilla');
+    var cardWidth = casillas.length ? casillas[0].offsetWidth + 16 : 300;
+
+    track.addEventListener('click', function() {
+      if (!stopped) {
+        var computed = window.getComputedStyle(track);
+        var matrix = new DOMMatrix(computed.transform);
+        manualOffset = matrix.m41;
+        track.classList.remove('running');
+        track.classList.add('stopped');
+        track.style.transform = 'translateX(' + manualOffset + 'px)';
+        stopped = true;
+      } else {
+        manualOffset -= cardWidth;
+        track.style.transform = 'translateX(' + manualOffset + 'px)';
+      }
+    });
+
     if ('IntersectionObserver' in window) {
       var obs = new IntersectionObserver(function(entries) {
         entries.forEach(function(e) {
+          if (stopped) return;
           if (e.isIntersecting) track.classList.add('running');
           else track.classList.remove('running');
         });
