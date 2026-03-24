@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
+<!-- End Google Tag Manager -->
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -41,6 +48,10 @@
     </style>
 </head>
 <body class="bg-gray-900 text-white">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P4BDXRN9"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
     <!-- Header fijo -->
     <header class="bg-brand-garnet sticky top-0 z-50 shadow-lg">
         <div class="px-4 py-3">
@@ -53,21 +64,21 @@
         </div>
     </header>
 
-    <!-- Selector de Función -->
+    <!-- Selector de Funci?n -->
     <div class="bg-gray-800 border-b border-gray-700 sticky top-[57px] z-40">
         <div class="px-4 py-3">
             <select id="selector-funcion" class="w-full bg-gray-700 text-white rounded-lg px-4 py-3 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary">
                 <option value="viernes">Viernes 20 Oct - 20:30</option>
-                <option value="sabado">Sábado 21 Oct - 19:00</option>
+                <option value="sabado">S?bado 21 Oct - 19:00</option>
                 <option value="domingo">Domingo 22 Oct</option>
             </select>
         </div>
     </div>
 
-    <!-- Estadísticas Rápidas -->
+    <!-- Estad?sticas R?pidas -->
     <div class="p-4 space-y-3">
         <div class="bg-gray-800 rounded-xl p-4">
-            <h2 class="text-sm text-gray-400 mb-3 uppercase tracking-wide">Resumen de la Función</h2>
+            <h2 class="text-sm text-gray-400 mb-3 uppercase tracking-wide">Resumen de la Funci?n</h2>
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-gray-700/50 rounded-lg p-3">
                     <p class="text-xs text-gray-400 mb-1">Total Esperado</p>
@@ -93,7 +104,7 @@
             <div class="flex items-start gap-3">
                 <span class="material-symbols-outlined text-blue-400 text-3xl">accessible</span>
                 <div>
-                    <h3 class="font-bold text-lg mb-1">Atención Especial</h3>
+                    <h3 class="font-bold text-lg mb-1">Atenci?n Especial</h3>
                     <p class="text-sm text-gray-300" id="info-discapacidad">-</p>
                 </div>
             </div>
@@ -108,7 +119,7 @@
                 <input 
                     type="text" 
                     id="codigo-verificar" 
-                    placeholder="Escanear o ingresar código"
+                    placeholder="Escanear o ingresar c?digo"
                     class="flex-1 bg-gray-700 text-white rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     autocomplete="off"
                 />
@@ -122,20 +133,20 @@
         </div>
     </div>
 
-    <!-- Resultado de Verificación -->
+    <!-- Resultado de Verificaci?n -->
     <div id="resultado-verificacion" class="px-4 mb-4 hidden">
         <div id="resultado-valido" class="bg-green-900/50 border border-green-500/50 rounded-xl p-4 hidden">
             <div class="flex items-start gap-3 mb-4">
                 <span class="material-symbols-outlined text-green-400 text-4xl">check_circle</span>
                 <div class="flex-grow">
-                    <h3 class="font-bold text-xl mb-2">Boleto Válido</h3>
+                    <h3 class="font-bold text-xl mb-2">Boleto V?lido</h3>
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between">
-                            <span class="text-gray-400">Código:</span>
+                            <span class="text-gray-400">C?digo:</span>
                             <span class="font-mono font-semibold" id="res-codigo">-</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-400">Función:</span>
+                            <span class="text-gray-400">Funci?n:</span>
                             <span class="font-semibold" id="res-fecha">-</span>
                         </div>
                         <div class="flex justify-between">
@@ -166,7 +177,7 @@
             <div class="flex items-start gap-3">
                 <span class="material-symbols-outlined text-red-400 text-4xl">cancel</span>
                 <div>
-                    <h3 class="font-bold text-xl mb-2">Boleto Inválido</h3>
+                    <h3 class="font-bold text-xl mb-2">Boleto Inv?lido</h3>
                     <p class="text-sm" id="res-error">-</p>
                 </div>
             </div>
@@ -177,7 +188,7 @@
     <div class="px-4 mb-4">
         <h2 class="text-lg font-bold mb-3">Pendientes de Ingreso</h2>
         <div id="lista-pendientes" class="space-y-2">
-            <!-- Se llenará con JavaScript -->
+            <!-- Se llenar? con JavaScript -->
         </div>
     </div>
 

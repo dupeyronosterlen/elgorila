@@ -1,13 +1,19 @@
 <!DOCTYPE html>
-<html lang="es"><head>
+<html class="dark" lang="es"><head>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
+<!-- End Google Tag Manager -->
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Confirmación - Compra Exitosa</title>
+<title>Confirmación - EL GORILA</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 <script>
@@ -16,137 +22,116 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#C8A060', // Golden accent
-                        surface: '#1A1814', // Dark background for the card
-                        onSurface: '#F5EFE6', // Light text color
-                        onSurfaceMuted: '#B8AF9E', // Muted text color for secondary info
-                        success: '#82A372', // Green for success icon background
-                        successContent: '#1A1814', // Dark text on success background
-                        surfaceVariant: '#2D2923', // Darker variant for details section
-                        error: '#B00020', // Error color for icons or text
-                        errorContainer: '#4E2121', // Background for error messages
+                        primary: "#8B0000",
+                        "background-dark": "#1a150e",
+                        "text-dark": "#D4CFC3",
+                        "accent-gold": "#D4AF37",
+                        "rich-dark": "#2a1e12",
                     },
                     fontFamily: {
-                        display: ["Libre Baskerville", "serif"],
+                        display: ["Lora", "serif"],
                         body: ["Inter", "sans-serif"],
-                    },
-                    borderRadius: {
-                        DEFAULT: "0px", // Sharp edges for the kafkian style
                     },
                 },
             },
         };
     </script>
 <style>
-        body {
-            background-image: url('img/FONDOS/2.png');
-            background-size: 100% auto;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-color: #1A1814;
-            position: relative;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: -1;
-            pointer-events: none;
-        }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        }
+        body { background-color: #1a150e; font-family: Inter, sans-serif; }
+        h1, h2, h3 { font-family: Lora, serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        /* Meta Pixel: descomentar y poner tu PIXEL_ID cuando tengas la cuenta */
+        /* <script>!function(f,b,e,v,n,t,s){...} fbq('init','PIXEL_ID'); fbq('track','Purchase');</script> */
     </style>
 </head>
-<body class="bg-surface text-onSurface font-body">
+<body class="bg-background-dark text-text-dark font-body">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P4BDXRN9"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 <div class="flex flex-col min-h-screen">
 <header class="py-6 px-4 sm:px-6 lg:px-8 absolute top-0 left-0 w-full z-10">
 <div class="max-w-7xl mx-auto">
-<a aria-label="Volver a la página de inicio" class="inline-block" href="index.html">
-<div class="font-display text-lg font-bold tracking-wider text-onSurface">EL GORILA DE</div>
-<div class="font-display text-xl font-bold tracking-widest text-onSurface">FRANZKAFKA</div>
+<a aria-label="Volver al inicio" class="inline-block" href="index.html">
+<img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity"/>
 </a>
 </div>
 </header>
 <main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 pt-28 pb-10">
-<div class="bg-surface/80 backdrop-blur-sm shadow-2xl p-8 sm:p-12 w-full max-w-2xl mx-auto border border-primary/20" id="contenedor-pago">
-<h1 class="font-display text-3xl sm:text-4xl font-bold text-onSurface mb-6 text-center">Confirmar y Pagar</h1>
+<div class="bg-rich-dark/90 backdrop-blur-sm shadow-2xl p-8 sm:p-12 w-full max-w-2xl mx-auto border border-accent-gold/20 rounded-lg" id="contenedor-pago">
+<h1 class="font-display text-3xl sm:text-4xl font-bold text-white mb-6 text-center">Confirmar y Pagar</h1>
 
 <!-- Resumen de Compra -->
-<div class="bg-surfaceVariant p-6 mb-6 space-y-4">
-<h3 class="text-lg font-bold text-onSurface mb-4">Resumen de Compra</h3>
-<div class="flex justify-between items-center border-b border-onSurface/20 pb-2">
-<span class="text-sm text-onSurfaceMuted">Función:</span>
-<span class="font-bold text-sm text-onSurface" id="confirmacion-funcion">Cargando...</span>
+<div class="bg-black/30 p-6 mb-6 space-y-4 rounded-lg border border-accent-gold/20">
+<h3 class="text-lg font-bold text-white mb-4">Resumen de Compra</h3>
+<div class="flex justify-between items-center border-b border-accent-gold/20 pb-2">
+<span class="text-sm text-text-dark/80">Función:</span>
+<span class="font-bold text-sm text-white" id="confirmacion-funcion">Cargando...</span>
 </div>
-<div class="flex justify-between items-center pt-2 pb-2 border-b border-onSurface/20">
-<span class="text-sm text-onSurfaceMuted">Boletos:</span>
-<span class="font-bold text-sm text-onSurface" id="confirmacion-cantidad">0</span>
+<div class="flex justify-between items-center pt-2 pb-2 border-b border-accent-gold/20">
+<span class="text-sm text-text-dark/80">Boletos:</span>
+<span class="font-bold text-sm text-white" id="confirmacion-cantidad">0</span>
 </div>
-<div class="flex justify-between items-center pt-2 pb-2 border-b border-onSurface/20">
-<span class="text-sm text-onSurfaceMuted">Subtotal:</span>
-<span class="font-bold text-sm text-onSurface" id="confirmacion-subtotal">$0.00</span>
+<div class="flex justify-between items-center pt-2 pb-2 border-b border-accent-gold/20">
+<span class="text-sm text-text-dark/80">Subtotal:</span>
+<span class="font-bold text-sm text-white" id="confirmacion-subtotal">$0.00</span>
 </div>
-<div id="confirmacion-descuento-container" class="flex justify-between items-center pt-2 pb-2 border-b border-onSurface/20 hidden">
-<span class="text-sm text-onSurfaceMuted">Descuento:</span>
+<div id="confirmacion-descuento-container" class="flex justify-between items-center pt-2 pb-2 border-b border-accent-gold/20 hidden">
+<span class="text-sm text-text-dark/80">Descuento:</span>
 <span class="font-bold text-sm text-green-400" id="confirmacion-descuento">-$0.00</span>
 </div>
 <div class="flex justify-between items-center pt-4">
-<span class="text-lg font-bold text-onSurface">Total:</span>
-<span class="text-xl font-bold text-primary" id="confirmacion-total">$0.00 MXN</span>
+<span class="text-lg font-bold text-white">Total:</span>
+<span class="text-xl font-bold text-accent-gold" id="confirmacion-total">$0.00 MXN</span>
 </div>
 </div>
 
 <!-- Formulario de Email -->
 <div class="mb-6">
-<label for="email-input" class="block text-sm font-semibold text-onSurface mb-2">Correo Electrónico *</label>
-<input type="email" id="email-input" required placeholder="tu@email.com" class="w-full px-4 py-3 bg-surfaceVariant border border-onSurface/20 rounded text-onSurface placeholder-onSurfaceMuted focus:outline-none focus:border-primary">
-<p class="text-xs text-onSurfaceMuted mt-1">Te enviaremos tus boletos a este correo</p>
+<label for="email-input" class="block text-sm font-semibold text-white mb-2">Correo Electrónico *</label>
+<input type="email" id="email-input" required placeholder="tu@email.com" class="w-full px-4 py-3 bg-black/30 border border-accent-gold/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-accent-gold/50">
+<p class="text-xs text-text-dark/70 mt-1">Te enviaremos tus boletos a este correo</p>
 </div>
 
 <!-- Botón de Pago -->
-<button id="btn-pagar" type="button" onclick="procesarPago()" class="w-full bg-primary text-surface font-bold py-4 hover:bg-opacity-90 transition-colors duration-300 mb-4">
-    Pagar con Boletia
+<button id="btn-pagar" type="button" onclick="procesarPago()" class="w-full bg-primary text-white font-bold py-4 rounded-xl hover:opacity-90 transition-opacity duration-300 mb-4 border border-accent-gold/40">
+    Continuar al pago
 </button>
 
 <div class="text-center">
-<p class="text-xs text-onSurfaceMuted">Al continuar, aceptas nuestros Términos y Condiciones y Política de Privacidad.</p>
+<p class="text-xs text-text-dark/70">Al continuar, aceptas nuestros Términos y Condiciones y Política de Privacidad.</p>
 </div>
 </div>
 
-<!-- Sección de Confirmación (oculta inicialmente) -->
-<div class="bg-surface/80 backdrop-blur-sm shadow-2xl p-8 sm:p-12 w-full max-w-2xl mx-auto border border-primary/20 hidden" id="contenedor-exito">
+<!-- Sección de Confirmación (oculta inicialmente) - Aquí disparar Meta Pixel -->
+<div class="bg-rich-dark/90 backdrop-blur-sm shadow-2xl p-8 sm:p-12 w-full max-w-2xl mx-auto border border-accent-gold/20 rounded-lg hidden" id="contenedor-exito">
 <div class="flex flex-col items-center text-center">
-<div class="bg-success rounded-full p-3 mb-6">
-<span class="material-symbols-outlined text-4xl text-successContent">done</span>
+<div class="bg-green-600/30 rounded-full p-3 mb-6 border border-green-500/40">
+<span class="material-symbols-outlined text-4xl text-green-400">done</span>
 </div>
-<h1 class="font-display text-4xl sm:text-5xl font-bold text-onSurface">¡Compra Exitosa!</h1>
-<p class="mt-4 text-sm sm:text-base text-onSurfaceMuted max-w-md">Hemos enviado la confirmación y tus boletos digitales al correo electrónico que nos proporcionaste.</p>
+<h1 class="font-display text-4xl sm:text-5xl font-bold text-white">¡Compra Exitosa!</h1>
+<p class="mt-4 text-sm sm:text-base text-text-dark/80 max-w-md">Hemos enviado la confirmación y tus boletos digitales al correo electrónico que nos proporcionaste.</p>
 </div>
-<div class="bg-surfaceVariant p-6 my-8 space-y-4">
-<div class="flex justify-between items-center border-b border-onSurface/20 pb-4">
-<span class="text-sm text-onSurfaceMuted">Correo electrónico:</span>
-<span class="font-bold text-sm text-onSurface" id="confirmacion-email-final">-</span>
+<div class="bg-black/30 p-6 my-8 space-y-4 rounded-lg border border-accent-gold/20">
+<div class="flex justify-between items-center border-b border-accent-gold/20 pb-4">
+<span class="text-sm text-text-dark/80">Correo electrónico:</span>
+<span class="font-bold text-sm text-white" id="confirmacion-email-final">-</span>
 </div>
-<div class="flex justify-between items-center pt-2 pb-4 border-b border-onSurface/20">
-<span class="text-sm text-onSurfaceMuted">Número de orden:</span>
-<span class="font-bold text-sm text-onSurface" id="confirmacion-orden-final">-</span>
+<div class="flex justify-between items-center pt-2 pb-4 border-b border-accent-gold/20">
+<span class="text-sm text-text-dark/80">Número de orden:</span>
+<span class="font-bold text-sm text-white" id="confirmacion-orden-final">-</span>
 </div>
 <div class="flex justify-between items-center pt-2">
-<span class="text-sm text-onSurfaceMuted">Boletos comprados:</span>
-<span class="font-bold text-sm text-onSurface" id="confirmacion-cantidad-final">-</span>
+<span class="text-sm text-text-dark/80">Boletos comprados:</span>
+<span class="font-bold text-sm text-white" id="confirmacion-cantidad-final">-</span>
 </div>
 </div>
-<div class="bg-primary/10 border border-primary/30 rounded-lg p-6 mb-8 hidden" id="certificado-info">
+<div class="bg-accent-gold/10 border border-accent-gold/30 rounded-lg p-6 mb-8 hidden" id="certificado-info">
 <div class="flex items-start gap-4">
-<span class="material-symbols-outlined text-primary text-3xl">verified</span>
+<span class="material-symbols-outlined text-accent-gold text-3xl">verified</span>
 <div class="flex-grow">
-<h3 class="font-display text-xl font-bold text-onSurface mb-2">Certificado Digital Único</h3>
-<p class="text-sm text-onSurfaceMuted mb-4">Cada boleto incluye un certificado digital único con código QR para verificación. Los certificados han sido enviados a tu correo electrónico.</p>
+<h3 class="font-display text-xl font-bold text-white mb-2">Certificado Digital Único</h3>
+<p class="text-sm text-text-dark/80 mb-4">Cada boleto incluye un certificado digital único con código QR para verificación. Los certificados han sido enviados a tu correo electrónico.</p>
 <div class="flex flex-wrap gap-2" id="certificados-lista">
 <!-- Los certificados se generarán aquí -->
 </div>
@@ -154,50 +139,38 @@
 </div>
 </div>
 <div class="text-center mb-8">
-<h2 class="font-display text-2xl font-bold text-onSurface">Siguientes Pasos</h2>
+<h2 class="font-display text-2xl font-bold text-white">Siguientes Pasos</h2>
 </div>
 <ul class="space-y-6 mb-8">
 <li class="flex items-start space-x-4">
-<span class="material-symbols-outlined text-primary mt-1">mail</span>
-<p class="text-sm sm:text-base text-onSurfaceMuted">Revisa tu bandeja de entrada. Si no lo encuentras, busca en la carpeta de correo no deseado.</p>
+<span class="material-symbols-outlined text-accent-gold mt-1">mail</span>
+<p class="text-sm sm:text-base text-text-dark/80">Revisa tu bandeja de entrada. Si no lo encuentras, busca en la carpeta de correo no deseado.</p>
 </li>
 <li class="flex items-start space-x-4">
-<span class="material-symbols-outlined text-primary mt-1">qr_code_2</span>
-<p class="text-sm sm:text-base text-onSurfaceMuted">Guarda tus boletos. Encontrarás un código QR único para cada entrada.</p>
+<span class="material-symbols-outlined text-accent-gold mt-1">qr_code_2</span>
+<p class="text-sm sm:text-base text-text-dark/80">Guarda tus boletos. Encontrarás un código QR único para cada entrada.</p>
 </li>
 <li class="flex items-start space-x-4">
-<span class="material-symbols-outlined text-primary mt-1">confirmation_number</span>
-<p class="text-sm sm:text-base text-onSurfaceMuted">Presenta el código QR en la entrada del teatro el día de la función. ¡Disfruta del espectáculo!</p>
+<span class="material-symbols-outlined text-accent-gold mt-1">confirmation_number</span>
+<p class="text-sm sm:text-base text-text-dark/80">Presenta el código QR en la entrada del teatro el día de la función. ¡Disfruta del espectáculo!</p>
 </li>
 </ul>
 <div class="mt-10">
-<a class="block w-full text-center bg-primary text-surface font-bold py-4 hover:bg-opacity-90 transition-colors duration-300" href="index.html">
-                        Volver al Inicio
-                    </a>
+<a class="block w-full text-center bg-primary text-white font-bold py-4 rounded-xl hover:opacity-90 transition-opacity border border-accent-gold/40" href="index.html">Volver al Inicio</a>
 </div>
 </div>
 </main>
-<footer class="bg-surface/80 backdrop-blur-sm py-8 px-4 sm:px-6 lg:px-8 border-t border-primary/20">
-<div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-6">
-<div class="text-sm text-onSurfaceMuted">
-<p>El Gorila de Franzkafka © 2024</p>
-<p>Una producción de Teatro Inmersivo S.A.</p>
-</div>
-<nav class="flex gap-x-6 gap-y-4 justify-center items-center flex-wrap">
-<a class="flex items-center gap-1.5 text-sm text-onSurface hover:text-primary transition-colors duration-300" href="index.html#contacto">
-<span class="material-symbols-outlined text-lg">mail</span>
-                        Contacto
-                    </a>
-<a class="flex items-center gap-1.5 text-sm text-onSurface hover:text-primary transition-colors duration-300" href="index.html#faq">
-<span class="material-symbols-outlined text-lg">help</span>
-                        Preguntas Frecuentes
-                    </a>
-</nav>
+<footer class="bg-rich-dark/80 backdrop-blur-md py-8 px-4 sm:px-6 lg:px-8 border-t border-accent-gold/10">
+<div class="max-w-7xl mx-auto text-center">
+<p class="font-display text-lg text-accent-gold">EL GORILA</p>
+<p class="text-text-dark/60 mt-2">© 2026. Todos los derechos reservados.</p>
+<a href="index.html" class="inline-block mt-4 text-accent-gold hover:text-white transition-colors">Volver al inicio</a>
 </div>
 </footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="js/api-config.js"></script>
 <script src="js/inventario.js"></script>
 <script src="js/imagenes.js"></script>
 <script src="js/certificado.js"></script>

@@ -1,102 +1,82 @@
 <!DOCTYPE html>
-<html lang="es"><head>
+<html class="dark" lang="es"><head>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
+<!-- End Google Tag Manager -->
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Checkout - Pago con Boletia</title>
+<title>Checkout - EL GORILA</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&amp;family=Work+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 <script>
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        primary: "#b89025",
-                        "background-light": "#fdf8ef",
-                        "background-dark": "#1a1a1a",
-                        'brand-garnet': '#800020',
-                        'brand-mustard': '#c8a951',
-                        'brand-cream': '#fdf8ef'
+                        primary: "#8B0000",
+                        "background-dark": "#1a150e",
+                        "text-dark": "#D4CFC3",
+                        "accent-gold": "#D4AF37",
+                        "rich-dark": "#2a1e12",
                     },
                     fontFamily: {
-                        display: ["Cormorant Garamond", "serif"],
-                        sans: ["Work Sans", "sans-serif"],
+                        display: ["Lora", "serif"],
+                        body: ["Inter", "sans-serif"],
                     },
-                    borderRadius: {
-                        DEFAULT: "0.5rem",
-                    },
+                    borderRadius: { DEFAULT: "0.5rem" },
                 },
             },
         };
     </script>
 <style>
-        .background-gradient {
-            background-image: url('img/FONDOS/2.png');
-            background-size: 100% auto;
-            background-position: center;
-            background-repeat: no-repeat;
-            position: relative;
+        body { background-color: #1a150e; font-family: Inter, sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: Lora, serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .btn-granate-terciopelo {
+            background: linear-gradient(165deg, #8B3A42 0%, #6B2D35 50%, #5A252C 100%) !important;
+            color: #f5f0e8 !important;
+            font-weight: 700;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12), 0 0 12px rgba(201,168,75,0.3);
+            border: 1px solid rgba(201,168,75,0.6);
+            transition: box-shadow 0.2s ease, transform 0.15s ease;
         }
-        .background-gradient::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 0;
-            pointer-events: none;
-        }
-        .background-gradient > * {
-            position: relative;
-            z-index: 1;
-        }
-        body {
-            font-family: 'Work Sans', sans-serif;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Cormorant Garamond', serif;
-        }
-        .material-symbols-outlined {
-          font-variation-settings:
-          'FILL' 0,
-          'wght' 300,
-          'GRAD' 0,
-          'opsz' 24
+        .btn-granate-terciopelo:hover {
+            box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 6px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), 0 0 20px rgba(201,168,75,0.45);
         }
     </style>
 </head>
-<body class="bg-background-light font-sans">
-<div class="background-gradient">
-<div class="bg-black/50 dark:bg-black/70 min-h-screen flex flex-col">
-<header class="fixed top-0 left-0 right-0 z-10 bg-black/60 backdrop-blur-sm border-b border-white/10">
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex items-center justify-center h-20">
-<a class="flex items-center" href="index.html">
-<img alt="Logo de El Gorila de Franzkafka" class="h-10 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPPH_UXeDGDzQHAKB-iEJvQbrvrzqpmXFej3ed-Q547iiFc1Wsj3SqCegjaE-aEV3o4ILlGsVS-w-ozsalqRGm52_bDIny7RrWoJ5IELfD7BIZUkz-ChCdN65O8iV5RqNuxm6gV9oC6ZxWh1Kk3s3aU8StstjGoVwLigb2aUyUorQI6M4MLJm-jAoT_uhjcOUnaAH6P47LqHG6WWz9AN5LzH0Z0ocjpDANQAu2Uip7oIg6WgOTwKYX2HtYhckUx2PYCIK0vJY"/>
-</a>
+<body class="bg-background-dark text-text-dark font-body">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P4BDXRN9"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+<div class="min-h-screen flex flex-col">
+<div class="fixed top-2 left-3 z-30">
+  <a href="index.html" aria-label="Ir al inicio"><img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="h-12 w-auto opacity-90 hover:opacity-100 transition-opacity"/></a>
 </div>
-</div>
-</header>
 <main class="flex-grow flex items-center justify-center p-4 sm:p-6 md:p-8 pt-24">
 <div class="w-full max-w-md mx-auto">
 <h2 class="text-4xl font-bold mb-6 text-white font-display text-center">Resumen y Pago</h2>
 <div class="space-y-4 mb-6 hidden" id="mensajes-error">
-<div class="bg-brand-garnet/90 backdrop-blur-sm border border-brand-cream/30 text-brand-cream rounded-lg p-4 hidden" id="error-pago">
+<div class="bg-primary/90 backdrop-blur-sm border border-accent-gold/30 text-text-dark rounded-lg p-4 hidden" id="error-pago">
 <div class="flex items-center gap-4">
 <span class="material-symbols-outlined text-3xl">error</span>
 <div class="flex-grow">
 <p class="font-semibold">Pago fallido. No se ha realizado ningún cargo.</p>
-<button type="button" onclick="location.reload()" class="font-semibold underline hover:text-white transition-colors duration-200 text-sm">Reintentar pago con Boletia</button>
+<button type="button" onclick="location.reload()" class="font-semibold underline hover:text-white transition-colors duration-200 text-sm">Reintentar pago</button>
 </div>
 </div>
 </div>
-<div class="bg-black/70 backdrop-blur-sm border border-white/20 text-brand-cream rounded-lg p-4 hidden" id="error-conexion">
+<div class="bg-black/70 backdrop-blur-sm border border-white/20 text-text-dark rounded-lg p-4 hidden" id="error-conexion">
 <div class="flex items-center gap-4">
 <span class="material-symbols-outlined text-3xl">cloud_off</span>
 <div class="flex-grow">
@@ -105,7 +85,7 @@
 </div>
 </div>
 </div>
-<div class="bg-black/70 backdrop-blur-sm border border-white/20 text-brand-cream rounded-lg p-4 hidden" id="advertencia-duplicado">
+<div class="bg-black/70 backdrop-blur-sm border border-white/20 text-text-dark rounded-lg p-4 hidden" id="advertencia-duplicado">
 <div class="flex items-center gap-4">
 <span class="material-symbols-outlined text-3xl">verified_user</span>
 <div class="flex-grow">
@@ -149,7 +129,7 @@
 <div class="space-y-4">
 <div>
 <label for="email-input" class="block text-sm text-white/80 mb-2">Correo Electrónico *</label>
-<input type="email" id="email-input" required placeholder="tu@email.com" class="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary">
+<input type="email" id="email-input" required placeholder="tu@email.com" class="w-full px-4 py-3 bg-black/50 border border-accent-gold/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-accent-gold/50">
 <p class="text-xs text-white/60 mt-1">Te enviaremos tus boletos a este correo</p>
 </div>
 </div>
@@ -157,16 +137,15 @@
 <div class="bg-black/60 dark:bg-black/70 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-6 flex items-start gap-4">
 <span class="material-symbols-outlined text-white/80 mt-1">lock</span>
 <div>
-<h4 class="font-bold text-white mb-2 font-display text-lg">Pago Seguro Interno</h4>
-<p class="text-white/80 text-sm mb-3">La transacción se procesa directamente en este sitio utilizando la infraestructura segura de Boletia. No serás redirigido a ningún portal externo.</p>
+<h4 class="font-bold text-white mb-2 font-display text-lg">Pago Seguro</h4>
+<p class="text-white/80 text-sm mb-3">La transacción se procesa de forma segura. Tus boletos serán enviados a tu correo electrónico al confirmar el pago.</p>
 <p class="text-white/80 text-sm italic">Tus boletos serán enviados a tu correo electrónico al confirmar el pago.</p>
 </div>
 </div>
 <div class="space-y-4">
-<button id="btn-pagar" type="button" class="w-full relative bg-gradient-to-br from-[#4a0010] to-[#800020] text-[#ffdf80] font-bold py-4 rounded-lg flex items-center justify-center gap-3 text-xl shadow-lg shadow-black/40 border border-[#ffdf80]/20 transition-all duration-300 ease-out hover:from-[#66001a] hover:to-[#990026] hover:text-white hover:border-[#ffdf80]/50 hover:shadow-2xl hover:shadow-[#c8a951]/20 hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale disabled:hover:translate-y-0 disabled:hover:shadow-none group overflow-hidden">
-<div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-50 pointer-events-none"></div>
-<span class="material-symbols-outlined text-2xl group-hover:animate-pulse z-10">confirmation_number</span>
-<span class="z-10 tracking-wide">Pagar con Boletia</span>
+<button id="btn-pagar" type="button" class="w-full btn-granate-terciopelo py-4 rounded-xl flex items-center justify-center gap-3 text-xl disabled:opacity-50 disabled:cursor-not-allowed group">
+<span class="material-symbols-outlined text-2xl">confirmation_number</span>
+<span class="tracking-wide">Continuar al pago</span>
 </button>
 </div>
 <div class="text-center mt-6">
@@ -174,30 +153,16 @@
 </div>
 </div>
 </main>
-<footer class="bg-black/60 backdrop-blur-sm text-white/80 py-8 border-t border-white/10">
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex flex-col md:flex-row justify-between items-center text-center md:text-left space-y-6 md:space-y-0">
-<div class="text-xs text-white/50">
-<p>© 2024 Teatro El Laberinto. Todos los derechos reservados.</p>
-</div>
-<div class="flex items-center space-x-2">
-<img alt="Logo El Gorila de Franzkafka" class="h-8 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs3lmzt4rgu581Pc8GgbCfk2HRgQ2M0lVTU88vOuVaojG_OpHJcKRLPTPuO41iLMa2Y8HLPMYsvtOY4oeUGx54akuznAW6dJF7pihn6C7HWUuoPSFaxpRxAheWtMQelutHHy0_tXlZy6AiIgUOUfkkwgqifhGERwCqX3TsekxubuvKmWzij3wro-KpmBvyHmAVR4A-cKsCjM7vVn65cwXgbOczV-9k9qMNbp40-YRteVRjFq3uOKEGD4kQI0QivLiL8_7743s"/>
-<span class="font-sans font-semibold tracking-wider uppercase text-base">El Gorila de Franzkafka</span>
-</div>
-<nav class="flex items-center space-x-6">
-<a class="text-white hover:text-brand-mustard transition-colors" href="index.html#contacto" title="Contacto">
-<span class="material-symbols-outlined text-3xl">mail</span>
-</a>
-<a class="text-white hover:text-brand-mustard transition-colors" href="index.html#faq" title="Preguntas Frecuentes">
-<span class="material-symbols-outlined text-3xl">help</span>
-</a>
-</nav>
-</div>
+<footer class="bg-rich-dark/80 backdrop-blur-md py-8 border-t border-accent-gold/10">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+<p class="font-display text-lg text-accent-gold">EL GORILA</p>
+<p class="text-text-dark/60 mt-2">© 2026. Todos los derechos reservados.</p>
+<a href="index.html" class="inline-block mt-4 text-accent-gold hover:text-white transition-colors">Volver al inicio</a>
 </div>
 </footer>
 </div>
-</div>
 
+<script src="js/api-config.js"></script>
 <script src="js/inventario.js"></script>
 <script src="js/imagenes.js"></script>
 <script src="js/certificado.js"></script>
