@@ -1281,8 +1281,17 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .barra-compra-fija .barra-compra-titulo {
       display: block;
     }
+    .barra-compra-fija .barra-compra-meta {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: center;
+      gap: 0.35rem 0.5rem;
+      line-height: 1.2;
+    }
     .barra-compra-fija .barra-compra-precio {
-      display: block;
+      display: inline;
       font-family: Lora, Georgia, 'Times New Roman', serif;
       font-size: 0.78rem;
       font-weight: 600;
@@ -1290,19 +1299,23 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       color: rgba(232, 215, 175, 0.95);
       text-shadow: 0 1px 3px rgba(0,0,0,0.45);
       font-variant-numeric: tabular-nums;
-      line-height: 1.2;
     }
     .barra-compra-fija .barra-compra-aforo {
-      display: block;
+      display: inline;
       font-family: Lora, Georgia, 'Times New Roman', serif;
-      font-size: 0.65rem;
+      font-size: 0.68rem;
       font-weight: 500;
       font-style: italic;
       letter-spacing: 0.06em;
-      color: rgba(245, 240, 232, 0.72);
+      color: rgba(245, 240, 232, 0.78);
       text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-      line-height: 1.25;
-      margin-top: 0.1rem;
+    }
+    .barra-compra-fija .barra-compra-meta-sep {
+      opacity: 0.45;
+      font-weight: 400;
+      font-style: normal;
+      letter-spacing: 0;
+      user-select: none;
     }
     @media (min-width: 769px) {
       .barra-compra-fija {
@@ -1321,7 +1334,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         letter-spacing: 0.14em;
       }
       .barra-compra-fija .barra-compra-aforo {
-        font-size: 0.7rem;
+        font-size: 0.74rem;
         letter-spacing: 0.07em;
       }
     }
@@ -1708,7 +1721,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div id="sobre-contenido" style="max-height:none; opacity:1; overflow:visible; padding-top:0.5rem;">
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-2 sm:mt-4 md:mt-8">
 <div class="text-center mb-6 sm:mb-8 px-4">
-<p class="text-text-dark/70 text-sm sm:text-base font-light tracking-wide max-w-2xl mx-auto">Creías que ya lo conocías.</p>
+<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">37 años esperándote. Llegó tu turno.</p>
 </div>
 <div class="max-w-5xl galeria-reducida mx-auto galeria-wrap">
 <div class="galeria-hilo galeria-hilo-1 hidden md:block" aria-hidden="true"></div>
@@ -1789,9 +1802,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </div>
 </div>
-<div class="text-center mt-6 sm:mt-8 px-4">
-<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">37 años esperándote. Llegó tu turno.</p>
-</div>
 </section>
 <section id="seccion-sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-4 sm:mt-6 section-with-bg" data-bg-sinopsis="img/SINOPSIS/1.png" data-bg-sinopsis-mobile="img/SINOPSIS/mobile/1.webp">
 <h2 class="mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
@@ -1836,7 +1846,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 
 <div class="text-center my-6 sm:my-8 px-4">
-<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Un hombre. Un escenario. Nada más.</p>
+<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Un actor. Un personaje. Nada más.</p>
 </div>
 <!-- Sección El Actor -->
 <section class="seccion-obra-actor mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" data-bg="img/SINOPSIS/3.png" data-bg-mobile="img/SINOPSIS/mobile/3.webp">
@@ -2215,8 +2225,11 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
 <div class="barra-compra-fija">
   <a class="link-venta-boletos" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener" aria-label="Adquiere tus entradas, 370 pesos mexicanos. Aforo limitado.">
     <span class="barra-compra-titulo">Adquiere tus entradas</span>
-    <span class="barra-compra-precio" aria-hidden="true">$370</span>
-    <span class="barra-compra-aforo" aria-hidden="true">Aforo limitado</span>
+    <span class="barra-compra-meta" aria-hidden="true">
+      <span class="barra-compra-precio">$370</span>
+      <span class="barra-compra-meta-sep" aria-hidden="true">·</span>
+      <span class="barra-compra-aforo">Aforo limitado</span>
+    </span>
   </a>
 </div>
 <script src="js/imagenes.js" defer></script>
