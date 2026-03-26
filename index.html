@@ -1519,32 +1519,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       },
     };
   </script>
-<!-- Google Ads Outbound Click Conversion -->
-<script>
-function gtag_report_conversion(url) {
-  var isExternal = (typeof url === 'string' && url.indexOf('http') === 0);
-  if (isExternal) {
-    gtag('event', 'conversion', {
-      'send_to': 'AW-17961021514/1Q6tCLSBxYUcEMrgvfRC',
-      'value': 370.0,
-      'currency': 'MXN'
-    });
-    return true;
-  }
-  var callback = function () {
-    if (typeof(url) != 'undefined') {
-      window.location = url;
-    }
-  };
-  gtag('event', 'conversion', {
-      'send_to': 'AW-17961021514/1Q6tCLSBxYUcEMrgvfRC',
-      'value': 370.0,
-      'currency': 'MXN',
-      'event_callback': callback
-  });
-  return false;
-}
-</script>
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
@@ -2413,6 +2387,19 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
           widgetCargado = true;
         }
 
+        if ('IntersectionObserver' in window) {
+          var preloadTarget = document.querySelector('.barra-compra-fija') || document.getElementById('venta-boletos');
+          if (preloadTarget) {
+            var preloadObs = new IntersectionObserver(function(entries) {
+              if (entries[0].isIntersecting) { cargarWidget(); preloadObs.disconnect(); }
+            }, { rootMargin: '400px' });
+            preloadObs.observe(preloadTarget);
+          }
+          setTimeout(function() { cargarWidget(); }, 4000);
+        } else {
+          setTimeout(function() { cargarWidget(); }, 2000);
+        }
+
         var widgetOverlay = document.getElementById('widget-boletos-overlay');
 
         function abrirWidget() {
@@ -2442,13 +2429,8 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
               abrirWidget();
               try {
                 gtag('event', 'conversion', {
-                  'send_to': 'AW-17961021514/ghTjCLOgxfobEMrgvfRC',
-                  'value': 1.0,
-                  'currency': 'MXN'
-                });
-                gtag('event', 'conversion', {
                   'send_to': 'AW-17961021514/bq35CLSXp44cEMrgvfRC',
-                  'value': 1.0,
+                  'value': 370.0,
                   'currency': 'MXN'
                 });
               } catch(err) {}
