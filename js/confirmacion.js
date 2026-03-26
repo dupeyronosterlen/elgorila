@@ -1,27 +1,55 @@
 // --- SISTEMA DE CONFIRMACIÓN Y PAGO ---
-// Página de pago final y confirmación
+// Página de pago final y confirmación (Stripe + modo simulado)
 
 let ordenCompra = null;
 
 // Cargar datos de la orden
-function cargarConfirmacion() {
+async function cargarConfirmacion() {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+
+    // --- Stripe: si hay session_id, obtener venta del backend (reintentar si webhook tarda) ---
+    if (sessionId && window.API_BASE) {
+        for (let intento = 0; intento < 3; intento++) {
+            try {
+                const res = await fetch(window.API_BASE + '/api/venta/' + encodeURIComponent(sessionId));
+                if (res.ok) {
+                    const venta = await res.json();
+                    ordenCompra = {
+                        estado: 'completada',
+                        email: venta.email,
+                        numeroOrden: venta.numeroOrden,
+                        cantidad: venta.cantidad,
+                        fecha: venta.fecha,
+                        total: venta.total
+                    };
+                    mostrarExito();
+                    return;
+                }
+            } catch (err) {
+                console.error('Error al obtener venta:', err);
+            }
+            await new Promise(r => setTimeout(r, 800 * (intento + 1)));
+        }
+    }
+
+    // --- Modo localStorage (simulado o fallback) ---
     const ordenGuardada = localStorage.getItem('orden_compra');
-    
     if (!ordenGuardada) {
-        // Si no hay orden, redirigir a boletos
-        alert('No hay una orden de compra. Redirigiendo a la página de boletos...');
+        if (sessionId) {
+            alert('La venta se está procesando. Si ya pagaste, revisa tu correo. Si no, intenta de nuevo.');
+        } else {
+            alert('No hay una orden de compra. Redirigiendo a la página de boletos...');
+        }
         window.location.href = 'boletos.html';
         return;
     }
-    
+
     try {
         ordenCompra = JSON.parse(ordenGuardada);
-        
-        // Si ya está completada, mostrar éxito
         if (ordenCompra.estado === 'completada') {
             mostrarExito();
         } else {
-            // Mostrar formulario de pago
             mostrarFormularioPago();
         }
     } catch (error) {
@@ -214,7 +242,7 @@ function mostrarInfoCertificados() {
     // Mostrar cada certificado con su código QR
     certificados.forEach((cert, index) => {
         const certificadoDiv = document.createElement('div');
-        certificadoDiv.className = 'bg-surfaceVariant border border-primary/20 rounded p-4 flex items-start gap-4';
+        certificadoDiv.className = 'bg-black/30 border border-accent-gold/20 rounded-lg p-4 flex items-start gap-4';
         
         const numeroBoleto = cert.numeroBoleto || (index + 1);
         const codigoQR = cert.id || `CERT-${ordenCompra.numeroOrden}-${numeroBoleto}`;
@@ -225,13 +253,13 @@ function mostrarInfoCertificados() {
             </div>
             <div class="flex-grow">
                 <div class="flex items-center gap-2 mb-2">
-                    <span class="material-symbols-outlined text-primary">confirmation_number</span>
-                    <p class="text-sm font-semibold text-onSurface">Boleto #${numeroBoleto}</p>
+                    <span class="material-symbols-outlined text-accent-gold">confirmation_number</span>
+                    <p class="text-sm font-semibold text-white">Boleto #${numeroBoleto}</p>
                 </div>
-                <p class="text-xs text-onSurfaceMuted font-mono mb-1">${codigoQR}</p>
-                <p class="text-xs text-onSurfaceMuted">Certificado digital único</p>
+                <p class="text-xs text-text-dark/80 font-mono mb-1">${codigoQR}</p>
+                <p class="text-xs text-text-dark/80">Certificado digital único</p>
                 <a href="verificar.html?codigo=${encodeURIComponent(codigoQR)}" 
-                   class="text-xs text-primary hover:underline mt-2 inline-block">
+                   class="text-xs text-accent-gold hover:underline mt-2 inline-block">
                     Verificar boleto →
                 </a>
             </div>
@@ -253,7 +281,7 @@ function mostrarInfoCertificados() {
                 }, function (error) {
                     if (error) {
                         console.error('Error al generar QR:', error);
-                        qrContainer.innerHTML = `<div class="text-xs text-onSurfaceMuted text-center">QR</div>`;
+                        qrContainer.innerHTML = `<div class="text-xs text-text-dark/80 text-center">QR</div>`;
                     }
                 });
             }

@@ -88,47 +88,34 @@ function mostrarDatosOrden() {
     localStorage.setItem('orden_compra', JSON.stringify(ordenCompra));
 }
 
-// Procesar pago
-function procesarPago() {
+// Procesar pago: Stripe (si API disponible) o modo simulado
+async function procesarPago() {
     if (!ordenCompra) {
         alert('Error: No se encontró la orden de compra');
         window.location.href = 'boletos.html';
         return;
     }
 
-    // Validar integridad de la orden
-    if (typeof ordenCompra.cantidad !== 'number' || 
-        ordenCompra.cantidad < 1 || 
-        ordenCompra.cantidad > 10) {
+    if (typeof ordenCompra.cantidad !== 'number' || ordenCompra.cantidad < 1 || ordenCompra.cantidad > 10) {
         alert('Error: Datos de la orden inválidos');
         window.location.href = 'boletos.html';
         return;
     }
-    
-    if (!ordenCompra.clave || !['viernes', 'sabado', 'domingo'].includes(ordenCompra.clave)) {
+    if (!ordenCompra.clave || typeof ordenCompra.clave !== 'string') {
         alert('Error: Fecha inválida');
         window.location.href = 'boletos.html';
         return;
     }
 
-    // Validar formulario
     const emailInput = document.getElementById('email-input');
-    if (!emailInput) {
-        alert('Error: Campo de email no encontrado');
-        return;
-    }
-    
-    let email = emailInput.value.trim();
-    
-    // Sanitizar email
-    email = email.substring(0, 254).replace(/[<>]/g, '');
-    
+    if (!emailInput) return;
+    let email = emailInput.value.trim().substring(0, 254).replace(/[<>]/g, '');
     if (!email || !validarEmail(email)) {
         alert('Por favor, ingresa un correo electrónico válido');
         return;
     }
 
-    // Verificar disponibilidad una última vez
+    // Verificar disponibilidad
     if (typeof InventarioManager !== 'undefined') {
         const disponibilidad = InventarioManager.obtenerDisponibilidad(ordenCompra.clave);
         if (disponibilidad.disponible < ordenCompra.cantidad) {
@@ -138,58 +125,75 @@ function procesarPago() {
         }
     }
 
-    // Confirmar compra en el inventario
-    if (typeof InventarioManager !== 'undefined') {
-        const resultado = InventarioManager.confirmarCompra(
-            ordenCompra.clave,
-            ordenCompra.cantidad,
-            ordenCompra.reservaId
-        );
+    // --- STRIPE: si API disponible, crear sesión y redirigir ---
+    if (window.API_BASE) {
+        const btn = document.getElementById('btn-pagar');
+        if (btn) { btn.disabled = true; btn.querySelector('span:last-child').textContent = 'Procesando...'; }
+        try {
+            const res = await fetch(window.API_BASE + '/api/create-checkout-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    orden: {
+                        clave: ordenCompra.clave,
+                        cantidad: ordenCompra.cantidad,
+                        total: ordenCompra.total,
+                        subtotal: ordenCompra.subtotal,
+                        fecha: ordenCompra.fecha,
+                        descuento: ordenCompra.descuento || 0,
+                        codigoDescuento: ordenCompra.codigoDescuento || ''
+                    },
+                    email: email
+                })
+            });
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+                return;
+            }
+            const msg = data.mensaje || data.error || 'Error al procesar el pago';
+            alert(msg);
+        } catch (err) {
+            console.error(err);
+            alert('Error de conexión. Verifica que el servidor esté activo e intenta de nuevo.');
+        }
+        if (btn) { btn.disabled = false; btn.querySelector('span:last-child').textContent = 'Continuar al pago'; }
+        return;
+    }
 
+    // --- MODO SIMULADO (sin backend) ---
+    if (typeof InventarioManager !== 'undefined') {
+        const resultado = InventarioManager.confirmarCompra(ordenCompra.clave, ordenCompra.cantidad, ordenCompra.reservaId);
         if (!resultado.exito) {
             alert(resultado.mensaje || 'Error al confirmar la compra');
             return;
         }
     }
 
-    // Generar número de orden único
     const numeroOrden = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-
-    // Actualizar orden con datos finales
     ordenCompra.email = email;
     ordenCompra.numeroOrden = numeroOrden;
     ordenCompra.fechaCompra = new Date().toISOString();
     ordenCompra.estado = 'completada';
-
-    // Guardar orden completa
     localStorage.setItem('orden_compra', JSON.stringify(ordenCompra));
     localStorage.setItem('ultima_compra', JSON.stringify(ordenCompra));
 
-    // Guardar en historial de ventas (para el panel de admin)
     if (typeof window.guardarVentaEnHistorial === 'function') {
         window.guardarVentaEnHistorial(ordenCompra);
     } else {
-        // Si el admin.js no está cargado, guardar directamente
         const ventas = JSON.parse(localStorage.getItem('historial_ventas') || '[]');
         ventas.push(ordenCompra);
         localStorage.setItem('historial_ventas', JSON.stringify(ventas));
     }
 
-    // Generar certificados digitales para los boletos
     if (typeof CertificadoManager !== 'undefined') {
         const resultadoCertificados = CertificadoManager.generarCertificadosParaOrden(ordenCompra);
         if (resultadoCertificados.exito) {
-            // Guardar IDs de certificados en la orden
             ordenCompra.certificados = resultadoCertificados.certificados.map(c => c.id);
             localStorage.setItem('orden_compra', JSON.stringify(ordenCompra));
-            console.log(`Certificados generados: ${resultadoCertificados.certificados.length}`);
-        } else {
-            console.error('Error al generar certificados:', resultadoCertificados.error);
-            // No bloqueamos el flujo si falla la generación de certificados
         }
     }
 
-    // Redirigir a confirmación
     window.location.href = 'confirmacion.html';
 }
 
@@ -224,6 +228,17 @@ function verificarDisponibilidadPeriodica() {
 
 // Inicializar cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
+    // Si volvió de Stripe cancelando
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('cancelado') === '1') {
+        const err = document.getElementById('mensajes-error');
+        const errPago = document.getElementById('error-pago');
+        if (err && errPago) {
+            err.classList.remove('hidden');
+            errPago.classList.remove('hidden');
+            errPago.querySelector('p').textContent = 'Pago cancelado. Puedes intentar de nuevo cuando quieras.';
+        }
+    }
     cargarOrden();
     
     // Configurar botón de pago

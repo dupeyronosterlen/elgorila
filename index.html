@@ -871,6 +871,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .logo-37-sello:not(.logo-37-cargando) {
       opacity: 1;
     }
+    /* Mientras el widget de boletos está abierto: no tapar la X ni el flujo de pago (Ticket Tailor) */
+    .logo-37-sello.logo-37-oculto-por-widget {
+      opacity: 0 !important;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s;
+    }
     /* Botón Adquiere tus entradas: granate tipo terciopelo */
     .btn-granate-terciopelo {
       background: linear-gradient(165deg, #8B3A42 0%, #6B2D35 50%, #5A252C 100%) !important;
@@ -1034,9 +1041,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.15) !important;
       }
     }
-    /* Carrusel "Lo que dicen": casillas laterales, rotación derecha a izquierda */
+    /* Carrusel "Lo que dicen": solo rotación automática (sin arrastre ni scroll; no interactivo) */
     .comentarios-carrusel-wrap {
       overflow: hidden;
+      pointer-events: none;
       mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
       -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
     }
@@ -1044,20 +1052,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       display: flex;
       width: max-content;
       gap: 1rem;
-      animation: comentarios-scroll 126s linear infinite;
-      animation-play-state: paused;
       padding: 0.5rem 0;
-      cursor: pointer;
+      pointer-events: none;
+      animation: comentarios-scroll 176.4s linear infinite;
+      animation-play-state: paused;
+      will-change: transform;
     }
     .comentarios-carrusel-track.running {
       animation-play-state: running;
-    }
-    .comentarios-carrusel-track.running:hover {
-      animation-duration: 30s;
-    }
-    .comentarios-carrusel-track.stopped {
-      animation-play-state: paused !important;
-      transition: transform 0.4s ease;
     }
     @keyframes comentarios-scroll {
       0% { transform: translateX(0); }
@@ -1214,7 +1216,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     /* Flecha: justo por encima de la barra de compra fija */
     @media (max-width: 768px) {
       .scroll-indicator {
-        bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+        bottom: calc(5.65rem + env(safe-area-inset-bottom, 0px));
       }
     }
     /* Botón fijo de compra: flotante con efecto 3D */
@@ -1267,9 +1269,40 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       text-decoration: none;
       text-shadow: 0 2px 4px rgba(0,0,0,0.4);
       -webkit-tap-highlight-color: transparent;
-      display: block;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
       width: 100%;
       text-align: center;
+      line-height: 1.2;
+    }
+    .barra-compra-fija .barra-compra-titulo {
+      display: block;
+    }
+    .barra-compra-fija .barra-compra-precio {
+      display: block;
+      font-family: Lora, Georgia, 'Times New Roman', serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: rgba(232, 215, 175, 0.95);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+    .barra-compra-fija .barra-compra-aforo {
+      display: block;
+      font-family: Lora, Georgia, 'Times New Roman', serif;
+      font-size: 0.65rem;
+      font-weight: 500;
+      font-style: italic;
+      letter-spacing: 0.06em;
+      color: rgba(245, 240, 232, 0.72);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      line-height: 1.25;
+      margin-top: 0.1rem;
     }
     @media (min-width: 769px) {
       .barra-compra-fija {
@@ -1283,18 +1316,27 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       .barra-compra-fija:hover { transform: translateX(-50%) translateY(-2px); }
       .barra-compra-fija:active { transform: translateX(-50%) translateY(1px); }
       .barra-compra-fija a { font-size: 1.3rem; }
+      .barra-compra-fija .barra-compra-precio {
+        font-size: 0.85rem;
+        letter-spacing: 0.14em;
+      }
+      .barra-compra-fija .barra-compra-aforo {
+        font-size: 0.7rem;
+        letter-spacing: 0.07em;
+      }
     }
-    /* WhatsApp flotante: confianza / contacto directo — sube para no tapar el botón de compra */
+    /* WhatsApp flotante: siempre por encima de la barra de compra (z-index) y un poco más compacto */
     .fab-whatsapp {
       position: fixed;
       right: max(0.85rem, env(safe-area-inset-right, 0px));
-      bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
-      z-index: 35;
+      /* Por encima de .barra-compra-fija (incl. línea de precio) */
+      bottom: calc(6.2rem + env(safe-area-inset-bottom, 0px));
+      z-index: 50;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 3.35rem;
-      height: 3.35rem;
+      width: 2.95rem;
+      height: 2.95rem;
       border-radius: 50%;
       background: #25d366;
       color: #fff;
@@ -1311,16 +1353,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       outline-offset: 3px;
     }
     .fab-whatsapp svg {
-      width: 1.85rem;
-      height: 1.85rem;
+      width: 1.55rem;
+      height: 1.55rem;
       flex-shrink: 0;
     }
     @media (min-width: 769px) {
       .fab-whatsapp {
-        width: 3.5rem;
-        height: 3.5rem;
-        right: max(1.1rem, env(safe-area-inset-right, 0px));
-        bottom: max(1.1rem, env(safe-area-inset-bottom, 0px));
+        width: 2.8rem;
+        height: 2.8rem;
+        right: max(1rem, env(safe-area-inset-right, 0px));
+        /* iPad/tablet: misma lógica — nunca al ras del borde bajo la barra (antes quedaba detrás por z-index y bottom bajo) */
+        bottom: calc(6.35rem + env(safe-area-inset-bottom, 0px));
+      }
+      .fab-whatsapp svg {
+        width: 1.45rem;
+        height: 1.45rem;
       }
     }
     /* Al hacer scroll a #venta-boletos: fotos completas arriba, botón abajo, sección Obra aún no visible */
@@ -1824,7 +1871,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Reseñas: después de El Actor -->
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg p-4 sm:p-6 md:p-8" id="comentarios">
 <div class="comentarios-seccion-frame relative overflow-hidden rounded-lg bg-rich-dark/90 backdrop-blur-md border-2 border-accent-gold/50 p-5 sm:p-6 md:p-8 shadow-[0_0_0_1px_rgba(212,175,55,0.2),inset_0_0_0_1px_rgba(212,175,55,0.08)]">
-<div class="comentarios-carrusel-wrap" aria-label="Comentarios del público en rotación">
+<div class="comentarios-carrusel-wrap" aria-label="Comentarios del público en rotación automática">
 <div class="comentarios-carrusel-track" id="comentarios-track">
 <blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">He tenido la fortuna de verlo casi una media docena de veces y llevarlo a 3 escuelas. Lo recuerdo con admiración.</p><cite class="comentarios-autor">— Victor Manuel Ordaz</cite></blockquote>
 <blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">El Gorila de hace 25 años me emocionó y me hizo reír. Verlo de nuevo, con todos estos años encima, me dejó más emocionada que la primera vez.</p><cite class="comentarios-autor">— LaBiblio Tecota</cite></blockquote>
@@ -2166,7 +2213,11 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
 </div>
 <!-- Barra fija de compra -->
 <div class="barra-compra-fija">
-  <a class="link-venta-boletos" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener">Adquiere tus entradas</a>
+  <a class="link-venta-boletos" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener" aria-label="Adquiere tus entradas, 370 pesos mexicanos. Aforo limitado.">
+    <span class="barra-compra-titulo">Adquiere tus entradas</span>
+    <span class="barra-compra-precio" aria-hidden="true">$370</span>
+    <span class="barra-compra-aforo" aria-hidden="true">Aforo limitado</span>
+  </a>
 </div>
 <script src="js/imagenes.js" defer></script>
 <script>
@@ -2193,30 +2244,9 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     if (!track) return;
     var items = track.innerHTML;
     track.innerHTML = items + items;
-    var stopped = false;
-    var manualOffset = 0;
-    var casillas = track.querySelectorAll('.comentarios-casilla');
-    var cardWidth = casillas.length ? casillas[0].offsetWidth + 16 : 300;
-
-    track.addEventListener('click', function() {
-      if (!stopped) {
-        var computed = window.getComputedStyle(track);
-        var matrix = new DOMMatrix(computed.transform);
-        manualOffset = matrix.m41;
-        track.classList.remove('running');
-        track.classList.add('stopped');
-        track.style.transform = 'translateX(' + manualOffset + 'px)';
-        stopped = true;
-      } else {
-        manualOffset -= cardWidth;
-        track.style.transform = 'translateX(' + manualOffset + 'px)';
-      }
-    });
-
     if ('IntersectionObserver' in window) {
       var obs = new IntersectionObserver(function(entries) {
         entries.forEach(function(e) {
-          if (stopped) return;
           if (e.isIntersecting) track.classList.add('running');
           else track.classList.remove('running');
         });
@@ -2401,12 +2431,21 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
         }
 
         var widgetOverlay = document.getElementById('widget-boletos-overlay');
+        var logo37Wrap = document.getElementById('logo-37-wrap');
+
+        function setLogo37PorWidget(oculto) {
+          if (!logo37Wrap) return;
+          logo37Wrap.classList.toggle('logo-37-oculto-por-widget', !!oculto);
+          if (oculto) logo37Wrap.setAttribute('aria-hidden', 'true');
+          else logo37Wrap.removeAttribute('aria-hidden');
+        }
 
         function abrirWidget() {
           cargarWidget();
           if (widgetOverlay) widgetOverlay.classList.add('abierto');
           widgetPanel.classList.add('abierto');
           document.body.style.overflow = 'hidden';
+          setLogo37PorWidget(true);
         }
 
         function cerrarWidget() {
@@ -2414,6 +2453,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
           widgetPanel.classList.remove('abierto');
           if (widgetOverlay) widgetOverlay.classList.remove('abierto');
           document.body.style.overflow = '';
+          setLogo37PorWidget(false);
         }
 
         links.forEach(function(a) {
