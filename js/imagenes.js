@@ -24,8 +24,8 @@ function obtenerImagenAleatoria(carpeta, cantidad) {
 function aplicarSinopsisAleatoria() {
     const imgSinopsis = document.getElementById('imagen-sinopsis');
     if (imgSinopsis) {
-        const sinopsis = obtenerImagenAleatoria('SINOPSIS', 7);
-        imgSinopsis.src = sinopsis;
+        const n = Math.floor(Math.random() * 7) + 1;
+        imgSinopsis.src = 'img/SINOPSIS/mobile/' + n + '.webp';
     }
 }
 
@@ -172,18 +172,13 @@ function setupGaleriaClic() {
 let cartelRotatorioActual = 1;
 const totalCartelesRotatorios = 9; // Del 01 al 09
 let intervaloCartelRotatorio = null;
-const CARTEL_ROTATORIO_MOBILE_BREAKPOINT = 1230;
 
 // Cachear referencia al elemento
 let cartelRotatorioElement = null;
 
-// Devuelve la ruta de la imagen del cartel rotatorio según viewport (móvil: WebP, desktop: PNG)
+// Cartel rotatorio: siempre WebP en mobile/ (~80–180 KB). Los PNG en raíz pesan ~8–14 MB cada uno y ralentizaban desktop.
 function getCartelRotatorioRuta(numeroFormateado) {
-    var isMobile = typeof window !== 'undefined' && window.innerWidth < CARTEL_ROTATORIO_MOBILE_BREAKPOINT;
-    if (isMobile) {
-        return 'img/CARTEL ROTATORIO/mobile/' + numeroFormateado + '.webp';
-    }
-    return 'img/CARTEL ROTATORIO/' + numeroFormateado + '.png';
+    return 'img/CARTEL ROTATORIO/mobile/' + numeroFormateado + '.webp';
 }
 
 function cambiarCartelRotatorio(direccion) {
@@ -556,7 +551,7 @@ function inicializarCuadrosDecorativos() {
     for (let i = 1; i <= 20; i++) {
         const el = document.getElementById('cuadro-decorativo-' + i);
         if (!el) continue;
-        el.style.backgroundImage = "url('img/SINOPSIS/" + numeros[i - 1] + ".png')";
+        el.style.backgroundImage = "url('img/SINOPSIS/mobile/" + numeros[i - 1] + ".webp')";
         const [left, top] = posiciones[i - 1];
         el.style.left = left + '%';
         el.style.top = top + '%';

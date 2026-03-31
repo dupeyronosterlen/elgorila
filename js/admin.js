@@ -658,7 +658,7 @@ function guardarAdminFooter() {
 
 // Sinopsis - texto en la sección Sinopsis (Index)
 var SINOPSIS_KEY = 'elgorila_sinopsis';
-var DEFAULT_SINOPSIS = 'Un simio se presenta ante una academia de científicos para rendir un informe. Ya no es un animal: viste de frac, articula. Relata su captura, su encierro, el viaje en barco donde entendió algo: no había salida, lo que sí había: un inventario. Escupir, beber, imitar. Gestos que lo volvieron tolerable, luego aceptable, después respetable. No perseguía la libertad —esa ya no venía en el paquete—, perseguía solo un lugar donde estar sin barrotes. Lo consiguió. Ahora cobra por poder decirlo. Pero mientras rinde su informe con una cortesía impecable, algo rechina. El simio tiene su informe listo.';
+var DEFAULT_SINOPSIS = 'El Gorila es una pieza que cruza pensamiento filosófico, humor incisivo y una animalidad siempre latente. El discurso avanza con aparente orden, pero se tensiona a través de la ironía, el juego y una risa que no busca alivio, sino conciencia. Lo que inicia como una explicación razonable se va transformando en un reflejo incómodo de nuestra propia necesidad de adaptación.\n\nLa obra parte de un texto fundamental, pero lo lleva a escena con una voz propia: clara, directa y viva. El humor —afilado, mexicano— abre grietas por donde aparecen preguntas esenciales sobre la obediencia, la identidad y el precio de pertenecer. La palabra no adorna: piensa, confronta y expone.\n\nMás que narrar una historia, El Gorila propone una experiencia íntima y perturbadora: escuchar a alguien que aprendió a hablar como nosotros, pensar como nosotros… y que, desde ese aprendizaje, nos observa con una lucidez inquietante.';
 
 function cargarSinopsis() {
     var text = '';

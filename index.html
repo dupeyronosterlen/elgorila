@@ -70,9 +70,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
 <link rel="preload" as="image" href="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" fetchpriority="high"/>
 <link rel="preload" as="image" href="img/LOGO DOS/Artboard 11.png" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" media="(max-width: 1229px)" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" fetchpriority="high"/>
 <link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp?v=5" media="(max-width: 1229px)" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/CARTEL ROTATORIO/01.png" media="(min-width: 1230px)" fetchpriority="high"/>
 <style type="text/tailwindcss">
     body {
       padding-top: 0;
@@ -1480,11 +1479,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       transform: scale(1.3);
       pointer-events: none;
     }
-    @media (min-width: 1230px) {
-      .widget-boletos-panel .widget-boletos-inner::before {
-        background-image: url('img/SINOPSIS/3.png');
-      }
-    }
     .widget-boletos-panel .widget-boletos-inner::after {
       content: '';
       position: absolute;
@@ -1806,7 +1800,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section id="seccion-sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-4 sm:mt-6 section-with-bg" data-bg-sinopsis="img/SINOPSIS/1.png" data-bg-sinopsis-mobile="img/SINOPSIS/mobile/1.webp">
 <h2 class="mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
             <div class="mx-auto max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left break-words bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 relative contenedor-texto-scroll">
-                <p id="sinopsis-texto" class="w-full">Un simio se presenta ante una academia de científicos para rendir un informe. Ya no es un animal: viste de frac, articula. Relata su captura, su encierro, el viaje en barco donde entendió algo: no había salida, lo que sí había: un inventario. Escupir, beber, imitar. Gestos que lo volvieron tolerable, luego aceptable, después respetable. No perseguía la libertad —esa ya no venía en el paquete—, perseguía solo un lugar donde estar sin barrotes. Lo consiguió. Ahora cobra por poder decirlo. Pero mientras rinde su informe con una cortesía impecable, algo rechina. El simio tiene su informe listo.</p>
+                <div id="sinopsis-texto" class="w-full space-y-4">
+                <p class="w-full">El Gorila es una pieza que cruza pensamiento filosófico, humor incisivo y una animalidad siempre latente. El discurso avanza con aparente orden, pero se tensiona a través de la ironía, el juego y una risa que no busca alivio, sino conciencia. Lo que inicia como una explicación razonable se va transformando en un reflejo incómodo de nuestra propia necesidad de adaptación.</p>
+                <p class="w-full">La obra parte de un texto fundamental, pero lo lleva a escena con una voz propia: clara, directa y viva. El humor —afilado, mexicano— abre grietas por donde aparecen preguntas esenciales sobre la obediencia, la identidad y el precio de pertenecer. La palabra no adorna: piensa, confronta y expone.</p>
+                <p class="w-full">Más que narrar una historia, El Gorila propone una experiencia íntima y perturbadora: escuchar a alguien que aprendió a hablar como nosotros, pensar como nosotros… y que, desde ese aprendizaje, nos observa con una lucidez inquietante.</p>
+                </div>
             </div>
 </section>
 <!-- Ancla para scroll al widget -->
@@ -1846,7 +1844,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 
 <div class="text-center my-6 sm:my-8 px-4">
-<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Un actor. Un personaje. Nada más.</p>
+<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Un actor. Un personaje.</p>
 </div>
 <!-- Sección El Actor -->
 <section class="seccion-obra-actor mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" data-bg="img/SINOPSIS/3.png" data-bg-mobile="img/SINOPSIS/mobile/3.webp">
@@ -1902,7 +1900,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
 <div class="text-center my-6 sm:my-8 px-4">
-<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Detrás del telón.</p>
+<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Ambiente o atmósfera.</p>
 </div>
 <!-- Sección Equipo -->
     <section class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-6 sm:mt-8 section-with-bg" data-bg="img/SINOPSIS/4.png" data-bg-mobile="img/SINOPSIS/mobile/4.webp">
@@ -2275,7 +2273,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     var bgMobile = sec && sec.getAttribute('data-bg-sinopsis-mobile');
     if (!sec || !bg) return;
     function aplicarFondo() {
-      var url = (window.innerWidth < 1230 && bgMobile) ? bgMobile : bg;
+      var url = bgMobile || bg;
       sec.style.backgroundImage = "url('" + url + "')";
       sec.removeAttribute('data-bg-sinopsis');
       if (bgMobile) sec.removeAttribute('data-bg-sinopsis-mobile');
@@ -2307,10 +2305,9 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
   })();
   (function() {
     function aplicarFondosSecciones() {
-      var isMobile = window.innerWidth < 1230;
       var sections = document.querySelectorAll('.section-with-bg[data-bg]');
       sections.forEach(function(sec) {
-        var url = isMobile ? (sec.getAttribute('data-bg-mobile') || sec.getAttribute('data-bg')) : sec.getAttribute('data-bg');
+        var url = sec.getAttribute('data-bg-mobile') || sec.getAttribute('data-bg');
         if (url) sec.style.backgroundImage = "url('" + url + "')";
       });
     }
@@ -2369,7 +2366,18 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
       if (footerAdmin && (cfg.mostrar_admin_footer || '') === '0') footerAdmin.style.display = 'none';
       if ((cfg.sinopsis || '').trim()) {
         var sinopsisEl = document.getElementById('sinopsis-texto');
-        if (sinopsisEl) sinopsisEl.textContent = (cfg.sinopsis || '').trim();
+        if (sinopsisEl) {
+          var raw = (cfg.sinopsis || '').trim();
+          var parts = raw.split(/\n\s*\n/).map(function(s) { return s.trim(); }).filter(Boolean);
+          sinopsisEl.textContent = '';
+          var blocks = parts.length ? parts : [raw];
+          blocks.forEach(function(block) {
+            var p = document.createElement('p');
+            p.className = 'w-full';
+            p.textContent = block;
+            sinopsisEl.appendChild(p);
+          });
+        }
       }
     }
     function applyVenta(cfg) {
