@@ -259,6 +259,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         opacity: 0.8;
       }
     }
+    /* Móvil estrecho: menos blur en capa ::before (menos GPU, scroll más fluido) */
+    @media (max-width: 767px) {
+      .section-with-bg::before {
+        filter: blur(14px) brightness(0.52) contrast(0.85) saturate(0.5);
+      }
+      .obra-fondo-kafka.section-with-bg::before {
+        filter: blur(14px) brightness(0.38) contrast(0.85) saturate(0.4);
+      }
+    }
     /* Textura de grano sutil en el fondo (tema texturas) */
     .main-container::before {
       content: '';
@@ -2304,19 +2313,37 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     window.addEventListener('resize', setSrc);
   })();
   (function() {
-    function aplicarFondosSecciones() {
-      var sections = document.querySelectorAll('.section-with-bg[data-bg]');
+    function urlFondoSeccion(sec) {
+      return sec.getAttribute('data-bg-mobile') || sec.getAttribute('data-bg');
+    }
+    function aplicarFondoSeccion(sec) {
+      var url = urlFondoSeccion(sec);
+      if (url) sec.style.backgroundImage = "url('" + url + "')";
+    }
+    var sections = document.querySelectorAll('.section-with-bg[data-bg]');
+    function reaplicarFondosYaCargados() {
       sections.forEach(function(sec) {
-        var url = sec.getAttribute('data-bg-mobile') || sec.getAttribute('data-bg');
-        if (url) sec.style.backgroundImage = "url('" + url + "')";
+        if (sec.getAttribute('data-bg-cargado') === '1') aplicarFondoSeccion(sec);
       });
     }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', aplicarFondosSecciones);
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (!entry.isIntersecting) return;
+          var sec = entry.target;
+          aplicarFondoSeccion(sec);
+          sec.setAttribute('data-bg-cargado', '1');
+          io.unobserve(sec);
+        });
+      }, { rootMargin: '200px', threshold: 0 });
+      sections.forEach(function(sec) { io.observe(sec); });
     } else {
-      aplicarFondosSecciones();
+      sections.forEach(function(sec) {
+        aplicarFondoSeccion(sec);
+        sec.setAttribute('data-bg-cargado', '1');
+      });
     }
-    window.addEventListener('resize', aplicarFondosSecciones);
+    window.addEventListener('resize', reaplicarFondosYaCargados);
   })();
   (function() {
     var URL_VENTA_DEFAULT = 'https://boletos.elgorilateatro.com.mx/events/elgorila/2124139';
@@ -2713,32 +2740,6 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
       carrusel.addEventListener('click', function() { showOsterlenTexto(index + 1); });
       carrusel.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showOsterlenTexto(index + 1); }
-      });
-    }
-  })();
-  (function() {
-    var carrusel = document.getElementById('sinopsis-texto-carrusel');
-    var indicator = document.getElementById('sinopsis-texto-indicator');
-    var slides = document.querySelectorAll('.sinopsis-texto-slide');
-    var total = slides.length;
-    var index = 0;
-    function showSinopsisTexto(i) {
-      index = ((i % total) + total) % total;
-      slides.forEach(function(s, j) {
-        if (j === index) {
-          s.classList.remove('opacity-0', 'pointer-events-none');
-          s.classList.add('opacity-100');
-        } else {
-          s.classList.add('opacity-0', 'pointer-events-none');
-          s.classList.remove('opacity-100');
-        }
-      });
-      if (indicator) indicator.textContent = (index + 1) + '/' + total;
-    }
-    if (carrusel && total) {
-      carrusel.addEventListener('click', function() { showSinopsisTexto(index + 1); });
-      carrusel.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showSinopsisTexto(index + 1); }
       });
     }
   })();
