@@ -202,6 +202,10 @@ body {
   flex-shrink: 0;
   filter: grayscale(100%) contrast(1.1);
 }
+/* Retrato 1923: rostro un poco más bajo en el encuadre */
+.bio-foto--kafka {
+  object-position: center 28%;
+}
 .bio-texto-wrap { flex: 1; }
 .bio-nombre {
   font-family: var(--display);
@@ -497,18 +501,18 @@ body {
   }
 }
 
-/* ── Promo digital (v5): precio y cupón ───────────────────── */
+/* ── Promo digital (v5): precio y cupón (tono discreto) ───── */
 .promo-leer-box {
-  border: 1px solid rgba(212, 58, 26, 0.4);
+  border: 1px solid rgba(242, 237, 228, 0.14);
   border-radius: 8px;
-  padding: 22px 20px;
-  background: rgba(212, 58, 26, 0.07);
+  padding: 20px 18px;
+  background: rgba(8, 8, 8, 0.35);
   margin-top: 10px;
 }
 .promo-precio {
   font-family: var(--display);
-  font-size: 28px;
-  color: var(--crema);
+  font-size: 24px;
+  color: rgba(242, 237, 228, 0.92);
   margin-bottom: 6px;
   line-height: 1.2;
 }
@@ -530,16 +534,16 @@ body {
 .promo-cupon-etiq {
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--rojo-dim);
+  color: rgba(242, 237, 228, 0.45);
   margin-bottom: 6px;
 }
 .promo-cupon-codigo {
   font-family: var(--mono);
-  font-size: 18px;
-  letter-spacing: 0.12em;
-  color: var(--rojo);
+  font-size: 17px;
+  letter-spacing: 0.1em;
+  color: rgba(242, 237, 228, 0.88);
   user-select: all;
 }
 .promo-nota-cupon {
@@ -554,6 +558,12 @@ body {
   width: 100%;
   margin-top: 6px;
   box-sizing: border-box;
+}
+.promo-leer-box .cta-boleto {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 14px 20px;
+  background: rgba(212, 58, 26, 0.82);
 }
 </style>
 </head>
@@ -604,7 +614,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- ══ SOBRE EL AUTOR ════════════════════════════════════════ -->
 <section class="seccion">
   <div class="seccion-label">Sobre el autor</div>
-  <p class="texto-cuerpo"><strong>Franz Kafka</strong> (Praga, 1883 — Viena, 1924). <em>Un informe para una academia</em> (1917) narra la adaptación forzada de un simio a la “forma humana”: no es evolución, es renuncia a cambio de una salida.</p>
+  <div class="bio-wrap">
+    <img class="bio-foto bio-foto--kafka" src="../img/programa/kafka-1923.jpg" alt="Franz Kafka, retrato de 1923">
+    <div class="bio-texto-wrap">
+      <div class="bio-nombre">Franz Kafka</div>
+      <div class="bio-fechas">Praga, 1883 — Viena, 1924</div>
+      <p class="bio-texto"><em>Un informe para una academia</em> (1917) narra la adaptación forzada de un simio a la “forma humana”: no es evolución, es renuncia a cambio de una salida.</p>
+    </div>
+  </div>
 </section>
 
 <!-- ══ SOBRE EL INTÉRPRETE ═══════════════════════════════════ -->
@@ -641,20 +658,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <p class="texto-pequeño">Texto original de Franz Kafka. Versión escénica de Humberto Dupeyron.</p>
 </section>
 
-<!-- ══ POR TU TIEMPO — PROMO DIGITAL ═════════════════════════ -->
+<!-- ══ QUE VIVA EL TEATRO — PROMO DIGITAL (v5) ═══════════════ -->
 <!-- Cupón: crear en Ticket Tailor el descuento 10% con el mismo código (PROGRAMAV5) o actualizar código y texto aquí. -->
 <section class="seccion">
-  <div class="seccion-label">Por tu tiempo</div>
-  <p class="texto-cuerpo">Si llegaste hasta aquí leyendo este programa digital, gracias. Queremos reconocerlo con un <strong>10% de descuento</strong> en tu compra en línea.</p>
+  <div class="seccion-label">Que viva el teatro</div>
+  <p class="texto-cuerpo">Gracias por leer el programa. Te dejamos un gesto de cortesía por llegar hasta aquí: al comprar tus boletos en línea, <strong>10% de descuento</strong> con el código de abajo.</p>
   <div class="promo-leer-box">
     <div class="promo-precio">Desde $370 <small>MXN · referencia de boleto general</small></div>
-    <p class="texto-cuerpo" style="margin-bottom:0;">Con el cupón aplicas <strong>10% menos</strong> al pagar en la plataforma de boletos.</p>
+    <p class="texto-cuerpo" style="margin-bottom:0;">El código aplica <strong>10%</strong> al pagar en la plataforma.</p>
     <div class="promo-cupon-wrap">
-      <div class="promo-cupon-etiq">Código al comprar</div>
+      <div class="promo-cupon-etiq">Cupón (opcional)</div>
       <div class="promo-cupon-codigo" id="codigo-promo-v5">PROGRAMAV5</div>
     </div>
     <a class="cta-btn cta-boleto" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener noreferrer">Comprar boletos</a>
-    <p class="promo-nota-cupon">Ingresa el código en el paso de pago (cupón o descuento), según muestre Ticket Tailor. Si no aplica, escríbenos a <a href="mailto:elgorilateatro@gmail.com" style="color:var(--rojo-dim);">elgorilateatro@gmail.com</a>.</p>
+    <p class="promo-nota-cupon">Al pagar en línea, ingresa el código en el paso correspondiente (cupón o descuento), según muestre Ticket Tailor. Si no aplica, escríbenos a <a href="mailto:elgorilateatro@gmail.com" style="color:var(--rojo-dim);">elgorilateatro@gmail.com</a>.</p>
   </div>
 </section>
 
