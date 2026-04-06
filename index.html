@@ -1914,8 +1914,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Sección Equipo -->
     <section class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-6 sm:mt-8 section-with-bg" data-bg="img/SINOPSIS/4.png" data-bg-mobile="img/SINOPSIS/mobile/4.webp">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
+        <!-- Odila: oculta fuera de temporada (música). Reactivar: quitar hidden + aria-hidden del div siguiente; quitar md:col-span-2 de la columna Ariel. -->
         <!-- Columna Izquierda: Odila Dupeyrón -->
-        <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
+        <div class="hidden rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll" aria-hidden="true">
             <div class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4">
                 <div class="foto-equipo-kafka w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 rounded-lg overflow-hidden border border-accent-gold/20">
                     <img src="img/ODILA DUPEYRON/1.jpg" alt="Odila Dupeyrón" class="w-full h-full object-cover" loading="lazy" onerror="this.src='img/ODILA DUPEYRON/2.jpg'; this.onerror=null;"/>
@@ -1937,8 +1938,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
             </div>
         </div>
-        <!-- Columna Derecha: Ariel de la Peña -->
-        <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
+        <!-- Columna Derecha: Ariel de la Peña (md:col-span-2 mientras Odila esté oculta) -->
+        <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll md:col-span-2">
             <div class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4">
                 <div class="foto-equipo-kafka w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 rounded-lg overflow-hidden border border-accent-gold/20">
                     <img src="img/ARIEL DE LA PEÑA/1.jpg" alt="Ariel de la Peña" class="w-full h-full object-cover" loading="lazy" onerror="this.src='img/ARIEL DE LA PEÑA/2.jpg'; this.onerror=function(){this.src='img/ARIEL DE LA PEÑA/3.jpg'; this.onerror=null;};"/>
@@ -2442,7 +2443,9 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
       } else {
         var ua = navigator.userAgent || '';
         var esInAppBrowser = /FBAN|FBAV|FB_IAB|Instagram/i.test(ua);
-        var USAR_WIDGET_INLINE = !esInAppBrowser;
+        /* Widget solo escritorio (≥1230px, mismo breakpoint que el layout). Móvil/tablet: enlace directo a boletos (sin script Ticket Tailor). */
+        var esEscritorioBoletos = window.matchMedia ? window.matchMedia('(min-width: 1230px)').matches : (window.innerWidth >= 1230);
+        var USAR_WIDGET_INLINE = !esInAppBrowser && esEscritorioBoletos;
         if (USAR_WIDGET_INLINE) {
         var widgetPanel = document.getElementById('widget-boletos-panel');
         var widgetContenido = document.getElementById('widget-boletos-contenido');
