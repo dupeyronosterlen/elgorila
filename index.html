@@ -1019,7 +1019,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     /* Móvil: fondos de cuadros con ~40% menos saturación (opacidad reducida) para que se vean las imágenes */
     @media (max-width: 1229px) {
-      #seccion-sinopsis,
+      #sinopsis,
       #faq,
       #contacto,
       .seccion-obra-actor,
@@ -1806,7 +1806,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </div>
 </section>
-<section id="seccion-sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-4 sm:mt-6 section-with-bg" data-bg-sinopsis="img/SINOPSIS/1.png" data-bg-sinopsis-mobile="img/SINOPSIS/mobile/1.webp">
+<section id="sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-4 sm:mt-6 section-with-bg" data-bg-sinopsis="img/SINOPSIS/1.png" data-bg-sinopsis-mobile="img/SINOPSIS/mobile/1.webp">
 <h2 class="mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
             <div class="mx-auto max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left break-words bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 relative contenedor-texto-scroll">
                 <div id="sinopsis-texto" class="w-full space-y-4">
@@ -1823,7 +1823,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">La pieza que no envejece.</p>
 </div>
 <!-- Sección La Obra (fondo Kafka más oscuro y desaturado) -->
-<section class="seccion-obra-actor obra-fondo-kafka mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" data-bg="img/SINOPSIS/2.png" data-bg-mobile="img/SINOPSIS/mobile/2.webp">
+<section id="la-obra" class="seccion-obra-actor obra-fondo-kafka mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" data-bg="img/SINOPSIS/2.png" data-bg-mobile="img/SINOPSIS/mobile/2.webp">
     <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
         <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
             <div class="flex-1 w-full min-w-0 order-2 md:order-1 flex flex-col min-h-0 bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
@@ -1856,7 +1856,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Un actor. Un personaje.</p>
 </div>
 <!-- Sección El Actor -->
-<section class="seccion-obra-actor mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" data-bg="img/SINOPSIS/3.png" data-bg-mobile="img/SINOPSIS/mobile/3.webp">
+<section id="actor" class="seccion-obra-actor mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" data-bg="img/SINOPSIS/3.png" data-bg-mobile="img/SINOPSIS/mobile/3.webp">
     <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
         <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
             <div class="imagen-obra-actor w-full md:w-[500px] lg:w-[600px] flex-shrink-0 order-1 md:order-1">
@@ -2278,7 +2278,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     }
   })();
   (function() {
-    var sec = document.getElementById('seccion-sinopsis');
+    var sec = document.getElementById('sinopsis');
     var bg = sec && sec.getAttribute('data-bg-sinopsis');
     var bgMobile = sec && sec.getAttribute('data-bg-sinopsis-mobile');
     if (!sec || !bg) return;

@@ -289,6 +289,35 @@ body {
 }
 .difunto::after { content: ' †'; font-size: 0.75em; opacity: 0.35; }
 
+/* Ficha promo (v5): tono distinto al programa impreso / día de función */
+.ficha-artistica-promo .seccion-label {
+  border-bottom: none;
+  margin-bottom: 14px;
+  padding-left: 12px;
+  border-left: 3px solid rgba(212, 58, 26, 0.5);
+  padding-bottom: 2px;
+  letter-spacing: 0.26em;
+  color: rgba(212, 58, 26, 0.95);
+}
+.ficha-lista--promo {
+  padding: 14px 16px 10px;
+  border-radius: 10px;
+  background: linear-gradient(165deg, rgba(242, 237, 228, 0.06) 0%, rgba(8, 8, 8, 0.35) 100%);
+  border: 1px solid rgba(242, 237, 228, 0.11);
+  box-shadow: inset 0 1px 0 rgba(242, 237, 228, 0.05);
+}
+.ficha-lista--promo .ficha-fila {
+  border-bottom: 0.5px dashed rgba(242, 237, 228, 0.12);
+  padding: 9px 0;
+}
+.ficha-lista--promo .ficha-fila:last-child { border-bottom: none; }
+.ficha-lista--promo .ficha-rol { color: rgba(242, 237, 228, 0.4); }
+.ficha-nombre--apoyo {
+  font-weight: 300;
+  font-size: 17px;
+  opacity: 0.92;
+}
+
 /* ── CONTACTO ────────────────────────────────────── */
 .contacto-lista { display: flex; flex-direction: column; gap: 14px; }
 .contacto-fila {
@@ -462,6 +491,10 @@ body {
   .texto-pequeño {
     font-size: 18px;
   }
+
+  .ficha-nombre--apoyo {
+    font-size: 16px;
+  }
 }
 
 /* ── Promo digital (v5): precio y cupón ───────────────────── */
@@ -587,13 +620,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-<!-- ══ FICHA ARTÍSTICA (resumida) ════════════════════════════ -->
-<section class="seccion">
+<!-- ══ FICHA ARTÍSTICA (promo digital: equipo completo, Osterlen una sola vez) ══ -->
+<section class="seccion ficha-artistica-promo">
   <div class="seccion-label">Ficha artística</div>
-  <div class="ficha-lista">
+  <div class="ficha-lista ficha-lista--promo">
     <div class="ficha-fila"><span class="ficha-rol">Actuación</span><span class="ficha-nombre">Humberto Dupeyron</span></div>
-    <div class="ficha-fila"><span class="ficha-rol">Dirección de producción</span><span class="ficha-nombre">Osterlen Dupeyron</span></div>
-    <div class="ficha-fila"><span class="ficha-rol">Escenografía</span><span class="ficha-nombre">Osterlen Dupeyron</span></div>
+    <div class="ficha-fila"><span class="ficha-rol">Bustos escénicos</span><span class="ficha-nombre">Ariel de la Peña</span></div>
+    <div class="ficha-fila"><span class="ficha-rol">Busto del Gorila</span><span class="ficha-nombre difunto">Gabriel Ponzanelli</span></div>
+    <div class="ficha-fila"><span class="ficha-rol">Vestuario</span><span class="ficha-nombre">Bulmaro Corona Castillo</span></div>
+    <div class="ficha-fila"><span class="ficha-rol">Iluminación y sonido</span><span class="ficha-nombre">Uriel Espinosa Jiménez</span></div>
+    <div class="ficha-fila"><span class="ficha-rol">Dirección de producción y escenografía</span><span class="ficha-nombre">Osterlen Dupeyron</span></div>
+    <div class="ficha-fila"><span class="ficha-rol">Asistencia personal</span><span class="ficha-nombre ficha-nombre--apoyo">Mar Sosa</span></div>
+    <div class="ficha-fila"><span class="ficha-rol">Seguridad y accesos</span><span class="ficha-nombre ficha-nombre--apoyo">Mauricio Sánchez</span></div>
   </div>
 </section>
 
