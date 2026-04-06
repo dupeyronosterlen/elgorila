@@ -565,6 +565,34 @@ body {
   padding: 14px 20px;
   background: rgba(212, 58, 26, 0.82);
 }
+/* Cierre emocional tras el CTA (display itálico; label de sección sigue en mono/rojo) */
+.promo-viva-teatro {
+  font-family: var(--display);
+  font-size: 23px;
+  font-style: italic;
+  font-weight: 400;
+  text-align: center;
+  letter-spacing: 0.04em;
+  color: rgba(242, 237, 228, 0.78);
+  line-height: 1.35;
+  margin: 0;
+  padding: 20px 8px 4px;
+}
+.promo-viva-teatro::before {
+  content: '';
+  display: block;
+  width: 100%;
+  max-width: 120px;
+  height: 1px;
+  margin: 0 auto 14px;
+  background: linear-gradient(90deg, transparent, rgba(212, 58, 26, 0.42), transparent);
+}
+@media (max-width: 540px) {
+  .promo-viva-teatro {
+    font-size: 20px;
+    padding-top: 18px;
+  }
+}
 </style>
 </head>
 <body>
@@ -655,13 +683,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- ══ TEXTO Y DERECHOS ═════════════════════════════════════ -->
 <section class="seccion">
   <div class="seccion-label">Texto y derechos</div>
-  <p class="texto-pequeño">Texto original de Franz Kafka. Versión escénica de Humberto Dupeyron.</p>
+  <p class="texto-cuerpo"><em>Un informe para una academia</em> (<em>Ein Bericht für eine Akademie</em>), de <strong>Franz Kafka</strong>: escrito en <strong>abril de 1917</strong> y publicado <strong>en noviembre del mismo año</strong>. Un simio ya humanizado comparece ante una tribuna académica y expone, con frialdad casi clínica, la renuncia y la asimilación forzada a la “forma humana”.</p>
+  <p class="texto-cuerpo"><strong>Llevada al teatro</strong> desde el cuento de Kafka como <strong>monólogo</strong>, <strong>Humberto Dupeyron</strong> encarna <em>El Gorila</em> en <strong>versión e interpretación</strong> desde el <strong>estreno de 1989</strong> en el Teatro Xola (Ciudad de México). En <strong>2026</strong> suma <strong>treinta y siete años</strong> de cartelera, temporadas y giras en <strong>decenas de teatros</strong> de México. <strong>Prensa y crítica la han ubicado entre las mejores obras del teatro mexicano y como la más longeva.</strong></p>
 </section>
 
-<!-- ══ QUE VIVA EL TEATRO — PROMO DIGITAL (v5) ═══════════════ -->
+<!-- ══ ESTO ES PARA TI — PROMO DIGITAL (v5) ═══════════════════ -->
 <!-- Cupón: crear en Ticket Tailor el descuento 10% con el mismo código (PROGRAMAV5) o actualizar código y texto aquí. -->
 <section class="seccion">
-  <div class="seccion-label">Que viva el teatro</div>
+  <div class="seccion-label">Esto es para ti</div>
   <p class="texto-cuerpo">Gracias por leer el programa. Te dejamos un gesto de cortesía por llegar hasta aquí: al comprar tus boletos en línea, <strong>10% de descuento</strong> con el código de abajo.</p>
   <div class="promo-leer-box">
     <div class="promo-precio">Desde $370 <small>MXN · referencia de boleto general</small></div>
@@ -671,6 +700,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="promo-cupon-codigo" id="codigo-promo-v5">PROGRAMAV5</div>
     </div>
     <a class="cta-btn cta-boleto" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener noreferrer">Comprar boletos</a>
+    <p class="promo-viva-teatro">Que viva el teatro</p>
     <p class="promo-nota-cupon">Al pagar en línea, ingresa el código en el paso correspondiente (cupón o descuento), según muestre Ticket Tailor. Si no aplica, escríbenos a <a href="mailto:elgorilateatro@gmail.com" style="color:var(--rojo-dim);">elgorilateatro@gmail.com</a>.</p>
   </div>
 </section>
