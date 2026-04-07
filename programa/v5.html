@@ -510,11 +510,34 @@ body {
   margin-top: 10px;
 }
 .promo-precio {
-  font-family: var(--display);
-  font-size: 24px;
-  color: rgba(242, 237, 228, 0.92);
   margin-bottom: 6px;
   line-height: 1.2;
+}
+.promo-precio-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 14px;
+  margin-bottom: 6px;
+}
+.promo-precio-tachado {
+  font-family: var(--display);
+  font-size: 22px;
+  text-decoration: line-through;
+  text-decoration-color: rgba(242, 237, 228, 0.32);
+  text-decoration-thickness: 1px;
+  color: rgba(242, 237, 228, 0.42);
+}
+.promo-precio-oferta {
+  font-family: var(--display);
+  font-size: 26px;
+  color: rgba(242, 237, 228, 0.94);
+}
+.promo-precio-mxn {
+  font-family: var(--cuerpo);
+  font-size: 17px;
+  font-weight: 400;
+  color: rgba(242, 237, 228, 0.52);
 }
 .promo-precio small {
   display: block;
@@ -522,7 +545,7 @@ body {
   font-size: 17px;
   font-weight: 400;
   color: rgba(242, 237, 228, 0.55);
-  margin-top: 6px;
+  margin-top: 0;
 }
 .promo-cupon-wrap {
   margin: 16px 0 18px;
@@ -688,15 +711,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 
 <!-- ══ ESTO ES PARA TI — PROMO DIGITAL (v5) ═══════════════════ -->
-<!-- Cupón: crear en Ticket Tailor el descuento 10% con el mismo código (PROGRAMAV5) o actualizar código y texto aquí. -->
+<!-- Cupón PROGRAMAV5: total sin cupón $370 (358+12). Objetivo con cupón $333. En TT: 10% sobre el total, o ~10,335% si el desc. solo aplica a la admisión. -->
 <section class="seccion">
   <div class="seccion-label">Esto es para ti</div>
   <p class="texto-cuerpo">Gracias por leer el programa. Te dejamos un gesto de cortesía por llegar hasta aquí: al comprar tus boletos en línea, <strong>10% de descuento</strong> con el código de abajo.</p>
   <div class="promo-leer-box">
-    <div class="promo-precio">Desde $370 <small>MXN · referencia de boleto general</small></div>
-    <p class="texto-cuerpo" style="margin-bottom:0;">El código aplica <strong>10%</strong> al pagar en la plataforma.</p>
+    <div class="promo-precio">
+      <div class="promo-precio-fila">
+        <span class="promo-precio-tachado">$370</span>
+        <span class="promo-precio-oferta">$333</span>
+        <span class="promo-precio-mxn">MXN</span>
+      </div>
+      <small>MXN · admisión general · total en caja (incluye tarifa de reserva)</small>
+    </div>
+    <p class="texto-cuerpo" style="margin-bottom:0;">El código aplica <strong>10%</strong> al pagar en línea.</p>
     <div class="promo-cupon-wrap">
-      <div class="promo-cupon-etiq">Cupón (opcional)</div>
+      <div class="promo-cupon-etiq">Cupón</div>
       <div class="promo-cupon-codigo" id="codigo-promo-v5">PROGRAMAV5</div>
     </div>
     <a class="cta-btn cta-boleto" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener noreferrer">Comprar boletos</a>
