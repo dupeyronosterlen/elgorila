@@ -2408,45 +2408,16 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
         }
       }
     }
-    function applyVenta(cfg) {
-      var modo = (cfg.venta_modo || 'url');
-      var urlVenta = (cfg.url_venta || '').trim() || URL_VENTA_DEFAULT;
-      var mensajeVenta = (cfg.venta_mensaje || '').trim();
+    function applyVenta() {
+      /* Forzar URL oficial para evitar redirecciones externas por configuración dinámica. */
+      var urlVenta = URL_VENTA_DEFAULT;
       var links = document.querySelectorAll('.link-venta-boletos');
-      var mostrarModalVenta = (modo === 'mensaje');
-      if (mostrarModalVenta) {
-        links.forEach(function(a) {
-          a.href = '#';
-          a.addEventListener('click', function(e) {
-            e.preventDefault();
-            var overlay = document.getElementById('modal-venta-info-overlay');
-            var modal = document.getElementById('modal-venta-info');
-            var contenido = document.getElementById('modal-venta-info-contenido');
-            if (contenido) contenido.textContent = mensajeVenta || 'Próximamente';
-            if (overlay) { overlay.classList.remove('hidden'); overlay.setAttribute('aria-hidden', 'false'); }
-            if (modal) { modal.classList.remove('hidden'); modal.setAttribute('aria-modal', 'true'); }
-            document.body.style.overflow = 'hidden';
-          });
-        });
-        var cerrarVentaInfo = function() {
-          var overlay = document.getElementById('modal-venta-info-overlay');
-          var modal = document.getElementById('modal-venta-info');
-          if (overlay) { overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden', 'true'); }
-          if (modal) { modal.classList.add('hidden'); }
-          document.body.style.overflow = '';
-        };
-        document.getElementById('modal-venta-info-overlay') && document.getElementById('modal-venta-info-overlay').addEventListener('click', cerrarVentaInfo);
-        document.getElementById('cerrar-venta-info') && document.getElementById('cerrar-venta-info').addEventListener('click', cerrarVentaInfo);
-        document.addEventListener('keydown', function(e) {
-          if (e.key === 'Escape' && document.getElementById('modal-venta-info') && !document.getElementById('modal-venta-info').classList.contains('hidden')) cerrarVentaInfo();
-        });
-      } else {
-        var ua = navigator.userAgent || '';
-        var esInAppBrowser = /FBAN|FBAV|FB_IAB|Instagram/i.test(ua);
-        /* Widget solo escritorio (≥1230px, mismo breakpoint que el layout). Móvil/tablet: enlace directo a boletos (sin script Ticket Tailor). */
-        var esEscritorioBoletos = window.matchMedia ? window.matchMedia('(min-width: 1230px)').matches : (window.innerWidth >= 1230);
-        var USAR_WIDGET_INLINE = !esInAppBrowser && esEscritorioBoletos;
-        if (USAR_WIDGET_INLINE) {
+      var ua = navigator.userAgent || '';
+      var esInAppBrowser = /FBAN|FBAV|FB_IAB|Instagram/i.test(ua);
+      /* Widget solo escritorio (≥1230px, mismo breakpoint que el layout). Móvil/tablet: enlace directo a boletos (sin script Ticket Tailor). */
+      var esEscritorioBoletos = window.matchMedia ? window.matchMedia('(min-width: 1230px)').matches : (window.innerWidth >= 1230);
+      var USAR_WIDGET_INLINE = !esInAppBrowser && esEscritorioBoletos;
+      if (USAR_WIDGET_INLINE) {
         var widgetPanel = document.getElementById('widget-boletos-panel');
         var widgetContenido = document.getElementById('widget-boletos-contenido');
         var widgetCargado = false;
@@ -2528,26 +2499,25 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
         document.addEventListener('keydown', function(e) {
           if (e.key === 'Escape' && widgetPanel && widgetPanel.classList.contains('abierto')) cerrarWidget();
         });
-        } else {
-          if (urlVenta) links.forEach(function(a) {
-            a.href = urlVenta;
-            if (urlVenta.indexOf('http') === 0) {
-              a.setAttribute('target', '_blank');
-              a.setAttribute('rel', 'noopener');
-            } else {
-              a.removeAttribute('target');
-              a.addEventListener('click', function(e) {
-                e.preventDefault();
-                window.location.href = urlVenta;
-              });
-            }
-          });
-        }
+      } else {
+        if (urlVenta) links.forEach(function(a) {
+          a.href = urlVenta;
+          if (urlVenta.indexOf('http') === 0) {
+            a.setAttribute('target', '_blank');
+            a.setAttribute('rel', 'noopener');
+          } else {
+            a.removeAttribute('target');
+            a.addEventListener('click', function(e) {
+              e.preventDefault();
+              window.location.href = urlVenta;
+            });
+          }
+        });
       }
     }
     function run(cfg) {
       applyContacto(cfg);
-      applyVenta(cfg);
+      applyVenta();
     }
     fetch('/api/config').then(function(r) { return r.ok ? r.json() : Promise.reject(); }).then(run).catch(function() { run(getLocalConfig()); });
   })();
