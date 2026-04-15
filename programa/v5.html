@@ -1,20 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
-<!-- End Google Tag Manager -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="El Gorila — programa digital promocional. Información de la función, agradecimiento por leer y beneficio en boletos.">
 <title>El Gorila · Programa digital · Promo 2026</title>
 <link rel="canonical" href="https://elgorilateatro.com.mx/programa/v5.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.googletagmanager.com">
+<link rel="preload" as="image" type="image/webp" href="../img/programa/portada-v4.webp">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Courier+Prime&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <style>
 :root {
   --negro: #080808;
@@ -419,18 +415,6 @@ body {
   line-height: 1;
 }
 
-:root {
-  --negro: #080808;
-  --rojo: #D43A1A;
-  --crema: #F2EDE4;
-  --crema-dim: rgba(242,237,228,0.45);
-  --crema-faint: rgba(242,237,228,0.08);
-  --rojo-dim: rgba(212,58,26,0.6);
-  --display: 'IM Fell English', serif;
-  --cuerpo: 'Cormorant Garamond', serif;
-  --mono: 'Courier Prime', monospace;
-}
-
 @media (max-width: 540px) {
   body {
     max-width: 100%;
@@ -620,15 +604,13 @@ body {
 </style>
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P4BDXRN9"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
 <!-- ══ PORTADA ══════════════════════════════════════════════ -->
 <section class="portada">
   <div class="portada-foto-wrap">
-    <img class="portada-foto" src="../img/programa/portada-v4.jpg" alt="Humberto Dupeyron · El Gorila">
+    <picture>
+      <source srcset="../img/programa/portada-v4.webp" type="image/webp">
+      <img class="portada-foto" src="../img/programa/portada-v4.jpg" alt="Humberto Dupeyron · El Gorila" width="480" height="547" fetchpriority="high" decoding="async">
+    </picture>
     <div class="portada-foto-overlay"></div>
   </div>
   <div class="portada-numero-fantasma">37</div>
@@ -667,7 +649,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section class="seccion">
   <div class="seccion-label">Sobre el autor</div>
   <div class="bio-wrap">
-    <img class="bio-foto bio-foto--kafka" src="../img/programa/kafka-1923.jpg" alt="Franz Kafka, retrato de 1923">
+    <picture>
+      <source srcset="../img/programa/kafka-1923.webp" type="image/webp">
+      <img class="bio-foto bio-foto--kafka" src="../img/programa/kafka-1923.jpg" alt="Franz Kafka, retrato de 1923" width="192" height="256" loading="lazy" decoding="async">
+    </picture>
     <div class="bio-texto-wrap">
       <div class="bio-nombre">Franz Kafka</div>
       <div class="bio-fechas">Praga, 1883 — Viena, 1924</div>
@@ -680,7 +665,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section class="seccion">
   <div class="seccion-label">Sobre el intérprete</div>
   <div class="bio-wrap">
-    <img class="bio-foto" src="../img/programa/bio-v4.jpg" alt="Humberto Dupeyron">
+    <picture>
+      <source srcset="../img/programa/bio-v4.webp" type="image/webp">
+      <img class="bio-foto" src="../img/programa/bio-v4.jpg" alt="Humberto Dupeyron" width="192" height="162" loading="lazy" decoding="async">
+    </picture>
     <div class="bio-texto-wrap">
       <div class="bio-nombre">Humberto Dupeyron</div>
       <div class="bio-fechas">Ciudad de México, 1947</div>
@@ -751,5 +739,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="pie-numero pie-numero--mini" title="Programa digital v5">37</div>
 </div>
 
+<!-- Google Tag Manager (deferred to avoid blocking first paint) -->
+<script>requestIdleCallback?requestIdleCallback(g):setTimeout(g,3500);function g(){var w=window,d=document,s='script',l='dataLayer',i='GTM-P4BDXRN9';w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);}</script>
 </body>
 </html>
