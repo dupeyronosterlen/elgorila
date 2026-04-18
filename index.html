@@ -59,25 +59,25 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     50% { transform: scale(1.2); opacity: 1; }
   }
 </style>
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography" defer></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 <style>
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
-  src: url(fonts/inter-latin.woff2) format('woff2');
+  src: url(fonts/inter-latin.woff2?v=2) format('woff2');
 }
 @font-face {
   font-family: 'Lora';
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
-  src: url(fonts/lora-latin.woff2) format('woff2');
+  src: url(fonts/lora-latin.woff2?v=2) format('woff2');
 }
 </style>
-<link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
-<link rel="preload" as="font" type="font/woff2" href="fonts/lora-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2?v=2" crossorigin/>
+<link rel="preload" as="font" type="font/woff2" href="fonts/lora-latin.woff2?v=2" crossorigin/>
 <!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
 <link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" fetchpriority="high" media="(max-width: 1229px)"/>
 <link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp?v=5" media="(max-width: 1229px)"/>
@@ -1628,7 +1628,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 <div class="logo-37-sello logo-37-cargando" id="logo-37-wrap">
   <button type="button" id="abrir-popup-37" class="logo-37-btn flex items-center justify-center p-0 rounded transition-transform duration-200 hover:scale-110 focus:scale-110 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Ver 37 aniversario">
-    <img src="img/LOGO DOS/Artboard 11.webp" alt="37 años" class="w-auto object-contain opacity-90 flex-shrink-0 pointer-events-none" loading="eager" decoding="async" onload="this.closest('.logo-37-sello').classList.remove('logo-37-cargando'); this.closest('.logo-37-sello').classList.add('logo-37-loaded');" onerror="this.src='img/LOGO DOS/Artboard 11.png'; this.onerror=function(){this.src='img/LOGO DOS/2.png'; this.onerror=null;}; this.closest('.logo-37-sello').classList.remove('logo-37-cargando'); this.closest('.logo-37-sello').classList.add('logo-37-loaded');"/>
+    <img src="img/LOGO DOS/Artboard 11.webp?v=2" alt="37 años" class="w-auto object-contain opacity-90 flex-shrink-0 pointer-events-none" loading="eager" decoding="async" onload="this.closest('.logo-37-sello').classList.remove('logo-37-cargando'); this.closest('.logo-37-sello').classList.add('logo-37-loaded');" onerror="this.src='img/LOGO DOS/Artboard 11.png'; this.onerror=function(){this.src='img/LOGO DOS/2.png'; this.onerror=null;}; this.closest('.logo-37-sello').classList.remove('logo-37-cargando'); this.closest('.logo-37-sello').classList.add('logo-37-loaded');"/>
   </button>
 </div>
 <div id="zoom-lens" class="zoom-lens" aria-hidden="true" role="presentation"></div>
@@ -2781,6 +2781,7 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
     document.addEventListener('DOMContentLoaded', hideOverlay);
     if (document.readyState !== 'loading') hideOverlay();
     else window.addEventListener('load', hideOverlay);
+    setTimeout(hideOverlay, 6000);
   })();
   (function() {
     var LANDING_EVENTS_KEY = 'elgorila_landing_events';
