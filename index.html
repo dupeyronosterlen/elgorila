@@ -75,6 +75,25 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   font-display: swap;
   src: url(fonts/lora-latin.woff2?v=2) format('woff2');
 }
+/* PREVIEW Opción C: IM Fell English para titulares (lazy, sin preload). Quitar este bloque para revertir. */
+@font-face {
+  font-family: 'IM Fell English';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/im-fell-english-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'IM Fell English';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/im-fell-english-italic-latin.woff2) format('woff2');
+}
+.preview-fellenglish {
+  font-family: 'IM Fell English', Lora, Georgia, 'Times New Roman', serif !important;
+  letter-spacing: 0.01em;
+}
 </style>
 <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2?v=2" crossorigin/>
 <link rel="preload" as="font" type="font/woff2" href="fonts/lora-latin.woff2?v=2" crossorigin/>
@@ -1839,7 +1858,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
         <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
             <div class="flex-1 w-full min-w-0 order-2 md:order-1 flex flex-col min-h-0 bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
-                <h2 class="mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">La Obra</h2>
+                <h2 class="preview-fellenglish mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">La Obra</h2>
                 <div class="flex-1 min-h-0 flex flex-col">
                 <div id="obra-texto-carrusel" class="relative flex-1 min-h-0 cursor-pointer select-none text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (3 en total)">
                     <div class="obra-texto-slide texto-slide-activo absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-center" data-index="0">
