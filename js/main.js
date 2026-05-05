@@ -1,5 +1,5 @@
 // --- CONFIGURACIÓN ---
-let precioUnitario = 389; // Precio de un boleto
+let precioUnitario = 299; // Precio de un boleto
 let cantidadActual = 0;   // Empezamos con 0 boletos
 let fechaSeleccionada = null; // Aquí guardaremos "viernes" o "sabado"
 let nombreFecha = "";     // Aquí guardaremos el texto bonito "Viernes 20..."
@@ -380,6 +380,7 @@ function irAConfirmacion() {
     
     try {
         localStorage.setItem('orden_compra', JSON.stringify(orden));
+        navegandoACheckout = true;
         window.location.href = 'checkout.html';
         return true;
     } catch (error) {
@@ -390,8 +391,10 @@ function irAConfirmacion() {
 }
 
 // --- FUNCIÓN: LIMPIAR RESERVA AL SALIR ---
+let navegandoACheckout = false;
+
 function limpiarReserva() {
-    if (reservaId) {
+    if (reservaId && !navegandoACheckout) {
         InventarioManager.liberarReserva(reservaId);
         reservaId = null;
     }

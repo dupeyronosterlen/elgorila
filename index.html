@@ -7,16 +7,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
 <!-- End Google Tag Manager -->
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-NXF8093MDJ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-NXF8093MDJ');
-  gtag('config', 'AW-17961021514');
-</script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate"/>
@@ -99,7 +89,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="preload" as="font" type="font/woff2" href="fonts/lora-latin.woff2?v=2" crossorigin/>
 <!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
 <link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" fetchpriority="high" media="(max-width: 1229px)"/>
-<link rel="preload" as="image" href="img/CARTEL INFORMATIVO/mobile/2.webp?v=5" media="(max-width: 1229px)"/>
 <style type="text/tailwindcss">
     body {
       padding-top: 0;
@@ -775,9 +764,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         overflow: visible !important;
       }
       #cartel-rotatorio {
-        height: 340% !important;
-        width: 340% !important;
-        min-height: 677px !important;
+        height: clamp(420px, 78vh, 960px) !important;
+        width: 100% !important;
+        min-height: unset !important;
         background-size: contain !important;
         background-position: center center !important;
         background-repeat: no-repeat !important;
@@ -790,9 +779,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     @media (min-width: 1230px) {
       #main-content { padding-top: 0 !important; }
       .hero-cartel-desktop { margin-top: 0; margin-bottom: -3.5rem; }
-      #cartel-container { padding-top: 0 !important; padding-bottom: 0 !important; max-height: 75vh !important; min-height: 420px !important; overflow: hidden !important; }
+      #cartel-container { padding-top: 0 !important; padding-bottom: 0 !important; max-height: 85vh !important; min-height: 420px !important; overflow: visible !important; }
       /* Imagen del retrato: ancho fijo 480px en desktop; texto toma el resto */
-      .cartel-rotatorio-container { width: 480px !important; max-width: 480px !important; flex: 0 0 480px !important; margin: 0 !important; }
+      .cartel-rotatorio-container { width: 480px !important; max-width: 480px !important; flex: 0 0 480px !important; margin: 0 !important; overflow: visible !important; }
       .cartel-informativo-container { flex: 1 !important; min-width: 0 !important; }
       /* Carteles no interactivos en desktop hasta que se unan */
       #cartel-container,
@@ -1336,6 +1325,27 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       text-shadow: 0 1px 3px rgba(0,0,0,0.45);
       font-variant-numeric: tabular-nums;
     }
+    .barra-compra-fija .barra-compra-precio-tachado {
+      display: inline;
+      font-family: Lora, Georgia, 'Times New Roman', serif;
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: rgba(232, 215, 175, 0.5);
+      text-decoration: line-through;
+      font-variant-numeric: tabular-nums;
+      margin-right: 0.3em;
+    }
+    .barra-compra-fija .barra-compra-precio-promo {
+      display: inline;
+      font-family: Lora, Georgia, 'Times New Roman', serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #f0c060;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+      font-variant-numeric: tabular-nums;
+    }
     .barra-compra-fija .barra-compra-aforo {
       display: inline;
       font-family: Lora, Georgia, 'Times New Roman', serif;
@@ -1365,8 +1375,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       .barra-compra-fija:hover { transform: translateX(-50%) translateY(-2px); }
       .barra-compra-fija:active { transform: translateX(-50%) translateY(1px); }
       .barra-compra-fija a { font-size: 1.3rem; }
-      .barra-compra-fija .barra-compra-precio {
-        font-size: 0.85rem;
+      .barra-compra-fija .barra-compra-precio-tachado {
+        font-size: 0.78rem;
+        letter-spacing: 0.1em;
+      }
+      .barra-compra-fija .barra-compra-precio-promo {
+        font-size: 0.9rem;
         letter-spacing: 0.14em;
       }
       .barra-compra-fija .barra-compra-aforo {
@@ -1949,7 +1963,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
             <div class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4">
                 <div class="foto-equipo-kafka w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 rounded-lg overflow-hidden border border-accent-gold/20">
-                    <img src="img/ODILA DUPEYRON/1.jpg" alt="Odila Dupeyron" class="w-full h-full object-cover" loading="lazy" onerror="this.src='img/ODILA DUPEYRON/2.jpg'; this.onerror=null;"/>
+                    <img src="img/ODILA DUPEYRON/2.jpg" alt="Odila Dupeyron" class="w-full h-full object-cover" loading="lazy"/>
                 </div>
                 <div class="flex-1 text-center md:text-left">
                     <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Odila Dupeyron</h3>
@@ -2261,12 +2275,12 @@ Insurgentes Sur 2135, Col. San Ángel, C.P. 01000, Álvaro Obregón, Ciudad de M
 </div>
 <!-- Barra fija de compra -->
 <div class="barra-compra-fija">
-  <a class="link-venta-boletos" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener" aria-label="Adquiere tus entradas, 370 pesos mexicanos. Aforo limitado.">
+  <a class="link-venta-boletos" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener" aria-label="Adquiere tus entradas, precio promocional 299 pesos mexicanos. Aforo limitado.">
     <span class="barra-compra-titulo">Adquiere tus entradas</span>
     <span class="barra-compra-meta" aria-hidden="true">
-      <span class="barra-compra-precio">$370</span>
+      <span class="barra-compra-precio-tachado">$370</span><span class="barra-compra-precio-promo">$299</span>
       <span class="barra-compra-meta-sep" aria-hidden="true">·</span>
-      <span class="barra-compra-aforo">Aforo limitado</span>
+      <span class="barra-compra-aforo">Feliz Día de las Madres</span>
     </span>
   </a>
 </div>
