@@ -56,17 +56,12 @@ const imagenesGaleria = [
     '063.png', '064.png', '066.png', '067.png', '068.png', '069.png', '070.png', '071.png',
     '072.png', '073.png', '074.png', '075.png', '076.png'
 ];
-const galeriaFallback = 'img/GALERIA/02.png'; // imagen de respaldo si alguna falla
-const galeriaFallbackMobile = 'img/GALERIA/mobile/02.webp';
+const galeriaFallback = 'img/GALERIA/mobile/02.webp';
 const GALERIA_MOBILE_BREAKPOINT = 1230;
 
 function galeriaRuta(filename) {
-    var isMobile = typeof window !== 'undefined' && window.innerWidth < GALERIA_MOBILE_BREAKPOINT;
-    if (isMobile) {
-        var base = filename.replace(/\.(jpe?g|png)$/i, '');
-        return 'img/GALERIA/mobile/' + base + '.webp';
-    }
-    return 'img/GALERIA/' + filename;
+    var base = filename.replace(/\.(jpe?g|png)$/i, '');
+    return 'img/GALERIA/mobile/' + base + '.webp';
 }
 
 // Aplicar imágenes aleatorias a la galería: móvil usa WebP en mobile/, desktop usa original
@@ -77,7 +72,7 @@ function aplicarGaleriaAleatoria() {
         numerosSeleccionados.add(Math.floor(Math.random() * imagenesGaleria.length));
     }
     const indices = Array.from(numerosSeleccionados);
-    const fallback = window.innerWidth < GALERIA_MOBILE_BREAKPOINT ? galeriaFallbackMobile : galeriaFallback;
+    const fallback = galeriaFallback;
     for (let i = 0; i < cantidadMostrar; i++) {
         const imgElement = document.getElementById(`galeria-img-${i + 1}`);
         if (imgElement) {
@@ -130,12 +125,12 @@ function siguienteImagenGaleria(imgElement) {
         imgElement.src = src;
         imgElement.onerror = function () {
             this.onerror = null;
-            this.src = (window.innerWidth < GALERIA_MOBILE_BREAKPOINT ? galeriaFallbackMobile : galeriaFallback);
+            this.src = galeriaFallback;
         };
         imgElement.style.opacity = '1';
     };
     preload.onerror = function () {
-        imgElement.src = (window.innerWidth < GALERIA_MOBILE_BREAKPOINT ? galeriaFallbackMobile : galeriaFallback);
+        imgElement.src = galeriaFallback;
         imgElement.style.opacity = '1';
     };
     preload.src = src;
@@ -168,7 +163,7 @@ function setupGaleriaClic() {
     }
 }
 
-// Sistema de carrusel de cartel rotatorio (lado izquierdo) - 01 al 09; móvil: WebP en mobile/, desktop: PNG
+// Sistema de carrusel de cartel rotatorio (lado izquierdo) - 01 al 09; WebP en mobile/ (móvil y desktop)
 let cartelRotatorioActual = 1;
 const totalCartelesRotatorios = 9; // Del 01 al 09
 let intervaloCartelRotatorio = null;
@@ -355,8 +350,8 @@ function inicializarImagenObra() {
 // Rotación de imágenes del Actor - detecta automáticamente múltiples formatos
 let actorImagenActual = 1;
 const totalActorImagenes = 15;
-// Números disponibles detectados: 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15
-const numerosActorDisponibles = [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15];
+// Solo JPG ligeros (evitar PNG pesados duplicados)
+const numerosActorDisponibles = [1, 2, 3, 4, 5];
 
 // Cachear referencia al elemento
 let actorImagenElement = null;
@@ -375,11 +370,10 @@ function cambiarImagenActor() {
     actorImagenElement.style.opacity = '0';
     
     requestAnimationFrame(() => {
-        const extensiones = ['JPG', 'jpg', 'jpeg', 'png'];
+        const extensiones = ['jpg', 'JPG', 'jpeg'];
         const formatosNombre = [
-            (num) => num.toString().padStart(2, '0'),  // 01, 02, etc.
-            (num) => num.toString(),  // 1, 2, etc.
-            (num) => `0${num}`,  // 01, 02, etc. (alternativo)
+            (num) => num.toString().padStart(2, '0'),
+            (num) => num.toString(),
         ];
         let extensionIndex = 0;
         let formatoIndex = 0;
@@ -404,13 +398,16 @@ function cambiarImagenActor() {
                 if (extensionIndex >= extensiones.length) {
                     extensionIndex = 0;
                     formatoIndex++;
-                    if (formatoIndex >= formatosNombre.length * 2) {
+                    if (formatoIndex >= formatosNombre.length) {
                         numeroIndex++;
                         formatoIndex = 0;
                         if (numeroIndex >= todosLosNumeros.length) {
                             actorImagenElement.style.opacity = '1';
                             return;
                         }
+                    } else {
+                        intentarCargar();
+                        return;
                     }
                 }
                 intentarCargar();
@@ -428,11 +425,10 @@ function inicializarImagenActor() {
     actorImagenElement = document.getElementById('actor-imagen');
     if (actorImagenElement && numerosActorDisponibles.length > 0) {
         actorImagenActual = numerosActorDisponibles[0];
-        const extensiones = ['JPG', 'jpg', 'jpeg', 'png'];
+        const extensiones = ['jpg', 'JPG', 'jpeg'];
         const formatosNombre = [
-            (num) => num.toString().padStart(2, '0'),  // 01, 02, etc.
-            (num) => num.toString(),  // 1, 2, etc.
-            (num) => `0${num}`,  // 01, 02, etc. (alternativo)
+            (num) => num.toString().padStart(2, '0'),
+            (num) => num.toString(),
         ];
         let extensionIndex = 0;
         let formatoIndex = 0;
@@ -455,7 +451,7 @@ function inicializarImagenActor() {
                 if (extensionIndex >= extensiones.length) {
                     extensionIndex = 0;
                     formatoIndex++;
-                    if (formatoIndex >= formatosNombre.length * 2) {
+                    if (formatoIndex >= formatosNombre.length) {
                         numeroIndex++;
                         formatoIndex = 0;
                         if (numeroIndex < numerosActorDisponibles.length) {
