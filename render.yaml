@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: elgorila-boletaje-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    healthCheckPath: /api/availability
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BASE_URL
+        value: https://elgorilateatro.com.mx
+      - key: STRIPE_SECRET_KEY
+        sync: false   # Lo pones a mano en Render (es secreto)
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false   # Lo pones a mano en Render (es secreto)
