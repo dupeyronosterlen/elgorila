@@ -1,3 +1,5 @@
 # Netlify (y similares): la slug amigable sirve el mismo index sin 404 al refrescar
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre    /index.html   200
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/   /index.html   200
+/presskit    /presskit/index.html   200
+/presskit/   /presskit/index.html   200

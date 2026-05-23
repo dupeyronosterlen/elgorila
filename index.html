@@ -96,15 +96,28 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       position: relative;
       background-color: #1a150e;
     }
-    /* Logo EL GORILA: fijo arriba a la izquierda */
-    .logo-gorila-sello {
+    /* Logo EL GORILA + press kit: columna fija arriba a la izquierda */
+    .logo-gorila-column {
       position: fixed !important;
-      top: 0.5rem !important;
-      left: 0.75rem !important;
+      top: max(0.5rem, env(safe-area-inset-top)) !important;
+      left: max(0.75rem, env(safe-area-inset-left)) !important;
       right: auto !important;
       transform: translateY(6px) !important;
-      z-index: 30;
+      z-index: 35;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+      pointer-events: none;
+    }
+    .logo-gorila-sello {
+      position: static !important;
+      top: auto !important;
+      left: auto !important;
+      right: auto !important;
+      transform: none !important;
       cursor: pointer;
+      pointer-events: auto;
     }
     .logo-gorila-sello img {
       height: 4.8rem !important;
@@ -114,7 +127,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .logo-gorila-sello:hover img { opacity: 1; transform: scale(1.05); }
     @media (max-width: 767px) {
-      .logo-gorila-sello { left: 0.5rem !important; }
+      .logo-gorila-column { left: max(0.5rem, env(safe-area-inset-left)) !important; }
       .logo-gorila-sello img { height: clamp(2.5rem, 7vw, 3.5rem) !important; }
     }
     /* Móvil ancho: logos un poco más contenidos para alinear con marco proporcional */
@@ -874,7 +887,31 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         filter: saturate(0.55);
         -webkit-filter: saturate(0.55);
     }
-    /* 37 tipo sello: fijo arriba a la derecha, 50% más grande que antes, sin recorte */
+    .btn-presskit-sello {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 0.625rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      color: rgba(212, 175, 55, 0.85);
+      text-decoration: none;
+      padding: 2px 0 3px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+      line-height: 1.2;
+      white-space: nowrap;
+      pointer-events: auto;
+      position: relative;
+      z-index: 1;
+      transition: color 0.2s ease, border-color 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .btn-presskit-sello:hover,
+    .btn-presskit-sello:focus-visible {
+      color: #D4AF37;
+      border-color: rgba(212, 175, 55, 0.65);
+      outline: none;
+    }
+    /* 37 tipo sello: fijo arriba a la derecha */
     .logo-37-sello {
       position: fixed !important;
       top: max(0.5rem, env(safe-area-inset-top)) !important;
@@ -1682,10 +1719,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <span></span><span></span><span></span><span></span>
   </div>
 </div>
-<div class="logo-gorila-sello" id="logo-gorila-wrap">
-  <button type="button" id="btn-gorila-inicio" class="flex items-center justify-center p-0 rounded transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Ir al inicio">
-    <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="w-auto object-contain flex-shrink-0 pointer-events-none" loading="eager" decoding="async">
-  </button>
+<div class="logo-gorila-column" id="logo-gorila-column">
+  <div class="logo-gorila-sello" id="logo-gorila-wrap">
+    <button type="button" id="btn-gorila-inicio" class="flex items-center justify-center p-0 rounded transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Ir al inicio">
+      <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="w-auto object-contain flex-shrink-0 pointer-events-none" loading="eager" decoding="async">
+    </button>
+  </div>
+  <a href="presskit/index.html" class="btn-presskit-sello" id="link-presskit">presskit 2026</a>
 </div>
 <div class="logo-37-sello logo-37-cargando" id="logo-37-wrap">
   <button type="button" id="abrir-popup-37" class="logo-37-btn flex items-center justify-center p-0 rounded transition-transform duration-200 hover:scale-110 focus:scale-110 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Ver 37 aniversario">
