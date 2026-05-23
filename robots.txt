@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /admin.html
+Disallow: /taquilla.html
+Disallow: /acomodadores.html
+Disallow: /verificar.html
+Disallow: /checkout.html
+Disallow: /confirmacion.html
+Disallow: /gracias.html
+Disallow: /boletos.html
+
+Sitemap: https://elgorilateatro.com.mx/sitemap.xml
