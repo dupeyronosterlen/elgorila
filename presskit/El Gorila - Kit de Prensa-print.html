@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kit de Prensa · El Gorila</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#f1ead9;
+    --paper-2:#e8dfc8;
+    --ink:#1a1411;
+    --ink-soft:#3a2e26;
+    --rule:#a89578;
+    --red:#8a1218;
+    --red-deep:#5a0a0d;
+    --green:#1d2a22;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);color:var(--ink);font-family:"EB Garamond", Georgia, serif;font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  body{overflow-x:hidden}
+  a{color:inherit}
+  img{display:block;max-width:100%}
+
+  /* ---------- LAYOUT PRIMITIVES ---------- */
+  .sheet{
+    width:100%;
+    max-width:1180px;
+    margin:0 auto;
+    padding:96px 88px;
+    position:relative;
+  }
+  .sheet--dark{background:#100c0a;color:#e9dfc8}
+  .sheet--paper{background:var(--paper)}
+  .sheet--bleed{max-width:none;padding:0}
+  .grid{display:grid;gap:48px}
+
+  .label{
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+    font-size:11px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    font-weight:500;
+    color:var(--red);
+  }
+  .sheet--dark .label{color:#d99b3a}
+  .rule{height:1px;background:var(--ink);opacity:.6;width:100%}
+  .sheet--dark .rule{background:#e9dfc8;opacity:.35}
+  .rule--red{background:var(--red);opacity:1;height:2px}
+  .rule--thick{height:4px}
+
+  .display{
+    font-family:"Cormorant Garamond", serif;
+    font-weight:500;
+    line-height:.92;
+    letter-spacing:-.015em;
+  }
+  .display-italic{font-style:italic;font-weight:400}
+  .smallcaps{font-variant:all-small-caps;letter-spacing:.12em}
+
+  /* ---------- COVER ---------- */
+  .cover{
+    min-height:100vh;
+    background:#0a0706;
+    color:#f1ead9;
+    position:relative;
+    overflow:hidden;
+    padding:56px 64px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+  .cover__photo{
+    position:absolute;inset:0;
+    background-image:url('assets/escena-1.jpg');
+    background-size:cover;
+    background-position:center 22%;
+    filter:contrast(1.05) saturate(.95);
+  }
+  .cover__photo::after{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse at 60% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 70%, rgba(0,0,0,.85) 100%),
+      linear-gradient(180deg, rgba(10,7,6,.55) 0%, rgba(10,7,6,.15) 35%, rgba(10,7,6,.85) 100%);
+  }
+  .cover > :not(.cover__photo){position:relative;z-index:2}
+
+  .cover__top{display:flex;justify-content:space-between;align-items:flex-start;gap:40px}
+  .cover__crest{
+    border:1px solid rgba(241,234,217,.5);
+    padding:14px 18px;
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    line-height:1.7;
+  }
+  .cover__crest strong{display:block;color:#d99b3a;font-weight:500}
+  .cover__meta{
+    text-align:right;
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    line-height:1.9;
+    color:#d6c7a3;
+  }
+
+  .cover__title{
+    margin-top:48px;
+  }
+  .cover__kicker{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    letter-spacing:.4em;
+    text-transform:uppercase;
+    color:#d99b3a;
+    margin-bottom:36px;
+  }
+  .cover__name{
+    font-family:"Cormorant Garamond",serif;
+    font-weight:500;
+    font-size:clamp(120px, 22vw, 320px);
+    line-height:.82;
+    letter-spacing:-.04em;
+  }
+  .cover__name em{font-style:italic;font-weight:400;color:#c9302c}
+  .cover__strap{
+    margin-top:28px;
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-weight:300;
+    font-size:clamp(22px,2.6vw,34px);
+    max-width:720px;
+    line-height:1.25;
+    color:#e9dfc8;
+  }
+
+  .cover__bottom{
+    display:grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap:48px;
+    align-items:flex-end;
+    border-top:1px solid rgba(241,234,217,.35);
+    padding-top:24px;
+  }
+  .cover__stat .num{
+    font-family:"Cormorant Garamond",serif;
+    font-size:64px;
+    line-height:.9;
+    font-weight:500;
+    color:#d99b3a;
+  }
+  .cover__stat .lbl{
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    margin-top:10px;
+    color:#d6c7a3;
+  }
+  .cover__byline{
+    font-family:"Cormorant Garamond",serif;
+    font-size:22px;
+    line-height:1.3;
+  }
+  .cover__byline em{font-style:italic;color:#c9302c}
+  .cover__byline span{
+    display:block;font-family:"JetBrains Mono",monospace;
+    font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+    color:#d6c7a3;margin-top:8px;
+  }
+
+  /* ---------- INDEX ---------- */
+  .index{display:grid;grid-template-columns: 1fr 2fr;gap:96px;align-items:flex-start}
+  .index h2{
+    font-family:"Cormorant Garamond",serif;
+    font-weight:500;
+    font-size:84px;
+    line-height:.95;
+    letter-spacing:-.02em;
+  }
+  .index h2 em{font-style:italic;color:var(--red)}
+  .index ol{list-style:none;counter-reset:idx}
+  .index li{
+    counter-increment:idx;
+    display:grid;
+    grid-template-columns: 56px 1fr auto;
+    align-items:baseline;
+    padding:22px 0;
+    border-bottom:1px solid var(--rule);
+    gap:24px;
+  }
+  .index li:first-child{border-top:1px solid var(--rule)}
+  .index li::before{
+    content: counter(idx, decimal-leading-zero);
+    font-family:"JetBrains Mono",monospace;
+    font-size:13px;
+    letter-spacing:.18em;
+    color:var(--red);
+  }
+  .index li .title{
+    font-family:"Cormorant Garamond",serif;
+    font-size:30px;
+    font-weight:500;
+  }
+  .index li .pg{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+    letter-spacing:.22em;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- SECTION HEADER ---------- */
+  .section-head{
+    display:grid;
+    grid-template-columns: 80px 1fr;
+    gap:24px;
+    align-items:baseline;
+    margin-bottom:48px;
+  }
+  .section-head .num{
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-size:64px;
+    color:var(--red);
+    line-height:.9;
+  }
+  .section-head .ttl{
+    font-family:"Cormorant Garamond",serif;
+    font-size:56px;
+    font-weight:500;
+    line-height:1;
+    letter-spacing:-.02em;
+  }
+  .section-head .ttl em{font-style:italic;color:var(--red-deep)}
+
+  /* ---------- FICHA TÉCNICA ---------- */
+  .ficha{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:0 64px;
+    border-top:2px solid var(--ink);
+  }
+  .ficha .row{
+    display:grid;
+    grid-template-columns: 140px 1fr;
+    gap:24px;
+    align-items:baseline;
+    padding:18px 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .ficha .row .k{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    padding-top:4px;
+  }
+  .ficha .row .v{
+    font-family:"Cormorant Garamond",serif;
+    font-size:22px;
+    font-weight:500;
+    line-height:1.25;
+  }
+  .ficha .row .v em{font-style:italic;color:var(--red-deep)}
+  .ficha .row .v small{
+    display:block;font-family:"EB Garamond",serif;
+    font-size:15px;font-weight:400;color:var(--ink-soft);margin-top:4px;
+  }
+  .ficha .row.row--wide{grid-column:1 / -1;grid-template-columns: 140px 1fr}
+  .ficha .row a{color:var(--red);text-decoration:none;border-bottom:1px solid var(--red)}
+
+  /* ---------- SINOPSIS ---------- */
+  .sinopsis{display:grid;grid-template-columns: 1fr 1fr;gap:64px}
+  .sinopsis .body{
+    font-size:17px;line-height:1.65;
+    text-align:justify;hyphens:auto;
+  }
+  .sinopsis .body p+p{margin-top:14px;text-indent:1.4em}
+  .sinopsis .col h3{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--red);margin-bottom:18px;
+  }
+  .sinopsis .col h3 span{color:var(--ink-soft);font-weight:400}
+
+  .dropcap::first-letter{
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:78px;
+    float:left;
+    line-height:.85;
+    padding:8px 12px 0 0;
+    color:var(--red);
+  }
+
+  /* ---------- FULL BLEED IMAGE ---------- */
+  .bleed-photo{
+    position:relative;
+    height:88vh;
+    min-height:560px;
+    overflow:hidden;
+  }
+  .bleed-photo img{
+    width:100%;height:100%;object-fit:cover;
+  }
+  .bleed-photo .caption{
+    position:absolute;left:64px;bottom:48px;
+    color:#f1ead9;
+    max-width:520px;
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-size:26px;
+    line-height:1.25;
+    text-shadow:0 2px 16px rgba(0,0,0,.7);
+  }
+  .bleed-photo .caption span{
+    display:block;
+    font-family:"JetBrains Mono",monospace;
+    font-style:normal;
+    font-size:10px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    margin-top:14px;
+    color:#d99b3a;
+  }
+
+  /* ---------- HISTORIAL ---------- */
+  .historial{display:grid;grid-template-columns: 1fr 1fr;gap:64px;align-items:flex-start}
+  .historial .body{font-size:17px;line-height:1.7;text-align:justify;hyphens:auto}
+  .historial .body p+p{margin-top:14px}
+  .historial .sidebar{position:sticky;top:32px}
+  .stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+    border-top:2px solid var(--ink);
+    border-bottom:2px solid var(--ink);
+    padding:24px 0;
+  }
+  .stats .stat .n{
+    font-family:"Cormorant Garamond",serif;
+    font-size:72px;
+    line-height:.85;
+    color:var(--red);
+    font-weight:500;
+  }
+  .stats .stat .l{
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    margin-top:8px;
+    color:var(--ink-soft);
+  }
+  .venues{
+    margin-top:28px;
+  }
+  .venues h4{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--red);margin-bottom:14px;
+  }
+  .venues .v-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;
+    font-family:"Cormorant Garamond",serif;
+    font-size:15px;
+    line-height:1.45;
+    color:var(--ink-soft);
+  }
+  .venues .v-grid em{font-style:normal;color:var(--ink)}
+
+  /* ---------- BIOGRAFÍAS ---------- */
+  .bio{display:grid;grid-template-columns:1fr 1.4fr;gap:64px;align-items:flex-start}
+  .bio + .bio{margin-top:80px;padding-top:64px;border-top:1px solid var(--rule)}
+  .bio.reverse{grid-template-columns:1.4fr 1fr}
+  .bio .photo-wrap{
+    aspect-ratio: 3/4;
+    overflow:hidden;
+    background:#0a0706;
+  }
+  .bio .photo-wrap img{width:100%;height:100%;object-fit:cover}
+  .bio h3{
+    font-family:"Cormorant Garamond",serif;
+    font-size:48px;
+    font-weight:500;
+    line-height:1;
+    margin-bottom:6px;
+  }
+  .bio h3 em{font-style:italic;color:var(--red-deep)}
+  .bio .role{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--red);margin-bottom:24px;
+  }
+  .bio .body{font-size:16px;line-height:1.7;text-align:justify;hyphens:auto}
+  .bio .body p+p{margin-top:12px}
+
+  /* ---------- NOTA DE PRODUCCIÓN (dark) ---------- */
+  .nota{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:64px;
+    align-items:flex-start;
+  }
+  .nota .lead{
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-weight:300;
+    font-size:34px;
+    line-height:1.2;
+    color:#f1ead9;
+  }
+  .nota .lead em{color:#d99b3a;font-style:italic;font-weight:400}
+  .nota .body{
+    font-size:17px;line-height:1.75;
+    color:#d6c7a3;
+    text-align:justify;hyphens:auto;
+  }
+  .nota .body p+p{margin-top:14px;text-indent:1.4em}
+  .nota .body strong{color:#f1ead9;font-weight:500}
+
+  .pull-quote{
+    margin:48px 0;
+    padding:32px 0;
+    border-top:2px solid #d99b3a;
+    border-bottom:2px solid #d99b3a;
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-weight:300;
+    font-size:42px;
+    line-height:1.15;
+    color:#f1ead9;
+    text-align:center;
+    letter-spacing:-.01em;
+  }
+  .pull-quote em{color:#c9302c;font-style:italic}
+
+  /* ---------- CONTACTO ---------- */
+  .contacto{
+    display:grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap:64px;
+    align-items:flex-start;
+  }
+  .contact-card{
+    border:1px solid var(--ink);
+    padding:40px;
+    background:var(--paper-2);
+  }
+  .contact-card .label{margin-bottom:24px}
+  .contact-card h3{
+    font-family:"Cormorant Garamond",serif;
+    font-size:42px;
+    font-weight:500;
+    line-height:1;
+  }
+  .contact-card .pos{
+    font-family:"EB Garamond",serif;
+    font-style:italic;
+    font-size:18px;
+    color:var(--ink-soft);
+    margin-bottom:32px;
+  }
+  .contact-card dl{display:grid;gap:14px}
+  .contact-card dl > div{
+    display:grid;grid-template-columns:90px 1fr;gap:16px;align-items:baseline;
+    padding-bottom:12px;border-bottom:1px solid var(--rule);
+  }
+  .contact-card dt{
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .contact-card dd{
+    font-family:"Cormorant Garamond",serif;
+    font-size:20px;font-weight:500;
+  }
+  .contact-card dd a{text-decoration:none;border-bottom:1px solid var(--red);color:var(--red-deep)}
+
+  .imagenes h3{
+    font-family:"Cormorant Garamond",serif;
+    font-size:36px;font-weight:500;line-height:1;
+    margin-bottom:8px;
+  }
+  .imagenes .sub{
+    font-family:"EB Garamond",serif;font-style:italic;color:var(--ink-soft);
+    margin-bottom:24px;
+  }
+  .imagenes ul{list-style:none;display:grid;gap:10px}
+  .imagenes ul li{
+    display:grid;grid-template-columns: 28px 1fr;gap:14px;
+    padding:14px 0;border-bottom:1px solid var(--rule);
+    font-family:"Cormorant Garamond",serif;font-size:18px;
+    align-items:baseline;
+  }
+  .imagenes ul li::before{
+    content:"■";color:var(--red);font-size:11px;line-height:1;
+    transform:translateY(-3px);
+  }
+  .imagenes ul li small{
+    display:block;
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--ink-soft);margin-top:4px;font-weight:400;
+  }
+  .credits{
+    margin-top:40px;
+    padding:24px;
+    background:var(--paper-2);
+    border-left:3px solid var(--red);
+    font-family:"EB Garamond",serif;
+    font-size:14px;
+    line-height:1.6;
+    color:var(--ink-soft);
+  }
+  .credits strong{color:var(--ink);font-weight:600;display:block;margin-bottom:6px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase}
+
+  /* ---------- PHOTO STRIP ---------- */
+  .photo-strip{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap:8px;
+    height:60vh;
+    min-height:420px;
+  }
+  .photo-strip > div{
+    background-size:cover;background-position:center;
+    position:relative;overflow:hidden;
+  }
+  .photo-strip > div::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,.5) 100%);
+  }
+  .photo-strip .ph-cap{
+    position:absolute;left:20px;bottom:18px;z-index:2;
+    color:#f1ead9;
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+  }
+
+  /* ---------- COLOPHON / FOOTER ---------- */
+  .colophon{
+    background:#0a0706;color:#d6c7a3;
+    padding:64px;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:48px;
+    align-items:flex-end;
+    border-top:4px solid var(--red);
+  }
+  .colophon .big{
+    font-family:"Cormorant Garamond",serif;
+    font-size:56px;
+    line-height:.95;
+    color:#f1ead9;
+    font-weight:500;
+  }
+  .colophon .big em{font-style:italic;color:#d99b3a}
+  .colophon .meta{
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+    line-height:2;
+  }
+  .colophon .meta strong{color:#f1ead9;font-weight:500}
+
+  /* RUN HEADER */
+  .runner{
+    position:fixed;
+    top:24px;
+    right:32px;
+    z-index:50;
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:var(--ink);
+    mix-blend-mode:difference;
+    pointer-events:none;
+  }
+  .runner span{color:#c9302c}
+
+  /* ============== PRINT ============== */
+  @media print {
+    @page { size: A4 portrait; margin: 0; }
+    html, body {
+      background: var(--paper);
+      font-size: 11pt;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .runner { display: none !important; }
+
+    /* Each top-level section becomes its own page block */
+    body > section {
+      page-break-before: always;
+      break-before: page;
+      page-break-after: always;
+      break-after: page;
+      page-break-inside: avoid;
+    }
+    body > section:first-of-type {
+      page-break-before: avoid;
+      break-before: avoid;
+    }
+
+    /* Tighten section padding for paper */
+    .sheet { padding: 48px 56px; max-width: none; }
+
+    /* Cover fills page */
+    .cover {
+      min-height: auto;
+      height: 100vh;
+      padding: 40px 48px;
+    }
+    .cover__name { font-size: 180px; }
+    .cover__strap { font-size: 22px; }
+    .cover__stat .num { font-size: 52px; }
+
+    /* Full-bleed photo sections */
+    .sheet--bleed { padding: 0; }
+    .bleed-photo { height: 100vh; min-height: 0; }
+    .photo-strip { height: 100vh; min-height: 0; }
+
+    /* Avoid orphan splits inside content */
+    .ficha, .sinopsis, .historial, .bio, .nota, .contacto,
+    .stats, .pull-quote, .contact-card, .index {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Sinopsis: stack to fit page */
+    .sinopsis { gap: 32px; }
+    .historial { gap: 32px; }
+    .historial .sidebar { position: static; }
+
+    /* Bios — keep each whole */
+    .bio + .bio { margin-top: 48px; padding-top: 48px; }
+
+    /* Dark section keeps its background */
+    .sheet--dark { background: #100c0a !important; }
+    .colophon { background: #0a0706 !important; }
+
+    /* Section titles smaller on print */
+    .section-head .ttl { font-size: 44px; }
+    .section-head .num { font-size: 52px; }
+
+    /* Hide caret/cursor borders */
+    a { text-decoration: none; }
+
+    /* Make sure column-count doesn't overflow */
+    .nota .body[style*="column-count"] { column-count: 2 !important; column-gap: 40px !important; }
+
+    img { max-width: 100%; }
+  }
+
+  @media (max-width: 900px){
+    .sheet{padding:64px 32px}
+    .cover{padding:32px 24px}
+    .index,.sinopsis,.historial,.bio,.bio.reverse,.nota,.contacto{grid-template-columns:1fr;gap:32px}
+    .cover__bottom{grid-template-columns:1fr;gap:24px}
+    .photo-strip{grid-template-columns:1fr;height:auto}
+    .photo-strip > div{height:60vw;min-height:280px}
+    .ficha{grid-template-columns:1fr}
+    .colophon{grid-template-columns:1fr;padding:40px 24px}
+    .section-head{grid-template-columns:1fr;gap:8px}
+    .section-head .ttl{font-size:40px}
+    .cover__name{font-size:clamp(80px, 22vw, 180px)}
+  }
+</style>
+</head>
+<body>
+
+<div class="runner">Kit de Prensa · <span>El Gorila</span> · Temporada 2026</div>
+
+<!-- ============== COVER ============== -->
+<section class="cover" data-screen-label="01 Portada">
+  <div class="cover__photo"></div>
+
+  <div class="cover__top">
+    <div class="cover__crest">
+      <strong>Kit de Prensa</strong>
+      Temporada 2026<br/>
+      Documento Oficial
+    </div>
+    <div class="cover__meta">
+      Domingos · 17:30 hrs<br/>
+      La Nueva Carpa Geodésica<br/>
+      San Ángel · CDMX
+    </div>
+  </div>
+
+  <div class="cover__title">
+    <div class="cover__kicker">De Franz Kafka · con Humberto Dupeyron</div>
+    <div class="cover__name display">El <em>Gorila</em></div>
+    <div class="cover__strap">El monólogo más longevo de México. Treinta y siete años ininterrumpidos en escena.</div>
+  </div>
+
+  <div class="cover__bottom">
+    <div class="cover__stat">
+      <div class="num">37</div>
+      <div class="lbl">Años en escena</div>
+    </div>
+    <div class="cover__stat">
+      <div class="num">90<span style="font-size:28px">′</span></div>
+      <div class="lbl">Duración · Monólogo</div>
+    </div>
+    <div class="cover__byline">
+      Basado en <em>"Un informe para la Academia"</em>
+      <span>Franz Kafka · 1917</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============== INDEX ============== -->
+<section class="sheet sheet--paper" data-screen-label="02 Índice">
+  <div class="index">
+    <div>
+      <div class="label" style="margin-bottom:20px">Contenido</div>
+      <h2 class="display">Í<em>n</em>dice</h2>
+      <p style="margin-top:32px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;line-height:1.35;color:var(--ink-soft);max-width:340px">
+        Una guía completa para prensa, programadores y editores sobre la obra, su historia y su intérprete.
+      </p>
+    </div>
+    <ol>
+      <li><span class="title">Ficha técnica</span><span class="pg">P. 03</span></li>
+      <li><span class="title">Sinopsis</span><span class="pg">P. 04</span></li>
+      <li><span class="title">Historial de la obra</span><span class="pg">P. 06</span></li>
+      <li><span class="title">Biografías</span><span class="pg">P. 08</span></li>
+      <li><span class="title">Nota de producción</span><span class="pg">P. 10</span></li>
+      <li><span class="title">Contacto de prensa</span><span class="pg">P. 12</span></li>
+      <li><span class="title">Imágenes de alta resolución</span><span class="pg">P. 13</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============== 01 FICHA TÉCNICA ============== -->
+<section class="sheet sheet--paper" data-screen-label="03 Ficha técnica">
+  <div class="section-head">
+    <div class="num">01</div>
+    <div>
+      <div class="label" style="margin-bottom:10px">Sección uno</div>
+      <div class="ttl display">Ficha <em>técnica</em></div>
+    </div>
+  </div>
+
+  <div class="ficha">
+    <div class="row"><div class="k">Título</div><div class="v"><em>El Gorila</em></div></div>
+    <div class="row"><div class="k">Basado en</div><div class="v">«Un informe para la Academia»<small>de Franz Kafka</small></div></div>
+    <div class="row"><div class="k">Actuación</div><div class="v">Humberto Dupeyron</div></div>
+    <div class="row"><div class="k">Producción</div><div class="v">Osterlen Dupeyron</div></div>
+    <div class="row"><div class="k">Música original</div><div class="v">Odila Dupeyron</div></div>
+    <div class="row"><div class="k">Duración</div><div class="v">90 minutos</div></div>
+    <div class="row"><div class="k">Clasificación</div><div class="v">Todo público</div></div>
+    <div class="row"><div class="k">Temporada</div><div class="v">Domingos · 17:30 hrs</div></div>
+    <div class="row row--wide"><div class="k">Sede</div><div class="v">La Nueva Carpa Geodésica<small>Insurgentes Sur 2135, San Ángel, Ciudad de México</small></div></div>
+    <div class="row"><div class="k">Precio</div><div class="v">$370 MXN</div></div>
+    <div class="row"><div class="k">Boletos</div><div class="v"><a href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139">boletos.elgorilateatro.com.mx</a></div></div>
+    <div class="row row--wide"><div class="k">Web</div><div class="v"><a href="https://elgorilateatro.com.mx">elgorilateatro.com.mx</a></div></div>
+  </div>
+</section>
+
+<!-- ============== FULL BLEED PHOTO ============== -->
+<section class="sheet--bleed">
+  <div class="bleed-photo">
+    <img src="assets/escena-2.jpg" alt="Humberto Dupeyron en El Gorila" />
+    <div class="caption">
+      «Aprendió a beber, a fumar, a escupir. Aprendió a hablar. Se volvió humano no por convicción, sino por supervivencia.»
+      <span>Peter el Rojo · El Gorila</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============== 02 SINOPSIS ============== -->
+<section class="sheet sheet--paper" data-screen-label="04 Sinopsis">
+  <div class="section-head">
+    <div class="num">02</div>
+    <div>
+      <div class="label" style="margin-bottom:10px">Sección dos</div>
+      <div class="ttl display"><em>Sin</em>opsis</div>
+    </div>
+  </div>
+
+  <div class="sinopsis">
+    <div class="col">
+      <h3>Versión corta <span>· 80 palabras</span></h3>
+      <div class="body dropcap">
+        <p>Un simio capturado presenta ante una academia de científicos el informe de su transformación en hombre. Entre el humor negro y la reflexión existencial, Peter —el gorila— narra su proceso de "civilización" forzada: desde la captura hasta su adaptación al mundo humano. Humberto Dupeyron encarna este monólogo kafkiano que, tras 37 años ininterrumpidos en escena, se ha convertido en el más longevo de México: una indagación perturbadora sobre identidad, libertad y el precio de la asimilación.</p>
+      </div>
+    </div>
+
+    <div class="col">
+      <h3>Versión larga <span>· 200 palabras</span></h3>
+      <div class="body">
+        <p>Basada en el relato "Un informe para la Academia" de Franz Kafka, <em>El Gorila</em> es un monólogo que traspasa los límites del teatro convencional. Un simio humanizado —Peter el Rojo— comparece ante una academia de sabios para presentar el informe de su metamorfosis: cómo dejó de ser simio para volverse hombre.</p>
+        <p>El relato avanza entre el absurdo y lo brutal: la captura violenta, el encierro en una jaula estrecha a bordo de un barco, la decisión de imitar a sus captores como única vía de escape. No buscaba la libertad —imposible de recuperar—, sino una salida. Aprendió a beber, a fumar, a escupir. Aprendió a hablar. Se volvió humano no por convicción, sino por supervivencia.</p>
+        <p>Humberto Dupeyron encarna este personaje desde 1989, sosteniendo en escena uno de los textos más incómodos y lúcidos sobre la condición humana. <em>El Gorila</em> no ofrece respuestas sino una serie de interrogantes. ¿Qué significa civilizarse? ¿Cuánto de nosotros sacrificamos para pertenecer? ¿Acaso somos más libres que Peter?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== 03 HISTORIAL ============== -->
+<section class="sheet sheet--paper" data-screen-label="05 Historial">
+  <div class="section-head">
+    <div class="num">03</div>
+    <div>
+      <div class="label" style="margin-bottom:10px">Sección tres</div>
+      <div class="ttl display">Historial <em>de la obra</em></div>
+    </div>
+  </div>
+
+  <div class="historial">
+    <div class="body">
+      <p><em>El Gorila</em> lleva 37 temporadas consecutivas en escena, posicionándose como el monólogo más longevo de México. Desde su estreno en 1989 en el Teatro Xola, la obra ha permanecido ininterrumpidamente en cartelera, acumulando más de mil funciones y varias generaciones.</p>
+      <p>El texto original —"Un informe para la Academia" (<em>Ein Bericht für eine Akademie</em>, 1917)— es uno de los relatos más célebres de Franz Kafka. La primera adaptación teatral fue realizada en 1968 por Alejandro Jodorowsky, quien confió la interpretación a Narciso Busquets. Años más tarde, Jodorowsky otorgó los derechos de representación a Humberto Dupeyron, quien desde entonces ha dedicado casi cuatro décadas a este personaje.</p>
+      <p>A lo largo de su trayectoria, <em>El Gorila</em> ha sido reconocida no solo por su vigencia temática, sino por la disciplina actoral que exige: un actor solo en escena durante 90 minutos, sosteniendo un texto denso, físicamente demandante y emocionalmente complejo.</p>
+      <p>La obra ha sido presentada en diversos foros de la Ciudad de México, así como en el interior de la república, en ciudades como Oaxaca, Chiapas, Puebla, Aguascalientes, Monterrey, Guadalajara, Morelia, Acapulco, Chihuahua, Querétaro, Veracruz, Tijuana, la Paz, Ensenada, los Cabos entre muchas ciudades más, y actualmente presentándose La Nueva Carpa Geodésica en San Ángel. Su permanencia en cartelera la ha consolidado como una referencia obligada del teatro contemporáneo en México.</p>
+    </div>
+
+    <div class="sidebar">
+      <div class="stats">
+        <div class="stat"><div class="n">1989</div><div class="l">Año de estreno · Teatro Xola</div></div>
+        <div class="stat"><div class="n">37</div><div class="l">Temporadas consecutivas</div></div>
+        <div class="stat"><div class="n">+1000</div><div class="l">Funciones acumuladas</div></div>
+        <div class="stat"><div class="n">90′</div><div class="l">Minutos · un solo actor</div></div>
+      </div>
+
+      <div class="venues">
+        <h4>Foros en Ciudad de México</h4>
+        <div class="v-grid">
+          <em>Teatro Xola</em>
+          <em>Foro Shakespeare</em>
+          <em>Teatro Jorge Negrete</em>
+          <em>Teatro Helénico</em>
+          <em>Sala Villaurrutia</em>
+          <em>Teatro Arlequín</em>
+          <em>Teatro Venustiano Carranza</em>
+          <em>Teatro Principal</em>
+          <em>Teatro Virginia Fábregas</em>
+          <em>Teatro Milán</em>
+          <em>Teatro Cantinflas</em>
+          <em>Teatro Silvia Pinal</em>
+          <em>Teatro Versalles</em>
+          <em>Teatro Polifórum</em>
+          <em>Teatro Wilberto Cantón</em>
+          <em>Teatro Lírico</em>
+          <em>Teatro Benito Juárez</em>
+          <em>Teatro Orientación</em>
+          <em>Carpa México</em>
+          <em>Teatro de la República</em>
+          <em>Teatro Ofelia</em>
+          <em>Teatro López Tarso</em>
+          <em>Teatro Metropólitan</em>
+          <em>Teatro Royal Pedregal</em>
+          <em>Teatro Sullivan</em>
+          <span>entre muchos más</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== FULL BLEED PHOTO ============== -->
+<section class="sheet--bleed">
+  <div class="bleed-photo">
+    <img src="assets/escena-3.jpg" alt="Peter el Rojo en escena" style="object-position:center 30%" />
+    <div class="caption">
+      «¿Acaso somos más libres que Peter?»
+      <span>Una pregunta que no concede tregua</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============== 04 BIOGRAFÍAS ============== -->
+<section class="sheet sheet--paper" data-screen-label="06 Biografías">
+  <div class="section-head">
+    <div class="num">04</div>
+    <div>
+      <div class="label" style="margin-bottom:10px">Sección cuatro</div>
+      <div class="ttl display">Bio<em>grafías</em></div>
+    </div>
+  </div>
+
+  <div class="bio">
+    <div class="photo-wrap">
+      <img src="assets/retrato.jpg" alt="Humberto Dupeyron" />
+    </div>
+    <div>
+      <h3>Humberto <em>Dupeyron</em></h3>
+      <div class="role">Actor</div>
+      <div class="body">
+        <p>Humberto Dupeyron es actor, director, escritor y pedagogo teatral con más de seis décadas de trayectoria. Nacido en la Ciudad de México, se formó en la academia de Andrés Soler.</p>
+        <p>Ha participado en cine, televisión y en más de 80 montajes teatrales, tanto en roles protagónicos como en ensambles, abarcando desde el teatro clásico y comedia, hasta la experimentación contemporánea. Entre sus trabajos más reconocidos se encuentran <em>El Gorila</em>, <em>Los Malditos</em>, <em>La Dama de Negro</em>, <em>Mi Querido Profesor</em>, <em>Esta Noche Cena Pancho</em>, <em>Mañana Será Otro Día</em>, <em>Cuando el Pepino Falla</em>, <em>Hacemos de Tocho Morocho</em>, <em>Para Petacas las Mías</em>, <em>Las Hijas de Don Tomás</em>, <em>Nace una Estrella</em>, <em>Dulce Amor Mío</em>. Como director, ha montado obras como <em>Violación</em>, <em>Dos Parejas Disparejas</em>.</p>
+        <p>Su compromiso con <em>El Gorila</em> representa no solo una hazaña actoral, sino una defensa del teatro como oficio de resistencia: 37 años sosteniendo el mismo personaje en escena, reinventándolo cada función, sin concesiones.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bio reverse">
+    <div>
+      <h3>Franz <em>Kafka</em></h3>
+      <div class="role">Autor · Praga, 1883 — Kierling, 1924</div>
+      <div class="body">
+        <p>Franz Kafka es uno de los escritores más influyentes del siglo XX. Su obra —marcada por atmósferas opresivas, burocracias absurdas y protagonistas atrapados en situaciones incomprensibles— ha dado origen al término <em>"kafkiano"</em> para describir experiencias de alienación y desorientación existencial.</p>
+        <p>Aunque en vida publicó poco (relatos breves, principalmente), sus novelas <em>El proceso</em>, <em>El castillo</em> y <em>La metamorfosis</em> fueron editadas póstumamente y se convirtieron en pilares de la literatura moderna. "Un informe para la Academia" (1917), el relato que da origen a <em>El Gorila</em>, condensa muchas de sus obsesiones: la animalidad, la transformación forzada, la imposibilidad de retorno.</p>
+      </div>
+    </div>
+    <div class="photo-wrap" style="background:#0a0706;display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 300 400" style="width:100%;height:100%" aria-hidden="true">
+        <defs>
+          <linearGradient id="kafkaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1a1411"/>
+            <stop offset="1" stop-color="#0a0706"/>
+          </linearGradient>
+        </defs>
+        <rect width="300" height="400" fill="url(#kafkaGrad)"/>
+        <g fill="none" stroke="#8a1218" stroke-width=".8" opacity=".4">
+          <circle cx="150" cy="200" r="120"/>
+          <circle cx="150" cy="200" r="90"/>
+          <circle cx="150" cy="200" r="60"/>
+        </g>
+        <text x="150" y="180" text-anchor="middle" fill="#d99b3a" style="font-family:'Cormorant Garamond',serif;font-size:60px;font-style:italic;font-weight:500">K.</text>
+        <text x="150" y="215" text-anchor="middle" fill="#e9dfc8" style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.3em">1883 — 1924</text>
+        <text x="150" y="240" text-anchor="middle" fill="#8a1218" style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.3em">EIN BERICHT FÜR</text>
+        <text x="150" y="254" text-anchor="middle" fill="#8a1218" style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.3em">EINE AKADEMIE</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============== 05 NOTA DE PRODUCCIÓN (dark) ============== -->
+<section class="sheet sheet--dark" data-screen-label="07 Nota de producción">
+  <div class="section-head">
+    <div class="num" style="color:#d99b3a">05</div>
+    <div>
+      <div class="label" style="margin-bottom:10px">Sección cinco</div>
+      <div class="ttl display" style="color:#f1ead9">Nota de <em style="color:#d99b3a">producción</em></div>
+    </div>
+  </div>
+
+  <div class="nota">
+    <div class="lead">
+      Hay obras que envejecen. <em>El Gorila</em> no. Cada temporada que pasa, el texto de Kafka se vuelve más incómodo, más urgente.
+    </div>
+    <div class="body">
+      <p>En 1989, cuando Humberto Dupeyron lo estrenó por primera vez, el mundo era otro. Hoy, 37 años después, las preguntas que plantea Peter el Rojo —el simio convertido en hombre— siguen sin respuesta.</p>
+      <p><strong>¿Qué significa adaptarse? ¿Cuánto perdemos en el proceso de pertenecer? ¿Somos más libres que un gorila enjaulado que aprendió a imitar gestos humanos para sobrevivir?</strong> La obra no moraliza. No ofrece salidas. Presenta un espejo.</p>
+    </div>
+  </div>
+
+  <div class="pull-quote">
+    No es teatro fácil. No es entretenimiento.<br/>
+    Es una <em>cita con lo incómodo</em>, con lo necesario.
+  </div>
+
+  <div class="nota">
+    <div class="body" style="grid-column:1 / -1;column-count:2;column-gap:64px;text-indent:0">
+      <p>Esta temporada marca un nuevo capítulo en la historia de <em>El Gorila</em>. Tras décadas en diversos foros, la obra encuentra ahora su hogar en <strong>La Nueva Carpa Geodésica</strong>, un espacio diseñado para la intimidad y la experimentación. Los domingos a las 17:30 horas, el público se encuentra con Humberto Dupeyron —y con Peter el Rojo— en una experiencia teatral que no concede tregua.</p>
+      <p>La decisión de sostener este monólogo durante 37 años consecutivos no es solo una proeza actoral: es un acto de resistencia. En un contexto cultural que privilegia lo efímero y lo espectacular, <em>El Gorila</em> insiste en la permanencia, en la profundidad, en el valor de un texto que no busca complacer sino confrontar.</p>
+      <p>No es teatro fácil. No es entretenimiento. Es una cita con lo incómodo, con lo necesario, con la consciencia y el humor que caracteriza a Humberto Dupeyron. <strong>Y por eso sigue vivo.</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== PHOTO STRIP ============== -->
+<section class="sheet--bleed">
+  <div class="photo-strip">
+    <div style="background-image:url('assets/escena-1.jpg')"><div class="ph-cap">Escena 01</div></div>
+    <div style="background-image:url('assets/escena-2.jpg')"><div class="ph-cap">Escena 02</div></div>
+    <div style="background-image:url('assets/escena-3.jpg')"><div class="ph-cap">Escena 03</div></div>
+  </div>
+</section>
+
+<!-- ============== 06 CONTACTO + 07 IMÁGENES ============== -->
+<section class="sheet sheet--paper" data-screen-label="08 Contacto e imágenes">
+  <div class="section-head">
+    <div class="num">06</div>
+    <div>
+      <div class="label" style="margin-bottom:10px">Sección seis · siete</div>
+      <div class="ttl display">Contacto <em>&amp;</em> material</div>
+    </div>
+  </div>
+
+  <div class="contacto">
+    <div class="contact-card">
+      <div class="label">Contacto de prensa</div>
+      <h3>Osterlen Dupeyron</h3>
+      <div class="pos">Producción · El Gorila</div>
+
+      <dl>
+        <div>
+          <dt>Email</dt>
+          <dd><a href="mailto:elgorilateatro@gmail.com">elgorilateatro@gmail.com</a></dd>
+        </div>
+        <div>
+          <dt>WhatsApp</dt>
+          <dd><a href="https://wa.me/5215512037223">+52 55 1203 7223</a></dd>
+        </div>
+        <div>
+          <dt>Web</dt>
+          <dd><a href="https://elgorilateatro.com.mx">elgorilateatro.com.mx</a></dd>
+        </div>
+        <div>
+          <dt>Instagram</dt>
+          <dd><a href="https://instagram.com/elgorilateatro">@elgorilateatro</a></dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="imagenes">
+      <div class="label" style="margin-bottom:12px">Sección 07</div>
+      <h3>Imágenes de alta resolución</h3>
+      <div class="sub">Material fotográfico disponible para uso editorial.</div>
+
+      <ul>
+        <li>
+          <div>
+            Poster oficial
+            <small>ElGorila_Poster_Oficial_2026.png</small>
+          </div>
+        </li>
+        <li>
+          <div>
+            Retrato del actor
+            <small>ElGorila_Retrato_HumbertoDupeyron.jpeg</small>
+          </div>
+        </li>
+        <li>
+          <div>
+            Escenas de la obra
+            <small>7 imágenes de alta resolución</small>
+          </div>
+        </li>
+      </ul>
+
+      <div class="credits">
+        <strong>Créditos fotográficos</strong>
+        Todas las imágenes: © El Gorila Teatro.<br/>
+        Uso permitido únicamente para difusión editorial relacionada con la obra. Se requiere acreditación.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== COLOPHON ============== -->
+<section class="colophon" data-screen-label="09 Colofón">
+  <div class="big display">El <em>Gorila</em><br/>37 años en escena</div>
+  <div class="meta">
+    <strong>Temporada 2026</strong>
+    Domingos · 17:30 hrs<br/>
+    La Nueva Carpa Geodésica<br/>
+    Insurgentes Sur 2135<br/>
+    San Ángel · CDMX
+  </div>
+  <div class="meta" style="text-align:right">
+    <strong>elgorilateatro.com.mx</strong>
+    @elgorilateatro<br/>
+    elgorilateatro@gmail.com<br/>
+    +52 55 1203 7223<br/><br/>
+    Kit de Prensa · Edición 2026
+  </div>
+</section>
+
+<script>
+(async () => {
+  try { if (document.fonts && document.fonts.ready) { await document.fonts.ready; } } catch(e){}
+  await new Promise(r => setTimeout(r, 500));
+  window.print();
+})();
+</script>
+</body>
+</html>
