@@ -3,3 +3,5 @@ node_modules/
 *.log
 server/.env
 server/data/
+.dev.vars
+usuarios.json

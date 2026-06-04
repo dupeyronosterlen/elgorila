@@ -1,0 +1,28 @@
+name = "elgorila-api"
+main = "worker/index.js"
+compatibility_date = "2025-06-01"
+
+# ─── KV Namespaces ────────────────────────────────────────────────────────────
+# Después de ejecutar los comandos de creación (ver README de Phase 2A),
+# reemplaza los IDs de placeholder con los IDs reales que devuelve wrangler.
+# preview_id se usa con `wrangler dev`; id se usa en producción.
+
+[[kv_namespaces]]
+binding = "INVENTARIO"
+id = "5c1712aba9eb40108d75b9ba12cbd3dd"
+preview_id = "a950cf9717a644b48d7912d1334abd8a"
+
+[[kv_namespaces]]
+binding = "VENTAS"
+id = "1a9c033a4cca4347b05ab8fc5b2f8ba2"
+preview_id = "8342e8b9abe14759ae1e6ea07d8bbd8c"
+
+# ─── Secrets ──────────────────────────────────────────────────────────────────
+# JWT_SECRET, STRIPE_SECRET_KEY y STRIPE_WEBHOOK_SECRET NO van aquí.
+# Definirlos en [vars] — aunque sea con valor vacío — hace que wrangler los
+# trate como variables de entorno y sobreescriba los Secrets del Dashboard en
+# cada deploy.
+#
+# Configurar ÚNICAMENTE en:
+#   Cloudflare Dashboard → Workers & Pages → elgorila-api
+#   → Settings → Variables and Secrets → Add secret

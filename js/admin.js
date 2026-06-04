@@ -6,7 +6,7 @@ const VENTAS_KEY = 'historial_ventas';
 const MENSAJES_KEY = 'elgorila_mensajes';
 
 // Verificar acceso con nuevo sistema
-function verificarAcceso() {
+async function verificarAcceso() {
     const usuarioId = document.getElementById('usuario-input').value.trim();
     const password = document.getElementById('password-input').value;
     const errorDiv = document.getElementById('error-login');
@@ -21,7 +21,7 @@ function verificarAcceso() {
         return;
     }
     
-    const resultado = AuthManager.autenticar(usuarioId, password);
+    const resultado = await AuthManager.autenticar(usuarioId, password);
     
     if (resultado.exito) {
         ocultarError(errorDiv);
