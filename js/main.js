@@ -1,9 +1,10 @@
 // --- CONFIGURACIÓN ---
-let precioUnitario = 299; // Precio de un boleto
+let precioUnitario = 350; // Precio de un boleto (all-in, impuesto absorbido)
 let cantidadActual = 0;   // Empezamos con 0 boletos
-let fechaSeleccionada = null; // Aquí guardaremos "viernes" o "sabado"
-let nombreFecha = "";     // Aquí guardaremos el texto bonito "Viernes 20..."
-let codigoDescuento = ""; // Código de descuento aplicado
+let fechaSeleccionada = null; // Clave dinámica de la función
+let fechaIsoActual = null;    // Fecha ISO (YYYY-MM-DD) para el Worker
+let nombreFecha = "";     // Texto largo "Sábado 12 Jul 2026 - 19:10 hrs"
+let codigoDescuento = ""; // Código de descuento (validado server-side)
 let reservaId = null;     // ID de la reserva temporal
 let disponibilidadInfo = null; // Información de disponibilidad
 
@@ -58,9 +59,16 @@ function seleccionarFecha(clave, texto, funcion = null) {
     fechaSeleccionada = clave; // Guardamos la clave dinámica
     nombreFecha = texto;       // Guardamos el texto largo
 
+    // Extraer fecha ISO para llamadas al Worker
+    if (funcion && funcion.fecha) {
+        const d = funcion.fecha instanceof Date ? funcion.fecha : new Date(funcion.fecha);
+        fechaIsoActual = d.toISOString().split('T')[0];
+        refrescarDisponibilidadWorker();
+    }
+
     // Actualizar la pantalla (muestra la fecha en el resumen)
     actualizarPantalla();
-    
+
     // Resaltar el botón seleccionado
     resaltarBotonFecha(clave);
 
@@ -334,6 +342,25 @@ function actualizarPantalla() {
     
 }
 
+// --- DISPONIBILIDAD REAL DESDE EL WORKER ---
+// Fire-and-forget: no bloquea la UI, actualiza disponibilidadInfo si el Worker responde.
+function refrescarDisponibilidadWorker() {
+    if (!fechaIsoActual || !window.API_BASE) return;
+    fetch(`${window.API_BASE}/api/disponibilidad?fecha=${encodeURIComponent(fechaIsoActual)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+            if (!data || typeof data.disponibles !== 'number') return;
+            disponibilidadInfo = {
+                total: data.total,
+                vendidos: data.vendidos,
+                reservados: 0,
+                disponible: data.disponibles,
+            };
+            actualizarIndicadorDisponibilidad();
+        })
+        .catch(() => {}); // usa localStorage como fallback silencioso
+}
+
 // --- FUNCIÓN 4: IR A CONFIRMACIÓN (PAGO FINAL) ---
 function irAConfirmacion() {
     if (fechaSeleccionada === null) {
@@ -366,6 +393,7 @@ function irAConfirmacion() {
 
     let orden = {
         fecha: nombreFecha,
+        fechaIso: fechaIsoActual,
         clave: fechaSeleccionada,
         cantidad: cantidadActual,
         precioUnitario: precioUnitario,

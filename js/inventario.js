@@ -50,14 +50,8 @@ function validarIntegridadInventario(inventario) {
     return true;
 }
 
-// Códigos de descuento válidos (en producción esto vendría de un servidor)
-const CODIGOS_DESCUENTO = {
-    'ESTUDIANTE10': { descuento: 10, tipo: 'porcentaje', nombre: 'Descuento Estudiante' },
-    'SENIOR15': { descuento: 15, tipo: 'porcentaje', nombre: 'Descuento Tercera Edad' },
-    'GRUPO20': { descuento: 20, tipo: 'porcentaje', nombre: 'Descuento Grupo' },
-    'PREVENTA50': { descuento: 50, tipo: 'fijo', nombre: 'Descuento Preventa' },
-    'KAFKA2024': { descuento: 25, tipo: 'porcentaje', nombre: 'Código Especial' }
-};
+// Los códigos de descuento se validan ÚNICAMENTE en el servidor (Worker).
+// Ver scripts/init-descuentos.js y POST /api/checkout en worker/index.js.
 
 // Inicializar inventario si no existe (actualizado para fechas dinámicas)
 function inicializarInventario() {
@@ -329,24 +323,11 @@ function validarCodigoDescuento(codigo) {
         };
     }
     
-    // Verificar rate limit
-    if (!verificarRateLimit()) {
-        return {
-            valido: false,
-            mensaje: 'Demasiados intentos. Por favor espera un momento.'
-        };
-    }
-    
-    const codigoUpper = codigoSanitizado.toUpperCase();
-    if (CODIGOS_DESCUENTO[codigoUpper]) {
-        return {
-            valido: true,
-            datos: CODIGOS_DESCUENTO[codigoUpper]
-        };
-    }
+    // La validación real ocurre en el servidor al procesar el pago.
+    // Aquí solo verificamos formato; el descuento se aplica en Stripe Checkout.
     return {
-        valido: false,
-        mensaje: 'Código de descuento no válido'
+        valido: true,
+        datos: { nombre: 'Código recibido', descuento: 0, tipo: 'porcentaje' }
     };
 }
 

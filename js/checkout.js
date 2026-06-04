@@ -125,37 +125,35 @@ async function procesarPago() {
         }
     }
 
-    // --- STRIPE: si API disponible, crear sesión y redirigir ---
+    // --- CHECKOUT: llamar al Worker ---
     if (window.API_BASE) {
+        if (!ordenCompra.fechaIso) {
+            alert('Error: selecciona una fecha desde la página de boletos.');
+            window.location.href = 'boletos.html';
+            return;
+        }
         const btn = document.getElementById('btn-pagar');
         if (btn) { btn.disabled = true; btn.querySelector('span:last-child').textContent = 'Procesando...'; }
         try {
-            const res = await fetch(window.API_BASE + '/api/create-checkout-session', {
+            const body = {
+                cantidad: ordenCompra.cantidad,
+                fecha:    ordenCompra.fechaIso,
+            };
+            if (ordenCompra.codigoDescuento) body.codigoDescuento = ordenCompra.codigoDescuento;
+            const res = await fetch(window.API_BASE + '/api/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    orden: {
-                        clave: ordenCompra.clave,
-                        cantidad: ordenCompra.cantidad,
-                        total: ordenCompra.total,
-                        subtotal: ordenCompra.subtotal,
-                        fecha: ordenCompra.fecha,
-                        descuento: ordenCompra.descuento || 0,
-                        codigoDescuento: ordenCompra.codigoDescuento || ''
-                    },
-                    email: email
-                })
+                body: JSON.stringify(body),
             });
             const data = await res.json();
             if (data.url) {
                 window.location.href = data.url;
                 return;
             }
-            const msg = data.mensaje || data.error || 'Error al procesar el pago';
-            alert(msg);
+            alert(data.error || 'Error al procesar el pago. Intenta de nuevo.');
         } catch (err) {
             console.error(err);
-            alert('Error de conexión. Verifica que el servidor esté activo e intenta de nuevo.');
+            alert('Error de conexión. Verifica tu internet e intenta de nuevo.');
         }
         if (btn) { btn.disabled = false; btn.querySelector('span:last-child').textContent = 'Continuar al pago'; }
         return;
