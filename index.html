@@ -88,7 +88,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </style>
 <link rel="preconnect" href="https://www.googletagmanager.com"/>
 <link rel="preconnect" href="https://connect.facebook.net"/>
-<link rel="preconnect" href="https://cdn.tickettailor.com"/>
 <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2?v=2" crossorigin/>
 <link rel="preload" as="font" type="font/woff2" href="fonts/lora-latin.woff2?v=2" crossorigin/>
 <!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
@@ -1619,17 +1618,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
-    #widget-boletos-contenido .tt-widget {
-      filter: invert(1) hue-rotate(180deg);
-      max-width: 100%;
-      box-sizing: border-box;
-    }
-    #widget-boletos-contenido .tt-widget iframe,
-    #widget-boletos-contenido .tt-widget > div {
-      max-width: 100% !important;
-      width: 100% !important;
-      box-sizing: border-box;
-    }
     @media (min-width: 640px) {
       .widget-boletos-panel .widget-boletos-inner { padding: 2rem 1.5rem; }
     }
@@ -2403,7 +2391,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 <!-- Barra fija de compra -->
 <div class="barra-compra-fija">
-  <a class="link-venta-boletos" data-fuera-temporada="0" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener noreferrer" aria-label="Compra tus boletos para EL GORILA">
+  <a class="link-venta-boletos" data-fuera-temporada="0" href="checkout.html" aria-label="Compra tus boletos para EL GORILA">
     <span class="barra-compra-titulo">Compra tus boletos</span>
     <span class="barra-compra-meta" aria-hidden="true">
       <span class="barra-compra-precio">$350 MXN</span>
@@ -2502,7 +2490,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     window.addEventListener('resize', reaplicarFondosYaCargados);
   })();
   (function() {
-    var URL_VENTA_DEFAULT = 'https://boletos.elgorilateatro.com.mx/events/elgorila/2124139';
+    var URL_VENTA_DEFAULT = 'checkout.html';
     function getLocalConfig() {
       var c = {};
       try {
@@ -2573,109 +2561,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
       /* Forzar URL oficial para evitar redirecciones externas por configuración dinámica. */
       var urlVenta = URL_VENTA_DEFAULT;
-      var ua = navigator.userAgent || '';
-      var esInAppBrowser = /FBAN|FBAV|FB_IAB|Instagram/i.test(ua);
-      /* Widget solo escritorio (≥1230px, mismo breakpoint que el layout). Móvil/tablet: enlace directo a boletos (sin script Ticket Tailor). */
-      var esEscritorioBoletos = window.matchMedia ? window.matchMedia('(min-width: 1230px)').matches : (window.innerWidth >= 1230);
-      var USAR_WIDGET_INLINE = !esInAppBrowser && esEscritorioBoletos;
-      if (USAR_WIDGET_INLINE) {
-        var widgetPanel = document.getElementById('widget-boletos-panel');
-        var widgetContenido = document.getElementById('widget-boletos-contenido');
-        var widgetCargado = false;
-        var WIDGET_URL = 'https://boletos.elgorilateatro.com.mx/events/elgorila/2124139/select-date?ref=website_widget';
-
-        function cargarWidget() {
-          if (widgetCargado) return;
-          widgetContenido.innerHTML = '<div class="tt-widget"><div class="tt-widget-fallback"><p><a href="' + WIDGET_URL + '" target="_blank">Comprar boletos</a><br/><small><a href="https://www.tickettailor.com?rf=wdg_299208" class="tt-widget-powered">Sell tickets online with Ticket Tailor</a></small></p></div></div>';
-          var s = document.createElement('script');
-          s.src = 'https://cdn.tickettailor.com/js/widgets/min/widget.js';
-          s.setAttribute('data-url', WIDGET_URL);
-          s.setAttribute('data-type', 'inline');
-          s.setAttribute('data-inline-minimal', 'true');
-          s.setAttribute('data-inline-show-logo', 'false');
-          s.setAttribute('data-inline-bg-fill', 'false');
-          s.setAttribute('data-inline-inherit-ref-from-url-param', '');
-          s.setAttribute('data-inline-ref', 'website_widget');
-          widgetContenido.querySelector('.tt-widget').appendChild(s);
-          widgetCargado = true;
-        }
-
-        if ('IntersectionObserver' in window) {
-          var preloadTarget = document.querySelector('.barra-compra-fija') || document.getElementById('venta-boletos');
-          if (preloadTarget) {
-            var preloadObs = new IntersectionObserver(function(entries) {
-              if (entries[0].isIntersecting) { cargarWidget(); preloadObs.disconnect(); }
-            }, { rootMargin: '400px' });
-            preloadObs.observe(preloadTarget);
-          }
-          setTimeout(function() { cargarWidget(); }, 4000);
+      if (urlVenta) links.forEach(function(a) {
+        a.href = urlVenta;
+        if (urlVenta.indexOf('http') === 0) {
+          a.setAttribute('target', '_blank');
+          a.setAttribute('rel', 'noopener');
         } else {
-          setTimeout(function() { cargarWidget(); }, 2000);
-        }
-
-        var widgetOverlay = document.getElementById('widget-boletos-overlay');
-        var logo37Wrap = document.getElementById('logo-37-wrap');
-
-        function setLogo37PorWidget(oculto) {
-          if (!logo37Wrap) return;
-          logo37Wrap.classList.toggle('logo-37-oculto-por-widget', !!oculto);
-          if (oculto) logo37Wrap.setAttribute('aria-hidden', 'true');
-          else logo37Wrap.removeAttribute('aria-hidden');
-        }
-
-        function abrirWidget() {
-          if (!widgetPanel) return;
-          cargarWidget();
-          if (widgetOverlay) widgetOverlay.classList.add('abierto');
-          widgetPanel.classList.add('abierto');
-          document.body.style.overflow = 'hidden';
-          setLogo37PorWidget(true);
-        }
-
-        function cerrarWidget() {
-          if (!widgetPanel) return;
-          widgetPanel.classList.remove('abierto');
-          if (widgetOverlay) widgetOverlay.classList.remove('abierto');
-          document.body.style.overflow = '';
-          setLogo37PorWidget(false);
-        }
-
-        links.forEach(function(a) {
-          a.href = '#';
           a.removeAttribute('target');
-          a.removeAttribute('rel');
-          a.removeAttribute('onclick');
           a.addEventListener('click', function(e) {
             e.preventDefault();
-            if (widgetPanel.classList.contains('abierto')) {
-              cerrarWidget();
-            } else {
-              abrirWidget();
-            }
+            window.location.href = urlVenta;
           });
-        });
-
-        if (widgetOverlay) widgetOverlay.addEventListener('click', cerrarWidget);
-        var cerrarBtn = document.getElementById('cerrar-widget-boletos');
-        if (cerrarBtn) cerrarBtn.addEventListener('click', cerrarWidget);
-        document.addEventListener('keydown', function(e) {
-          if (e.key === 'Escape' && widgetPanel && widgetPanel.classList.contains('abierto')) cerrarWidget();
-        });
-      } else {
-        if (urlVenta) links.forEach(function(a) {
-          a.href = urlVenta;
-          if (urlVenta.indexOf('http') === 0) {
-            a.setAttribute('target', '_blank');
-            a.setAttribute('rel', 'noopener');
-          } else {
-            a.removeAttribute('target');
-            a.addEventListener('click', function(e) {
-              e.preventDefault();
-              window.location.href = urlVenta;
-            });
-          }
-        });
-      }
+        }
+      });
     }
     function run(cfg) {
       applyContacto(cfg);
