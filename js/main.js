@@ -14,6 +14,7 @@ let fechaIsoActual    = null;  // YYYY-MM-DD para el Worker
 let nombreFecha       = '';    // texto largo para mostrar al comprador
 let reservaId         = null;
 let disponibilidadInfo = null;
+let _grupoGrandeNotificado = false;
 
 // --- HELPERS DE CARRITO ---
 
@@ -22,7 +23,12 @@ function totalCantidad() {
 }
 
 function calcularTotal() {
-    return TIPOS_BOLETO.reduce((s, t) => s + t.precio * (cantidades[t.tipo] || 0), 0);
+    const tieneEspeciales = cantidades.inapam > 0 || cantidades.estudiante > 0 || cantidades.maestro > 0;
+    const promoGrupo = cantidades.general >= 5 && !tieneEspeciales;
+    return TIPOS_BOLETO.reduce((s, t) => {
+        const precio = (promoGrupo && t.tipo === 'general') ? t.precio * 0.75 : t.precio;
+        return s + precio * (cantidades[t.tipo] || 0);
+    }, 0);
 }
 
 // --- FUNCIÓN 1: CAMBIAR CANTIDAD POR TIPO ---
@@ -33,8 +39,8 @@ function cambiarCantidad(tipo, delta) {
     if (nueva < 0) return;
 
     const totalNueva = totalCantidad() - cantidades[tipo] + nueva;
-    if (totalNueva > 8) {
-        alert('El máximo es 8 boletos por compra');
+    if (totalNueva > 50) {
+        alert('El máximo es 50 boletos por compra. Para grupos mayores contáctanos.');
         return;
     }
 
@@ -155,6 +161,10 @@ function refrescarDisponibilidadWorker() {
 
 // --- FUNCIÓN 3: ACTUALIZAR PANTALLA ---
 function actualizarPantalla() {
+    // Estado de promoción
+    const tieneEspeciales = cantidades.inapam > 0 || cantidades.estudiante > 0 || cantidades.maestro > 0;
+    const promoGrupo = cantidades.general >= 5 && !tieneEspeciales;
+
     // Cantidad por tipo
     TIPOS_BOLETO.forEach(t => {
         const el = document.getElementById(`cantidad-${t.tipo}`);
@@ -169,18 +179,36 @@ function actualizarPantalla() {
     const resumenEl = document.getElementById('items-resumen');
     if (resumenEl) {
         const activos = TIPOS_BOLETO.filter(t => cantidades[t.tipo] > 0);
-        resumenEl.innerHTML = activos.map(t =>
-            `<div class="flex justify-between text-text-dark text-sm">
+        resumenEl.innerHTML = activos.map(t => {
+            const precio = (promoGrupo && t.tipo === 'general') ? t.precio * 0.75 : t.precio;
+            return `<div class="flex justify-between text-text-dark text-sm">
                 <span>${t.nombre} × ${cantidades[t.tipo]}</span>
-                <span>$${(t.precio * cantidades[t.tipo]).toFixed(2)}</span>
-            </div>`
-        ).join('');
+                <span>$${(precio * cantidades[t.tipo]).toFixed(2)}</span>
+            </div>`;
+        }).join('');
     }
 
     // Total
     const total = calcularTotal();
     const totalEl = document.getElementById('total-precio');
     if (totalEl) totalEl.textContent = `$${total.toFixed(2)} MXN`;
+
+    // Banner promo 5+ generales sin especiales
+    let promoBanner = document.getElementById('promo-grupo-banner');
+    if (!promoBanner && totalEl && totalEl.parentNode) {
+        promoBanner = document.createElement('div');
+        promoBanner.id = 'promo-grupo-banner';
+        totalEl.parentNode.insertBefore(promoBanner, totalEl);
+    }
+    if (promoBanner) {
+        if (promoGrupo) {
+            promoBanner.className = 'text-xs text-green-400 font-semibold my-1';
+            promoBanner.textContent = `🎟 Promoción: 25% de descuento en tus ${cantidades.general} boletos generales`;
+        } else {
+            promoBanner.className = 'hidden';
+            promoBanner.textContent = '';
+        }
+    }
 
     // Botón continuar
     const boton = document.getElementById('btn-continuar');
@@ -198,6 +226,32 @@ function actualizarPantalla() {
         boton.textContent = `Continuar — $${total.toFixed(2)} MXN`;
         boton.disabled = false;
         boton.classList.remove('cursor-not-allowed', 'opacity-70');
+    }
+
+    // Leyenda grupo grande (20+ boletos)
+    const esGrupoGrande = totalCantidad() >= 20;
+    let grupoLeyenda = document.getElementById('grupo-leyenda');
+    if (!grupoLeyenda && boton.parentNode) {
+        grupoLeyenda = document.createElement('p');
+        grupoLeyenda.id = 'grupo-leyenda';
+        boton.parentNode.insertBefore(grupoLeyenda, boton.nextSibling);
+    }
+    if (grupoLeyenda) {
+        if (esGrupoGrande) {
+            grupoLeyenda.className = 'text-xs text-yellow-400 mt-2 text-center';
+            grupoLeyenda.innerHTML = 'Para grupos grandes contáctanos: <a href="mailto:elgorilateatro@gmail.com" class="underline">elgorilateatro@gmail.com</a>';
+        } else {
+            grupoLeyenda.className = 'hidden';
+            grupoLeyenda.innerHTML = '';
+        }
+    }
+
+    // GA4 notificación grupo grande — una vez por umbral
+    if (esGrupoGrande && !_grupoGrandeNotificado) {
+        _grupoGrandeNotificado = true;
+        if (typeof gtag === 'function') gtag('event', 'grupo_grande', { cantidad: totalCantidad() });
+    } else if (!esGrupoGrande) {
+        _grupoGrandeNotificado = false;
     }
 }
 

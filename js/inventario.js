@@ -143,8 +143,8 @@ function crearReserva(fecha, cantidad) {
         return { exito: false, mensaje: 'Fecha inválida' };
     }
     
-    if (typeof cantidad !== 'number' || cantidad < 1 || cantidad > 10) {
-        return { exito: false, mensaje: 'Cantidad inválida. Debe ser entre 1 y 10.' };
+    if (typeof cantidad !== 'number' || cantidad < 1 || cantidad > 50) {
+        return { exito: false, mensaje: 'Cantidad inválida. Debe ser entre 1 y 50.' };
     }
     
     // Verificar rate limit

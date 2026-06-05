@@ -1,19 +1,9 @@
-// Últimas dos funciones de la temporada — domingos 17:30 hrs
 const FUNCIONES_TEMPORADA = [
   {
-    id: 'domingo_20260524',
-    fecha: new Date('2026-05-24T17:30:00'),
-    nombre: 'Domingo 24 May 2026 - 17:30 hrs',
-    clave: 'domingo_20260524',
-    tipo: 'regular',
-    activa: true,
-    bloqueada: false
-  },
-  {
-    id: 'domingo_20260531',
-    fecha: new Date('2026-05-31T17:30:00'),
-    nombre: 'Domingo 31 May 2026 - 17:30 hrs',
-    clave: 'domingo_20260531',
+    id: 'miercoles_20260820',
+    fecha: new Date('2026-08-20T20:30:00'),
+    nombre: 'Miércoles 20 Ago 2026 - 20:30 hrs',
+    clave: 'miercoles_20260820',
     tipo: 'regular',
     activa: true,
     bloqueada: false
