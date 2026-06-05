@@ -1,230 +1,228 @@
-// --- SISTEMA DE VERIFICACIÓN DE BOLETOS ---
-// Página para verificar boletos por código QR
-// Optimizado para validar 200 boletos en <30 minutos
+// --- VERIFICACIÓN DE BOLETOS (Worker API) ---
 
-let certificadoActual = null;
+let _ventaActual  = null;
+let _codigoActual = null;
 
-// Verificar boleto (mejorado para soportar efectivo)
-function verificarBoleto() {
-    verificarBoletoMejorado();
-}
+async function verificarBoleto() {
+    const input    = document.getElementById('codigo-qr-input');
+    const codigo   = (input?.value || '').trim().toUpperCase();
+    if (!codigo) { alert('Ingresa un código de folio'); return; }
+    if (!window.API_BASE) { alert('API no configurada'); return; }
 
-// Mostrar resultado de verificación
-function mostrarResultado(resultado) {
-    const resultadoContainer = document.getElementById('resultado-verificacion');
-    const resultadoValido = document.getElementById('resultado-valido');
-    const resultadoInvalido = document.getElementById('resultado-invalido');
-    
-    // Mostrar contenedor
-    resultadoContainer.classList.remove('hidden');
-    
-    if (resultado.valido) {
-        // Mostrar resultado válido
-        resultadoValido.classList.remove('hidden');
-        resultadoInvalido.classList.add('hidden');
-        
-        // Llenar información
-        document.getElementById('resultado-codigo').textContent = resultado.certificado.id;
-        document.getElementById('resultado-fecha').textContent = resultado.certificado.fecha || 'No especificada';
-        document.getElementById('resultado-orden').textContent = resultado.certificado.numeroOrden;
-        document.getElementById('resultado-email').textContent = resultado.certificado.email || 'No especificado';
-        document.getElementById('resultado-estado').textContent = 'Activo';
-        
-        // Mostrar tiempo de verificación (debug)
-        console.log(`Verificación completada en ${resultado.tiempo.toFixed(2)}ms`);
-        
-    } else {
-        // Mostrar resultado inválido
-        resultadoValido.classList.add('hidden');
-        resultadoInvalido.classList.remove('hidden');
-        
-        // Mostrar error
-        document.getElementById('resultado-error').textContent = resultado.error || 'Error desconocido';
-        
-        // Si el certificado existe pero está usado, mostrar información adicional
-        const infoAdicional = document.getElementById('resultado-info-adicional');
-        if (resultado.certificado && resultado.certificado.fechaUso) {
-            infoAdicional.classList.remove('hidden');
-            infoAdicional.innerHTML = `
-                <div class="flex justify-between">
-                    <span>Fecha de uso:</span>
-                    <span>${new Date(resultado.certificado.fechaUso).toLocaleString('es-MX')}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span>Número de orden:</span>
-                    <span>${resultado.certificado.numeroOrden}</span>
-                </div>
-            `;
+    _codigoActual = codigo;
+    _ventaActual  = null;
+
+    const btnV = document.getElementById('btn-verificar');
+    if (btnV) { btnV.disabled = true; btnV.textContent = 'Verificando…'; }
+
+    try {
+        const res  = await fetch(`${window.API_BASE}/api/venta/${encodeURIComponent(codigo)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+            mostrarInvalido(data.error || 'Folio no encontrado.');
+            return;
+        }
+
+        _ventaActual = data;
+
+        if (data.usado) {
+            const cuandoMX = new Date(data.usadoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+            mostrarYaCanjeado(data, cuandoMX);
         } else {
-            infoAdicional.classList.add('hidden');
+            mostrarValido(data);
         }
+    } catch (err) {
+        mostrarInvalido('Error de conexión. Intenta de nuevo.');
+    } finally {
+        if (btnV) { btnV.disabled = false; btnV.textContent = 'Verificar'; }
     }
 }
 
-// Marcar boleto como usado (mejorado para soportar efectivo)
-function marcarComoUsado() {
-    if (!certificadoActual) {
-        alert('No hay un boleto seleccionado');
-        return;
-    }
-    
-    // Confirmar acción
-    if (!confirm('¿Está seguro de marcar este boleto como usado? Esta acción no se puede deshacer.')) {
-        return;
-    }
-    
-    let resultado;
-    
-    // Verificar tipo de boleto
-    if (certificadoActual.tipo === 'efectivo') {
-        resultado = TaquillaManager.marcarComoUsado(certificadoActual.id);
-    } else {
-        resultado = CertificadoManager.marcarComoUsado(certificadoActual.id);
-    }
-    
-    if (resultado.exito) {
-        alert('Boleto marcado como usado exitosamente');
-        
-        // Actualizar visualización
-        document.getElementById('resultado-estado').textContent = 'Usado';
-        document.getElementById('resultado-estado').classList.remove('text-green-400');
-        document.getElementById('resultado-estado').classList.add('text-yellow-400');
-        
-        // Ocultar botón
-        document.getElementById('btn-marcar-usado').disabled = true;
-        document.getElementById('btn-marcar-usado').classList.add('opacity-50', 'cursor-not-allowed');
-        
-        // Limpiar certificado actual
-        certificadoActual = null;
-    } else {
-        alert('Error al marcar boleto: ' + (resultado.error || 'Error desconocido'));
+function mostrarValido(venta) {
+    document.getElementById('resultado-verificacion').classList.remove('hidden');
+    document.getElementById('resultado-valido').classList.remove('hidden');
+    document.getElementById('resultado-invalido').classList.add('hidden');
+
+    document.getElementById('resultado-codigo').textContent  = venta.codigo;
+    document.getElementById('resultado-fecha').textContent   = venta.funcionNombre || venta.fecha || '—';
+    document.getElementById('resultado-orden').textContent   = venta.nombre || venta.email || '—';
+    document.getElementById('resultado-email').textContent   = venta.email || '—';
+
+    const estadoEl = document.getElementById('resultado-estado');
+    estadoEl.textContent = 'VÁLIDO — No canjeado';
+    estadoEl.className   = 'font-semibold text-green-400';
+
+    // Mostrar botón solo si hay sesión admin
+    const btnU = document.getElementById('btn-marcar-usado');
+    if (btnU) {
+        const tieneAdmin = !!obtenerTokenAdmin();
+        btnU.classList.toggle('hidden', !tieneAdmin);
+        btnU.disabled = false;
+        btnU.className = tieneAdmin
+            ? 'w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all duration-300'
+            : 'hidden';
     }
 }
 
-// Permitir verificar con Enter
-function inicializar() {
-    const codigoInput = document.getElementById('codigo-qr-input');
-    const btnVerificar = document.getElementById('btn-verificar');
-    const btnMarcarUsado = document.getElementById('btn-marcar-usado');
-    
-    // Event listeners
-    if (btnVerificar) {
-        btnVerificar.addEventListener('click', verificarBoleto);
-    }
-    
-    if (codigoInput) {
-        codigoInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                verificarBoleto();
-            }
+function mostrarYaCanjeado(venta, cuandoMX) {
+    document.getElementById('resultado-verificacion').classList.remove('hidden');
+    document.getElementById('resultado-valido').classList.add('hidden');
+    document.getElementById('resultado-invalido').classList.remove('hidden');
+
+    document.getElementById('resultado-error').textContent = `Ya fue canjeado el ${cuandoMX}.`;
+
+    const info = document.getElementById('resultado-info-adicional');
+    info.classList.remove('hidden');
+    info.innerHTML = `
+        <div class="flex justify-between"><span>Función:</span><span>${venta.funcionNombre || venta.fecha || '—'}</span></div>
+        <div class="flex justify-between"><span>Email:</span><span>${venta.email || '—'}</span></div>
+        <div class="flex justify-between"><span>Folio:</span><span>${venta.codigo}</span></div>`;
+}
+
+function mostrarInvalido(mensaje) {
+    document.getElementById('resultado-verificacion').classList.remove('hidden');
+    document.getElementById('resultado-valido').classList.add('hidden');
+    document.getElementById('resultado-invalido').classList.remove('hidden');
+    document.getElementById('resultado-error').textContent = mensaje;
+    document.getElementById('resultado-info-adicional').classList.add('hidden');
+}
+
+async function marcarComoUsado() {
+    if (!_ventaActual || !_codigoActual) { alert('No hay boleto seleccionado'); return; }
+    if (_ventaActual.usado) { alert('Este boleto ya fue canjeado'); return; }
+
+    const token = obtenerTokenAdmin();
+    if (!token) { alert('Necesitas iniciar sesión como admin para canjear boletos'); return; }
+
+    if (!confirm('¿Marcar este boleto como canjeado? Esta acción no se puede deshacer.')) return;
+
+    const btnU = document.getElementById('btn-marcar-usado');
+    if (btnU) { btnU.disabled = true; btnU.textContent = 'Canjeando…'; }
+
+    try {
+        const res  = await fetch(`${window.API_BASE}/api/canjear/${encodeURIComponent(_codigoActual)}`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
         });
-        
-        // Auto-focus
-        codigoInput.focus();
-    }
-    
-    if (btnMarcarUsado) {
-        btnMarcarUsado.addEventListener('click', marcarComoUsado);
-    }
-    
-    // Limpiar resultado al cambiar el código
-    if (codigoInput) {
-        codigoInput.addEventListener('input', function() {
-            const resultadoContainer = document.getElementById('resultado-verificacion');
-            if (resultadoContainer && !resultadoContainer.classList.contains('hidden')) {
-                resultadoContainer.classList.add('hidden');
-                certificadoActual = null;
-            }
-        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.error || 'Error al canjear');
+            if (btnU) { btnU.disabled = false; btnU.textContent = 'Marcar como Usado (Entrada)'; }
+            return;
+        }
+
+        // Actualizar UI
+        const estadoEl = document.getElementById('resultado-estado');
+        estadoEl.textContent = '✓ CANJEADO';
+        estadoEl.className   = 'font-semibold text-yellow-400';
+        if (btnU) { btnU.disabled = true; btnU.className = 'w-full px-6 py-3 bg-gray-700 text-gray-400 font-bold rounded-lg cursor-not-allowed'; btnU.textContent = 'Canjeado'; }
+
+        _ventaActual.usado   = true;
+        _ventaActual.usadoEn = data.usadoEn;
+    } catch {
+        alert('Error de conexión');
+        if (btnU) { btnU.disabled = false; btnU.textContent = 'Marcar como Usado (Entrada)'; }
     }
 }
 
-// Cargar estadísticas
-function cargarEstadisticas() {
-    if (typeof CertificadoManager !== 'undefined') {
-        const stats = CertificadoManager.obtenerEstadisticas();
-        const statsTotal = document.getElementById('stats-total');
-        const statsActivos = document.getElementById('stats-activos');
-        const statsUsados = document.getElementById('stats-usados');
-        
-        if (statsTotal) statsTotal.textContent = stats.total;
-        if (statsActivos) statsActivos.textContent = stats.activos;
-        if (statsUsados) statsUsados.textContent = stats.usados;
+function obtenerTokenAdmin() {
+    if (typeof AuthManager !== 'undefined') return AuthManager.obtenerAdminToken();
+    return localStorage.getItem('elgorila_admin_token') || null;
+}
+
+// ── Cámara QR ──────────────────────────────────────────────────────────────────
+
+let _scannerStream = null;
+
+function abrirScanner() {
+    const modal = document.getElementById('modal-scanner');
+    if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    iniciarCamara();
+}
+
+function cerrarScanner() {
+    pararCamara();
+    const modal = document.getElementById('modal-scanner');
+    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+}
+
+async function iniciarCamara() {
+    try {
+        _scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const video = document.getElementById('scanner-video');
+        if (video) { video.srcObject = _scannerStream; video.play(); }
+        requestAnimationFrame(escanearFrame);
+    } catch {
+        alert('No se pudo acceder a la cámara. Verifica los permisos.');
+        cerrarScanner();
     }
 }
 
-    // Verificar si hay código en la URL
-function verificarCodigoURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const codigo = urlParams.get('codigo');
-    
-    if (codigo) {
-        const codigoInput = document.getElementById('codigo-qr-input');
-        if (codigoInput) {
-            codigoInput.value = codigo;
-            // Verificar automáticamente
-            setTimeout(() => {
-                verificarBoleto();
-            }, 500);
+function pararCamara() {
+    if (_scannerStream) { _scannerStream.getTracks().forEach(t => t.stop()); _scannerStream = null; }
+}
+
+function escanearFrame() {
+    if (!_scannerStream) return;
+    const video  = document.getElementById('scanner-video');
+    const canvas = document.getElementById('scanner-canvas');
+    if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) {
+        requestAnimationFrame(escanearFrame);
+        return;
+    }
+    const ctx = canvas.getContext('2d');
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    if (typeof jsQR !== 'undefined') {
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+        if (code && code.data) {
+            // Extraer código del URL si es una URL de verificación
+            let codigo = code.data;
+            const urlMatch = codigo.match(/[?&]codigo=([^&]+)/);
+            if (urlMatch) codigo = decodeURIComponent(urlMatch[1]);
+            cerrarScanner();
+            const input = document.getElementById('codigo-qr-input');
+            if (input) { input.value = codigo.toUpperCase(); }
+            verificarBoleto();
+            return;
         }
     }
+    requestAnimationFrame(escanearFrame);
 }
 
-// Verificar también boletos en efectivo
-function verificarBoletoMejorado() {
-    const codigoInput = document.getElementById('codigo-qr-input');
-    const codigoQR = codigoInput.value.trim().toUpperCase();
-    
-    if (!codigoQR) {
-        alert('Por favor, ingrese un código QR');
-        return;
-    }
-    
-    // Intentar verificar como certificado digital
-    if (codigoQR.startsWith('CERT-')) {
-        const resultado = CertificadoManager.verificarCertificado(codigoQR);
-        mostrarResultado(resultado);
-        certificadoActual = resultado.certificado || null;
-        return;
-    }
-    
-    // Intentar verificar como boleto en efectivo
-    if (codigoQR.startsWith('EFECT-') && typeof TaquillaManager !== 'undefined') {
-        const resultado = TaquillaManager.verificarCodigo(codigoQR);
-        
-        if (resultado.valido) {
-            // Mostrar resultado como válido
-            const resultadoContainer = document.getElementById('resultado-verificacion');
-            const resultadoValido = document.getElementById('resultado-valido');
-            const resultadoInvalido = document.getElementById('resultado-invalido');
-            
-            resultadoContainer.classList.remove('hidden');
-            resultadoValido.classList.remove('hidden');
-            resultadoInvalido.classList.add('hidden');
-            
-            document.getElementById('resultado-codigo').textContent = resultado.boleto.id;
-            document.getElementById('resultado-fecha').textContent = resultado.boleto.fecha;
-            document.getElementById('resultado-orden').textContent = 'EFECTIVO';
-            document.getElementById('resultado-email').textContent = 'Venta en taquilla';
-            document.getElementById('resultado-estado').textContent = 'Activo';
-            
-            certificadoActual = { id: resultado.boleto.id, tipo: 'efectivo' };
-        } else {
-            mostrarResultado({ valido: false, error: resultado.error });
-        }
-        return;
-    }
-    
-    // Código no reconocido
-    mostrarResultado({ valido: false, error: 'Código no reconocido. Debe comenzar con CERT- o EFECT-' });
-}
+// ── Inicialización ─────────────────────────────────────────────────────────────
 
-// Inicializar cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
-    inicializar();
-    cargarEstadisticas();
-    verificarCodigoURL();
-    
-    // Actualizar estadísticas cada 5 segundos
-    setInterval(cargarEstadisticas, 5000);
+    const btnV = document.getElementById('btn-verificar');
+    const btnU = document.getElementById('btn-marcar-usado');
+    const btnS = document.getElementById('btn-escanear');
+    const input = document.getElementById('codigo-qr-input');
+
+    if (btnV) btnV.addEventListener('click', verificarBoleto);
+    if (btnU) btnU.addEventListener('click', marcarComoUsado);
+    if (btnS) {
+        btnS.disabled = false;
+        btnS.addEventListener('click', abrirScanner);
+    }
+    if (input) {
+        input.addEventListener('keypress', e => { if (e.key === 'Enter') verificarBoleto(); });
+        input.addEventListener('input', () => {
+            document.getElementById('resultado-verificacion')?.classList.add('hidden');
+            _ventaActual = null;
+        });
+        input.focus();
+    }
+
+    // Auto-verificar si hay ?codigo= en la URL
+    const params = new URLSearchParams(window.location.search);
+    const codigoURL = params.get('codigo');
+    if (codigoURL && input) {
+        input.value = codigoURL.toUpperCase();
+        setTimeout(verificarBoleto, 300);
+    }
 });

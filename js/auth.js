@@ -116,7 +116,6 @@ const AuthManager = {
                 rol: data.rol,
                 fechaLogin: new Date().toISOString(),
             };
-            // Guardamos el objeto de sesión para compatibilidad con código existente
             sessionStorage.setItem('usuario_sesion', JSON.stringify(sesion));
             this.registrarAuditoria({
                 accion: 'login',
@@ -131,62 +130,73 @@ const AuthManager = {
         }
     },
 
-    // Obtener sesión activa desde el JWT en sessionStorage.
-    // Decodifica el payload localmente (la firma ya fue verificada por el servidor al emitirlo).
-    obtenerUsuarioActual() {
+    // Admin login vía secrets del Worker — token 30 días en localStorage
+    async autenticarAdmin(usuarioId, password) {
+        if (!window.API_BASE) return { exito: false, error: 'API no configurada.' };
         try {
-            const token = sessionStorage.getItem('elgorila_token');
-            if (!token) return null;
-
-            const parts = token.split('.');
-            if (parts.length !== 3) {
-                sessionStorage.removeItem('elgorila_token');
-                sessionStorage.removeItem('usuario_sesion');
-                return null;
-            }
-
-            const payload = JSON.parse(
-                decodeURIComponent(
-                    Array.from(
-                        atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
-                            .split('')
-                            .map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
-                            .join('')
-                    ).join('')
-                )
-            );
-
-            if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-                sessionStorage.removeItem('elgorila_token');
-                sessionStorage.removeItem('usuario_sesion');
-                return null;
-            }
-
-            return {
-                usuarioId: payload.usuario,
-                nombre: payload.nombre || payload.usuario,
-                rol: payload.rol,
-                fechaLogin: payload.iat
-                    ? new Date(payload.iat * 1000).toISOString()
-                    : new Date().toISOString(),
-            };
-        } catch {
-            return null;
+            const res = await fetch(window.API_BASE + '/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario: usuarioId.trim(), password }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.token) return { exito: false, error: data.error || 'Credenciales incorrectas.' };
+            localStorage.setItem('elgorila_admin_token', data.token);
+            const sesion = { usuarioId: data.usuario, nombre: data.nombre || data.usuario, rol: 'admin', fechaLogin: new Date().toISOString() };
+            localStorage.setItem('elgorila_admin_sesion', JSON.stringify(sesion));
+            return { exito: true, usuario: sesion };
+        } catch (err) {
+            return { exito: false, error: 'Error de conexión.' };
         }
+    },
+
+    // Token admin para llamadas autenticadas al Worker
+    obtenerAdminToken() {
+        return localStorage.getItem('elgorila_admin_token') || null;
+    },
+
+    // Decode JWT payload (no verifica firma — el servidor la verifica)
+    _decodeJWT(token) {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+            const payload = JSON.parse(decodeURIComponent(
+                Array.from(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+                    .map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
+            ));
+            if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+            return payload;
+        } catch { return null; }
+    },
+
+    // Sesión activa: primero localStorage (admin 30d), luego sessionStorage
+    obtenerUsuarioActual() {
+        // Admin token (localStorage, 30 días)
+        const adminToken = localStorage.getItem('elgorila_admin_token');
+        if (adminToken) {
+            const p = this._decodeJWT(adminToken);
+            if (p) return { usuarioId: p.usuario, nombre: p.nombre || p.usuario, rol: p.rol, fechaLogin: p.iat ? new Date(p.iat * 1000).toISOString() : new Date().toISOString() };
+            // Token expirado — limpiar
+            localStorage.removeItem('elgorila_admin_token');
+            localStorage.removeItem('elgorila_admin_sesion');
+        }
+        // KV token (sessionStorage, 8h)
+        const token = sessionStorage.getItem('elgorila_token');
+        if (!token) return null;
+        const p = this._decodeJWT(token);
+        if (!p) { sessionStorage.removeItem('elgorila_token'); sessionStorage.removeItem('usuario_sesion'); return null; }
+        return { usuarioId: p.usuario, nombre: p.nombre || p.usuario, rol: p.rol, fechaLogin: p.iat ? new Date(p.iat * 1000).toISOString() : new Date().toISOString() };
     },
 
     cerrarSesion() {
         const usuario = this.obtenerUsuarioActual();
         if (usuario) {
-            this.registrarAuditoria({
-                accion: 'logout',
-                usuario: usuario.nombre,
-                rol: usuario.rol,
-                detalles: 'Cierre de sesión',
-            });
+            this.registrarAuditoria({ accion: 'logout', usuario: usuario.nombre, rol: usuario.rol, detalles: 'Cierre de sesión' });
         }
         sessionStorage.removeItem('elgorila_token');
         sessionStorage.removeItem('usuario_sesion');
+        localStorage.removeItem('elgorila_admin_token');
+        localStorage.removeItem('elgorila_admin_sesion');
     },
 
     tienePermiso(permiso) {

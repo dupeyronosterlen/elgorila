@@ -576,8 +576,165 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/inventario.js"></script>
 <script src="js/fechas.js"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/config.js"></script>
+<script src="js/api-config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/admin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+<!-- Modal cámara QR (escáner de entrada) -->
+<div id="modal-scanner-admin" class="fixed inset-0 z-[300] hidden items-center justify-center bg-black/95">
+    <div class="relative w-full max-w-sm px-4">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-white font-bold text-lg">Escáner QR</h3>
+            <button type="button" onclick="cerrarScannerAdmin()" class="bg-black/60 text-white rounded-full p-2">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <video id="scanner-admin-video" class="w-full rounded-lg" playsinline autoplay muted></video>
+        <canvas id="scanner-admin-canvas" class="hidden"></canvas>
+        <p class="text-center text-white/60 text-sm mt-3">Apunta al QR del boleto para ir a verificar</p>
+    </div>
+</div>
+
+<script>
+// ── Override: autenticación admin vía secrets (localStorage, 30 días) ──────────
+async function verificarAcceso() {
+    const usuarioId = document.getElementById('usuario-input')?.value?.trim();
+    const password  = document.getElementById('password-input')?.value;
+    const errorDiv  = document.getElementById('error-login');
+    if (errorDiv) errorDiv.classList.add('hidden');
+    if (!usuarioId || !password) {
+        if (errorDiv) { errorDiv.textContent = 'Ingresa usuario y contraseña'; errorDiv.classList.remove('hidden'); }
+        return;
+    }
+    const resultado = await AuthManager.autenticarAdmin(usuarioId, password);
+    if (!resultado.exito) {
+        if (errorDiv) { errorDiv.textContent = resultado.error || 'Credenciales incorrectas'; errorDiv.classList.remove('hidden'); }
+        return;
+    }
+    // Mostrar panel
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('admin-panel').classList.remove('hidden');
+    const u = resultado.usuario;
+    const elU = document.getElementById('usuario-actual');
+    const elR = document.getElementById('rol-actual');
+    if (elU) elU.textContent = u.nombre || u.usuarioId;
+    if (elR) elR.textContent = u.rol;
+    if (typeof actualizarPanel === 'function') actualizarPanel();
+    cargarVentasWorker();
+}
+
+// ── Override: ventas desde Worker API (reemplaza cargarVentas de localStorage) ──
+async function cargarVentas() { await cargarVentasWorker(); }
+
+async function cargarVentasWorker() {
+    if (!window.API_BASE) return;
+    const token = AuthManager.obtenerAdminToken();
+    if (!token) return;
+    try {
+        const res  = await fetch(window.API_BASE + '/api/ventas', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const { ventas } = await res.json();
+        const tbody = document.getElementById('tabla-ventas');
+        if (!tbody) return;
+        if (!ventas || ventas.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-text-dark/60">Sin ventas registradas</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = ventas.map(v => {
+            const items   = (v.items || []).map(i => `${i.cantidad}×${i.tipo}`).join(', ') || `${v.cantidad} bol.`;
+            const fecha   = v.fechaCompra ? new Date(v.fechaCompra).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'short', timeStyle: 'short' }) : '—';
+            const estado  = v.usado ? `<span class="text-yellow-400 text-xs">✓ canjeado</span>` : `<span class="text-green-400 text-xs">activo</span>`;
+            return `<tr class="border-b border-primary/10 hover:bg-primary/5">
+                <td class="py-3 pr-4 font-mono text-xs text-text-dark/80">${v.codigo}</td>
+                <td class="py-3 pr-4 text-sm">${fecha}</td>
+                <td class="py-3 pr-4 text-sm">${v.funcionNombre || v.fecha}</td>
+                <td class="py-3 pr-4 text-sm">${items}</td>
+                <td class="py-3 pr-4 text-sm">$${(v.total||0).toFixed(2)}</td>
+                <td class="py-3 pr-4 text-sm">${v.email || '—'} ${estado}</td>
+            </tr>`;
+        }).join('');
+    } catch (e) { console.error('cargarVentasWorker:', e); }
+}
+
+// ── QR Scanner ──────────────────────────────────────────────────────────────────
+let _scanAdminStream = null;
+
+function abrirScannerAdmin() {
+    const modal = document.getElementById('modal-scanner-admin');
+    if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => {
+            _scanAdminStream = stream;
+            const video = document.getElementById('scanner-admin-video');
+            if (video) { video.srcObject = stream; video.play(); requestAnimationFrame(escanearAdmin); }
+        })
+        .catch(() => { alert('No se pudo acceder a la cámara'); cerrarScannerAdmin(); });
+}
+
+function cerrarScannerAdmin() {
+    if (_scanAdminStream) { _scanAdminStream.getTracks().forEach(t => t.stop()); _scanAdminStream = null; }
+    const modal = document.getElementById('modal-scanner-admin');
+    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+}
+
+function escanearAdmin() {
+    if (!_scanAdminStream) return;
+    const video  = document.getElementById('scanner-admin-video');
+    const canvas = document.getElementById('scanner-admin-canvas');
+    if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) { requestAnimationFrame(escanearAdmin); return; }
+    const ctx = canvas.getContext('2d');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    if (typeof jsQR !== 'undefined') {
+        const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+        if (code && code.data) {
+            cerrarScannerAdmin();
+            let codigo = code.data;
+            const m = codigo.match(/[?&]codigo=([^&]+)/);
+            if (m) codigo = decodeURIComponent(m[1]);
+            window.location.href = `verificar.html?codigo=${encodeURIComponent(codigo.toUpperCase())}`;
+            return;
+        }
+    }
+    requestAnimationFrame(escanearAdmin);
+}
+
+// ── Al cargar: si ya hay token admin guardado, saltarse el login ────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    const u = AuthManager.obtenerUsuarioActual();
+    if (u && u.rol === 'admin') {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        const elU = document.getElementById('usuario-actual');
+        const elR = document.getElementById('rol-actual');
+        if (elU) elU.textContent = u.nombre || u.usuarioId;
+        if (elR) elR.textContent = u.rol;
+        if (typeof actualizarPanel === 'function') setTimeout(actualizarPanel, 100);
+        cargarVentasWorker();
+    }
+
+    // Añadir botón escáner al header del panel si no existe
+    const hdr = document.querySelector('#admin-panel header .flex.justify-between .flex.gap-3');
+    if (hdr && !document.getElementById('btn-escaner-admin')) {
+        const btn = document.createElement('button');
+        btn.id = 'btn-escaner-admin';
+        btn.type = 'button';
+        btn.onclick = abrirScannerAdmin;
+        btn.className = 'px-4 py-2 bg-green-900/40 hover:bg-green-900/60 text-green-300 rounded-sm transition-colors border border-green-800/40 text-sm flex items-center gap-1';
+        btn.innerHTML = '<span class="material-symbols-outlined align-middle text-sm">qr_code_scanner</span> Escáner QR';
+        hdr.prepend(btn);
+    }
+});
+
+// Enter en el login
+document.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen && !loginScreen.classList.contains('hidden')) verificarAcceso();
+    }
+});
+</script>
 </body>
 </html>

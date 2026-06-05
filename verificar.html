@@ -9,8 +9,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
 <!-- End Google Tag Manager -->
     <meta charset="utf-8"/>
-<meta name="robots" content="noindex,nofollow"/>
+    <meta name="robots" content="noindex,nofollow"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev"/>
     <title>Verificar Boleto - El Gorila de Franz Kafka</title>
     <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -126,16 +127,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <p class="text-xs text-white/60 mt-2">Ingrese el código QR del boleto para verificar su validez</p>
                         </div>
 
-                        <!-- Botón para escanear con cámara (futuro) -->
+                        <!-- Botón escanear con cámara -->
                         <div class="text-center">
-                            <button 
-                                id="btn-escanear" 
+                            <button
+                                id="btn-escanear"
                                 type="button"
-                                class="text-white/60 hover:text-white text-sm underline"
-                                disabled
+                                class="text-white/80 hover:text-white text-sm underline"
                             >
                                 <span class="material-symbols-outlined align-middle text-lg">qr_code_scanner</span>
-                                Escanear con cámara (próximamente)
+                                Escanear con cámara
                             </button>
                         </div>
                     </div>
@@ -234,9 +234,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/certificado.js"></script>
-    <script src="js/taquilla.js"></script>
+    <!-- Modal cámara QR -->
+    <div id="modal-scanner" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/90">
+        <div class="relative w-full max-w-sm">
+            <button type="button" onclick="cerrarScanner()" class="absolute top-3 right-3 z-10 bg-black/60 text-white rounded-full p-2">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <video id="scanner-video" class="w-full rounded-lg" playsinline autoplay muted></video>
+            <canvas id="scanner-canvas" class="hidden"></canvas>
+            <p class="text-center text-white/70 text-sm mt-3">Apunta la cámara al código QR del boleto</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="js/api-config.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/verificar.js"></script>
 </body>
 </html>

@@ -677,20 +677,137 @@ async function handleVenta(id, request, env) {
 
     // Devolver datos necesarios para mostrar confirmación. Sin datos de tarjeta.
     return json({
-      sessionId:   venta.sessionId,
-      codigo:      venta.codigo,
-      numeroOrden: venta.codigo,  // alias para confirmacion.js
-      fecha:       venta.fecha,
-      cantidad:    venta.cantidad,
-      items:       venta.items || [],
-      email:       venta.email,
-      total:       venta.total,
-      fechaCompra: venta.fechaCompra,
-      estado:      venta.estado,
+      sessionId:     venta.sessionId,
+      codigo:        venta.codigo,
+      numeroOrden:   venta.codigo,
+      fecha:         venta.fecha,
+      funcionNombre: venta.funcionNombre || venta.fecha,
+      cantidad:      venta.cantidad,
+      items:         venta.items || [],
+      email:         venta.email,
+      nombre:        venta.nombre  || null,
+      total:         venta.total,
+      fechaCompra:   venta.fechaCompra,
+      estado:        venta.estado,
+      usado:         venta.usado   || false,
+      usadoEn:       venta.usadoEn || null,
     }, 200, request);
   } catch {
     return json({ error: 'Error al obtener la venta.' }, 500, request);
   }
+}
+
+// ─── ADMIN AUTH HELPERS ───────────────────────────────────────────────────────
+
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) {
+    // Still iterate to prevent length timing leak
+    for (let i = 0; i < a.length; i++) { /* */ }
+    return false;
+  }
+  let acc = 0;
+  for (let i = 0; i < a.length; i++) acc |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return acc === 0;
+}
+
+async function requireAdmin(request, env) {
+  if (!env.JWT_SECRET) return null;
+  const auth = request.headers.get('Authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (!token) return null;
+  const payload = await verifyJWT(token, env.JWT_SECRET);
+  if (!payload || payload.rol !== 'admin') return null;
+  return payload;
+}
+
+// ─── HANDLER: ADMIN LOGIN (secrets) ───────────────────────────────────────────
+
+async function handleAdminLogin(request, env) {
+  if (!env.JWT_SECRET)   return json({ error: 'Configuración incompleta.' }, 500, request);
+  if (!env.ADMIN_USER || !env.ADMIN_PASS)
+    return json({ error: 'Cuentas admin no configuradas en el Worker.' }, 503, request);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+
+  const { usuario, password } = body || {};
+  if (!usuario || !password) return json({ error: 'Faltan usuario o contraseña.' }, 400, request);
+
+  const u = usuario.trim();
+  let match = timingSafeEqual(u, env.ADMIN_USER) && timingSafeEqual(password, env.ADMIN_PASS);
+  if (!match && env.ADMIN_USER_2 && env.ADMIN_PASS_2)
+    match = timingSafeEqual(u, env.ADMIN_USER_2) && timingSafeEqual(password, env.ADMIN_PASS_2);
+
+  if (!match) {
+    await new Promise(r => setTimeout(r, 300)); // breve pausa anti-brute-force
+    return json({ error: 'Credenciales incorrectas.' }, 401, request);
+  }
+
+  const now     = Math.floor(Date.now() / 1000);
+  const TTL_30D = 30 * 24 * 60 * 60;
+  const token   = await signJWT({ usuario: u, nombre: 'Admin', rol: 'admin', iat: now, exp: now + TTL_30D }, env.JWT_SECRET);
+  return json({ token, usuario: u, nombre: 'Admin', rol: 'admin' }, 200, request);
+}
+
+// ─── HANDLER: CANJEAR BOLETO ──────────────────────────────────────────────────
+
+async function handleCanjear(codigo, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!codigo || !codigo.startsWith('CERT-')) return json({ error: 'Código de folio inválido.' }, 400, request);
+
+  const certRaw = await env.VENTAS.get(`cert:${codigo}`);
+  if (!certRaw) return json({ error: 'Folio no encontrado.' }, 404, request);
+
+  const { sessionId } = JSON.parse(certRaw);
+  const ventaRaw = await env.VENTAS.get(`venta:${sessionId}`);
+  if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
+
+  const venta = JSON.parse(ventaRaw);
+
+  if (venta.usado) {
+    const cuandoMX = new Date(venta.usadoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+    return json({ error: `Ya fue canjeado el ${cuandoMX}.`, usadoEn: venta.usadoEn }, 409, request);
+  }
+
+  venta.usado   = true;
+  venta.usadoEn = new Date().toISOString();
+  await env.VENTAS.put(`venta:${sessionId}`, JSON.stringify(venta));
+
+  return json({ ok: true, usadoEn: venta.usadoEn }, 200, request);
+}
+
+// ─── HANDLER: LISTADO DE VENTAS (admin) ───────────────────────────────────────
+
+async function handleVentas(request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+
+  const listResult = await env.VENTAS.list({ prefix: 'venta:', limit: 100 });
+
+  const ventas = [];
+  for (const key of listResult.keys) {
+    const raw = await env.VENTAS.get(key.name);
+    if (!raw) continue;
+    const v = JSON.parse(raw);
+    ventas.push({
+      codigo:        v.codigo,
+      fecha:         v.fecha,
+      funcionNombre: v.funcionNombre || v.fecha,
+      cantidad:      v.cantidad,
+      items:         v.items || [],
+      email:         v.email,
+      nombre:        v.nombre || null,
+      total:         v.total,
+      fechaCompra:   v.fechaCompra,
+      usado:         v.usado   || false,
+      usadoEn:       v.usadoEn || null,
+    });
+  }
+
+  ventas.sort((a, b) => new Date(b.fechaCompra) - new Date(a.fechaCompra));
+  return json({ ventas }, 200, request);
 }
 
 // ─── HANDLER: LISTA DE ESPERA ─────────────────────────────────────────────────
@@ -754,6 +871,15 @@ export default {
     if (method === 'GET'  && pathname === '/api/disponibilidad') return handleDisponibilidad(request, env);
     if (method === 'POST' && pathname === '/api/checkout')       return handleCheckout(request, env);
     if (method === 'POST' && pathname === '/api/lista-espera')   return handleListaEspera(request, env);
+
+    // Admin auth (secrets — token 30 días en localStorage)
+    if (method === 'POST' && pathname === '/api/admin/login')    return handleAdminLogin(request, env);
+
+    // Admin: canjear folio y listado de ventas
+    const canjearMatch = pathname.match(/^\/api\/canjear\/([^/]+)$/);
+    if (method === 'POST' && canjearMatch)
+      return handleCanjear(decodeURIComponent(canjearMatch[1]), request, env);
+    if (method === 'GET'  && pathname === '/api/ventas')         return handleVentas(request, env);
 
     // Confirmación de venta (acepta session_id o código CERT)
     const ventaMatch = pathname.match(/^\/api\/venta\/([^/]+)$/);
