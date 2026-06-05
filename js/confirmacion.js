@@ -63,50 +63,45 @@ async function cargarConfirmacion() {
 function mostrarFormularioPago() {
     if (!ordenCompra) return;
 
-    // Calcular cargo por servicio
-    const cargoServicio = ordenCompra.subtotal * 0.05;
-    const totalFinal = ordenCompra.total + cargoServicio;
+    const subtotal       = ordenCompra.subtotal       || ordenCompra.total || 0;
+    const total          = ordenCompra.total          || 0;
+    const descuentoMonto = ordenCompra.descuentoMonto || 0;
 
     // Función
     const funcionElement = document.getElementById('confirmacion-funcion');
-    if (funcionElement) {
-        funcionElement.textContent = ordenCompra.fecha || 'No especificada';
-    }
+    if (funcionElement) funcionElement.textContent = ordenCompra.fecha || 'No especificada';
 
-    // Cantidad
+    // Cantidad/items
     const cantidadElement = document.getElementById('confirmacion-cantidad');
     if (cantidadElement) {
-        cantidadElement.textContent = `${ordenCompra.cantidad} x General`;
+        if (Array.isArray(ordenCompra.items) && ordenCompra.items.length) {
+            cantidadElement.textContent = ordenCompra.items
+                .map(i => `${i.cantidad} × ${i.tipo.charAt(0).toUpperCase() + i.tipo.slice(1)}`)
+                .join(', ');
+        } else {
+            cantidadElement.textContent = `${ordenCompra.cantidadTotal || 0} boletos`;
+        }
     }
 
     // Subtotal
     const subtotalElement = document.getElementById('confirmacion-subtotal');
-    if (subtotalElement) {
-        subtotalElement.textContent = `$${ordenCompra.subtotal.toFixed(2)}`;
-    }
+    if (subtotalElement) subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
 
     // Descuento
-    if (ordenCompra.descuento && ordenCompra.descuento > 0) {
-        const descuentoContainer = document.getElementById('confirmacion-descuento-container');
-        const descuentoElement = document.getElementById('confirmacion-descuento');
-        if (descuentoContainer) {
+    const descuentoContainer = document.getElementById('confirmacion-descuento-container');
+    const descuentoElement   = document.getElementById('confirmacion-descuento');
+    if (descuentoContainer) {
+        if (descuentoMonto > 0) {
             descuentoContainer.classList.remove('hidden');
-        }
-        if (descuentoElement) {
-            descuentoElement.textContent = `-$${ordenCompra.descuento.toFixed(2)}`;
+            if (descuentoElement) descuentoElement.textContent = `-$${descuentoMonto.toFixed(2)}`;
+        } else {
+            descuentoContainer.classList.add('hidden');
         }
     }
 
     // Total
     const totalElement = document.getElementById('confirmacion-total');
-    if (totalElement) {
-        totalElement.textContent = `$${totalFinal.toFixed(2)} MXN`;
-    }
-
-    // Guardar total final
-    ordenCompra.totalFinal = totalFinal;
-    ordenCompra.cargoServicio = cargoServicio;
-    localStorage.setItem('orden_compra', JSON.stringify(ordenCompra));
+    if (totalElement) totalElement.textContent = `$${total.toFixed(2)} MXN`;
 }
 
 // Procesar pago
@@ -186,20 +181,47 @@ function procesarPago() {
 function mostrarExito() {
     const contenedorPago = document.getElementById('contenedor-pago');
     const contenedorExito = document.getElementById('contenedor-exito');
-    
+
     if (contenedorPago) contenedorPago.classList.add('hidden');
     if (contenedorExito) contenedorExito.classList.remove('hidden');
 
     // Mostrar datos finales
     document.getElementById('confirmacion-email-final').textContent = ordenCompra.email || 'No especificado';
     document.getElementById('confirmacion-orden-final').textContent = ordenCompra.numeroOrden || 'No disponible';
-    
+
     // Mostrar cantidad de boletos
     const cantidadFinal = document.getElementById('confirmacion-cantidad-final');
+    const cantTotal = ordenCompra.cantidadTotal || ordenCompra.cantidad || 0;
     if (cantidadFinal) {
-        cantidadFinal.textContent = `${ordenCompra.cantidad} ${ordenCompra.cantidad === 1 ? 'boleto' : 'boletos'}`;
+        cantidadFinal.textContent = `${cantTotal} ${cantTotal === 1 ? 'boleto' : 'boletos'}`;
     }
-    
+
+    // Botón compartir por WhatsApp
+    const waContainer = document.getElementById('btn-whatsapp-container');
+    if (waContainer) {
+        const boletosTexto = Array.isArray(ordenCompra.items) && ordenCompra.items.length
+            ? ordenCompra.items.map(i => `${i.cantidad} ${i.tipo}`).join(', ')
+            : `${cantTotal} boleto${cantTotal !== 1 ? 's' : ''}`;
+        const total = ordenCompra.total || 0;
+        const orden = ordenCompra.numeroOrden || '';
+        const fecha = ordenCompra.fecha || '';
+        const msg = encodeURIComponent(
+            `*EL GORILA — Boleto confirmado* 🎭\n` +
+            `Función: ${fecha}\n` +
+            `Boletos: ${boletosTexto}\n` +
+            `Total: $${total.toFixed(2)} MXN\n` +
+            `Orden: ${orden}\n\n` +
+            `📍 Centro Cultural Coyoacanense, Coyoacán`
+        );
+        waContainer.innerHTML = `
+            <a href="https://wa.me/?text=${msg}" target="_blank" rel="noopener noreferrer"
+               class="flex items-center justify-center gap-2 w-full border border-green-600/50 bg-green-900/30 hover:bg-green-800/40 text-green-400 font-semibold py-3 rounded-xl transition-colors text-sm">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z M12 0C5.373 0 0 5.373 0 12c0 2.109.549 4.09 1.508 5.814L0 24l6.335-1.496A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.882 9.882 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374A9.858 9.858 0 012.106 12c0-5.455 4.44-9.894 9.894-9.894 5.455 0 9.894 4.439 9.894 9.894 0 5.455-4.439 9.894-9.894 9.894z"/></svg>
+                Guardar en WhatsApp
+            </a>`;
+        waContainer.classList.remove('hidden');
+    }
+
     // Preparar información de certificados (para futura implementación de NFTs)
     mostrarInfoCertificados();
 }

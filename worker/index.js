@@ -495,6 +495,34 @@ async function handleVenta(id, request, env) {
   }
 }
 
+// ─── HANDLER: LISTA DE ESPERA ─────────────────────────────────────────────────
+
+async function handleListaEspera(request, env) {
+  if (!env.VENTAS) return json({ error: 'KV no disponible' }, 503, request);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400, request); }
+
+  const { clave, nombre, email } = body || {};
+
+  if (!clave || typeof clave !== 'string' || !/^[a-z0-9_]+$/.test(clave))
+    return json({ error: 'Función inválida' }, 400, request);
+  if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2 || nombre.trim().length > 100)
+    return json({ error: 'Nombre inválido' }, 400, request);
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return json({ error: 'Correo inválido' }, 400, request);
+
+  const key = `lista:${clave}:${Date.now()}`;
+  await env.VENTAS.put(key, JSON.stringify({
+    clave,
+    nombre: nombre.trim().substring(0, 100),
+    email:  email.trim().substring(0, 254),
+    ts:     new Date().toISOString(),
+  }));
+
+  return json({ ok: true }, 200, request);
+}
+
 // ─── ROUTER ───────────────────────────────────────────────────────────────────
 
 export default {
@@ -524,6 +552,7 @@ export default {
     // Checkout público
     if (method === 'GET'  && pathname === '/api/disponibilidad') return handleDisponibilidad(request, env);
     if (method === 'POST' && pathname === '/api/checkout')       return handleCheckout(request, env);
+    if (method === 'POST' && pathname === '/api/lista-espera')   return handleListaEspera(request, env);
 
     // Confirmación de venta (acepta session_id o código CERT)
     const ventaMatch = pathname.match(/^\/api\/venta\/([^/]+)$/);

@@ -6,7 +6,8 @@ const FUNCIONES_TEMPORADA = [
     clave: 'miercoles_20260820',
     tipo: 'regular',
     activa: true,
-    bloqueada: false
+    bloqueada: false,
+    agotada: true
   }
 ];
 

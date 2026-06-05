@@ -284,15 +284,21 @@ function irAConfirmacion() {
         }
     }
 
+    const subtotalSinDescuento = TIPOS_BOLETO.reduce((s, t) => s + t.precio * (cantidades[t.tipo] || 0), 0);
+    const totalConDescuento = calcularTotal();
+    const descuentoMonto = subtotalSinDescuento - totalConDescuento;
+
     const orden = {
-        fecha:         nombreFecha,
-        fechaIso:      fechaIsoActual,
-        clave:         fechaSeleccionada,
+        fecha:          nombreFecha,
+        fechaIso:       fechaIsoActual,
+        clave:          fechaSeleccionada,
         items,
-        cantidadTotal: cantTotal,
-        total:         calcularTotal(),
+        cantidadTotal:  cantTotal,
+        subtotal:       subtotalSinDescuento,
+        descuentoMonto: descuentoMonto > 0 ? descuentoMonto : 0,
+        total:          totalConDescuento,
         reservaId,
-        timestamp:     Date.now(),
+        timestamp:      Date.now(),
     };
 
     try {
@@ -330,22 +336,43 @@ function cargarFechas() {
     let html = '';
 
     [...funciones.especiales, ...funciones.regulares].forEach(funcion => {
-        const bloqueada    = funcion.bloqueada;
+        const bloqueada      = funcion.bloqueada;
+        const esAgotada      = funcion.agotada === true;
         const esSeleccionada = fechaSeleccionada === funcion.clave;
+        const fechaCorta     = funcion.nombre.split(' - ')[0];
+        const hora           = funcion.nombre.split(' - ')[1] || '';
+        const claveStr       = funcion.clave;
+        const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
+
+        if (esAgotada) {
+            html += `
+            <div>
+                <button type="button" disabled data-fecha-clave="${claveStr}"
+                    class="w-full p-4 rounded-lg text-center border border-red-800/50 bg-red-950/30 text-red-300 cursor-not-allowed backdrop-blur-sm">
+                    <span class="block font-bold text-sm">${fechaCorta}</span>
+                    <span class="inline-block mt-1 bg-red-700 text-white text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">Agotado</span>
+                </button>
+                <button type="button" onclick="abrirListaEspera('${claveStr}', '${nombreStr}')"
+                    class="w-full mt-1 text-xs text-accent-gold underline hover:text-white transition-colors py-1">
+                    Anotarme en lista de espera →
+                </button>
+            </div>
+            `;
+            return;
+        }
+
         const claseBoton   = bloqueada
             ? 'p-4 rounded-lg text-center border border-slate-700/50 bg-slate-800/40 text-slate-400 cursor-not-allowed backdrop-blur-sm'
             : `p-3 sm:p-4 rounded-lg text-center border-2 ${esSeleccionada ? 'border-white border-4' : 'border-[#967d3d]'} bg-[#c69c3a] text-[#3e1116] transition-all duration-200 hover:bg-[#dcb048] hover:text-[#2a080d] active:bg-[#b88a2f] hover:shadow-md hover:border-[#bda056] group focus:ring-2 focus:ring-white touch-manipulation`;
         const estiloBoton  = bloqueada ? '' : (esSeleccionada
             ? 'border: 3px solid white; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); -webkit-tap-highlight-color: transparent;'
             : '-webkit-tap-highlight-color: transparent;');
-        const fechaCorta   = funcion.nombre.split(' - ')[0];
-        const hora         = funcion.nombre.split(' - ')[1] || '';
 
         html += `
             <button
                 type="button"
-                data-fecha-clave="${funcion.clave}"
-                onclick="${bloqueada ? '' : `seleccionarFecha('${funcion.clave}', '${funcion.nombre}', ${JSON.stringify(funcion).replace(/"/g, '&quot;')})`}"
+                data-fecha-clave="${claveStr}"
+                onclick="${bloqueada ? '' : `seleccionarFecha('${claveStr}', '${nombreStr}', ${JSON.stringify(funcion).replace(/"/g, '&quot;')})`}"
                 class="${claseBoton}"
                 ${bloqueada ? 'disabled' : ''}
                 style="${estiloBoton}"
@@ -384,9 +411,71 @@ function inicializar() {
     setInterval(cargarFechas, 60000);
 }
 
+// --- LISTA DE ESPERA ---
+let _listaEsperaClave = null;
+
+function abrirListaEspera(clave, nombre) {
+    _listaEsperaClave = clave;
+    const modal = document.getElementById('modal-lista-espera');
+    const texto = document.getElementById('espera-funcion-texto');
+    if (texto) texto.textContent = nombre;
+    if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    const n = document.getElementById('espera-nombre');
+    const e = document.getElementById('espera-email');
+    if (n) n.value = '';
+    if (e) e.value = '';
+    const msg = document.getElementById('espera-mensaje');
+    if (msg) msg.classList.add('hidden');
+}
+
+function cerrarListaEspera() {
+    const modal = document.getElementById('modal-lista-espera');
+    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+}
+
+async function enviarListaEspera() {
+    const nombre = (document.getElementById('espera-nombre')?.value || '').trim();
+    const email  = (document.getElementById('espera-email')?.value || '').trim();
+    const msgEl  = document.getElementById('espera-mensaje');
+
+    if (!nombre) { alert('Por favor escribe tu nombre'); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Por favor ingresa un correo válido'); return; }
+
+    const btn = document.querySelector('#modal-lista-espera .btn-espera-submit');
+    if (btn) btn.disabled = true;
+
+    try {
+        if (window.API_BASE) {
+            const res = await fetch(window.API_BASE + '/api/lista-espera', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clave: _listaEsperaClave, nombre, email })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                if (msgEl) { msgEl.className = 'mt-3 text-center text-sm text-red-400'; msgEl.textContent = data.error || 'Error al registrar'; msgEl.classList.remove('hidden'); }
+                return;
+            }
+        }
+        if (msgEl) {
+            msgEl.className = 'mt-3 text-center text-sm text-green-400';
+            msgEl.textContent = '¡Listo! Te avisaremos si hay disponibilidad.';
+            msgEl.classList.remove('hidden');
+        }
+        setTimeout(cerrarListaEspera, 2500);
+    } catch {
+        if (msgEl) { msgEl.className = 'mt-3 text-center text-sm text-red-400'; msgEl.textContent = 'Error de conexión. Intenta de nuevo.'; msgEl.classList.remove('hidden'); }
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
 window.irAConfirmacion  = irAConfirmacion;
 window.cambiarCantidad  = cambiarCantidad;
 window.seleccionarFecha = seleccionarFecha;
+window.abrirListaEspera   = abrirListaEspera;
+window.cerrarListaEspera  = cerrarListaEspera;
+window.enviarListaEspera  = enviarListaEspera;
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', inicializar);

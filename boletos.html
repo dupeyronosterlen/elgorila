@@ -486,6 +486,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </footer>
 </div>
+<!-- Modal Lista de Espera -->
+<div id="modal-lista-espera" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+  <div class="bg-[#1a1612] w-full max-w-sm rounded-lg border border-accent-gold/30 shadow-2xl p-6 relative">
+    <button type="button" onclick="cerrarListaEspera()" class="absolute top-4 right-4 text-text-muted-dark hover:text-white transition-colors">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="font-display text-xl font-bold text-white mb-1">Lista de espera</h3>
+    <p class="text-text-muted-dark text-sm mb-5" id="espera-funcion-texto"></p>
+    <input type="text" id="espera-nombre" placeholder="Tu nombre" autocomplete="name"
+      class="w-full px-4 py-3 mb-3 bg-black/50 border border-accent-gold/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-accent-gold/50 text-sm"/>
+    <input type="email" id="espera-email" placeholder="tu@email.com" autocomplete="email"
+      class="w-full px-4 py-3 mb-5 bg-black/50 border border-accent-gold/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-accent-gold/50 text-sm"/>
+    <button type="button" onclick="enviarListaEspera()"
+      class="btn-espera-submit w-full btn-granate-terciopelo py-3 rounded-xl text-base font-bold mb-3 disabled:opacity-50 disabled:cursor-not-allowed">
+      Anotarme
+    </button>
+    <div id="espera-mensaje" class="hidden mt-1 text-center text-sm"></div>
+  </div>
+</div>
+
 <script src="js/config.js"></script>
 <script src="js/inventario.js"></script>
 <script src="js/fechas.js"></script>

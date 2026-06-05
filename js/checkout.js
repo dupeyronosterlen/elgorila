@@ -40,18 +40,35 @@ function mostrarDatosOrden() {
             .join(', ');
     }
 
-    // Total (precio calculado en el Worker; lo mostramos desde la orden local como estimado)
-    const total = ordenCompra.total || 0;
+    const subtotal       = ordenCompra.subtotal       || ordenCompra.total || 0;
+    const total          = ordenCompra.total          || 0;
+    const descuentoMonto = ordenCompra.descuentoMonto || 0;
+
+    // Subtotal
+    const subtotalElement = document.getElementById('checkout-subtotal');
+    if (subtotalElement) subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+
+    // Descuento (promo 5+ generales)
+    const descuentoContainer = document.getElementById('checkout-descuento-container');
+    if (descuentoContainer) {
+        if (descuentoMonto > 0) {
+            descuentoContainer.classList.remove('hidden');
+            const descuentoEl = document.getElementById('checkout-descuento');
+            if (descuentoEl) descuentoEl.textContent = `-$${descuentoMonto.toFixed(2)}`;
+            const codigoInfo = document.getElementById('checkout-codigo-info');
+            if (codigoInfo) codigoInfo.textContent = '(5+ generales)';
+        } else {
+            descuentoContainer.classList.add('hidden');
+        }
+    }
+
+    // Cargo por servicio: ocultar (no aplica)
+    const cargoElement = document.getElementById('checkout-cargo');
+    if (cargoElement && cargoElement.closest('.flex')) cargoElement.closest('.flex').style.display = 'none';
+
+    // Total
     const totalElement = document.getElementById('checkout-total');
     if (totalElement) totalElement.textContent = `$${total.toFixed(2)} MXN`;
-
-    // Ocultar elementos que ya no aplican (cargo por servicio, descuento por código)
-    const descuentoContainer = document.getElementById('checkout-descuento-container');
-    if (descuentoContainer) descuentoContainer.classList.add('hidden');
-    const cargoElement = document.getElementById('checkout-cargo');
-    if (cargoElement) cargoElement.closest && cargoElement.closest('.flex') && (cargoElement.closest('.flex').style.display = 'none');
-    const subtotalElement = document.getElementById('checkout-subtotal');
-    if (subtotalElement) subtotalElement.textContent = `$${total.toFixed(2)}`;
 }
 
 // Procesar pago: Stripe (si API disponible) o modo simulado
