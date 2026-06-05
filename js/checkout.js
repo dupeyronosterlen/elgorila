@@ -30,62 +30,28 @@ function mostrarDatosOrden() {
 
     // Función
     const funcionElement = document.getElementById('checkout-funcion');
-    if (funcionElement) {
-        funcionElement.textContent = ordenCompra.fecha || 'No especificada';
-    }
+    if (funcionElement) funcionElement.textContent = ordenCompra.fecha || 'No especificada';
 
-    // Boletos
+    // Boletos: mostrar desglose por tipo
     const boletosElement = document.getElementById('checkout-boletos');
-    if (boletosElement) {
-        boletosElement.textContent = `${ordenCompra.cantidad} x General`;
+    if (boletosElement && Array.isArray(ordenCompra.items)) {
+        boletosElement.textContent = ordenCompra.items
+            .map(i => `${i.cantidad} × ${i.tipo.charAt(0).toUpperCase() + i.tipo.slice(1)}`)
+            .join(', ');
     }
 
-    // Subtotal
-    const subtotalElement = document.getElementById('checkout-subtotal');
-    if (subtotalElement) {
-        subtotalElement.textContent = `$${ordenCompra.subtotal.toFixed(2)}`;
-    }
-
-    // Descuento (si existe)
-    const descuentoContainer = document.getElementById('checkout-descuento-container');
-    const descuentoElement = document.getElementById('checkout-descuento');
-    if (ordenCompra.descuento && ordenCompra.descuento > 0) {
-        if (descuentoContainer) {
-            descuentoContainer.classList.remove('hidden');
-        }
-        if (descuentoElement) {
-            descuentoElement.textContent = `-$${ordenCompra.descuento.toFixed(2)}`;
-            if (ordenCompra.codigoDescuento) {
-                const codigoInfo = document.getElementById('checkout-codigo-info');
-                if (codigoInfo) {
-                    codigoInfo.textContent = `(${ordenCompra.codigoDescuento})`;
-                }
-            }
-        }
-    } else {
-        if (descuentoContainer) {
-            descuentoContainer.classList.add('hidden');
-        }
-    }
-
-    // Cargo por servicio (5% del subtotal)
-    const cargoServicio = ordenCompra.subtotal * 0.05;
-    const cargoElement = document.getElementById('checkout-cargo');
-    if (cargoElement) {
-        cargoElement.textContent = `$${cargoServicio.toFixed(2)}`;
-    }
-
-    // Total
-    const total = ordenCompra.total + cargoServicio;
+    // Total (precio calculado en el Worker; lo mostramos desde la orden local como estimado)
+    const total = ordenCompra.total || 0;
     const totalElement = document.getElementById('checkout-total');
-    if (totalElement) {
-        totalElement.textContent = `$${total.toFixed(2)} MXN`;
-    }
+    if (totalElement) totalElement.textContent = `$${total.toFixed(2)} MXN`;
 
-    // Guardar total actualizado en la orden
-    ordenCompra.totalFinal = total;
-    ordenCompra.cargoServicio = cargoServicio;
-    localStorage.setItem('orden_compra', JSON.stringify(ordenCompra));
+    // Ocultar elementos que ya no aplican (cargo por servicio, descuento por código)
+    const descuentoContainer = document.getElementById('checkout-descuento-container');
+    if (descuentoContainer) descuentoContainer.classList.add('hidden');
+    const cargoElement = document.getElementById('checkout-cargo');
+    if (cargoElement) cargoElement.closest && cargoElement.closest('.flex') && (cargoElement.closest('.flex').style.display = 'none');
+    const subtotalElement = document.getElementById('checkout-subtotal');
+    if (subtotalElement) subtotalElement.textContent = `$${total.toFixed(2)}`;
 }
 
 // Procesar pago: Stripe (si API disponible) o modo simulado
@@ -96,13 +62,14 @@ async function procesarPago() {
         return;
     }
 
-    if (typeof ordenCompra.cantidad !== 'number' || ordenCompra.cantidad < 1 || ordenCompra.cantidad > 10) {
-        alert('Error: Datos de la orden inválidos');
+    // Validar que haya items y fecha ISO
+    if (!Array.isArray(ordenCompra.items) || ordenCompra.items.length === 0) {
+        alert('El carrito está vacío. Regresa y selecciona boletos.');
         window.location.href = 'boletos.html';
         return;
     }
-    if (!ordenCompra.clave || typeof ordenCompra.clave !== 'string') {
-        alert('Error: Fecha inválida');
+    if (!ordenCompra.fechaIso) {
+        alert('Error: selecciona una fecha desde la página de boletos.');
         window.location.href = 'boletos.html';
         return;
     }
@@ -115,35 +82,18 @@ async function procesarPago() {
         return;
     }
 
-    // Verificar disponibilidad
-    if (typeof InventarioManager !== 'undefined') {
-        const disponibilidad = InventarioManager.obtenerDisponibilidad(ordenCompra.clave);
-        if (disponibilidad.disponible < ordenCompra.cantidad) {
-            alert('Lo sentimos, ya no hay suficientes boletos disponibles para esta función.');
-            window.location.href = 'boletos.html';
-            return;
-        }
-    }
-
     // --- CHECKOUT: llamar al Worker ---
     if (window.API_BASE) {
-        if (!ordenCompra.fechaIso) {
-            alert('Error: selecciona una fecha desde la página de boletos.');
-            window.location.href = 'boletos.html';
-            return;
-        }
         const btn = document.getElementById('btn-pagar');
         if (btn) { btn.disabled = true; btn.querySelector('span:last-child').textContent = 'Procesando...'; }
         try {
-            const body = {
-                cantidad: ordenCompra.cantidad,
-                fecha:    ordenCompra.fechaIso,
-            };
-            if (ordenCompra.codigoDescuento) body.codigoDescuento = ordenCompra.codigoDescuento;
             const res = await fetch(window.API_BASE + '/api/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
+                body: JSON.stringify({
+                    items: ordenCompra.items,
+                    fecha: ordenCompra.fechaIso,
+                }),
             });
             const data = await res.json();
             if (data.url) {

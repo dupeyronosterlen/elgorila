@@ -1,411 +1,246 @@
-// --- CONFIGURACIÓN ---
-let precioUnitario = 350; // Precio de un boleto (all-in, impuesto absorbido)
-let cantidadActual = 0;   // Empezamos con 0 boletos
-let fechaSeleccionada = null; // Clave dinámica de la función
-let fechaIsoActual = null;    // Fecha ISO (YYYY-MM-DD) para el Worker
-let nombreFecha = "";     // Texto largo "Sábado 12 Jul 2026 - 19:10 hrs"
-let codigoDescuento = ""; // Código de descuento (validado server-side)
-let reservaId = null;     // ID de la reserva temporal
-let disponibilidadInfo = null; // Información de disponibilidad
+// --- TIPOS DE BOLETO ---
+// Precios definitivos. El Worker los valida de forma independiente.
+const TIPOS_BOLETO = [
+    { tipo: 'general',    nombre: 'General',    precio: 350 },
+    { tipo: 'inapam',     nombre: 'INAPAM',     precio: 245, desc: '30% desc.' },
+    { tipo: 'estudiante', nombre: 'Estudiante', precio: 245, desc: '30% desc.' },
+    { tipo: 'maestro',    nombre: 'Maestro',    precio: 245, desc: '30% desc.' },
+];
 
-// --- FUNCIÓN 1: SUMAR Y RESTAR BOLETOS ---
-function cambiarCantidad(numero) {
-    // Sumamos lo que llegue (1 o -1) a la cantidad actual
-    const nuevaCantidad = cantidadActual + numero;
+// --- ESTADO DEL CARRITO ---
+let cantidades        = { general: 0, inapam: 0, estudiante: 0, maestro: 0 };
+let fechaSeleccionada = null;  // clave dinámica (e.g. sabado_1234567890)
+let fechaIsoActual    = null;  // YYYY-MM-DD para el Worker
+let nombreFecha       = '';    // texto largo para mostrar al comprador
+let reservaId         = null;
+let disponibilidadInfo = null;
 
-    // Regla 1: No pueden bajar de 0 boletos
-    if (nuevaCantidad < 0) {
-        return; // No hacer nada si intenta bajar de 0
-    }
+// --- HELPERS DE CARRITO ---
 
-    // Regla 2: Máximo 10 boletos por persona
-    if (nuevaCantidad > 10) {
-        alert("El máximo es 10 boletos por compra");
+function totalCantidad() {
+    return Object.values(cantidades).reduce((s, c) => s + c, 0);
+}
+
+function calcularTotal() {
+    return TIPOS_BOLETO.reduce((s, t) => s + t.precio * (cantidades[t.tipo] || 0), 0);
+}
+
+// --- FUNCIÓN 1: CAMBIAR CANTIDAD POR TIPO ---
+function cambiarCantidad(tipo, delta) {
+    if (!(tipo in cantidades)) return;
+
+    const nueva = cantidades[tipo] + delta;
+    if (nueva < 0) return;
+
+    const totalNueva = totalCantidad() - cantidades[tipo] + nueva;
+    if (totalNueva > 8) {
+        alert('El máximo es 8 boletos por compra');
         return;
     }
 
-    // Actualizar cantidad
-    cantidadActual = nuevaCantidad;
+    cantidades[tipo] = nueva;
 
-    // Si la cantidad es 0, liberar reserva si existe
-    if (cantidadActual === 0 && reservaId) {
+    if (totalCantidad() === 0 && reservaId) {
         InventarioManager.liberarReserva(reservaId);
         reservaId = null;
     }
 
-    // Actualizamos los números en la pantalla inmediatamente (sin esperar)
     actualizarPantalla();
 
-    // Verificar disponibilidad después de actualizar (solo si hay fecha y cantidad > 0)
-    if (fechaSeleccionada && cantidadActual > 0) {
+    if (fechaSeleccionada && totalCantidad() > 0) {
         verificarDisponibilidad();
     }
 }
 
-// --- FUNCIÓN 2: CUANDO ELIGEN UNA FECHA ---
+// --- FUNCIÓN 2: SELECCIONAR FECHA ---
 function seleccionarFecha(clave, texto, funcion = null) {
-    // Verificar si la función está bloqueada
     if (funcion && funcion.bloqueada) {
         alert('Las ventas para esta función están bloqueadas. La función comenzará pronto.');
         return;
     }
-    
-    // Liberar reserva anterior si existe
+
     if (reservaId) {
         InventarioManager.liberarReserva(reservaId);
         reservaId = null;
     }
 
-    fechaSeleccionada = clave; // Guardamos la clave dinámica
-    nombreFecha = texto;       // Guardamos el texto largo
+    fechaSeleccionada = clave;
+    nombreFecha       = texto;
 
-    // Extraer fecha ISO para llamadas al Worker
     if (funcion && funcion.fecha) {
         const d = funcion.fecha instanceof Date ? funcion.fecha : new Date(funcion.fecha);
         fechaIsoActual = d.toISOString().split('T')[0];
         refrescarDisponibilidadWorker();
     }
 
-    // Actualizar la pantalla (muestra la fecha en el resumen)
     actualizarPantalla();
-
-    // Resaltar el botón seleccionado
     resaltarBotonFecha(clave);
 
-    // Solo verificar disponibilidad y crear reserva si hay boletos seleccionados
-    if (cantidadActual > 0) {
+    if (totalCantidad() > 0) {
         verificarDisponibilidad();
     }
 }
 
-// --- FUNCIÓN: RESALTAR BOTÓN DE FECHA SELECCIONADO ---
+// --- RESALTAR BOTÓN DE FECHA ---
 function resaltarBotonFecha(clave) {
-    // Remover resaltado de todos los botones
-    const botones = document.querySelectorAll('#botones-fecha button');
-    botones.forEach(btn => {
+    document.querySelectorAll('#botones-fecha button').forEach(btn => {
         btn.style.border = '';
         btn.style.boxShadow = '';
     });
-    
-    // Agregar resaltado al botón seleccionado
-    const botonSeleccionado = document.querySelector(`#botones-fecha button[data-fecha-clave="${clave}"]`);
-    if (botonSeleccionado && !botonSeleccionado.disabled) {
-        botonSeleccionado.style.border = '3px solid white';
-        botonSeleccionado.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.5)';
+    const sel = document.querySelector(`#botones-fecha button[data-fecha-clave="${clave}"]`);
+    if (sel && !sel.disabled) {
+        sel.style.border = '3px solid white';
+        sel.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.5)';
     }
 }
 
-// --- FUNCIÓN: VERIFICAR DISPONIBILIDAD Y CREAR RESERVA ---
+// --- VERIFICAR DISPONIBILIDAD (localStorage + Worker) ---
 function verificarDisponibilidad() {
     if (!fechaSeleccionada) return;
 
-    // Obtener disponibilidad actual
+    const total = totalCantidad();
     disponibilidadInfo = InventarioManager.obtenerDisponibilidad(fechaSeleccionada);
 
-    // Verificar si hay suficientes boletos (solo si cantidad > 0)
-    if (cantidadActual > 0 && cantidadActual > disponibilidadInfo.disponible) {
-        const cantidadAnterior = cantidadActual;
-        cantidadActual = Math.max(0, disponibilidadInfo.disponible);
-        if (disponibilidadInfo.disponible === 0) {
-            alert("Lo sentimos, esta función está agotada");
-            cantidadActual = 0;
-        } else if (cantidadAnterior !== cantidadActual) {
-            alert(`Solo hay ${disponibilidadInfo.disponible} boletos disponibles. Se ajustó la cantidad.`);
-        }
+    if (total > 0 && total > disponibilidadInfo.disponible) {
+        alert(`Solo hay ${disponibilidadInfo.disponible} boletos disponibles para esta función.`);
+        actualizarIndicadorDisponibilidad();
+        return;
     }
 
-    // Crear o actualizar reserva temporal
-    if (cantidadActual > 0 && disponibilidadInfo.disponible >= cantidadActual) {
-        // Liberar reserva anterior si existe
-        if (reservaId) {
-            InventarioManager.liberarReserva(reservaId);
-        }
-
-        // Crear nueva reserva
-        const resultado = InventarioManager.crearReserva(fechaSeleccionada, cantidadActual);
+    if (total > 0 && disponibilidadInfo.disponible >= total) {
+        if (reservaId) InventarioManager.liberarReserva(reservaId);
+        const resultado = InventarioManager.crearReserva(fechaSeleccionada, total);
         if (resultado.exito) {
             reservaId = resultado.reservaId;
-            // Actualizar disponibilidad después de reservar
             disponibilidadInfo = InventarioManager.obtenerDisponibilidad(fechaSeleccionada);
         } else {
-            alert(resultado.mensaje);
             reservaId = null;
         }
     }
 
-    // Actualizar indicador de disponibilidad en la UI
     actualizarIndicadorDisponibilidad();
 }
 
-// --- FUNCIÓN: ACTUALIZAR INDICADOR DE DISPONIBILIDAD ---
+// --- ACTUALIZAR INDICADOR DE DISPONIBILIDAD ---
 function actualizarIndicadorDisponibilidad() {
-    const indicador = document.getElementById('disponibilidad-info');
+    const indicador      = document.getElementById('disponibilidad-info');
     const mensajeAgotado = document.getElementById('mensaje-agotado');
-    
+
     if (disponibilidadInfo) {
         if (disponibilidadInfo.disponible > 0) {
-            if (indicador) {
-                indicador.innerHTML = `<p class="text-xs text-green-400">✓ ${disponibilidadInfo.disponible} boletos disponibles</p>`;
-            }
-            if (mensajeAgotado) {
-                mensajeAgotado.classList.add('hidden');
-            }
+            if (indicador) indicador.innerHTML = `<p class="text-xs text-green-400">✓ ${disponibilidadInfo.disponible} boletos disponibles</p>`;
+            if (mensajeAgotado) mensajeAgotado.classList.add('hidden');
         } else {
-            if (indicador) {
-                indicador.innerHTML = `<p class="text-xs text-red-400">✗ Agotado</p>`;
-            }
-            if (mensajeAgotado) {
-                mensajeAgotado.classList.remove('hidden');
-            }
+            if (indicador) indicador.innerHTML = `<p class="text-xs text-red-400">✗ Agotado</p>`;
+            if (mensajeAgotado) mensajeAgotado.classList.remove('hidden');
         }
     } else {
-        if (indicador) {
-            indicador.innerHTML = `<p class="text-xs text-text-muted-dark">Selecciona una fecha para ver disponibilidad</p>`;
-        }
-        if (mensajeAgotado) {
-            mensajeAgotado.classList.add('hidden');
-        }
+        if (indicador) indicador.innerHTML = `<p class="text-xs text-text-muted-dark">Selecciona una fecha para ver disponibilidad</p>`;
+        if (mensajeAgotado) mensajeAgotado.classList.add('hidden');
     }
 }
 
-// --- FUNCIÓN: APLICAR CÓDIGO DE DESCUENTO ---
-function aplicarCodigoDescuento() {
-    const inputCodigo = document.getElementById('codigo-descuento-input');
-    const mensajeCodigo = document.getElementById('mensaje-codigo');
-    
-    if (!inputCodigo) return;
-
-    const codigo = inputCodigo.value.trim();
-    
-    if (!codigo) {
-        codigoDescuento = "";
-        actualizarPantalla();
-        if (mensajeCodigo) {
-            mensajeCodigo.innerHTML = "";
-            mensajeCodigo.className = "hidden";
-        }
-        return;
-    }
-
-    const validacion = InventarioManager.validarCodigoDescuento(codigo);
-    
-    if (validacion.valido) {
-        codigoDescuento = codigo.toUpperCase();
-        if (mensajeCodigo) {
-            mensajeCodigo.innerHTML = `<span class="text-green-400">✓ ${validacion.datos.nombre} aplicado</span>`;
-            mensajeCodigo.className = "text-sm mt-1";
-        }
-        actualizarPantalla();
-    } else {
-        codigoDescuento = "";
-        if (mensajeCodigo) {
-            mensajeCodigo.innerHTML = `<span class="text-red-400">✗ ${validacion.mensaje || 'Código no válido'}</span>`;
-            mensajeCodigo.className = "text-sm mt-1";
-        }
-        actualizarPantalla();
-    }
-}
-
-// --- FUNCIÓN 3: ACTUALIZAR TEXTOS Y PRECIOS ---
-function actualizarPantalla() {
-    // 1. Buscar la cajita del número y poner la cantidad actual (puede ser 0)
-    let cajitaNumero = document.getElementById('cantidad-boletos');
-    if (cajitaNumero) {
-        cajitaNumero.textContent = cantidadActual.toString();
-    } else {
-        console.warn('No se encontró el elemento cantidad-boletos');
-    }
-
-    // 2. Actualizar la fecha seleccionada si hay una
-    let cajitaFecha = document.getElementById('fecha-seleccionada-texto');
-    if (cajitaFecha) {
-        if (nombreFecha) {
-            cajitaFecha.innerText = nombreFecha;
-        } else {
-            cajitaFecha.innerText = "Selecciona una fecha";
-        }
-    }
-
-    // 2b. Actualizar cantidad de boletos en el resumen (solo si hay boletos)
-    let cajitaCantidadResumen = document.getElementById('cantidad-boletos-resumen');
-    let contenedorCantidad = document.getElementById('cantidad-boletos-container');
-    if (cajitaCantidadResumen && contenedorCantidad) {
-        if (cantidadActual > 0) {
-            cajitaCantidadResumen.textContent = cantidadActual + "x boleto" + (cantidadActual > 1 ? "s" : "");
-            contenedorCantidad.style.display = "block";
-        } else {
-            contenedorCantidad.style.display = "none";
-        }
-    }
-
-    // 3. Calcular precios con descuento (solo si hay boletos)
-    let calculoPrecio;
-    if (cantidadActual > 0) {
-        if (typeof InventarioManager !== 'undefined' && InventarioManager.calcularPrecioConDescuento) {
-            calculoPrecio = InventarioManager.calcularPrecioConDescuento(
-                precioUnitario, 
-                cantidadActual, 
-                codigoDescuento
-            );
-        } else {
-            // Fallback si InventarioManager no está disponible
-            const subtotal = precioUnitario * cantidadActual;
-            const descuento = 0;
-            calculoPrecio = {
-                subtotal: subtotal,
-                descuento: descuento,
-                total: subtotal - descuento,
-                descuentoAplicado: null
-            };
-        }
-    } else {
-        // Si no hay boletos, precios en 0
-        calculoPrecio = {
-            subtotal: 0,
-            descuento: 0,
-            total: 0,
-            descuentoAplicado: null
-        };
-    }
-    
-    // 4. Actualizar el subtotal
-    let cajitaSubtotal = document.getElementById('subtotal-precio');
-    if (cajitaSubtotal) {
-        cajitaSubtotal.textContent = "$" + calculoPrecio.subtotal.toFixed(2);
-    } else {
-        console.warn('No se encontró el elemento subtotal-precio');
-    }
-
-    // 5. Mostrar descuento si hay uno aplicado
-    let cajitaDescuento = document.getElementById('descuento-precio');
-    let contenedorDescuento = document.getElementById('contenedor-descuento');
-    if (calculoPrecio.descuentoAplicado && calculoPrecio.descuento > 0) {
-        if (cajitaDescuento) {
-            cajitaDescuento.textContent = "-$" + calculoPrecio.descuento.toFixed(2);
-        }
-        if (contenedorDescuento) {
-            contenedorDescuento.classList.remove('hidden');
-        }
-    } else {
-        if (contenedorDescuento) {
-            contenedorDescuento.classList.add('hidden');
-        }
-    }
-    
-    // 6. Poner el total donde va el precio
-    let cajitaPrecio = document.getElementById('total-precio');
-    if (cajitaPrecio) {
-        cajitaPrecio.textContent = "$" + calculoPrecio.total.toFixed(2) + " MXN";
-    } else {
-        console.warn('No se encontró el elemento total-precio');
-    }
-
-    // 7. Controlar el botón de "Continuar"
-    let boton = document.getElementById('btn-continuar');
-    if (boton) {
-        if (fechaSeleccionada === null) {
-            // Si NO ha elegido fecha, bloqueamos el botón
-            boton.textContent = "Selecciona una fecha";
-            boton.disabled = true;
-            boton.classList.remove('bg-[#A97C22]', 'hover:bg-[#B88A2F]', 'text-white');
-            boton.classList.add('bg-gray-600', 'text-gray-400', 'cursor-not-allowed');
-            boton.style.backgroundColor = '';
-            boton.style.color = '';
-        } else if (cantidadActual === 0) {
-            // Si NO hay boletos, bloqueamos el botón
-            boton.textContent = "Selecciona al menos 1 boleto";
-            boton.disabled = true;
-            boton.classList.remove('bg-[#A97C22]', 'hover:bg-[#B88A2F]', 'text-white');
-            boton.classList.add('bg-gray-600', 'text-gray-400', 'cursor-not-allowed');
-            boton.style.backgroundColor = '';
-            boton.style.color = '';
-        } else if (!calculoPrecio || typeof calculoPrecio.total !== 'number') {
-            // Si no hay cálculo de precio válido, mantener deshabilitado
-            boton.textContent = "Calculando...";
-            boton.disabled = true;
-            boton.classList.remove('bg-[#A97C22]', 'hover:bg-[#B88A2F]', 'text-white');
-            boton.classList.add('bg-gray-600', 'text-gray-400', 'cursor-not-allowed');
-            boton.style.backgroundColor = '';
-            boton.style.color = '';
-        } else {
-            // Si YA eligió fecha Y hay boletos Y hay precio válido, activamos el botón
-            boton.textContent = "Adquiere tus boletos - $" + calculoPrecio.total.toFixed(2);
-            boton.disabled = false;
-            boton.classList.remove('bg-gray-600', 'text-gray-400', 'cursor-not-allowed');
-            boton.classList.add('bg-[#A97C22]', 'hover:bg-[#B88A2F]', 'text-white', 'cursor-pointer');
-            boton.style.backgroundColor = '#A97C22';
-            boton.style.color = '#FFFFFF';
-        }
-    } else {
-        console.warn('No se encontró el botón btn-continuar');
-    }
-    
-}
-
-// --- DISPONIBILIDAD REAL DESDE EL WORKER ---
-// Fire-and-forget: no bloquea la UI, actualiza disponibilidadInfo si el Worker responde.
+// --- DISPONIBILIDAD REAL DESDE EL WORKER (fire-and-forget) ---
 function refrescarDisponibilidadWorker() {
     if (!fechaIsoActual || !window.API_BASE) return;
     fetch(`${window.API_BASE}/api/disponibilidad?fecha=${encodeURIComponent(fechaIsoActual)}`)
         .then(r => r.ok ? r.json() : null)
         .then(data => {
             if (!data || typeof data.disponibles !== 'number') return;
-            disponibilidadInfo = {
-                total: data.total,
-                vendidos: data.vendidos,
-                reservados: 0,
-                disponible: data.disponibles,
-            };
+            disponibilidadInfo = { total: data.total, vendidos: data.vendidos, reservados: 0, disponible: data.disponibles };
             actualizarIndicadorDisponibilidad();
         })
-        .catch(() => {}); // usa localStorage como fallback silencioso
+        .catch(() => {});
 }
 
-// --- FUNCIÓN 4: IR A CONFIRMACIÓN (PAGO FINAL) ---
+// --- FUNCIÓN 3: ACTUALIZAR PANTALLA ---
+function actualizarPantalla() {
+    // Cantidad por tipo
+    TIPOS_BOLETO.forEach(t => {
+        const el = document.getElementById(`cantidad-${t.tipo}`);
+        if (el) el.textContent = cantidades[t.tipo] || 0;
+    });
+
+    // Fecha seleccionada
+    const cajitaFecha = document.getElementById('fecha-seleccionada-texto');
+    if (cajitaFecha) cajitaFecha.innerText = nombreFecha || 'Selecciona una fecha';
+
+    // Resumen de items en el panel de precio
+    const resumenEl = document.getElementById('items-resumen');
+    if (resumenEl) {
+        const activos = TIPOS_BOLETO.filter(t => cantidades[t.tipo] > 0);
+        resumenEl.innerHTML = activos.map(t =>
+            `<div class="flex justify-between text-text-dark text-sm">
+                <span>${t.nombre} × ${cantidades[t.tipo]}</span>
+                <span>$${(t.precio * cantidades[t.tipo]).toFixed(2)}</span>
+            </div>`
+        ).join('');
+    }
+
+    // Total
+    const total = calcularTotal();
+    const totalEl = document.getElementById('total-precio');
+    if (totalEl) totalEl.textContent = `$${total.toFixed(2)} MXN`;
+
+    // Botón continuar
+    const boton = document.getElementById('btn-continuar');
+    if (!boton) return;
+
+    if (!fechaSeleccionada) {
+        boton.textContent = 'Selecciona una fecha';
+        boton.disabled = true;
+        boton.classList.add('cursor-not-allowed', 'opacity-70');
+    } else if (totalCantidad() === 0) {
+        boton.textContent = 'Selecciona al menos 1 boleto';
+        boton.disabled = true;
+        boton.classList.add('cursor-not-allowed', 'opacity-70');
+    } else {
+        boton.textContent = `Continuar — $${total.toFixed(2)} MXN`;
+        boton.disabled = false;
+        boton.classList.remove('cursor-not-allowed', 'opacity-70');
+    }
+}
+
+// --- FUNCIÓN 4: IR A CHECKOUT ---
 function irAConfirmacion() {
-    if (fechaSeleccionada === null) {
-        alert("Por favor selecciona una fecha para continuar");
+    if (!fechaSeleccionada) {
+        alert('Por favor selecciona una fecha para continuar');
         return false;
     }
 
-    if (cantidadActual < 1) {
-        alert("Por favor selecciona al menos un boleto");
+    const items = TIPOS_BOLETO
+        .filter(t => cantidades[t.tipo] > 0)
+        .map(t => ({ tipo: t.tipo, cantidad: cantidades[t.tipo] }));
+
+    if (items.length === 0) {
+        alert('Por favor selecciona al menos un boleto');
         return false;
     }
 
+    const cantTotal = totalCantidad();
     verificarDisponibilidad();
-    
+
     if (!reservaId) {
-        const resultado = InventarioManager.crearReserva(fechaSeleccionada, cantidadActual);
+        const resultado = InventarioManager.crearReserva(fechaSeleccionada, cantTotal);
         if (resultado.exito) {
             reservaId = resultado.reservaId;
         } else {
-            alert("No se pudo crear la reserva. Por favor intenta de nuevo.");
+            alert('No se pudo crear la reserva. Por favor intenta de nuevo.');
             return false;
         }
     }
 
-    const calculoPrecio = InventarioManager.calcularPrecioConDescuento(
-        precioUnitario, 
-        cantidadActual, 
-        codigoDescuento
-    );
-
-    let orden = {
-        fecha: nombreFecha,
-        fechaIso: fechaIsoActual,
-        clave: fechaSeleccionada,
-        cantidad: cantidadActual,
-        precioUnitario: precioUnitario,
-        subtotal: calculoPrecio.subtotal,
-        descuento: calculoPrecio.descuento,
-        codigoDescuento: codigoDescuento || null,
-        descuentoAplicado: calculoPrecio.descuentoAplicado,
-        total: calculoPrecio.total,
-        reservaId: reservaId,
-        timestamp: Date.now()
+    const orden = {
+        fecha:         nombreFecha,
+        fechaIso:      fechaIsoActual,
+        clave:         fechaSeleccionada,
+        items,
+        cantidadTotal: cantTotal,
+        total:         calcularTotal(),
+        reservaId,
+        timestamp:     Date.now(),
     };
-    
+
     try {
         localStorage.setItem('orden_compra', JSON.stringify(orden));
         navegandoACheckout = true;
@@ -418,7 +253,7 @@ function irAConfirmacion() {
     }
 }
 
-// --- FUNCIÓN: LIMPIAR RESERVA AL SALIR ---
+// --- LIMPIAR RESERVA AL SALIR ---
 let navegandoACheckout = false;
 
 function limpiarReserva() {
@@ -430,34 +265,31 @@ function limpiarReserva() {
 
 window.addEventListener('beforeunload', limpiarReserva);
 
-// --- FUNCIÓN: CARGAR FECHAS DINÁMICAS ---
+// --- CARGAR FECHAS DINÁMICAS ---
 function cargarFechas() {
-    if (typeof FechasManager === 'undefined') {
-        console.error('FechasManager no está disponible');
-        return;
-    }
+    if (typeof FechasManager === 'undefined') return;
 
     const funciones = FechasManager.obtenerFunciones();
     const botonesContainer = document.getElementById('botones-fecha');
-    
     if (!botonesContainer) return;
 
     let html = '';
 
-    funciones.especiales.forEach(funcion => {
-        const bloqueada = funcion.bloqueada;
+    [...funciones.especiales, ...funciones.regulares].forEach(funcion => {
+        const bloqueada    = funcion.bloqueada;
         const esSeleccionada = fechaSeleccionada === funcion.clave;
-        const claseBoton = bloqueada 
+        const claseBoton   = bloqueada
             ? 'p-4 rounded-lg text-center border border-slate-700/50 bg-slate-800/40 text-slate-400 cursor-not-allowed backdrop-blur-sm'
             : `p-3 sm:p-4 rounded-lg text-center border-2 ${esSeleccionada ? 'border-white border-4' : 'border-[#967d3d]'} bg-[#c69c3a] text-[#3e1116] transition-all duration-200 hover:bg-[#dcb048] hover:text-[#2a080d] active:bg-[#b88a2f] hover:shadow-md hover:border-[#bda056] group focus:ring-2 focus:ring-white touch-manipulation`;
-        
-        const fechaCorta = funcion.nombre.split(' - ')[0];
-        const hora = funcion.nombre.split(' - ')[1] || '';
-        const estiloBoton = bloqueada ? '' : (esSeleccionada ? 'border: 3px solid white; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); -webkit-tap-highlight-color: transparent;' : '-webkit-tap-highlight-color: transparent;');
-        
+        const estiloBoton  = bloqueada ? '' : (esSeleccionada
+            ? 'border: 3px solid white; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); -webkit-tap-highlight-color: transparent;'
+            : '-webkit-tap-highlight-color: transparent;');
+        const fechaCorta   = funcion.nombre.split(' - ')[0];
+        const hora         = funcion.nombre.split(' - ')[1] || '';
+
         html += `
-            <button 
-                type="button" 
+            <button
+                type="button"
                 data-fecha-clave="${funcion.clave}"
                 onclick="${bloqueada ? '' : `seleccionarFecha('${funcion.clave}', '${funcion.nombre}', ${JSON.stringify(funcion).replace(/"/g, '&quot;')})`}"
                 class="${claseBoton}"
@@ -472,84 +304,35 @@ function cargarFechas() {
         `;
     });
 
-    funciones.regulares.forEach(funcion => {
-        const bloqueada = funcion.bloqueada;
-        const esSeleccionada = fechaSeleccionada === funcion.clave;
-        const claseBoton = bloqueada 
-            ? 'p-4 rounded-lg text-center border border-slate-700/50 bg-slate-800/40 text-slate-400 cursor-not-allowed backdrop-blur-sm'
-            : `p-3 sm:p-4 rounded-lg text-center border-2 ${esSeleccionada ? 'border-white border-4' : 'border-[#967d3d]'} bg-[#c69c3a] text-[#3e1116] transition-all duration-200 hover:bg-[#dcb048] hover:text-[#2a080d] active:bg-[#b88a2f] hover:shadow-md hover:border-[#bda056] group focus:ring-2 focus:ring-white touch-manipulation`;
-        
-        const fechaCorta = funcion.nombre.split(' - ')[0];
-        const hora = funcion.nombre.split(' - ')[1] || '';
-        const estiloBoton = bloqueada ? '' : (esSeleccionada ? 'border: 3px solid white; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); -webkit-tap-highlight-color: transparent;' : '-webkit-tap-highlight-color: transparent;');
-        
-        html += `
-            <button 
-                type="button" 
-                data-fecha-clave="${funcion.clave}"
-                onclick="${bloqueada ? '' : `seleccionarFecha('${funcion.clave}', '${funcion.nombre}', ${JSON.stringify(funcion).replace(/"/g, '&quot;')})`}"
-                class="${claseBoton}"
-                ${bloqueada ? 'disabled' : ''}
-                style="${estiloBoton}"
-            >
-                <span class="block font-bold ${bloqueada ? 'opacity-60' : ''}">${fechaCorta}</span>
-                <span class="text-sm ${bloqueada ? 'opacity-60' : ''}">
-                    ${bloqueada ? 'Ventas bloqueadas' : hora}
-                </span>
-            </button>
-        `;
-    });
-
     botonesContainer.innerHTML = html;
-    
-    if (fechaSeleccionada) {
-        resaltarBotonFecha(fechaSeleccionada);
-    }
+    if (fechaSeleccionada) resaltarBotonFecha(fechaSeleccionada);
 }
 
-// --- INICIALIZACIÓN AL CARGAR LA PÁGINA ---
+// --- INICIALIZACIÓN ---
 function inicializar() {
-    if (typeof InventarioManager !== 'undefined') {
-        InventarioManager.inicializar();
-    }
-    
+    if (typeof InventarioManager !== 'undefined') InventarioManager.inicializar();
+
     cargarFechas();
-    
+
     if (typeof FechasManager !== 'undefined') {
         const funciones = FechasManager.obtenerFunciones();
-        [...funciones.regulares, ...funciones.especiales].forEach(funcion => {
-            FechasManager.inicializarInventarioFuncion(funcion.clave);
+        [...funciones.regulares, ...funciones.especiales].forEach(f => {
+            FechasManager.inicializarInventarioFuncion(f.clave);
         });
     }
-    
+
     actualizarPantalla();
-    
+
     setInterval(() => {
-        if (fechaSeleccionada) {
-            verificarDisponibilidad();
-            actualizarPantalla();
-        }
+        if (fechaSeleccionada) { verificarDisponibilidad(); actualizarPantalla(); }
     }, 30000);
-    
-    setInterval(() => {
-        cargarFechas();
-    }, 60000);
-    
-    const inputCodigo = document.getElementById('codigo-descuento-input');
-    if (inputCodigo) {
-        inputCodigo.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                aplicarCodigoDescuento();
-            }
-        });
-    }
+
+    setInterval(cargarFechas, 60000);
 }
 
-window.irAConfirmacion = irAConfirmacion;
-window.cambiarCantidad = cambiarCantidad;
+window.irAConfirmacion  = irAConfirmacion;
+window.cambiarCantidad  = cambiarCantidad;
 window.seleccionarFecha = seleccionarFecha;
-window.aplicarCodigoDescuento = aplicarCodigoDescuento;
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', inicializar);

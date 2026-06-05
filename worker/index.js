@@ -170,10 +170,16 @@ async function checkRateLimit(ip, env) {
 
 // ─── CONSTANTES DE NEGOCIO ────────────────────────────────────────────────────
 
-const PRECIO_BASE    = 350;  // MXN all-in (8% impuesto absorbido)
-const CAPACIDAD      = 200;  // boletos por función
-const RESERVA_TTL    = 900;  // 15 min en segundos
-const TOKEN_TTL      = 8 * 60 * 60; // 8 horas
+const TIPOS_BOLETO = {
+  general:    { precio: 350, nombre: 'General' },
+  inapam:     { precio: 245, nombre: 'INAPAM' },
+  estudiante: { precio: 245, nombre: 'Estudiante' },
+  maestro:    { precio: 245, nombre: 'Maestro' },
+};
+
+const CAPACIDAD   = 200;       // boletos por función (capacidad total)
+const RESERVA_TTL = 900;       // reserva temporal: 15 min
+const TOKEN_TTL   = 8 * 60 * 60; // JWT: 8 horas
 
 // ─── HANDLERS: AUTENTICACIÓN ──────────────────────────────────────────────────
 
@@ -242,10 +248,9 @@ async function handleDisponibilidad(request, env) {
 async function handleCheckout(request, env) {
   if (!env.STRIPE_SECRET_KEY) return json({ error: 'Pagos no configurados.' }, 503, request);
 
-  // Rate limiting por IP
-  const ip = request.headers.get('CF-Connecting-IP')
-    || request.headers.get('X-Forwarded-For')?.split(',')[0].trim()
-    || 'unknown';
+  // CF-Connecting-IP es inyectado por Cloudflare — no puede ser falsificado.
+  // X-Forwarded-For es ignorado deliberadamente: es trivialmente manipulable.
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   if (!await checkRateLimit(ip, env)) {
     return json({ error: 'Demasiadas solicitudes. Intenta en 15 minutos.' }, 429, request);
   }
@@ -253,75 +258,106 @@ async function handleCheckout(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
 
-  const { cantidad, fecha, codigoDescuento } = body;
+  const { items, fecha } = body;
 
-  // Validar cantidad
-  if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > 8) {
-    return json({ error: 'Cantidad inválida (1–8 boletos).' }, 400, request);
+  // ── Validar items ─────────────────────────────────────────────────────────
+  if (!Array.isArray(items) || items.length === 0) {
+    return json({ error: 'El carrito está vacío.' }, 400, request);
   }
 
-  // Validar formato de fecha
+  let cantidadTotal = 0;
+  const tiposVistos = new Set();
+  const itemsValidados = [];
+
+  for (const item of items) {
+    const tipo     = typeof item.tipo === 'string' ? item.tipo.toLowerCase().trim() : '';
+    const cantidad = item.cantidad;
+    if (!TIPOS_BOLETO[tipo]) {
+      return json({ error: `Tipo de boleto inválido: "${tipo}".` }, 400, request);
+    }
+    if (!Number.isInteger(cantidad) || cantidad < 1) {
+      return json({ error: 'Cantidad inválida en uno o más tipos.' }, 400, request);
+    }
+    if (tiposVistos.has(tipo)) {
+      return json({ error: 'Tipo de boleto duplicado en el carrito.' }, 400, request);
+    }
+    tiposVistos.add(tipo);
+    cantidadTotal += cantidad;
+    itemsValidados.push({ tipo, cantidad });
+  }
+
+  if (cantidadTotal > 8) {
+    return json({ error: 'El máximo es 8 boletos por compra.' }, 400, request);
+  }
+
+  // ── Validar fecha ─────────────────────────────────────────────────────────
   if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
     return json({ error: 'Fecha inválida.' }, 400, request);
   }
 
-  // Validar fecha contra funciones:activas en KV
   const funcionesRaw = await env.INVENTARIO.get('funciones:activas');
   if (!funcionesRaw) return json({ error: 'No hay funciones activas. Contacta al administrador.' }, 503, request);
 
-  const funciones = JSON.parse(funcionesRaw);
-  const funcion   = funciones.find(f => f.fecha_iso === fecha && f.activa !== false);
+  let funciones, funcion;
+  try {
+    funciones = JSON.parse(funcionesRaw);
+    funcion   = funciones.find(f => f.fecha_iso === fecha && f.activa !== false);
+  } catch {
+    return json({ error: 'Error al leer configuración. Intenta de nuevo.' }, 500, request);
+  }
   if (!funcion) return json({ error: 'Fecha de función no válida.' }, 400, request);
 
-  // Validar código de descuento (server-side, nunca en el frontend)
-  let descuentoPct = 0;
-  if (codigoDescuento) {
-    const codigosRaw = await env.INVENTARIO.get('codigos:descuento');
-    if (codigosRaw) {
-      const entry = JSON.parse(codigosRaw)[codigoDescuento.trim().toUpperCase()];
-      if (entry && entry.activo !== false) descuentoPct = entry.porcentaje || 0;
-    }
-    // Código inválido → silenciosamente sin descuento (no revelar cuáles existen)
-  }
-
-  // Precio calculado SIEMPRE en el Worker
-  const subtotal  = PRECIO_BASE * cantidad;
-  const descuento = Math.round(subtotal * descuentoPct / 100);
-  const total     = subtotal - descuento;
-  const centavos  = total * 100;
-
-  // Leer inventario y verificar disponibilidad
+  // ── Verificar disponibilidad ──────────────────────────────────────────────
   const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
-  const inv    = invRaw ? JSON.parse(invRaw) : { total: CAPACIDAD, vendidos: 0, reservados: 0, bloqueado: false };
+  let inv;
+  try {
+    inv = invRaw ? JSON.parse(invRaw) : { total: CAPACIDAD, vendidos: 0, reservados: 0, bloqueado: false };
+  } catch {
+    inv = { total: CAPACIDAD, vendidos: 0, reservados: 0, bloqueado: false };
+  }
 
   if (inv.bloqueado) return json({ error: 'Ventas cerradas para esta función.' }, 409, request);
 
   const disponibles = inv.total - inv.vendidos - (inv.reservados || 0);
-  if (disponibles < cantidad) {
+  if (disponibles < cantidadTotal) {
     return json({ error: `Solo quedan ${Math.max(0, disponibles)} boleto(s) disponibles.` }, 409, request);
   }
 
-  // Reservar temporalmente (15 min)
-  const reservaId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  inv.reservados  = (inv.reservados || 0) + cantidad;
-  await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(inv));
-  await env.INVENTARIO.put(`reserva:${reservaId}`, JSON.stringify({ fecha, cantidad }), { expirationTtl: RESERVA_TTL });
+  // ── Precio calculado SIEMPRE en el Worker ─────────────────────────────────
+  // Cada tipo tiene su precio fijo; no hay lógica de descuento adicional.
+  let totalCentavos = 0;
+  for (const item of itemsValidados) {
+    totalCentavos += TIPOS_BOLETO[item.tipo].precio * item.cantidad * 100;
+  }
 
-  // Crear sesión Stripe (REST directo — sin SDK, sin dependencias externas)
+  // ── Reserva temporal (15 min) ─────────────────────────────────────────────
+  const reservaId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  inv.reservados  = (inv.reservados || 0) + cantidadTotal;
+  await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(inv));
+  await env.INVENTARIO.put(
+    `reserva:${reservaId}`,
+    JSON.stringify({ fecha, cantidad: cantidadTotal }),
+    { expirationTtl: RESERVA_TTL },
+  );
+
+  // ── Crear sesión Stripe con un line item por tipo ─────────────────────────
   const params = new URLSearchParams({
-    mode: 'payment',
-    'line_items[0][price_data][currency]':                        'mxn',
-    'line_items[0][price_data][product_data][name]':              `EL GORILA — ${funcion.nombre}`,
-    'line_items[0][price_data][product_data][description]':       `${cantidad} boleto${cantidad !== 1 ? 's' : ''}`,
-    'line_items[0][price_data][unit_amount]':                     String(centavos),
-    'line_items[0][quantity]':                                    '1',
+    mode:        'payment',
     success_url: 'https://elgorilateatro.com.mx/confirmacion.html?session_id={CHECKOUT_SESSION_ID}',
     cancel_url:  'https://elgorilateatro.com.mx/boletos.html?cancelado=1',
-    'metadata[fecha]':            fecha,
-    'metadata[cantidad]':         String(cantidad),
-    'metadata[reservaId]':        reservaId,
-    'metadata[codigoDescuento]':  codigoDescuento ? codigoDescuento.trim().toUpperCase() : '',
-    'metadata[descuento]':        String(descuento),
+    'metadata[fecha]':     fecha,
+    'metadata[cantidad]':  String(cantidadTotal),
+    'metadata[reservaId]': reservaId,
+    'metadata[items]':     JSON.stringify(itemsValidados),
+  });
+
+  itemsValidados.forEach((item, idx) => {
+    const tipo = TIPOS_BOLETO[item.tipo];
+    params.set(`line_items[${idx}][price_data][currency]`,                  'mxn');
+    params.set(`line_items[${idx}][price_data][product_data][name]`,        `EL GORILA — ${tipo.nombre}`);
+    params.set(`line_items[${idx}][price_data][product_data][description]`, funcion.nombre);
+    params.set(`line_items[${idx}][price_data][unit_amount]`,               String(tipo.precio * 100));
+    params.set(`line_items[${idx}][quantity]`,                              String(item.cantidad));
   });
 
   try {
@@ -339,7 +375,7 @@ async function handleCheckout(request, env) {
 
   } catch (err) {
     // Rollback reserva
-    inv.reservados = Math.max(0, inv.reservados - cantidad);
+    inv.reservados = Math.max(0, inv.reservados - cantidadTotal);
     await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(inv));
     await env.INVENTARIO.delete(`reserva:${reservaId}`);
     console.error('Stripe checkout error:', err.message);
@@ -378,7 +414,10 @@ async function handleWebhook(request, env) {
   const fecha     = meta.fecha;
   const cantidad  = parseInt(meta.cantidad, 10);
   const reservaId = meta.reservaId;
-  const descuento = parseInt(meta.descuento, 10) || 0;
+
+  // Desglose de items por tipo (guardado como JSON en metadata)
+  let items = [];
+  try { if (meta.items) items = JSON.parse(meta.items); } catch {}
 
   if (!fecha || !cantidad) {
     console.error('Webhook: metadata incompleta en sesión', sessionId);
@@ -393,10 +432,9 @@ async function handleWebhook(request, env) {
     codigo,
     fecha,
     cantidad,
+    items,  // desglose por tipo: [{ tipo, cantidad }]
     email: session.customer_details?.email || session.customer_email || null,
     total: session.amount_total != null ? session.amount_total / 100 : 0,
-    codigoDescuento: meta.codigoDescuento || null,
-    descuento,
     fechaCompra: new Date().toISOString(),
     estado: 'completada',
   };
@@ -422,36 +460,39 @@ async function handleWebhook(request, env) {
 // ─── HANDLER: VENTA (confirmación) ────────────────────────────────────────────
 
 async function handleVenta(id, request, env) {
-  // Buscar por session_id (redirect de Stripe → confirmacion.html?session_id=...)
-  let ventaRaw = await env.VENTAS.get(`venta:${id}`);
+  try {
+    // Buscar por session_id (redirect de Stripe → confirmacion.html?session_id=...)
+    let ventaRaw = await env.VENTAS.get(`venta:${id}`);
 
-  // Buscar por código CERT si no se encontró por session_id
-  if (!ventaRaw) {
-    const certRaw = await env.VENTAS.get(`cert:${id}`);
-    if (certRaw) {
-      const { sessionId } = JSON.parse(certRaw);
-      ventaRaw = await env.VENTAS.get(`venta:${sessionId}`);
+    // Buscar por código CERT si no se encontró por session_id
+    if (!ventaRaw) {
+      const certRaw = await env.VENTAS.get(`cert:${id}`);
+      if (certRaw) {
+        const { sessionId } = JSON.parse(certRaw);
+        ventaRaw = await env.VENTAS.get(`venta:${sessionId}`);
+      }
     }
+
+    if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
+
+    const venta = JSON.parse(ventaRaw);
+
+    // Devolver datos necesarios para mostrar confirmación. Sin datos de tarjeta.
+    return json({
+      sessionId:   venta.sessionId,
+      codigo:      venta.codigo,
+      numeroOrden: venta.codigo,  // alias para confirmacion.js
+      fecha:       venta.fecha,
+      cantidad:    venta.cantidad,
+      items:       venta.items || [],
+      email:       venta.email,
+      total:       venta.total,
+      fechaCompra: venta.fechaCompra,
+      estado:      venta.estado,
+    }, 200, request);
+  } catch {
+    return json({ error: 'Error al obtener la venta.' }, 500, request);
   }
-
-  if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
-
-  const venta = JSON.parse(ventaRaw);
-
-  // Devolver datos necesarios para mostrar confirmación. Sin datos de tarjeta.
-  return json({
-    sessionId:       venta.sessionId,
-    codigo:          venta.codigo,
-    numeroOrden:     venta.codigo,   // alias para compatibilidad con confirmacion.js
-    fecha:           venta.fecha,
-    cantidad:        venta.cantidad,
-    email:           venta.email,
-    total:           venta.total,
-    codigoDescuento: venta.codigoDescuento || null,
-    descuento:       venta.descuento || 0,
-    fechaCompra:     venta.fechaCompra,
-    estado:          venta.estado,
-  }, 200, request);
 }
 
 // ─── ROUTER ───────────────────────────────────────────────────────────────────
