@@ -936,13 +936,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .logo-37-sello:not(.logo-37-cargando) {
       opacity: 1;
     }
-    /* Mientras el widget de boletos está abierto: no tapar la X ni el flujo de pago (Ticket Tailor) */
-    .logo-37-sello.logo-37-oculto-por-widget {
-      opacity: 0 !important;
-      visibility: hidden;
-      pointer-events: none;
-      transition: opacity 0.2s ease, visibility 0.2s;
-    }
     /* Botón Adquiere tus entradas: granate tipo terciopelo */
     .btn-granate-terciopelo {
       background: linear-gradient(165deg, #8B3A42 0%, #6B2D35 50%, #5A252C 100%) !important;
@@ -1532,114 +1525,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       .galeria-hilo-2 { left: 50%; }
       .galeria-hilo-3 { left: 75%; }
     }
-    /* Widget de boletos — overlay flotante */
-    .widget-boletos-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9998;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
-    .widget-boletos-overlay.abierto {
-      opacity: 1;
-      visibility: visible;
-    }
-    .widget-boletos-panel {
-      position: fixed;
-      z-index: 9999;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%) scale(0.92);
-      width: calc(100% - 2rem);
-      max-width: 520px;
-      max-height: calc(100dvh - 6rem);
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s ease;
-    }
-    .widget-boletos-panel.abierto {
-      opacity: 1;
-      visibility: visible;
-      transform: translate(-50%, -50%) scale(1);
-    }
-    .widget-boletos-panel .widget-boletos-inner {
-      position: relative;
-      overflow: hidden;
-      background: rgba(26, 21, 14, 0.97);
-      border: 1px solid rgba(212, 175, 55, 0.25);
-      border-radius: 1rem;
-      padding: 1.5rem 1rem;
-      box-shadow:
-        0 25px 60px rgba(0,0,0,0.6),
-        0 0 40px rgba(201,168,75,0.12),
-        0 0 0 1px rgba(212,175,55,0.08);
-    }
-    .widget-boletos-panel .widget-boletos-inner::before {
-      content: '';
-      position: absolute;
-      top: -20%;
-      left: -20%;
-      right: -20%;
-      bottom: -20%;
-      background-image: url('img/SINOPSIS/mobile/3.webp');
-      background-size: 150% 150%;
-      background-position: center center;
-      background-repeat: no-repeat;
-      filter: blur(50px) brightness(0.28) contrast(0.8) saturate(0.4);
-      opacity: 0.75;
-      z-index: 0;
-      transform: scale(1.3);
-      pointer-events: none;
-    }
-    .widget-boletos-panel .widget-boletos-inner::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23t)' opacity='0.35'/%3E%3C/svg%3E");
-      background-repeat: repeat;
-      background-size: 120px 120px;
-      opacity: 0.04;
-      pointer-events: none;
-      z-index: 0;
-      border-radius: inherit;
-    }
-    .widget-boletos-panel .widget-boletos-inner > * {
-      position: relative;
-      z-index: 1;
-    }
-    #widget-boletos-contenido {
-      max-width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-    @media (min-width: 640px) {
-      .widget-boletos-panel .widget-boletos-inner { padding: 2rem 1.5rem; }
-    }
-    .widget-boletos-cerrar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.4);
-      border: 1px solid rgba(212,175,55,0.2);
-      color: rgba(212, 175, 55, 0.65);
-      cursor: pointer;
-      transition: color 0.2s, transform 0.2s, background 0.2s;
-      padding: 0;
-    }
-    .widget-boletos-cerrar:hover {
-      color: #d4af37;
-      background: rgba(0,0,0,0.6);
-      transform: scale(1.15);
-    }
   </style>
 <style>
   @media (min-width: 1230px) {
@@ -1889,19 +1774,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 
 </section>
-<!-- Overlay + Panel flotante de boletos -->
-<div id="widget-boletos-overlay" class="widget-boletos-overlay"></div>
-<div id="widget-boletos-panel" class="widget-boletos-panel">
-  <div class="widget-boletos-inner">
-    <div class="flex justify-between items-center mb-2">
-      <span style="color:rgba(212,175,55,0.85); font-weight:700; font-size:1.05rem; font-family:var(--font-display,serif);">Adquiere tus boletos</span>
-      <button id="cerrar-widget-boletos" class="widget-boletos-cerrar" aria-label="Cerrar widget de boletos">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div id="widget-boletos-contenido"></div>
-  </div>
-</div>
 <!-- Contenido de la obra (siempre visible, sobre eliminado) -->
 <div id="sobre-contenido" style="max-height:none; opacity:1; overflow:visible; padding-top:0.5rem;">
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-2 sm:mt-4 md:mt-8">
