@@ -168,6 +168,176 @@ async function checkRateLimit(ip, env) {
   return true;
 }
 
+// ─── RESEND (EMAIL) ───────────────────────────────────────────────────────────
+
+async function enviarEmail(to, subject, html, env) {
+  if (!env.RESEND_API_KEY) return false;
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'EL GORILA <onboarding@resend.dev>',
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        html,
+      }),
+    });
+    if (!res.ok) { const e = await res.text(); console.error('Resend:', res.status, e); return false; }
+    return true;
+  } catch (e) { console.error('Resend fetch:', e.message); return false; }
+}
+
+function htmlBoleto(venta, funcionNombre, tipos) {
+  const items = Array.isArray(venta.items) ? venta.items : [];
+  const generalItem     = items.find(i => i.tipo === 'general');
+  const tieneEspeciales = items.some(i => i.tipo !== 'general');
+  const promoGrupo      = !!(generalItem && generalItem.cantidad >= 5 && !tieneEspeciales);
+  const subtotal = items.reduce((s, i) => s + (tipos[i.tipo]?.precio || 0) * i.cantidad, 0);
+  const total    = venta.total || 0;
+  const descuentoMonto = Math.max(0, subtotal - total);
+
+  const verUrl = `https://elgorilateatro.com.mx/verificar.html?codigo=${encodeURIComponent(venta.codigo)}`;
+  const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(verUrl)}&margin=8`;
+  const waText = encodeURIComponent(
+    `*EL GORILA — Boleto confirmado* 🎭\n` +
+    `Función: ${funcionNombre}\n` +
+    `Boletos: ${items.map(i => `${i.cantidad} ${tipos[i.tipo]?.nombre || i.tipo}`).join(', ')}\n` +
+    `Total: $${total.toFixed(2)} MXN\n` +
+    `Folio: ${venta.codigo}\n\n` +
+    `📍 Centro Cultural Coyoacanense, Coyoacán`
+  );
+  const waUrl = `https://wa.me/?text=${waText}`;
+
+  const itemsHtml = items.map(i => {
+    const t = tipos[i.tipo] || { nombre: i.tipo, precio: 0 };
+    const p = (promoGrupo && i.tipo === 'general') ? t.precio * 0.75 : t.precio;
+    return `<tr><td style="color:#D4CFC3;font-size:14px;padding:3px 0;font-family:Arial,sans-serif;">${t.nombre} × ${i.cantidad}</td><td align="right" style="color:#D4CFC3;font-size:14px;padding:3px 0;font-family:Arial,sans-serif;">$${(p * i.cantidad).toFixed(2)}</td></tr>`;
+  }).join('');
+
+  const descuentoHtml = descuentoMonto > 0
+    ? `<tr><td style="color:#4cd964;font-size:13px;padding:3px 0;font-family:Arial,sans-serif;">Descuento 25% (5+ generales)</td><td align="right" style="color:#4cd964;font-size:13px;padding:3px 0;font-family:Arial,sans-serif;">-$${descuentoMonto.toFixed(2)}</td></tr>`
+    : '';
+
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0e0a07;font-family:Georgia,'Times New Roman',serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0e0a07;padding:40px 16px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#1a150e;border:1px solid rgba(212,175,55,0.25);border-radius:8px;">
+<tr><td style="padding:36px 40px 28px;text-align:center;background:#130f0b;border-bottom:1px solid rgba(212,175,55,0.15);border-radius:8px 8px 0 0;">
+  <img src="https://elgorilateatro.com.mx/img/LOGO/1.jpg" width="72" height="72" alt="EL GORILA" style="border-radius:50%;display:block;margin:0 auto 16px;border:2px solid rgba(212,175,55,0.4);">
+  <h1 style="margin:0;color:#D4AF37;font-size:26px;letter-spacing:6px;font-weight:400;">EL GORILA</h1>
+  <p style="margin:8px 0 0;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;">Boleto de Entrada · Confirmado</p>
+</td></tr>
+<tr><td style="padding:28px 40px 0;">
+  <p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Función</p>
+  <p style="margin:0 0 20px;color:#EAE0D1;font-size:17px;">${funcionNombre}</p>
+  <p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Venue</p>
+  <p style="margin:0 0 4px;color:#EAE0D1;font-size:15px;">Centro Cultural Coyoacanense</p>
+  <p style="margin:0 0 24px;color:rgba(212,175,55,0.6);font-size:13px;font-family:Arial,sans-serif;">Calle Felipe Carrillo Puerto 54, Coyoacán, CDMX</p>
+  <hr style="border:none;border-top:1px solid rgba(212,175,55,0.12);margin:0 0 24px;">
+</td></tr>
+<tr><td style="padding:0 40px 24px;">
+  <p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Resumen</p>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    ${itemsHtml}
+    ${descuentoHtml}
+    <tr><td colspan="2" style="padding-top:8px;border-top:1px solid rgba(212,175,55,0.15);"></td></tr>
+    <tr><td style="color:#D4AF37;font-size:16px;font-weight:700;padding-top:6px;font-family:Arial,sans-serif;">Total</td><td align="right" style="color:#D4AF37;font-size:18px;font-weight:700;padding-top:6px;font-family:Arial,sans-serif;">$${total.toFixed(2)} MXN</td></tr>
+  </table>
+  <hr style="border:none;border-top:1px solid rgba(212,175,55,0.12);margin:24px 0 0;">
+</td></tr>
+<tr><td style="padding:20px 40px;background:rgba(0,0,0,0.25);">
+  <p style="margin:0 0 6px;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Folio</p>
+  <p style="margin:0;color:#EAE0D1;font-family:'Courier New',monospace;font-size:13px;letter-spacing:1px;">${venta.codigo}</p>
+</td></tr>
+<tr><td style="padding:28px 40px;text-align:center;background:rgba(0,0,0,0.15);">
+  <p style="margin:0 0 16px;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Código QR para acceso</p>
+  <img src="${qrUrl}" width="160" height="160" alt="QR de acceso" style="display:block;margin:0 auto;background:#fff;padding:8px;border-radius:4px;">
+  <p style="margin:12px 0 0;color:rgba(212,175,55,0.35);font-size:11px;font-family:Arial,sans-serif;">Presenta este código en taquilla</p>
+</td></tr>
+<tr><td style="padding:24px 40px;text-align:center;">
+  <a href="${waUrl}" style="display:inline-block;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.4);color:#25d366;text-decoration:none;padding:14px 36px;border-radius:6px;font-family:Arial,sans-serif;font-size:14px;font-weight:600;">💬 &nbsp;Guardar en WhatsApp</a>
+</td></tr>
+<tr><td style="padding:24px 40px;text-align:center;background:#130f0b;border-top:1px solid rgba(212,175,55,0.12);border-radius:0 0 8px 8px;">
+  <p style="margin:0 0 6px;color:#D4AF37;font-size:15px;letter-spacing:3px;">EL GORILA</p>
+  <p style="margin:0;color:rgba(212,175,55,0.4);font-size:11px;font-family:Arial,sans-serif;">elgorilateatro@gmail.com &nbsp;·&nbsp; elgorilateatro.com.mx</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+function htmlAvisoAdmin(venta, funcionNombre, tipos) {
+  const items   = Array.isArray(venta.items) ? venta.items : [];
+  const resumen = items.map(i => `${i.cantidad}× ${tipos[i.tipo]?.nombre || i.tipo}`).join(', ') || `${venta.cantidad} boleto(s)`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:32px 16px;">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;padding:32px;border:1px solid #ddd;">
+<tr><td>
+  <h2 style="margin:0 0 24px;color:#8B0000;font-size:20px;">🎭 Nueva venta — EL GORILA</h2>
+  <table width="100%" cellpadding="6" cellspacing="0" style="font-size:15px;color:#333;border-collapse:collapse;">
+    <tr><td style="color:#666;width:140px;padding:8px 0;">Función</td><td style="padding:8px 0;"><strong>${funcionNombre}</strong></td></tr>
+    <tr style="background:#fafafa;"><td style="color:#666;padding:8px 6px;">Comprador</td><td style="padding:8px 6px;">${venta.nombre ? `${venta.nombre} &lt;${venta.email}&gt;` : (venta.email || '—')}</td></tr>
+    <tr><td style="color:#666;padding:8px 0;">Boletos</td><td style="padding:8px 0;">${resumen}</td></tr>
+    <tr style="background:#fafafa;"><td style="color:#666;padding:8px 6px;">Total</td><td style="padding:8px 6px;"><strong>$${(venta.total || 0).toFixed(2)} MXN</strong></td></tr>
+    <tr><td style="color:#666;padding:8px 0;">Folio</td><td style="padding:8px 0;font-family:monospace;font-size:13px;">${venta.codigo}</td></tr>
+    <tr style="background:#fafafa;"><td style="color:#666;padding:8px 6px;">Fecha</td><td style="padding:8px 6px;">${new Date(venta.fechaCompra).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}</td></tr>
+  </table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+function htmlAvisoListaEspera(entrada, funcionNombre) {
+  const nombre1 = entrada.nombre.split(' ')[0];
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0e0a07;font-family:Georgia,'Times New Roman',serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0e0a07;padding:40px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;background:#1a150e;border:1px solid rgba(212,175,55,0.25);border-radius:8px;padding:48px 40px;text-align:center;">
+<tr><td>
+  <h1 style="color:#D4AF37;font-size:24px;letter-spacing:4px;font-weight:400;margin:0 0 8px;">EL GORILA</h1>
+  <hr style="border:none;border-top:1px solid rgba(212,175,55,0.2);margin:20px 0;">
+  <p style="color:#EAE0D1;font-size:20px;margin:0 0 8px;">Hay disponibilidad, ${nombre1}.</p>
+  <p style="color:rgba(212,175,55,0.7);font-size:14px;margin:0 0 28px;font-family:Arial,sans-serif;">Quedaste en la lista de espera para <strong style="color:#D4AF37;">${funcionNombre}</strong>.<br>Acaba de liberarse un lugar.</p>
+  <a href="https://elgorilateatro.com.mx/boletos.html" style="display:inline-block;background:#8B0000;border:1px solid rgba(212,175,55,0.5);color:#f5f0e8;text-decoration:none;padding:16px 44px;border-radius:6px;font-family:Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;">Comprar boleto →</a>
+  <p style="color:rgba(212,175,55,0.3);font-size:11px;margin:28px 0 0;font-family:Arial,sans-serif;">Esta disponibilidad es limitada y puede agotarse pronto.</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+async function notificarPrimeroListaEspera(fecha, funcionNombre, env) {
+  if (!env.VENTAS || !env.RESEND_API_KEY) return;
+  let listResult;
+  try { listResult = await env.VENTAS.list({ prefix: `lista:${fecha}:`, limit: 20 }); } catch { return; }
+  if (!listResult.keys.length) return;
+
+  // Keys son lista:{fecha}:{timestamp} — orden lexicográfico = cronológico (timestamps 13 dígitos)
+  const primerKey = listResult.keys.sort((a, b) => a.name.localeCompare(b.name))[0].name;
+  let raw;
+  try { raw = await env.VENTAS.get(primerKey); } catch { return; }
+  if (!raw) return;
+
+  let entrada;
+  try { entrada = JSON.parse(raw); } catch { return; }
+
+  const enviado = await enviarEmail(
+    entrada.email,
+    `Hay disponibilidad — EL GORILA`,
+    htmlAvisoListaEspera(entrada, funcionNombre),
+    env
+  );
+  if (enviado) await env.VENTAS.delete(primerKey);
+}
+
 // ─── CONSTANTES DE NEGOCIO ────────────────────────────────────────────────────
 
 const TIPOS_BOLETO = {
@@ -286,8 +456,8 @@ async function handleCheckout(request, env) {
     itemsValidados.push({ tipo, cantidad });
   }
 
-  if (cantidadTotal > 8) {
-    return json({ error: 'El máximo es 8 boletos por compra.' }, 400, request);
+  if (cantidadTotal > 50) {
+    return json({ error: 'El máximo es 50 boletos por compra.' }, 400, request);
   }
 
   // ── Validar fecha ─────────────────────────────────────────────────────────
@@ -323,12 +493,10 @@ async function handleCheckout(request, env) {
     return json({ error: `Solo quedan ${Math.max(0, disponibles)} boleto(s) disponibles.` }, 409, request);
   }
 
-  // ── Precio calculado SIEMPRE en el Worker ─────────────────────────────────
-  // Cada tipo tiene su precio fijo; no hay lógica de descuento adicional.
-  let totalCentavos = 0;
-  for (const item of itemsValidados) {
-    totalCentavos += TIPOS_BOLETO[item.tipo].precio * item.cantidad * 100;
-  }
+  // ── Promo grupo: 25% descuento en generales si ≥5 generales sin especiales ─
+  const generalItem     = itemsValidados.find(i => i.tipo === 'general');
+  const tieneEspeciales = itemsValidados.some(i => i.tipo !== 'general');
+  const promoGrupo      = !!(generalItem && generalItem.cantidad >= 5 && !tieneEspeciales);
 
   // ── Reserva temporal (15 min) ─────────────────────────────────────────────
   const reservaId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -345,18 +513,23 @@ async function handleCheckout(request, env) {
     mode:        'payment',
     success_url: 'https://elgorilateatro.com.mx/confirmacion.html?session_id={CHECKOUT_SESSION_ID}',
     cancel_url:  'https://elgorilateatro.com.mx/boletos.html?cancelado=1',
-    'metadata[fecha]':     fecha,
-    'metadata[cantidad]':  String(cantidadTotal),
-    'metadata[reservaId]': reservaId,
-    'metadata[items]':     JSON.stringify(itemsValidados),
+    'metadata[fecha]':          fecha,
+    'metadata[cantidad]':       String(cantidadTotal),
+    'metadata[reservaId]':      reservaId,
+    'metadata[items]':          JSON.stringify(itemsValidados),
+    'metadata[funcionNombre]':  funcion.nombre,
+    'metadata[promoGrupo]':     String(promoGrupo),
   });
 
   itemsValidados.forEach((item, idx) => {
-    const tipo = TIPOS_BOLETO[item.tipo];
+    const tipo         = TIPOS_BOLETO[item.tipo];
+    const unitCentavos = (promoGrupo && item.tipo === 'general')
+      ? Math.round(tipo.precio * 0.75 * 100)
+      : tipo.precio * 100;
     params.set(`line_items[${idx}][price_data][currency]`,                  'mxn');
-    params.set(`line_items[${idx}][price_data][product_data][name]`,        `EL GORILA — ${tipo.nombre}`);
+    params.set(`line_items[${idx}][price_data][product_data][name]`,        `EL GORILA — ${tipo.nombre}${promoGrupo && item.tipo === 'general' ? ' (25% desc.)' : ''}`);
     params.set(`line_items[${idx}][price_data][product_data][description]`, funcion.nombre);
-    params.set(`line_items[${idx}][price_data][unit_amount]`,               String(tipo.precio * 100));
+    params.set(`line_items[${idx}][price_data][unit_amount]`,               String(unitCentavos));
     params.set(`line_items[${idx}][quantity]`,                              String(item.cantidad));
   });
 
@@ -385,37 +558,52 @@ async function handleCheckout(request, env) {
 
 // ─── HANDLER: WEBHOOK STRIPE ──────────────────────────────────────────────────
 
-async function handleWebhook(request, env) {
-  // Leer raw body ANTES de cualquier parse (requerido para verificar firma)
+async function handleWebhook(request, env, ctx) {
   const rawBody = await request.text();
   const sig     = request.headers.get('stripe-signature') || '';
 
   const firmaValida = await verificarFirmaStripe(rawBody, sig, env.STRIPE_WEBHOOK_SECRET || '');
-  if (!firmaValida) {
-    return new Response('Webhook signature invalid', { status: 400 });
-  }
+  if (!firmaValida) return new Response('Webhook signature invalid', { status: 400 });
 
   let event;
   try { event = JSON.parse(rawBody); } catch { return new Response('Invalid JSON', { status: 400 }); }
 
-  // Solo procesar pagos completados
+  const session = event.data.object;
+  const meta    = session.metadata || {};
+
+  // ── Sesión expirada: liberar reserva + notificar waitlist ─────────────────
+  if (event.type === 'checkout.session.expired') {
+    const fecha    = meta.fecha;
+    const cantidad = parseInt(meta.cantidad, 10) || 0;
+    if (fecha && cantidad) {
+      const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
+      if (invRaw) {
+        const inv  = JSON.parse(invRaw);
+        inv.reservados = Math.max(0, (inv.reservados || 0) - cantidad);
+        await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(inv));
+      }
+      if (meta.reservaId) await env.INVENTARIO.delete(`reserva:${meta.reservaId}`);
+      const funcionNombre = meta.funcionNombre || fecha;
+      ctx.waitUntil(notificarPrimeroListaEspera(fecha, funcionNombre, env));
+    }
+    return new Response('ok', { status: 200 });
+  }
+
   if (event.type !== 'checkout.session.completed') {
     return new Response('ok', { status: 200 });
   }
 
-  const session   = event.data.object;
   const sessionId = session.id;
 
-  // Idempotencia: rechazar si ya fue procesado
+  // Idempotencia
   const existing = await env.VENTAS.get(`venta:${sessionId}`);
   if (existing) return new Response('ok', { status: 200 });
 
-  const meta      = session.metadata || {};
-  const fecha     = meta.fecha;
-  const cantidad  = parseInt(meta.cantidad, 10);
-  const reservaId = meta.reservaId;
+  const fecha         = meta.fecha;
+  const cantidad      = parseInt(meta.cantidad, 10);
+  const reservaId     = meta.reservaId;
+  const funcionNombre = meta.funcionNombre || fecha;
 
-  // Desglose de items por tipo (guardado como JSON en metadata)
   let items = [];
   try { if (meta.items) items = JSON.parse(meta.items); } catch {}
 
@@ -424,35 +612,45 @@ async function handleWebhook(request, env) {
     return new Response('ok', { status: 200 });
   }
 
-  // Código único de confirmación
   const codigo = `CERT-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
   const venta = {
     sessionId,
     codigo,
     fecha,
+    funcionNombre,
     cantidad,
-    items,  // desglose por tipo: [{ tipo, cantidad }]
-    email: session.customer_details?.email || session.customer_email || null,
-    total: session.amount_total != null ? session.amount_total / 100 : 0,
+    items,
+    email:       session.customer_details?.email || session.customer_email || null,
+    nombre:      session.customer_details?.name  || null,
+    total:       session.amount_total != null ? session.amount_total / 100 : 0,
     fechaCompra: new Date().toISOString(),
-    estado: 'completada',
+    estado:      'completada',
   };
 
-  // Guardar en VENTAS KV (doble índice: por session_id y por código CERT)
   await env.VENTAS.put(`venta:${sessionId}`, JSON.stringify(venta));
   await env.VENTAS.put(`cert:${codigo}`,     JSON.stringify({ sessionId }));
 
-  // Actualizar inventario: reservado → vendido
+  // Inventario: reservado → vendido
   const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
   if (invRaw) {
-    const inv   = JSON.parse(invRaw);
+    const inv  = JSON.parse(invRaw);
     inv.vendidos   = (inv.vendidos   || 0) + cantidad;
     inv.reservados = Math.max(0, (inv.reservados || 0) - cantidad);
     await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(inv));
   }
-
   if (reservaId) await env.INVENTARIO.delete(`reserva:${reservaId}`);
+
+  // ── Emails fire-and-forget ────────────────────────────────────────────────
+  const emailPromises = [
+    enviarEmail('elgorilateatro@gmail.com', `[GORILA] Venta ${codigo}`, htmlAvisoAdmin(venta, funcionNombre, TIPOS_BOLETO), env),
+  ];
+  if (venta.email) {
+    emailPromises.push(
+      enviarEmail(venta.email, `Tu boleto — EL GORILA`, htmlBoleto(venta, funcionNombre, TIPOS_BOLETO), env)
+    );
+  }
+  ctx.waitUntil(Promise.all(emailPromises));
 
   return new Response('ok', { status: 200 });
 }
@@ -503,21 +701,24 @@ async function handleListaEspera(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400, request); }
 
-  const { clave, nombre, email } = body || {};
+  const { clave, fechaIso, nombre, email } = body || {};
 
-  if (!clave || typeof clave !== 'string' || !/^[a-z0-9_]+$/.test(clave))
+  // Aceptar clave (frontend) o fechaIso; usar fechaIso como clave KV para coincidir con webhook
+  const listaId = (fechaIso && /^\d{4}-\d{2}-\d{2}$/.test(fechaIso)) ? fechaIso : clave;
+  if (!listaId || typeof listaId !== 'string' || !/^[a-z0-9_-]+$/.test(listaId))
     return json({ error: 'Función inválida' }, 400, request);
   if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2 || nombre.trim().length > 100)
     return json({ error: 'Nombre inválido' }, 400, request);
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return json({ error: 'Correo inválido' }, 400, request);
 
-  const key = `lista:${clave}:${Date.now()}`;
+  const key = `lista:${listaId}:${Date.now()}`;
   await env.VENTAS.put(key, JSON.stringify({
-    clave,
-    nombre: nombre.trim().substring(0, 100),
-    email:  email.trim().substring(0, 254),
-    ts:     new Date().toISOString(),
+    clave:    clave   || listaId,
+    fechaIso: fechaIso || null,
+    nombre:   nombre.trim().substring(0, 100),
+    email:    email.trim().substring(0, 254),
+    ts:       new Date().toISOString(),
   }));
 
   return json({ ok: true }, 200, request);
@@ -537,7 +738,7 @@ export default {
 
     // Webhook primero (necesita raw body, no parsear antes)
     if (method === 'POST' && pathname === '/api/webhook') {
-      return handleWebhook(request, env);
+      return handleWebhook(request, env, ctx);
     }
 
     if (method === 'GET' && pathname === '/api/health') {

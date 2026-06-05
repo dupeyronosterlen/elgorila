@@ -345,6 +345,8 @@ function cargarFechas() {
         const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
 
         if (esAgotada) {
+            const dFuncion  = funcion.fecha instanceof Date ? funcion.fecha : new Date(funcion.fecha);
+            const fechaIsoF = dFuncion.toISOString().split('T')[0];
             html += `
             <div>
                 <button type="button" disabled data-fecha-clave="${claveStr}"
@@ -352,7 +354,7 @@ function cargarFechas() {
                     <span class="block font-bold text-sm">${fechaCorta}</span>
                     <span class="inline-block mt-1 bg-red-700 text-white text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">Agotado</span>
                 </button>
-                <button type="button" onclick="abrirListaEspera('${claveStr}', '${nombreStr}')"
+                <button type="button" onclick="abrirListaEspera('${claveStr}', '${nombreStr}', '${fechaIsoF}')"
                     class="w-full mt-1 text-xs text-accent-gold underline hover:text-white transition-colors py-1">
                     Anotarme en lista de espera →
                 </button>
@@ -412,10 +414,12 @@ function inicializar() {
 }
 
 // --- LISTA DE ESPERA ---
-let _listaEsperaClave = null;
+let _listaEsperaClave   = null;
+let _listaEsperaFechaIso = null;
 
-function abrirListaEspera(clave, nombre) {
-    _listaEsperaClave = clave;
+function abrirListaEspera(clave, nombre, fechaIso) {
+    _listaEsperaClave    = clave;
+    _listaEsperaFechaIso = fechaIso || null;
     const modal = document.getElementById('modal-lista-espera');
     const texto = document.getElementById('espera-funcion-texto');
     if (texto) texto.textContent = nombre;
@@ -449,7 +453,7 @@ async function enviarListaEspera() {
             const res = await fetch(window.API_BASE + '/api/lista-espera', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ clave: _listaEsperaClave, nombre, email })
+                body: JSON.stringify({ clave: _listaEsperaClave, fechaIso: _listaEsperaFechaIso, nombre, email })
             });
             const data = await res.json();
             if (!res.ok) {
