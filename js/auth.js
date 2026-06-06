@@ -93,42 +93,7 @@ const AuthManager = {
         },
     },
 
-    // ─── AUTENTICACIÓN (server-side) ──────────────────────────────────────────
-
-    async autenticar(usuarioId, password) {
-        if (!window.API_BASE) {
-            return { exito: false, error: 'API no configurada. Recarga la página.' };
-        }
-        try {
-            const res = await fetch(window.API_BASE + '/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario: usuarioId.trim(), password }),
-            });
-            const data = await res.json();
-            if (!res.ok || !data.token) {
-                return { exito: false, error: data.error || 'Credenciales incorrectas.' };
-            }
-            sessionStorage.setItem('elgorila_token', data.token);
-            const sesion = {
-                usuarioId: data.usuario,
-                nombre: data.nombre || data.usuario,
-                rol: data.rol,
-                fechaLogin: new Date().toISOString(),
-            };
-            sessionStorage.setItem('usuario_sesion', JSON.stringify(sesion));
-            this.registrarAuditoria({
-                accion: 'login',
-                usuario: sesion.nombre,
-                rol: sesion.rol,
-                detalles: 'Inicio de sesión',
-            });
-            return { exito: true, usuario: sesion };
-        } catch (err) {
-            console.error('Error de autenticación:', err);
-            return { exito: false, error: 'Error de conexión. Verifica tu internet e intenta de nuevo.' };
-        }
-    },
+    // ─── AUTENTICACIÓN (server-side vía secrets) ─────────────────────────────
 
     // Admin login vía secrets del Worker — token 30 días en localStorage
     async autenticarAdmin(usuarioId, password) {
@@ -169,23 +134,16 @@ const AuthManager = {
         } catch { return null; }
     },
 
-    // Sesión activa: primero localStorage (admin 30d), luego sessionStorage
+    // Sesión activa: token admin en localStorage (30 días)
     obtenerUsuarioActual() {
-        // Admin token (localStorage, 30 días)
         const adminToken = localStorage.getItem('elgorila_admin_token');
-        if (adminToken) {
-            const p = this._decodeJWT(adminToken);
-            if (p) return { usuarioId: p.usuario, nombre: p.nombre || p.usuario, rol: p.rol, fechaLogin: p.iat ? new Date(p.iat * 1000).toISOString() : new Date().toISOString() };
-            // Token expirado — limpiar
-            localStorage.removeItem('elgorila_admin_token');
-            localStorage.removeItem('elgorila_admin_sesion');
-        }
-        // KV token (sessionStorage, 8h)
-        const token = sessionStorage.getItem('elgorila_token');
-        if (!token) return null;
-        const p = this._decodeJWT(token);
-        if (!p) { sessionStorage.removeItem('elgorila_token'); sessionStorage.removeItem('usuario_sesion'); return null; }
-        return { usuarioId: p.usuario, nombre: p.nombre || p.usuario, rol: p.rol, fechaLogin: p.iat ? new Date(p.iat * 1000).toISOString() : new Date().toISOString() };
+        if (!adminToken) return null;
+        const p = this._decodeJWT(adminToken);
+        if (p) return { usuarioId: p.usuario, nombre: p.nombre || p.usuario, rol: p.rol, fechaLogin: p.iat ? new Date(p.iat * 1000).toISOString() : new Date().toISOString() };
+        // Token expirado — limpiar
+        localStorage.removeItem('elgorila_admin_token');
+        localStorage.removeItem('elgorila_admin_sesion');
+        return null;
     },
 
     cerrarSesion() {
@@ -193,8 +151,6 @@ const AuthManager = {
         if (usuario) {
             this.registrarAuditoria({ accion: 'logout', usuario: usuario.nombre, rol: usuario.rol, detalles: 'Cierre de sesión' });
         }
-        sessionStorage.removeItem('elgorila_token');
-        sessionStorage.removeItem('usuario_sesion');
         localStorage.removeItem('elgorila_admin_token');
         localStorage.removeItem('elgorila_admin_sesion');
     },

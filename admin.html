@@ -11,6 +11,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta charset="utf-8"/>
     <meta name="robots" content="noindex,nofollow"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev"/>
     <meta name="description" content="Panel de administración: ventas, inventario, usuarios y configuración del sitio El Gorila."/>
     <title>Panel de Administración - El Gorila de Franz Kafka</title>
     <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
@@ -322,6 +323,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <p class="text-3xl font-bold text-text-dark" id="reservas-activas">0</p>
                 <p class="text-sm text-text-dark/60 mt-2">reservas temporales</p>
             </div>
+
+            <!-- Tarjeta: Reserva Fiscal -->
+            <div class="bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 md:col-span-3">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-lg font-semibold text-text-dark">Reserva Fiscal Estimada</h3>
+                        <p class="text-xs text-text-dark/50 mt-0.5">8% sobre ventas completadas · Reiniciar cuando se pague el impuesto</p>
+                    </div>
+                    <span class="material-symbols-outlined text-yellow-500/80 text-3xl">account_balance</span>
+                </div>
+                <div class="flex items-end gap-6 flex-wrap">
+                    <p class="text-3xl font-bold text-yellow-400" id="fiscal-acumulado">$—</p>
+                    <button
+                        type="button"
+                        onclick="resetearFiscal()"
+                        class="px-4 py-2 bg-yellow-900/30 hover:bg-yellow-900/50 text-yellow-300 rounded-sm border border-yellow-800/40 text-sm transition-colors"
+                    >Resetear reserva</button>
+                </div>
+            </div>
         </div>
         </section>
 
@@ -363,28 +383,43 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <!-- 6. Ventas Recientes -->
         <section id="seccion-ventas" class="admin-section bg-surface-dark/80 backdrop-blur-sm p-6 rounded-sm border border-primary/20 mb-8 scroll-mt-24">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-display font-bold text-primary">6. Ventas Recientes</h2>
-                <button onclick="exportarDatos()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
-                    Exportar Datos
-                </button>
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                <h2 class="text-2xl font-display font-bold text-primary">6. Ventas</h2>
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="ventas-filtro-fecha"
+                        onchange="filtrarVentasPorFecha(this.value)"
+                        class="px-3 py-2 bg-background-dark border border-primary/30 rounded text-text-dark text-sm focus:outline-none focus:border-primary">
+                        <option value="">Todas las funciones</option>
+                    </select>
+                    <button onclick="exportarDatos()" class="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm transition-colors border border-primary/30 text-sm">
+                        Exportar
+                    </button>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
                         <tr class="border-b border-primary/20">
-                            <th class="pb-3 text-text-dark/70 font-semibold">Orden</th>
-                            <th class="pb-3 text-text-dark/70 font-semibold">Fecha</th>
-                            <th class="pb-3 text-text-dark/70 font-semibold">Función</th>
-                            <th class="pb-3 text-text-dark/70 font-semibold">Cantidad</th>
-                            <th class="pb-3 text-text-dark/70 font-semibold">Total</th>
-                            <th class="pb-3 text-text-dark/70 font-semibold">Email</th>
+                            <th class="pb-3 pr-3 text-text-dark/70 font-semibold text-sm">Folio</th>
+                            <th class="pb-3 pr-3 text-text-dark/70 font-semibold text-sm">Compra</th>
+                            <th class="pb-3 pr-3 text-text-dark/70 font-semibold text-sm">Función</th>
+                            <th class="pb-3 pr-3 text-text-dark/70 font-semibold text-sm">Boletos</th>
+                            <th class="pb-3 pr-3 text-text-dark/70 font-semibold text-sm">Total</th>
+                            <th class="pb-3 text-text-dark/70 font-semibold text-sm">Email / Estado</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-ventas">
                         <!-- Se llenará con JavaScript -->
                     </tbody>
                 </table>
+            </div>
+            <div id="ventas-cargar-mas-wrap" class="mt-4 text-center hidden">
+                <button
+                    id="btn-cargar-mas-ventas"
+                    type="button"
+                    onclick="cargarMasVentas()"
+                    class="px-6 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-sm border border-primary/30 text-sm transition-colors"
+                >Cargar más ventas</button>
             </div>
         </section>
 
@@ -597,7 +632,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 
 <script>
-// ── Override: autenticación admin vía secrets (localStorage, 30 días) ──────────
+// ── Autenticación admin vía secrets (localStorage, 30 días) ────────────────────
 async function verificarAcceso() {
     const usuarioId = document.getElementById('usuario-input')?.value?.trim();
     const password  = document.getElementById('password-input')?.value;
@@ -612,52 +647,148 @@ async function verificarAcceso() {
         if (errorDiv) { errorDiv.textContent = resultado.error || 'Credenciales incorrectas'; errorDiv.classList.remove('hidden'); }
         return;
     }
-    // Mostrar panel
+    _mostrarPanelAdmin(resultado.usuario);
+}
+
+function _mostrarPanelAdmin(u) {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('admin-panel').classList.remove('hidden');
-    const u = resultado.usuario;
     const elU = document.getElementById('usuario-actual');
     const elR = document.getElementById('rol-actual');
     if (elU) elU.textContent = u.nombre || u.usuarioId;
     if (elR) elR.textContent = u.rol;
     if (typeof actualizarPanel === 'function') actualizarPanel();
-    cargarVentasWorker();
+    _iniciarDatosAdmin();
 }
 
-// ── Override: ventas desde Worker API (reemplaza cargarVentas de localStorage) ──
-async function cargarVentas() { await cargarVentasWorker(); }
+async function _iniciarDatosAdmin() {
+    await Promise.all([
+        cargarVentasWorker(true),
+        cargarFiscal(),
+        poblarFiltroFunciones(),
+    ]);
+}
 
-async function cargarVentasWorker() {
+// ── Ventas desde Worker API con paginación cursor + filtro por función ──────────
+let _ventasCursor    = null;
+let _ventasFiltro    = '';
+const _ventasAcum    = [];
+
+async function cargarVentas() { await cargarVentasWorker(true); }
+
+async function cargarVentasWorker(reset) {
+    if (!window.API_BASE) return;
+    const token = AuthManager.obtenerAdminToken();
+    if (!token) return;
+
+    if (reset) { _ventasCursor = null; _ventasAcum.length = 0; }
+
+    try {
+        const params = new URLSearchParams();
+        if (_ventasFiltro) params.set('fecha', _ventasFiltro);
+        if (_ventasCursor) params.set('cursor', _ventasCursor);
+        const qs  = params.toString();
+        const url = window.API_BASE + '/api/ventas' + (qs ? '?' + qs : '');
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const { ventas, cursor } = await res.json();
+
+        _ventasCursor = cursor || null;
+        (ventas || []).forEach(v => _ventasAcum.push(v));
+
+        _renderVentas();
+    } catch (e) { console.error('cargarVentasWorker:', e); }
+}
+
+async function cargarMasVentas() { await cargarVentasWorker(false); }
+
+function filtrarVentasPorFecha(fecha) {
+    _ventasFiltro = fecha || '';
+    cargarVentasWorker(true);
+}
+
+function _renderVentas() {
+    const tbody = document.getElementById('tabla-ventas');
+    const wrap  = document.getElementById('ventas-cargar-mas-wrap');
+    if (!tbody) return;
+
+    if (!_ventasAcum.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-text-dark/60">Sin ventas registradas</td></tr>';
+        if (wrap) wrap.classList.add('hidden');
+        return;
+    }
+
+    tbody.innerHTML = _ventasAcum.map(v => {
+        const items  = (v.items || []).map(i => `${i.cantidad}×${i.tipo}`).join(', ') || `${v.cantidad} bol.`;
+        const fecha  = v.fechaCompra
+            ? new Date(v.fechaCompra).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'short', timeStyle: 'short' })
+            : '—';
+        const estado = v.usado
+            ? '<span class="text-yellow-400 text-xs">✓ canjeado</span>'
+            : '<span class="text-green-400 text-xs">activo</span>';
+        return `<tr class="border-b border-primary/10 hover:bg-primary/5">
+            <td class="py-2 pr-3 font-mono text-xs text-text-dark/80">${v.codigo}</td>
+            <td class="py-2 pr-3 text-xs text-text-dark/70">${fecha}</td>
+            <td class="py-2 pr-3 text-xs">${v.funcionNombre || v.fecha || '—'}</td>
+            <td class="py-2 pr-3 text-xs">${items}</td>
+            <td class="py-2 pr-3 text-xs text-primary font-semibold">$${(v.total || 0).toFixed(2)}</td>
+            <td class="py-2 text-xs">${v.email || '—'}&nbsp;${estado}</td>
+        </tr>`;
+    }).join('');
+
+    if (wrap) wrap.classList.toggle('hidden', !_ventasCursor);
+}
+
+// ── Poblar <select> de filtro con funciones activas ────────────────────────────
+async function poblarFiltroFunciones() {
+    if (!window.API_BASE) return;
+    try {
+        const res = await fetch(window.API_BASE + '/api/funciones');
+        if (!res.ok) return;
+        const funciones = await res.json();
+        const sel = document.getElementById('ventas-filtro-fecha');
+        if (!sel || !funciones.length) return;
+        funciones.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value       = f.fecha_iso;
+            opt.textContent = f.nombre || f.fecha_iso;
+            sel.appendChild(opt);
+        });
+    } catch (e) { console.error('poblarFiltroFunciones:', e); }
+}
+
+// ── Reserva fiscal ─────────────────────────────────────────────────────────────
+async function cargarFiscal() {
     if (!window.API_BASE) return;
     const token = AuthManager.obtenerAdminToken();
     if (!token) return;
     try {
-        const res  = await fetch(window.API_BASE + '/api/ventas', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(window.API_BASE + '/api/admin/fiscal', { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) return;
-        const { ventas } = await res.json();
-        const tbody = document.getElementById('tabla-ventas');
-        if (!tbody) return;
-        if (!ventas || ventas.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-text-dark/60">Sin ventas registradas</td></tr>`;
-            return;
-        }
-        tbody.innerHTML = ventas.map(v => {
-            const items   = (v.items || []).map(i => `${i.cantidad}×${i.tipo}`).join(', ') || `${v.cantidad} bol.`;
-            const fecha   = v.fechaCompra ? new Date(v.fechaCompra).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'short', timeStyle: 'short' }) : '—';
-            const estado  = v.usado ? `<span class="text-yellow-400 text-xs">✓ canjeado</span>` : `<span class="text-green-400 text-xs">activo</span>`;
-            return `<tr class="border-b border-primary/10 hover:bg-primary/5">
-                <td class="py-3 pr-4 font-mono text-xs text-text-dark/80">${v.codigo}</td>
-                <td class="py-3 pr-4 text-sm">${fecha}</td>
-                <td class="py-3 pr-4 text-sm">${v.funcionNombre || v.fecha}</td>
-                <td class="py-3 pr-4 text-sm">${items}</td>
-                <td class="py-3 pr-4 text-sm">$${(v.total||0).toFixed(2)}</td>
-                <td class="py-3 pr-4 text-sm">${v.email || '—'} ${estado}</td>
-            </tr>`;
-        }).join('');
-    } catch (e) { console.error('cargarVentasWorker:', e); }
+        const { acumulado } = await res.json();
+        const el = document.getElementById('fiscal-acumulado');
+        if (el) el.textContent = `$${(acumulado || 0).toFixed(2)} MXN`;
+    } catch (e) { console.error('cargarFiscal:', e); }
 }
 
-// ── QR Scanner ──────────────────────────────────────────────────────────────────
+async function resetearFiscal() {
+    if (!window.API_BASE) return;
+    const token = AuthManager.obtenerAdminToken();
+    if (!token) return;
+    if (!confirm('¿Confirmas que ya pagaste el impuesto y quieres reiniciar la reserva fiscal a $0?')) return;
+    try {
+        const res = await fetch(window.API_BASE + '/api/admin/fiscal/reset', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) { alert('Error al reiniciar'); return; }
+        const el = document.getElementById('fiscal-acumulado');
+        if (el) el.textContent = '$0.00 MXN';
+    } catch (e) { alert('Error de conexión'); }
+}
+window.resetearFiscal = resetearFiscal;
+
+// ── QR Scanner (admin panel) ────────────────────────────────────────────────────
 let _scanAdminStream = null;
 
 function abrirScannerAdmin() {
@@ -701,27 +832,21 @@ function escanearAdmin() {
     requestAnimationFrame(escanearAdmin);
 }
 
-// ── Al cargar: si ya hay token admin guardado, saltarse el login ────────────────
+// ── Inicialización ──────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
+    // Si ya hay token admin válido, saltarse login
     const u = AuthManager.obtenerUsuarioActual();
     if (u && u.rol === 'admin') {
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('admin-panel').classList.remove('hidden');
-        const elU = document.getElementById('usuario-actual');
-        const elR = document.getElementById('rol-actual');
-        if (elU) elU.textContent = u.nombre || u.usuarioId;
-        if (elR) elR.textContent = u.rol;
-        if (typeof actualizarPanel === 'function') setTimeout(actualizarPanel, 100);
-        cargarVentasWorker();
+        _mostrarPanelAdmin(u);
     }
 
-    // Añadir botón escáner al header del panel si no existe
+    // Botón escáner QR en el header del panel
     const hdr = document.querySelector('#admin-panel header .flex.justify-between .flex.gap-3');
     if (hdr && !document.getElementById('btn-escaner-admin')) {
         const btn = document.createElement('button');
-        btn.id = 'btn-escaner-admin';
-        btn.type = 'button';
-        btn.onclick = abrirScannerAdmin;
+        btn.id        = 'btn-escaner-admin';
+        btn.type      = 'button';
+        btn.onclick   = abrirScannerAdmin;
         btn.className = 'px-4 py-2 bg-green-900/40 hover:bg-green-900/60 text-green-300 rounded-sm transition-colors border border-green-800/40 text-sm flex items-center gap-1';
         btn.innerHTML = '<span class="material-symbols-outlined align-middle text-sm">qr_code_scanner</span> Escáner QR';
         hdr.prepend(btn);

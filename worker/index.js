@@ -1,18 +1,19 @@
 /**
  * EL GORILA — Cloudflare Worker API
- * Autenticación JWT + checkout Stripe + inventario en KV.
+ * Autenticación JWT (admin via secrets) + checkout Stripe + inventario en KV.
  *
  * KV INVENTARIO:
- *   sistema:usuarios          → { [id]: { id, nombre, rol, salt, hash, activo } }
  *   funciones:activas         → [{ fecha_iso, nombre, activa }]
- *   funcion:{fecha_iso}       → { total, vendidos, reservados, bloqueado }
+ *   funcion:{fecha_iso}       → { total, vendidos, reservados, bloqueado, version }
  *   codigos:descuento         → { [CODIGO]: { porcentaje, nombre, activo } }
- *   reserva:{id}              → { fecha, cantidad }   [TTL: 15 min]
- *   ratelimit:{ip}:{ventana}  → count                 [TTL: 15 min]
+ *   ratelimit:{ip}:{ventana}  → count  [TTL: 15 min]
  *
  * KV VENTAS:
  *   venta:{session_id}        → { sessionId, codigo, fecha, cantidad, email, total, ... }
  *   cert:{codigo}             → { sessionId }
+ *   ventaIdx:{fecha}:{sid}    → sessionId  (índice para filtrar por función)
+ *   lista:{fecha}:{ts}        → { nombre, email, ... }  (lista de espera)
+ *   fiscal:reserva:acumulado  → { acumulado: number }
  */
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
@@ -100,37 +101,8 @@ async function verifyJWT(token, secret) {
   } catch { return null; }
 }
 
-// ─── PBKDF2 (contraseñas) ─────────────────────────────────────────────────────
-// Parámetros DEBEN coincidir con scripts/init-usuarios.js.
-
-const PBKDF2_ITERATIONS   = 100_000;
-const PBKDF2_KEYLEN_BITS  = 256;
-
-function hexToBytes(hex) {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-  return bytes;
-}
-
-async function verifyPassword(password, saltHex, storedHashHex) {
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits'],
-  );
-  const derived = new Uint8Array(await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt: hexToBytes(saltHex), iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
-    keyMaterial, PBKDF2_KEYLEN_BITS,
-  ));
-  const stored = hexToBytes(storedHashHex);
-  if (derived.length !== stored.length) return false;
-  let acc = 0;
-  for (let i = 0; i < derived.length; i++) acc |= derived[i] ^ stored[i];
-  return acc === 0;
-}
-
 // ─── STRIPE ───────────────────────────────────────────────────────────────────
 
-// Verifica la firma de un webhook de Stripe usando HMAC-SHA256.
-// Ref: https://stripe.com/docs/webhooks/signatures
 async function verificarFirmaStripe(rawBody, sigHeader, secret) {
   if (!sigHeader || !secret) return false;
   const parts = {};
@@ -140,7 +112,7 @@ async function verificarFirmaStripe(rawBody, sigHeader, secret) {
   }
   if (!parts.t || !parts.v1) return false;
 
-  // Rechazar si el timestamp tiene más de 5 minutos de diferencia (anti-replay)
+  // Anti-replay: rechazar si el timestamp tiene más de 5 min de diferencia
   if (Math.abs(Math.floor(Date.now() / 1000) - parseInt(parts.t, 10)) > 300) return false;
 
   const key      = await importHmacKey(secret, 'sign');
@@ -320,7 +292,6 @@ async function notificarPrimeroListaEspera(fecha, funcionNombre, env) {
   try { listResult = await env.VENTAS.list({ prefix: `lista:${fecha}:`, limit: 20 }); } catch { return; }
   if (!listResult.keys.length) return;
 
-  // Keys son lista:{fecha}:{timestamp} — orden lexicográfico = cronológico (timestamps 13 dígitos)
   const primerKey = listResult.keys.sort((a, b) => a.name.localeCompare(b.name))[0].name;
   let raw;
   try { raw = await env.VENTAS.get(primerKey); } catch { return; }
@@ -347,54 +318,120 @@ const TIPOS_BOLETO = {
   maestro:    { precio: 245, nombre: 'Maestro' },
 };
 
-const CAPACIDAD   = 200;       // boletos por función (capacidad total)
-const RESERVA_TTL = 900;       // reserva temporal: 15 min
-const TOKEN_TTL   = 8 * 60 * 60; // JWT: 8 horas
+const CAPACIDAD   = 200;
+const RESERVA_TTL = 900;
 
-// ─── HANDLERS: AUTENTICACIÓN ──────────────────────────────────────────────────
+// ─── OPTIMISTIC LOCKING ───────────────────────────────────────────────────────
+// KV no tiene CAS, pero read→write→verify-version reduce el riesgo de race condition.
+// Si otro Worker escribió entre nuestro read y nuestro write, la versión diferirá
+// y reintentamos hasta 3 veces con jitter aleatorio.
 
-async function handleLogin(request, env) {
-  if (!env.JWT_SECRET) return json({ error: 'Configuración incompleta.' }, 500, request);
+async function reservarOptimista(fecha, cantidadTotal, env) {
+  for (let intento = 0; intento < 3; intento++) {
+    if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
 
-  let body;
-  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+    const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
+    const inv = invRaw
+      ? JSON.parse(invRaw)
+      : { total: CAPACIDAD, vendidos: 0, reservados: 0, bloqueado: false, version: 0 };
+    const version = inv.version ?? 0;
 
-  const { usuario, password } = body;
-  if (!usuario || !password) return json({ error: 'Faltan usuario o contraseña.' }, 400, request);
+    if (inv.bloqueado) return { ok: false, status: 409, error: 'Ventas cerradas para esta función.' };
 
-  let usuarios;
+    const disponibles = inv.total - inv.vendidos - (inv.reservados || 0);
+    if (disponibles < cantidadTotal) {
+      return { ok: false, status: 409, error: `Solo quedan ${Math.max(0, disponibles)} boleto(s) disponibles.` };
+    }
+
+    const invNuevo = { ...inv, reservados: (inv.reservados || 0) + cantidadTotal, version: version + 1 };
+    await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(invNuevo));
+
+    // Verificar que nuestra escritura es la versión actual
+    const check = await env.INVENTARIO.get(`funcion:${fecha}`);
+    const checkInv = check ? JSON.parse(check) : {};
+    if ((checkInv.version ?? -1) === version + 1) return { ok: true };
+    // Conflicto — reintentar
+  }
+  return { ok: false, status: 503, error: 'El sistema está concurrido. Intenta de nuevo en unos segundos.' };
+}
+
+async function liberarReservaOptimista(fecha, cantidadTotal, env) {
+  for (let intento = 0; intento < 3; intento++) {
+    if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
+
+    const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
+    if (!invRaw) return;
+    const inv = JSON.parse(invRaw);
+    const version = inv.version ?? 0;
+
+    const invNuevo = { ...inv, reservados: Math.max(0, (inv.reservados || 0) - cantidadTotal), version: version + 1 };
+    await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(invNuevo));
+
+    const check = await env.INVENTARIO.get(`funcion:${fecha}`);
+    const checkInv = check ? JSON.parse(check) : {};
+    if ((checkInv.version ?? -1) === version + 1) return;
+  }
+  console.error(`liberarReserva: conflicto persistente para ${fecha}`);
+}
+
+async function confirmarVentaOptimista(fecha, cantidadTotal, env) {
+  for (let intento = 0; intento < 3; intento++) {
+    if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
+
+    const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
+    const inv = invRaw
+      ? JSON.parse(invRaw)
+      : { total: CAPACIDAD, vendidos: 0, reservados: 0, bloqueado: false, version: 0 };
+    const version = inv.version ?? 0;
+
+    const invNuevo = {
+      ...inv,
+      vendidos:   (inv.vendidos   || 0) + cantidadTotal,
+      reservados: Math.max(0, (inv.reservados || 0) - cantidadTotal),
+      version:    version + 1,
+    };
+    await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(invNuevo));
+
+    const check = await env.INVENTARIO.get(`funcion:${fecha}`);
+    const checkInv = check ? JSON.parse(check) : {};
+    if ((checkInv.version ?? -1) === version + 1) return;
+  }
+  console.error(`confirmarVenta: conflicto persistente para ${fecha}`);
+}
+
+// ─── ADMIN AUTH HELPERS ───────────────────────────────────────────────────────
+
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) {
+    let sink = 0;
+    for (let i = 0; i < Math.max(a.length, b.length); i++) sink |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+    return false;
+  }
+  let acc = 0;
+  for (let i = 0; i < a.length; i++) acc |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return acc === 0;
+}
+
+async function requireAdmin(request, env) {
+  if (!env.JWT_SECRET) return null;
+  const auth = request.headers.get('Authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (!token) return null;
+  const payload = await verifyJWT(token, env.JWT_SECRET);
+  if (!payload || payload.rol !== 'admin') return null;
+  return payload;
+}
+
+// ─── HANDLER: FUNCIONES ACTIVAS (público) ────────────────────────────────────
+
+async function handleFunciones(request, env) {
+  const raw = await env.INVENTARIO.get('funciones:activas');
+  if (!raw) return json([], 200, request);
   try {
-    const raw = await env.INVENTARIO.get('sistema:usuarios');
-    if (!raw) return json({ error: 'Sistema no inicializado.' }, 503, request);
-    usuarios = JSON.parse(raw);
-  } catch { return json({ error: 'Error interno.' }, 500, request); }
-
-  const user = usuarios[usuario.trim()];
-  const salt       = user?.salt ?? '00000000000000000000000000000000';
-  const storedHash = user?.hash ?? '0'.repeat(64);
-  const match      = await verifyPassword(password, salt, storedHash);
-
-  if (!user || !user.activo || !match) return json({ error: 'Credenciales incorrectas.' }, 401, request);
-
-  const now = Math.floor(Date.now() / 1000);
-  const token = await signJWT(
-    { usuario: user.id, nombre: user.nombre, rol: user.rol, iat: now, exp: now + TOKEN_TTL },
-    env.JWT_SECRET,
-  );
-  return json({ token, usuario: user.id, nombre: user.nombre, rol: user.rol }, 200, request);
-}
-
-async function handleVerify(request, env) {
-  if (!env.JWT_SECRET) return json({ valid: false }, 500, request);
-  let body;
-  try { body = await request.json(); } catch { return json({ valid: false }, 400, request); }
-  const payload = body.token ? await verifyJWT(body.token, env.JWT_SECRET) : null;
-  if (!payload) return json({ valid: false }, 200, request);
-  return json({ valid: true, usuario: payload.usuario, nombre: payload.nombre, rol: payload.rol }, 200, request);
-}
-
-function handleLogout(request) {
-  return json({ ok: true }, 200, request);
+    const funciones = JSON.parse(raw).filter(f => f.activa !== false);
+    return json(funciones, 200, request);
+  } catch { return json([], 200, request); }
 }
 
 // ─── HANDLER: DISPONIBILIDAD ──────────────────────────────────────────────────
@@ -418,8 +455,6 @@ async function handleDisponibilidad(request, env) {
 async function handleCheckout(request, env) {
   if (!env.STRIPE_SECRET_KEY) return json({ error: 'Pagos no configurados.' }, 503, request);
 
-  // CF-Connecting-IP es inyectado por Cloudflare — no puede ser falsificado.
-  // X-Forwarded-For es ignorado deliberadamente: es trivialmente manipulable.
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   if (!await checkRateLimit(ip, env)) {
     return json({ error: 'Demasiadas solicitudes. Intenta en 15 minutos.' }, 429, request);
@@ -430,7 +465,6 @@ async function handleCheckout(request, env) {
 
   const { items, fecha } = body;
 
-  // ── Validar items ─────────────────────────────────────────────────────────
   if (!Array.isArray(items) || items.length === 0) {
     return json({ error: 'El carrito está vacío.' }, 400, request);
   }
@@ -442,25 +476,16 @@ async function handleCheckout(request, env) {
   for (const item of items) {
     const tipo     = typeof item.tipo === 'string' ? item.tipo.toLowerCase().trim() : '';
     const cantidad = item.cantidad;
-    if (!TIPOS_BOLETO[tipo]) {
-      return json({ error: `Tipo de boleto inválido: "${tipo}".` }, 400, request);
-    }
-    if (!Number.isInteger(cantidad) || cantidad < 1) {
-      return json({ error: 'Cantidad inválida en uno o más tipos.' }, 400, request);
-    }
-    if (tiposVistos.has(tipo)) {
-      return json({ error: 'Tipo de boleto duplicado en el carrito.' }, 400, request);
-    }
+    if (!TIPOS_BOLETO[tipo]) return json({ error: `Tipo de boleto inválido: "${tipo}".` }, 400, request);
+    if (!Number.isInteger(cantidad) || cantidad < 1) return json({ error: 'Cantidad inválida en uno o más tipos.' }, 400, request);
+    if (tiposVistos.has(tipo)) return json({ error: 'Tipo de boleto duplicado en el carrito.' }, 400, request);
     tiposVistos.add(tipo);
     cantidadTotal += cantidad;
     itemsValidados.push({ tipo, cantidad });
   }
 
-  if (cantidadTotal > 50) {
-    return json({ error: 'El máximo es 50 boletos por compra.' }, 400, request);
-  }
+  if (cantidadTotal > 50) return json({ error: 'El máximo es 50 boletos por compra.' }, 400, request);
 
-  // ── Validar fecha ─────────────────────────────────────────────────────────
   if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
     return json({ error: 'Fecha inválida.' }, 400, request);
   }
@@ -468,47 +493,30 @@ async function handleCheckout(request, env) {
   const funcionesRaw = await env.INVENTARIO.get('funciones:activas');
   if (!funcionesRaw) return json({ error: 'No hay funciones activas. Contacta al administrador.' }, 503, request);
 
-  let funciones, funcion;
+  let funcion;
   try {
-    funciones = JSON.parse(funcionesRaw);
-    funcion   = funciones.find(f => f.fecha_iso === fecha && f.activa !== false);
+    const funciones = JSON.parse(funcionesRaw);
+    funcion = funciones.find(f => f.fecha_iso === fecha && f.activa !== false);
   } catch {
     return json({ error: 'Error al leer configuración. Intenta de nuevo.' }, 500, request);
   }
   if (!funcion) return json({ error: 'Fecha de función no válida.' }, 400, request);
 
-  // ── Verificar disponibilidad ──────────────────────────────────────────────
-  const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
-  let inv;
-  try {
-    inv = invRaw ? JSON.parse(invRaw) : { total: CAPACIDAD, vendidos: 0, reservados: 0, bloqueado: false };
-  } catch {
-    inv = { total: CAPACIDAD, vendidos: 0, reservados: 0, bloqueado: false };
-  }
+  // Optimistic lock: reservar antes de llamar a Stripe
+  const reserva = await reservarOptimista(fecha, cantidadTotal, env);
+  if (!reserva.ok) return json({ error: reserva.error }, reserva.status, request);
 
-  if (inv.bloqueado) return json({ error: 'Ventas cerradas para esta función.' }, 409, request);
-
-  const disponibles = inv.total - inv.vendidos - (inv.reservados || 0);
-  if (disponibles < cantidadTotal) {
-    return json({ error: `Solo quedan ${Math.max(0, disponibles)} boleto(s) disponibles.` }, 409, request);
-  }
-
-  // ── Promo grupo: 25% descuento en generales si ≥5 generales sin especiales ─
   const generalItem     = itemsValidados.find(i => i.tipo === 'general');
   const tieneEspeciales = itemsValidados.some(i => i.tipo !== 'general');
   const promoGrupo      = !!(generalItem && generalItem.cantidad >= 5 && !tieneEspeciales);
 
-  // ── Reserva temporal (15 min) ─────────────────────────────────────────────
   const reservaId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  inv.reservados  = (inv.reservados || 0) + cantidadTotal;
-  await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(inv));
   await env.INVENTARIO.put(
     `reserva:${reservaId}`,
     JSON.stringify({ fecha, cantidad: cantidadTotal }),
     { expirationTtl: RESERVA_TTL },
   );
 
-  // ── Crear sesión Stripe con un line item por tipo ─────────────────────────
   const params = new URLSearchParams({
     mode:        'payment',
     success_url: 'https://elgorilateatro.com.mx/confirmacion.html?session_id={CHECKOUT_SESSION_ID}',
@@ -547,9 +555,8 @@ async function handleCheckout(request, env) {
     return json({ url: session.url, sessionId: session.id }, 200, request);
 
   } catch (err) {
-    // Rollback reserva
-    inv.reservados = Math.max(0, inv.reservados - cantidadTotal);
-    await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(inv));
+    // Rollback: liberar reserva si Stripe falló
+    await liberarReservaOptimista(fecha, cantidadTotal, env);
     await env.INVENTARIO.delete(`reserva:${reservaId}`);
     console.error('Stripe checkout error:', err.message);
     return json({ error: 'Error al crear sesión de pago. Intenta de nuevo.' }, 500, request);
@@ -571,17 +578,11 @@ async function handleWebhook(request, env, ctx) {
   const session = event.data.object;
   const meta    = session.metadata || {};
 
-  // ── Sesión expirada: liberar reserva + notificar waitlist ─────────────────
   if (event.type === 'checkout.session.expired') {
     const fecha    = meta.fecha;
     const cantidad = parseInt(meta.cantidad, 10) || 0;
     if (fecha && cantidad) {
-      const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
-      if (invRaw) {
-        const inv  = JSON.parse(invRaw);
-        inv.reservados = Math.max(0, (inv.reservados || 0) - cantidad);
-        await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(inv));
-      }
+      await liberarReservaOptimista(fecha, cantidad, env);
       if (meta.reservaId) await env.INVENTARIO.delete(`reserva:${meta.reservaId}`);
       const funcionNombre = meta.funcionNombre || fecha;
       ctx.waitUntil(notificarPrimeroListaEspera(fecha, funcionNombre, env));
@@ -629,19 +630,26 @@ async function handleWebhook(request, env, ctx) {
   };
 
   await env.VENTAS.put(`venta:${sessionId}`, JSON.stringify(venta));
-  await env.VENTAS.put(`cert:${codigo}`,     JSON.stringify({ sessionId }));
+  await env.VENTAS.put(`cert:${codigo}`,      JSON.stringify({ sessionId }));
+  // Índice por fecha para filtrado en admin
+  await env.VENTAS.put(`ventaIdx:${fecha}:${sessionId}`, sessionId);
 
-  // Inventario: reservado → vendido
-  const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
-  if (invRaw) {
-    const inv  = JSON.parse(invRaw);
-    inv.vendidos   = (inv.vendidos   || 0) + cantidad;
-    inv.reservados = Math.max(0, (inv.reservados || 0) - cantidad);
-    await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(inv));
-  }
+  // Inventario: reservado → vendido (optimistic lock)
+  await confirmarVentaOptimista(fecha, cantidad, env);
   if (reservaId) await env.INVENTARIO.delete(`reserva:${reservaId}`);
 
-  // ── Emails fire-and-forget ────────────────────────────────────────────────
+  // Reserva fiscal: acumular 8% del total
+  ctx.waitUntil((async () => {
+    try {
+      const monto8 = Math.round(venta.total * 0.08 * 100) / 100;
+      const fiscalRaw = await env.VENTAS.get('fiscal:reserva:acumulado');
+      const fiscal    = fiscalRaw ? JSON.parse(fiscalRaw) : { acumulado: 0 };
+      fiscal.acumulado = Math.round((fiscal.acumulado + monto8) * 100) / 100;
+      await env.VENTAS.put('fiscal:reserva:acumulado', JSON.stringify(fiscal));
+    } catch (e) { console.error('fiscal acumulado error:', e.message); }
+  })());
+
+  // Emails fire-and-forget
   const emailPromises = [
     enviarEmail('elgorilateatro@gmail.com', `[GORILA] Venta ${codigo}`, htmlAvisoAdmin(venta, funcionNombre, TIPOS_BOLETO), env),
   ];
@@ -655,14 +663,12 @@ async function handleWebhook(request, env, ctx) {
   return new Response('ok', { status: 200 });
 }
 
-// ─── HANDLER: VENTA (confirmación) ────────────────────────────────────────────
+// ─── HANDLER: VENTA PÚBLICA (sin email) ───────────────────────────────────────
 
 async function handleVenta(id, request, env) {
   try {
-    // Buscar por session_id (redirect de Stripe → confirmacion.html?session_id=...)
     let ventaRaw = await env.VENTAS.get(`venta:${id}`);
 
-    // Buscar por código CERT si no se encontró por session_id
     if (!ventaRaw) {
       const certRaw = await env.VENTAS.get(`cert:${id}`);
       if (certRaw) {
@@ -672,53 +678,63 @@ async function handleVenta(id, request, env) {
     }
 
     if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
+    const v = JSON.parse(ventaRaw);
 
-    const venta = JSON.parse(ventaRaw);
-
-    // Devolver datos necesarios para mostrar confirmación. Sin datos de tarjeta.
+    // Respuesta pública: sin email ni nombre del comprador
     return json({
-      sessionId:     venta.sessionId,
-      codigo:        venta.codigo,
-      numeroOrden:   venta.codigo,
-      fecha:         venta.fecha,
-      funcionNombre: venta.funcionNombre || venta.fecha,
-      cantidad:      venta.cantidad,
-      items:         venta.items || [],
-      email:         venta.email,
-      nombre:        venta.nombre  || null,
-      total:         venta.total,
-      fechaCompra:   venta.fechaCompra,
-      estado:        venta.estado,
-      usado:         venta.usado   || false,
-      usadoEn:       venta.usadoEn || null,
+      sessionId:     v.sessionId,
+      codigo:        v.codigo,
+      fecha:         v.fecha,
+      funcionNombre: v.funcionNombre || v.fecha,
+      cantidad:      v.cantidad,
+      items:         v.items || [],
+      total:         v.total,
+      fechaCompra:   v.fechaCompra,
+      estado:        v.estado,
+      usado:         v.usado   || false,
+      usadoEn:       v.usadoEn || null,
     }, 200, request);
   } catch {
     return json({ error: 'Error al obtener la venta.' }, 500, request);
   }
 }
 
-// ─── ADMIN AUTH HELPERS ───────────────────────────────────────────────────────
+// ─── HANDLER: VENTA DETALLE ADMIN (con email) ─────────────────────────────────
 
-function timingSafeEqual(a, b) {
-  if (typeof a !== 'string' || typeof b !== 'string') return false;
-  if (a.length !== b.length) {
-    // Still iterate to prevent length timing leak
-    for (let i = 0; i < a.length; i++) { /* */ }
-    return false;
+async function handleAdminVentaDetail(id, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+
+  try {
+    let ventaRaw = await env.VENTAS.get(`venta:${id}`);
+    if (!ventaRaw) {
+      const certRaw = await env.VENTAS.get(`cert:${id}`);
+      if (certRaw) {
+        const { sessionId } = JSON.parse(certRaw);
+        ventaRaw = await env.VENTAS.get(`venta:${sessionId}`);
+      }
+    }
+    if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
+    const v = JSON.parse(ventaRaw);
+
+    return json({
+      sessionId:     v.sessionId,
+      codigo:        v.codigo,
+      fecha:         v.fecha,
+      funcionNombre: v.funcionNombre || v.fecha,
+      cantidad:      v.cantidad,
+      items:         v.items || [],
+      email:         v.email  || null,
+      nombre:        v.nombre || null,
+      total:         v.total,
+      fechaCompra:   v.fechaCompra,
+      estado:        v.estado,
+      usado:         v.usado   || false,
+      usadoEn:       v.usadoEn || null,
+    }, 200, request);
+  } catch {
+    return json({ error: 'Error al obtener la venta.' }, 500, request);
   }
-  let acc = 0;
-  for (let i = 0; i < a.length; i++) acc |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return acc === 0;
-}
-
-async function requireAdmin(request, env) {
-  if (!env.JWT_SECRET) return null;
-  const auth = request.headers.get('Authorization') || '';
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-  if (!token) return null;
-  const payload = await verifyJWT(token, env.JWT_SECRET);
-  if (!payload || payload.rol !== 'admin') return null;
-  return payload;
 }
 
 // ─── HANDLER: ADMIN LOGIN (secrets) ───────────────────────────────────────────
@@ -727,6 +743,12 @@ async function handleAdminLogin(request, env) {
   if (!env.JWT_SECRET)   return json({ error: 'Configuración incompleta.' }, 500, request);
   if (!env.ADMIN_USER || !env.ADMIN_PASS)
     return json({ error: 'Cuentas admin no configuradas en el Worker.' }, 503, request);
+
+  // Rate limiting igual que checkout
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!await checkRateLimit(ip, env)) {
+    return json({ error: 'Demasiados intentos. Espera 15 minutos.' }, 429, request);
+  }
 
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
@@ -740,7 +762,7 @@ async function handleAdminLogin(request, env) {
     match = timingSafeEqual(u, env.ADMIN_USER_2) && timingSafeEqual(password, env.ADMIN_PASS_2);
 
   if (!match) {
-    await new Promise(r => setTimeout(r, 300)); // breve pausa anti-brute-force
+    await new Promise(r => setTimeout(r, 300));
     return json({ error: 'Credenciales incorrectas.' }, 401, request);
   }
 
@@ -780,34 +802,54 @@ async function handleCanjear(codigo, request, env) {
 
 // ─── HANDLER: LISTADO DE VENTAS (admin) ───────────────────────────────────────
 
+function _formatVenta(v) {
+  return {
+    codigo:        v.codigo,
+    fecha:         v.fecha,
+    funcionNombre: v.funcionNombre || v.fecha,
+    cantidad:      v.cantidad,
+    items:         v.items || [],
+    email:         v.email   || null,
+    nombre:        v.nombre  || null,
+    total:         v.total,
+    fechaCompra:   v.fechaCompra,
+    usado:         v.usado   || false,
+    usadoEn:       v.usadoEn || null,
+  };
+}
+
 async function handleVentas(request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
 
-  const listResult = await env.VENTAS.list({ prefix: 'venta:', limit: 100 });
+  const url          = new URL(request.url);
+  const fechaFiltro  = url.searchParams.get('fecha') || '';
+  const cursorParam  = url.searchParams.get('cursor') || undefined;
+  const LIMIT        = 100;
 
-  const ventas = [];
-  for (const key of listResult.keys) {
-    const raw = await env.VENTAS.get(key.name);
-    if (!raw) continue;
-    const v = JSON.parse(raw);
-    ventas.push({
-      codigo:        v.codigo,
-      fecha:         v.fecha,
-      funcionNombre: v.funcionNombre || v.fecha,
-      cantidad:      v.cantidad,
-      items:         v.items || [],
-      email:         v.email,
-      nombre:        v.nombre || null,
-      total:         v.total,
-      fechaCompra:   v.fechaCompra,
-      usado:         v.usado   || false,
-      usadoEn:       v.usadoEn || null,
-    });
+  let ventas     = [];
+  let nextCursor = null;
+
+  if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
+    // Filtro por función: usar índice ventaIdx:{fecha}:*
+    const idxResult = await env.VENTAS.list({ prefix: `ventaIdx:${fechaFiltro}:` });
+    const sessionIds = (await Promise.all(
+      idxResult.keys.map(k => env.VENTAS.get(k.name))
+    )).filter(Boolean);
+
+    const ventasRaw = await Promise.all(sessionIds.map(sid => env.VENTAS.get(`venta:${sid}`)));
+    ventas = ventasRaw.filter(Boolean).map(r => _formatVenta(JSON.parse(r)));
+  } else {
+    // Paginación cursor-based en todas las ventas
+    const listResult = await env.VENTAS.list({ prefix: 'venta:', limit: LIMIT, cursor: cursorParam });
+    if (!listResult.list_complete) nextCursor = listResult.cursor;
+
+    const ventasRaw = await Promise.all(listResult.keys.map(k => env.VENTAS.get(k.name)));
+    ventas = ventasRaw.filter(Boolean).map(r => _formatVenta(JSON.parse(r)));
   }
 
   ventas.sort((a, b) => new Date(b.fechaCompra) - new Date(a.fechaCompra));
-  return json({ ventas }, 200, request);
+  return json({ ventas, cursor: nextCursor || null }, 200, request);
 }
 
 // ─── HANDLER: LISTA DE ESPERA ─────────────────────────────────────────────────
@@ -820,7 +862,6 @@ async function handleListaEspera(request, env) {
 
   const { clave, fechaIso, nombre, email } = body || {};
 
-  // Aceptar clave (frontend) o fechaIso; usar fechaIso como clave KV para coincidir con webhook
   const listaId = (fechaIso && /^\d{4}-\d{2}-\d{2}$/.test(fechaIso)) ? fechaIso : clave;
   if (!listaId || typeof listaId !== 'string' || !/^[a-z0-9_-]+$/.test(listaId))
     return json({ error: 'Función inválida' }, 400, request);
@@ -841,11 +882,29 @@ async function handleListaEspera(request, env) {
   return json({ ok: true }, 200, request);
 }
 
+// ─── HANDLERS: RESERVA FISCAL ────────────────────────────────────────────────
+
+async function handleFiscalReserva(request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+
+  const raw    = await env.VENTAS.get('fiscal:reserva:acumulado');
+  const fiscal = raw ? JSON.parse(raw) : { acumulado: 0 };
+  return json({ acumulado: fiscal.acumulado || 0 }, 200, request);
+}
+
+async function handleFiscalReset(request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+
+  await env.VENTAS.put('fiscal:reserva:acumulado', JSON.stringify({ acumulado: 0 }));
+  return json({ ok: true, acumulado: 0 }, 200, request);
+}
+
 // ─── ROUTER ───────────────────────────────────────────────────────────────────
 
 export default {
   async fetch(request, env, ctx) {
-    // Preflight CORS
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(request) });
     }
@@ -853,39 +912,49 @@ export default {
     const { pathname } = new URL(request.url);
     const method       = request.method;
 
-    // Webhook primero (necesita raw body, no parsear antes)
+    // Webhook primero (necesita raw body)
     if (method === 'POST' && pathname === '/api/webhook') {
       return handleWebhook(request, env, ctx);
     }
 
     if (method === 'GET' && pathname === '/api/health') {
-      return json({ status: 'ok', version: '1.0' }, 200, request);
+      return json({ status: 'ok', version: '2.0' }, 200, request);
     }
 
-    // Auth
-    if (method === 'POST' && pathname === '/api/auth/login')  return handleLogin(request, env);
-    if (method === 'POST' && pathname === '/api/auth/verify') return handleVerify(request, env);
-    if (method === 'POST' && pathname === '/api/auth/logout') return handleLogout(request);
+    // Funciones activas (público — frontend lo usa para mostrar la cartelera)
+    if (method === 'GET' && pathname === '/api/funciones') {
+      return handleFunciones(request, env);
+    }
+
+    // Admin login (secrets-based)
+    if (method === 'POST' && pathname === '/api/admin/login') {
+      return handleAdminLogin(request, env);
+    }
 
     // Checkout público
     if (method === 'GET'  && pathname === '/api/disponibilidad') return handleDisponibilidad(request, env);
     if (method === 'POST' && pathname === '/api/checkout')       return handleCheckout(request, env);
     if (method === 'POST' && pathname === '/api/lista-espera')   return handleListaEspera(request, env);
 
-    // Admin auth (secrets — token 30 días en localStorage)
-    if (method === 'POST' && pathname === '/api/admin/login')    return handleAdminLogin(request, env);
-
     // Admin: canjear folio y listado de ventas
     const canjearMatch = pathname.match(/^\/api\/canjear\/([^/]+)$/);
     if (method === 'POST' && canjearMatch)
       return handleCanjear(decodeURIComponent(canjearMatch[1]), request, env);
-    if (method === 'GET'  && pathname === '/api/ventas')         return handleVentas(request, env);
+    if (method === 'GET' && pathname === '/api/ventas') return handleVentas(request, env);
 
-    // Confirmación de venta (acepta session_id o código CERT)
+    // Detalle venta: público (sin email) vs admin (con email)
     const ventaMatch = pathname.match(/^\/api\/venta\/([^/]+)$/);
     if (method === 'GET' && ventaMatch) {
       return handleVenta(decodeURIComponent(ventaMatch[1]), request, env);
     }
+    const adminVentaMatch = pathname.match(/^\/api\/admin\/venta\/([^/]+)$/);
+    if (method === 'GET' && adminVentaMatch) {
+      return handleAdminVentaDetail(decodeURIComponent(adminVentaMatch[1]), request, env);
+    }
+
+    // Reserva fiscal
+    if (method === 'GET'  && pathname === '/api/admin/fiscal')       return handleFiscalReserva(request, env);
+    if (method === 'POST' && pathname === '/api/admin/fiscal/reset') return handleFiscalReset(request, env);
 
     return json({ error: 'not found' }, 404, request);
   },
