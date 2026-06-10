@@ -1232,6 +1232,40 @@ async function handleReporte(request, env, ctx) {
   });
 }
 
+// ─── PRÓXIMAMENTE: REGISTRO DE CORREOS ───────────────────────────────────────
+
+async function handleProximamente(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'JSON inválido.' }, 400, request); }
+
+  const { email } = body || {};
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim()))
+    return json({ error: 'Correo inválido.' }, 400, request);
+
+  const correo = String(email).trim().toLowerCase().substring(0, 254);
+
+  // Verificar si ya existe para no duplicar
+  const existing = await env.VENTAS.get(`proximamente:email:${correo}`);
+  if (existing) return json({ ok: true, nuevo: false }, 200, request);
+
+  // Guardar en KV
+  const ts = Date.now();
+  await env.VENTAS.put(`proximamente:email:${correo}`, JSON.stringify({ email: correo, ts: new Date(ts).toISOString() }));
+  await env.VENTAS.put(`proximamente:lista:${ts}`, JSON.stringify({ email: correo, ts: new Date(ts).toISOString() }));
+
+  // Notificar al admin
+  await enviarEmail(
+    'elgorilateatro@gmail.com',
+    `📬 Nuevo registro próximamente — ${correo}`,
+    `<p style="font-family:sans-serif;">Nuevo correo registrado para aviso de reestreno:</p>
+     <p style="font-family:monospace;font-size:16px;"><strong>${correo}</strong></p>
+     <p style="font-family:sans-serif;color:#888;font-size:13px;">${new Date(ts).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}</p>`,
+    env
+  );
+
+  return json({ ok: true, nuevo: true }, 200, request);
+}
+
 // ─── ROUTER ───────────────────────────────────────────────────────────────────
 
 export default {
@@ -1244,6 +1278,9 @@ export default {
     const method       = request.method;
 
     // Rutas globales (sin teatroId)
+    if (method === 'POST' && pathname === '/api/proximamente') {
+      return handleProximamente(request, env);
+    }
     if (method === 'POST' && pathname === '/api/webhook') {
       return handleWebhook(request, env, ctx);
     }
