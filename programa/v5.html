@@ -11,64 +11,79 @@
 <link rel="preload" as="font" type="font/woff2" href="../fonts/courier-prime-latin.woff2" crossorigin>
 <link rel="preload" as="image" type="image/webp" href="../img/programa/portada-v4.webp">
 <style>
+/* ── FUENTES ─────────────────────────────────────────────── */
 @font-face {
   font-family: 'IM Fell English';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
+  font-style: normal; font-weight: 400; font-display: swap;
   src: url(../fonts/im-fell-english-latin.woff2) format('woff2');
 }
 @font-face {
   font-family: 'IM Fell English';
-  font-style: italic;
-  font-weight: 400;
-  font-display: optional;
+  font-style: italic; font-weight: 400; font-display: optional;
   src: url(../fonts/im-fell-english-italic-latin.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Courier Prime';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
+  font-style: normal; font-weight: 400; font-display: swap;
   src: url(../fonts/courier-prime-latin.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Cormorant Garamond';
-  font-style: normal;
-  font-weight: 300 600;
-  font-display: swap;
+  font-style: normal; font-weight: 300 600; font-display: swap;
   src: url(../fonts/cormorant-normal-latin.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Cormorant Garamond';
-  font-style: italic;
-  font-weight: 300 400;
-  font-display: swap;
+  font-style: italic; font-weight: 300 400; font-display: swap;
   src: url(../fonts/cormorant-italic-latin.woff2) format('woff2');
 }
+
+/* ── TOKENS — fusión index × v4 ──────────────────────────── */
 :root {
-  --negro: #080808;
-  --rojo: #D43A1A;
-  --crema: #F2EDE4;
-  --crema-dim: rgba(242,237,228,0.45);
-  --crema-faint: rgba(242,237,228,0.08);
-  --rojo-dim: rgba(212,58,26,0.6);
-  --display: 'IM Fell English', serif;
-  --cuerpo: 'Cormorant Garamond', serif;
-  --mono: 'Courier Prime', monospace;
+  /* index: warm brown palette */
+  --bg:         #1a150e;
+  --bg2:        #201810;
+  --bg3:        #261e14;
+  --ink:        #D4CFC3;
+  --ink-dim:    rgba(212,207,195,0.62);
+  --ink-faint:  rgba(212,207,195,0.08);
+  /* index: crisp gold */
+  --gold:       #D4AF37;
+  --gold-dim:   rgba(212,175,55,0.5);
+  --gold-faint: rgba(212,175,55,0.12);
+  /* v4: red accent */
+  --red:        #D43A1A;
+  --red-dim:    rgba(212,58,26,0.55);
+  /* typography */
+  --display:    'IM Fell English', Georgia, serif;
+  --cuerpo:     'Cormorant Garamond', serif;
+  --mono:       'Courier Prime', monospace;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
+
+/* ── BODY — fondo cálido + grain (index) ─────────────────── */
 body {
-  background: var(--negro);
-  color: var(--crema);
+  background: var(--bg);
+  color: var(--ink);
   font-family: var(--cuerpo);
   max-width: 480px;
   margin: 0 auto;
   overflow-x: hidden;
+  position: relative;
+}
+/* Grain texture (index technique) */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* ── PORTADA ─────────────────────────────────────── */
+/* ── PORTADA ─────────────────────────────────────────────── */
 .portada {
   min-height: 100svh;
   display: flex;
@@ -76,7 +91,7 @@ body {
   justify-content: flex-end;
   position: relative;
   padding-bottom: 36px;
-  background: #080808;
+  background: var(--bg);
 }
 .portada-foto-wrap {
   position: absolute;
@@ -85,565 +100,447 @@ body {
   overflow: hidden;
 }
 .portada-foto {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   object-fit: cover;
-  object-position: 30% center;
+  object-position: center 12%;
   display: block;
-  filter: grayscale(100%) brightness(0.72) contrast(1.25);
+  filter: grayscale(100%) brightness(0.65) contrast(1.22) sepia(0.15);
 }
 .portada-foto-overlay {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background:
-    linear-gradient(to right, rgba(8,8,8,0.65) 0%, rgba(8,8,8,0) 55%),
-    linear-gradient(to bottom, rgba(8,8,8,0.3) 0%, rgba(8,8,8,0) 35%, rgba(8,8,8,1) 100%);
+    linear-gradient(to right, rgba(26,21,14,0.70) 0%, rgba(26,21,14,0) 55%),
+    linear-gradient(to bottom, rgba(26,21,14,0.3) 0%, rgba(26,21,14,0) 35%, rgba(26,21,14,1) 100%);
 }
 .portada-numero-fantasma {
-  position: absolute;
-  right: 14px;
-  top: 8svh;
+  position: absolute; right: 14px; top: 8svh;
   font-family: var(--display);
   font-size: 130px;
-  color: rgba(242,237,228,0.035);
-  line-height: 1;
-  letter-spacing: -0.04em;
-  z-index: 1;
-  pointer-events: none;
-  user-select: none;
+  color: rgba(212,175,55,0.04);
+  line-height: 1; letter-spacing: -0.04em;
+  z-index: 1; pointer-events: none; user-select: none;
 }
 .portada-exp {
-  position: absolute;
-  top: 18px;
-  left: 22px;
-  z-index: 2;
+  position: absolute; top: 18px; left: 22px; z-index: 2;
 }
 .exp-num {
   font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: 0.22em;
-  color: rgba(212,58,26,0.75);
-  text-transform: uppercase;
-  line-height: 2;
+  font-size: 13px; letter-spacing: 0.22em;
+  color: rgba(212,175,55,0.7);
+  text-transform: uppercase; line-height: 2;
 }
 .portada-contenido {
-  position: relative;
-  z-index: 2;
+  position: relative; z-index: 2;
   padding: 0 24px;
   animation: fadeUp 1s ease 0.1s both;
 }
 .linea-roja-corta {
-  width: 44px;
-  height: 1.5px;
-  background: var(--rojo);
-  margin-bottom: 13px;
+  width: 44px; height: 1.5px;
+  background: var(--red); margin-bottom: 13px;
 }
 .portada-titulo {
   font-family: var(--display);
   font-size: clamp(64px, 20vw, 86px);
   line-height: 0.88;
-  color: var(--crema);
+  color: var(--ink);
   letter-spacing: -0.02em;
   margin-bottom: 8px;
 }
 .portada-sub {
   font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: 0.2em;
+  font-size: 13px; letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(242,237,228,0.35);
-  line-height: 1.9;
-  margin-bottom: 18px;
+  color: rgba(212,207,195,0.32);
+  line-height: 1.9; margin-bottom: 18px;
 }
 .portada-frase {
   font-family: var(--cuerpo);
-  font-size: 19px;
-  font-style: italic;
-  font-weight: 300;
-  color: rgba(242,237,228,0.68);
-  line-height: 1.55;
-  margin-bottom: 26px;
+  font-size: 19px; font-style: italic; font-weight: 300;
+  color: rgba(212,207,195,0.65);
+  line-height: 1.55; margin-bottom: 26px;
   padding-left: 12px;
-  border-left: 1.5px solid rgba(212,58,26,0.5);
+  border-left: 1.5px solid var(--gold-dim);
 }
 .datos-row {
   display: flex;
-  border-top: 0.5px solid var(--crema-faint);
-  border-bottom: 0.5px solid var(--crema-faint);
+  border-top: 0.5px solid var(--ink-faint);
+  border-bottom: 0.5px solid var(--ink-faint);
   padding: 13px 0;
 }
 .dato-col {
   flex: 1;
-  border-right: 0.5px solid var(--crema-faint);
-  padding-right: 10px;
-  margin-right: 10px;
+  border-right: 0.5px solid var(--ink-faint);
+  padding-right: 10px; margin-right: 10px;
 }
 .dato-col:last-child { border-right: none; margin-right: 0; padding-right: 0; }
 .dato-etiq {
   font-family: var(--mono);
-  font-size: 21px;
-  letter-spacing: 0.22em;
+  font-size: 9px; letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--rojo-dim);
-  margin-bottom: 5px;
+  color: var(--gold-dim); margin-bottom: 5px;
 }
 .dato-val {
   font-family: var(--cuerpo);
-  font-size: 17px;
-  color: var(--crema);
-  line-height: 1.3;
+  font-size: 17px; color: var(--ink); line-height: 1.3;
 }
 
-/* ── SECCIONES BASE ──────────────────────────────── */
+/* ── SECCIONES BASE ──────────────────────────────────────── */
 .seccion {
+  position: relative;
   padding: 34px 24px;
-  border-top: 0.5px solid var(--crema-faint);
+  border-top: 0.5px solid var(--ink-faint);
+  background: var(--bg);
+  z-index: 1;
 }
+.seccion--mid { background: var(--bg2); }
+.seccion > * { position: relative; z-index: 1; }
+
+/* Etiqueta de sección: gold (index) + estructura v5 */
 .seccion-label {
   font-family: var(--mono);
-  font-size: 21px;
-  letter-spacing: 0.32em;
+  font-size: 9px; letter-spacing: 0.36em;
   text-transform: uppercase;
-  color: var(--rojo);
+  color: var(--gold);
   padding-bottom: 11px;
-  border-bottom: 0.5px solid rgba(212,58,26,0.2);
+  border-bottom: 0.5px solid var(--gold-faint);
   margin-bottom: 18px;
 }
 .texto-cuerpo {
   font-family: var(--cuerpo);
-  font-size: 19px;
-  line-height: 1.72;
-  color: rgba(242,237,228,0.82);
+  font-size: 19px; line-height: 1.72;
+  color: var(--ink-dim);
   margin-bottom: 14px;
 }
 .texto-cuerpo:last-child { margin-bottom: 0; }
 
-/* ── SECCIÓN CON FOTO LATERAL ────────────────────── */
+/* ── SECCIONES CON FOTO BORROSA (index technique) ────────── */
+.seccion-foto-bg {
+  position: relative;
+  overflow: hidden;
+  padding: 34px 24px;
+  border-top: 0.5px solid var(--ink-faint);
+  z-index: 1;
+}
+/* Capa de foto borrosa detrás */
+.seccion-foto-bg::before {
+  content: '';
+  position: absolute;
+  top: -20%; left: -20%; right: -20%; bottom: -20%;
+  background-size: 150% 150%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  filter: blur(55px) brightness(0.22) contrast(0.85) saturate(0.4) sepia(0.25);
+  opacity: 0.85;
+  z-index: 0;
+  transform: scale(1.3);
+  pointer-events: none;
+}
+/* Velo cálido encima de la foto borrosa */
+.seccion-foto-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(26,21,14,0.52);
+  pointer-events: none; z-index: 0;
+}
+.seccion-foto-bg > * { position: relative; z-index: 1; }
+/* Cada sección tiene su propia foto */
+.bg-kafka  { --foto-url: url('../img/programa/kafka-1923.jpg'); }
+.bg-dupeyron { --foto-url: url('../img/programa/bio-v4.jpg'); }
+.bg-kafka::before,
+.bg-dupeyron::before { background-image: var(--foto-url); }
+
+/* ── BIO (con foto lateral) ──────────────────────────────── */
 .bio-wrap {
-  display: flex;
-  gap: 14px;
-  margin-bottom: 16px;
-  align-items: flex-start;
+  display: flex; gap: 14px;
+  margin-bottom: 16px; align-items: flex-start;
 }
 .bio-foto {
-  width: 96px;
-  height: 120px;
-  object-fit: cover;
-  object-position: center top;
+  width: 96px; height: 120px;
+  object-fit: cover; object-position: center top;
   flex-shrink: 0;
-  filter: grayscale(100%) contrast(1.1);
+  filter: grayscale(100%) contrast(1.15) brightness(0.9) sepia(0.1);
+  border: 1px solid var(--gold-faint);
 }
-/* Retrato 1923: rostro un poco más bajo en el encuadre */
-.bio-foto--kafka {
-  object-position: center 28%;
-}
+.bio-foto--kafka { object-position: center 28%; }
 .bio-texto-wrap { flex: 1; }
 .bio-nombre {
   font-family: var(--display);
-  font-size: 22px;
-  color: var(--crema);
-  line-height: 1.1;
-  margin-bottom: 6px;
+  font-size: 22px; color: var(--ink);
+  line-height: 1.1; margin-bottom: 6px;
 }
 .bio-fechas {
   font-family: var(--mono);
-  font-size: 21px;
-  letter-spacing: 0.18em;
-  color: var(--rojo-dim);
-  text-transform: uppercase;
-  margin-bottom: 10px;
+  font-size: 9px; letter-spacing: 0.18em;
+  color: var(--gold-dim);
+  text-transform: uppercase; margin-bottom: 10px;
 }
 .bio-texto {
   font-family: var(--cuerpo);
-  font-size: 21px;
-  line-height: 1.68;
-  color: rgba(242,237,228,0.78);
+  font-size: 18px; line-height: 1.68;
+  color: rgba(212,207,195,0.8);
 }
 .bio-texto-cont {
   font-family: var(--cuerpo);
-  font-size: 21px;
-  line-height: 1.68;
-  color: rgba(242,237,228,0.78);
+  font-size: 18px; line-height: 1.68;
+  color: rgba(212,207,195,0.8);
   margin-top: 12px;
 }
 
-/* ── CITA ────────────────────────────────────────── */
+/* ── CITA ────────────────────────────────────────────────── */
 .cita-bloque {
-  border-left: 1.5px solid rgba(212,58,26,0.5);
+  border-left: 1.5px solid var(--gold-dim);
   padding-left: 14px;
 }
 .cita-texto {
   font-family: var(--cuerpo);
-  font-size: 21px;
-  font-style: italic;
-  font-weight: 300;
-  color: rgba(242,237,228,0.8);
-  line-height: 1.7;
+  font-size: 19px; font-style: italic; font-weight: 300;
+  color: rgba(212,207,195,0.82); line-height: 1.7;
 }
 .cita-firma {
   font-family: var(--mono);
-  font-size: 21px;
-  letter-spacing: 0.18em;
-  color: var(--rojo-dim);
-  text-transform: uppercase;
-  margin-top: 10px;
+  font-size: 9px; letter-spacing: 0.18em;
+  color: var(--gold-dim);
+  text-transform: uppercase; margin-top: 10px;
 }
 
-/* ── FICHA ───────────────────────────────────────── */
+/* ── FICHA ARTÍSTICA ─────────────────────────────────────── */
 .ficha-lista { display: flex; flex-direction: column; }
 .ficha-fila {
   display: grid;
   grid-template-columns: 36% 1fr;
-  gap: 10px;
-  padding: 11px 0;
-  border-bottom: 0.5px solid rgba(242,237,228,0.06);
+  gap: 10px; padding: 11px 0;
+  border-bottom: 0.5px solid var(--ink-faint);
   align-items: baseline;
 }
 .ficha-fila:last-child { border-bottom: none; }
 .ficha-rol {
   font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: 0.1em;
+  font-size: 9px; letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(242,237,228,0.28);
+  color: rgba(212,207,195,0.28);
 }
 .ficha-nombre {
   font-family: var(--cuerpo);
-  font-size: 19px;
-  font-weight: 500;
-  color: var(--crema);
-  line-height: 1.3;
+  font-size: 19px; font-weight: 500;
+  color: var(--ink); line-height: 1.3;
 }
 .ficha-nombre .sub {
   display: block;
-  font-size: 21px;
-  font-weight: 300;
-  font-style: italic;
-  opacity: 0.4;
-  margin-top: 2px;
+  font-size: 17px; font-weight: 300;
+  font-style: italic; opacity: 0.4; margin-top: 2px;
 }
 .difunto::after { content: ' †'; font-size: 0.75em; opacity: 0.35; }
 
-/* Ficha promo (v5): tono distinto al programa impreso / día de función */
+/* Ficha promo (v5) */
 .ficha-artistica-promo .seccion-label {
-  border-bottom: none;
-  margin-bottom: 14px;
+  border-bottom: none; margin-bottom: 14px;
   padding-left: 12px;
-  border-left: 3px solid rgba(212, 58, 26, 0.5);
+  border-left: 3px solid var(--gold-dim);
   padding-bottom: 2px;
   letter-spacing: 0.26em;
-  color: rgba(212, 58, 26, 0.95);
+  color: var(--gold);
 }
 .ficha-lista--promo {
   padding: 14px 16px 10px;
-  border-radius: 10px;
-  background: linear-gradient(165deg, rgba(242, 237, 228, 0.06) 0%, rgba(8, 8, 8, 0.35) 100%);
-  border: 1px solid rgba(242, 237, 228, 0.11);
-  box-shadow: inset 0 1px 0 rgba(242, 237, 228, 0.05);
+  border-radius: 4px;
+  background: linear-gradient(165deg, rgba(212,175,55,0.05) 0%, rgba(26,21,14,0.5) 100%);
+  border: 1px solid var(--gold-faint);
+  box-shadow: inset 0 1px 0 rgba(212,175,55,0.07);
 }
 .ficha-lista--promo .ficha-fila {
-  border-bottom: 0.5px dashed rgba(242, 237, 228, 0.12);
+  border-bottom: 0.5px dashed rgba(212,207,195,0.1);
   padding: 9px 0;
 }
 .ficha-lista--promo .ficha-fila:last-child { border-bottom: none; }
-.ficha-lista--promo .ficha-rol { color: rgba(242, 237, 228, 0.4); }
+.ficha-lista--promo .ficha-rol { color: rgba(212,207,195,0.4); }
 .ficha-nombre--apoyo {
-  font-weight: 300;
-  font-size: 17px;
-  opacity: 0.92;
+  font-weight: 300; font-size: 17px; opacity: 0.92;
 }
 
-/* ── CONTACTO ────────────────────────────────────── */
+/* ── CONTACTO ────────────────────────────────────────────── */
 .contacto-lista { display: flex; flex-direction: column; gap: 14px; }
 .contacto-fila {
   display: grid;
   grid-template-columns: 28% 1fr;
-  gap: 12px;
-  align-items: baseline;
+  gap: 12px; align-items: baseline;
 }
 .contacto-etiq {
   font-family: var(--mono);
-  font-size: 21px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--rojo-dim);
+  font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--gold-dim);
 }
-.contacto-val { font-family: var(--cuerpo); font-size: 19px; color: var(--crema); }
+.contacto-val { font-family: var(--cuerpo); font-size: 19px; color: var(--ink); }
 
 .texto-pequeño {
   font-family: var(--cuerpo);
-  font-size: 21px;
-  font-style: italic;
-  line-height: 1.65;
-  color: rgba(242,237,228,0.3);
+  font-size: 17px; font-style: italic; line-height: 1.65;
+  color: rgba(212,207,195,0.3);
 }
 
-/* ── PIE ─────────────────────────────────────────── */
+/* ── PIE ─────────────────────────────────────────────────── */
 .pie {
   padding: 14px 24px 32px;
-  border-top: 0.5px solid var(--crema-faint);
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+  border-top: 0.5px solid var(--ink-faint);
+  display: flex; justify-content: flex-end; align-items: center;
+  background: var(--bg);
+  position: relative; z-index: 1;
 }
 .pie-numero {
   font-family: var(--display);
-  font-size: 52px;
-  color: rgba(242,237,228,0.04);
-  line-height: 1;
+  font-size: 52px; color: rgba(212,175,55,0.05); line-height: 1;
 }
-.pie-numero--mini {
-  font-size: 24px;
-  color: rgba(242,237,228,0.06);
-}
+.pie-numero--mini { font-size: 24px; color: rgba(212,175,55,0.07); }
 
-/* ── DIVISOR ─────────────────────────────────────── */
+/* ── DIVISOR ─────────────────────────────────────────────── */
 .divisor {
-  width: 32px;
-  height: 1px;
-  background: rgba(212,58,26,0.3);
+  width: 32px; height: 1px;
+  background: var(--gold-dim);
   margin: 18px 0;
 }
 
+/* ── PROMO DIGITAL (v5) ──────────────────────────────────── */
+.promo-leer-box {
+  border: 1px solid var(--gold-faint);
+  border-radius: 4px;
+  padding: 20px 18px;
+  background: linear-gradient(165deg, rgba(212,175,55,0.06) 0%, rgba(26,21,14,0.55) 100%);
+  margin-top: 10px;
+}
+.promo-precio { margin-bottom: 6px; line-height: 1.2; }
+.promo-precio-fila {
+  display: flex; flex-wrap: wrap;
+  align-items: baseline; gap: 10px 14px; margin-bottom: 6px;
+}
+.promo-precio-tachado {
+  font-family: var(--display); font-size: 22px;
+  text-decoration: line-through;
+  text-decoration-color: rgba(212,207,195,0.28);
+  text-decoration-thickness: 1px;
+  color: rgba(212,207,195,0.38);
+}
+.promo-precio-oferta {
+  font-family: var(--display); font-size: 26px;
+  color: rgba(212,207,195,0.95);
+}
+.promo-precio-mxn {
+  font-family: var(--cuerpo); font-size: 17px; font-weight: 400;
+  color: rgba(212,207,195,0.48);
+}
+.promo-precio small {
+  display: block;
+  font-family: var(--cuerpo); font-size: 16px; font-weight: 400;
+  color: rgba(212,207,195,0.52); margin-top: 0;
+}
+.promo-cupon-wrap {
+  margin: 16px 0 18px;
+  padding: 12px 14px;
+  background: rgba(26,21,14,0.55);
+  border-radius: 3px;
+  border: 1px dashed rgba(212,175,55,0.25);
+}
+.promo-cupon-etiq {
+  font-family: var(--mono);
+  font-size: 9px; letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-dim); margin-bottom: 6px;
+}
+.promo-cupon-codigo {
+  font-family: var(--mono);
+  font-size: 16px; letter-spacing: 0.1em;
+  color: rgba(212,207,195,0.9);
+  user-select: all;
+}
+.promo-nota-cupon {
+  font-family: var(--cuerpo);
+  font-size: 15px; font-style: italic;
+  color: rgba(212,207,195,0.42); line-height: 1.55; margin-top: 12px;
+}
+.promo-leer-box .cta-btn {
+  width: 100%; margin-top: 6px; box-sizing: border-box;
+}
+.promo-leer-box .cta-boleto {
+  font-size: 18px; font-weight: 600;
+  padding: 14px 20px;
+  background: rgba(212,58,26,0.82);
+}
+.promo-viva-teatro {
+  font-family: var(--display);
+  font-size: 22px; font-style: italic; font-weight: 400;
+  text-align: center; letter-spacing: 0.04em;
+  color: rgba(212,207,195,0.72);
+  line-height: 1.35; margin: 0;
+  padding: 20px 8px 4px;
+}
+.promo-viva-teatro::before {
+  content: '';
+  display: block; width: 100%; max-width: 120px; height: 1px;
+  margin: 0 auto 14px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+
+/* ── CTA ─────────────────────────────────────────────────── */
+.cta-wrap {
+  display: flex; flex-direction: column; gap: 14px; margin-top: 28px;
+}
+.cta-btn {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 18px 24px;
+  border-radius: 3px;
+  font-family: var(--cuerpo);
+  font-size: 20px; font-weight: 600; letter-spacing: 0.01em;
+  text-decoration: none; text-align: center; line-height: 1.2;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+.cta-btn:active { opacity: 0.8; }
+.cta-boleto { background: var(--red); color: #fff; }
+.cta-ws {
+  background: transparent; color: var(--ink);
+  border: 1.5px solid rgba(212,207,195,0.3);
+}
+.cta-icon { font-size: 22px; line-height: 1; }
+
+/* ── ANIMACIÓN ───────────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── CTA ACCESIBLE ─────────────────────────────────────── */
-.cta-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 28px;
-}
-.cta-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 18px 24px;
-  border-radius: 6px;
-  font-family: var(--cuerpo);
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  text-decoration: none;
-  text-align: center;
-  line-height: 1.2;
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.15s;
-}
-.cta-btn:active { opacity: 0.8; }
-.cta-boleto {
-  background: var(--rojo);
-  color: #fff;
-}
-.cta-ws {
-  background: transparent;
-  color: var(--crema);
-  border: 1.5px solid rgba(242,237,228,0.35);
-}
-.cta-icon {
-  font-size: 22px;
-  line-height: 1;
-}
-
+/* ── RESPONSIVE ──────────────────────────────────────────── */
 @media (max-width: 540px) {
-  body {
-    max-width: 100%;
+  body { max-width: 100%; }
+  .seccion, .seccion-foto-bg { padding: 26px 18px; }
+  .texto-cuerpo, .bio-texto, .bio-texto-cont { font-size: 17px; }
+  .seccion-label, .contacto-etiq, .bio-fechas { font-size: 8px; }
+  .dato-etiq { font-size: 8px; }
+  .ficha-fila { grid-template-columns: 1fr; gap: 4px; }
+  .ficha-rol { font-size: 8px; }
+  .contacto-fila { grid-template-columns: 1fr; gap: 4px; }
+  .bio-wrap { flex-direction: column; align-items: flex-start; }
+  .bio-foto { width: 90px; height: 110px; }
+  .portada-titulo { font-size: clamp(52px, 18vw, 72px); }
+  .cta-btn { font-size: 18px; padding: 16px 18px; }
+  .texto-pequeño { font-size: 16px; }
+  .ficha-nombre--apoyo { font-size: 16px; }
+  /* Menos blur en móvil: menos GPU */
+  .seccion-foto-bg::before {
+    filter: blur(18px) brightness(0.25) contrast(0.85) saturate(0.4) sepia(0.2);
   }
-
-  .seccion {
-    padding: 26px 18px;
-  }
-
-  .texto-cuerpo,
-  .bio-texto,
-  .bio-texto-cont {
-    font-size: 17px;
-    line-height: 1.72;
-  }
-
-  .seccion-label,
-  .contacto-etiq,
-  .bio-fechas {
-    font-size: 15px;
-    letter-spacing: 0.18em;
-  }
-
-  .dato-etiq {
-    font-size: 11px;
-    letter-spacing: 0.18em;
-  }
-
-  .ficha-fila {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-
-  .ficha-rol {
-    font-size: 11px;
-    letter-spacing: 0.08em;
-  }
-
-  .contacto-fila {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-
-  .bio-wrap {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .bio-foto {
-    width: 90px;
-    height: 110px;
-  }
-
-  .portada-titulo {
-    font-size: clamp(52px, 18vw, 72px);
-  }
-
-  .cta-btn {
-    font-size: 18px;
-    padding: 16px 18px;
-  }
-
-  .texto-pequeño {
-    font-size: 18px;
-  }
-
-  .ficha-nombre--apoyo {
-    font-size: 16px;
-  }
-}
-
-/* ── Promo digital (v5): precio y cupón (tono discreto) ───── */
-.promo-leer-box {
-  border: 1px solid rgba(242, 237, 228, 0.14);
-  border-radius: 8px;
-  padding: 20px 18px;
-  background: rgba(8, 8, 8, 0.35);
-  margin-top: 10px;
-}
-.promo-precio {
-  margin-bottom: 6px;
-  line-height: 1.2;
-}
-.promo-precio-fila {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 10px 14px;
-  margin-bottom: 6px;
-}
-.promo-precio-tachado {
-  font-family: var(--display);
-  font-size: 22px;
-  text-decoration: line-through;
-  text-decoration-color: rgba(242, 237, 228, 0.32);
-  text-decoration-thickness: 1px;
-  color: rgba(242, 237, 228, 0.42);
-}
-.promo-precio-oferta {
-  font-family: var(--display);
-  font-size: 26px;
-  color: rgba(242, 237, 228, 0.94);
-}
-.promo-precio-mxn {
-  font-family: var(--cuerpo);
-  font-size: 17px;
-  font-weight: 400;
-  color: rgba(242, 237, 228, 0.52);
-}
-.promo-precio small {
-  display: block;
-  font-family: var(--cuerpo);
-  font-size: 17px;
-  font-weight: 400;
-  color: rgba(242, 237, 228, 0.55);
-  margin-top: 0;
-}
-.promo-cupon-wrap {
-  margin: 16px 0 18px;
-  padding: 12px 14px;
-  background: rgba(8, 8, 8, 0.45);
-  border-radius: 6px;
-  border: 1px dashed rgba(242, 237, 228, 0.2);
-}
-.promo-cupon-etiq {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(242, 237, 228, 0.45);
-  margin-bottom: 6px;
-}
-.promo-cupon-codigo {
-  font-family: var(--mono);
-  font-size: 17px;
-  letter-spacing: 0.1em;
-  color: rgba(242, 237, 228, 0.88);
-  user-select: all;
-}
-.promo-nota-cupon {
-  font-family: var(--cuerpo);
-  font-size: 16px;
-  font-style: italic;
-  color: rgba(242, 237, 228, 0.45);
-  line-height: 1.55;
-  margin-top: 12px;
-}
-.promo-leer-box .cta-btn {
-  width: 100%;
-  margin-top: 6px;
-  box-sizing: border-box;
-}
-.promo-leer-box .cta-boleto {
-  font-size: 18px;
-  font-weight: 600;
-  padding: 14px 20px;
-  background: rgba(212, 58, 26, 0.82);
-}
-/* Cierre emocional tras el CTA (display itálico; label de sección sigue en mono/rojo) */
-.promo-viva-teatro {
-  font-family: var(--display);
-  font-size: 23px;
-  font-style: italic;
-  font-weight: 400;
-  text-align: center;
-  letter-spacing: 0.04em;
-  color: rgba(242, 237, 228, 0.78);
-  line-height: 1.35;
-  margin: 0;
-  padding: 20px 8px 4px;
-}
-.promo-viva-teatro::before {
-  content: '';
-  display: block;
-  width: 100%;
-  max-width: 120px;
-  height: 1px;
-  margin: 0 auto 14px;
-  background: linear-gradient(90deg, transparent, rgba(212, 58, 26, 0.42), transparent);
-}
-@media (max-width: 540px) {
-  .promo-viva-teatro {
-    font-size: 20px;
-    padding-top: 18px;
-  }
+  .promo-viva-teatro { font-size: 19px; padding-top: 18px; }
 }
 </style>
 </head>
 <body>
+
 <!-- ══ PORTADA ══════════════════════════════════════════════ -->
 <section class="portada">
   <div class="portada-foto-wrap">
     <picture>
       <source srcset="../img/programa/portada-v4.webp" type="image/webp">
-      <img class="portada-foto" src="../img/programa/portada-v4.jpg" alt="Humberto Dupeyron · El Gorila" width="480" height="547" fetchpriority="high" decoding="async">
+      <img class="portada-foto" src="../img/programa/portada-v4.jpg"
+           alt="Humberto Dupeyron · El Gorila"
+           width="480" height="547"
+           fetchpriority="high" decoding="async">
     </picture>
     <div class="portada-foto-overlay"></div>
   </div>
@@ -679,29 +576,37 @@ body {
   <p class="texto-cuerpo">Un simio capturado elige imitar a los hombres para sobrevivir. Años después, desde una tribuna, rinde su informe: aguardiente, tabaco, lenguaje aprendido a golpes — la civilización como táctica de salida.</p>
 </section>
 
-<!-- ══ SOBRE EL AUTOR ════════════════════════════════════════ -->
-<section class="seccion">
+<!-- ══ SOBRE EL AUTOR — fondo foto borrosa (index) ══════════ -->
+<section class="seccion-foto-bg bg-kafka">
   <div class="seccion-label">Sobre el autor</div>
   <div class="bio-wrap">
     <picture>
       <source srcset="../img/programa/kafka-1923.webp" type="image/webp">
-      <img class="bio-foto bio-foto--kafka" src="../img/programa/kafka-1923.jpg" alt="Franz Kafka, retrato de 1923" width="192" height="256" loading="lazy" decoding="async">
+      <img class="bio-foto bio-foto--kafka"
+           src="../img/programa/kafka-1923.jpg"
+           alt="Franz Kafka, retrato de 1923"
+           width="192" height="256"
+           loading="lazy" decoding="async">
     </picture>
     <div class="bio-texto-wrap">
       <div class="bio-nombre">Franz Kafka</div>
       <div class="bio-fechas">Praga, 1883 — Viena, 1924</div>
-      <p class="bio-texto"><em>Un informe para una academia</em> (1917) narra la adaptación forzada de un simio a la “forma humana”: no es evolución, es renuncia a cambio de una salida.</p>
+      <p class="bio-texto"><em>Un informe para una academia</em> (1917) narra la adaptación forzada de un simio a la "forma humana": no es evolución, es renuncia a cambio de una salida.</p>
     </div>
   </div>
 </section>
 
-<!-- ══ SOBRE EL INTÉRPRETE ═══════════════════════════════════ -->
-<section class="seccion">
+<!-- ══ SOBRE EL INTÉRPRETE — fondo foto borrosa (index) ═════ -->
+<section class="seccion-foto-bg bg-dupeyron">
   <div class="seccion-label">Sobre el intérprete</div>
   <div class="bio-wrap">
     <picture>
       <source srcset="../img/programa/bio-v4.webp" type="image/webp">
-      <img class="bio-foto" src="../img/programa/bio-v4.jpg" alt="Humberto Dupeyron" width="192" height="162" loading="lazy" decoding="async">
+      <img class="bio-foto"
+           src="../img/programa/bio-v4.jpg"
+           alt="Humberto Dupeyron"
+           width="192" height="162"
+           loading="lazy" decoding="async">
     </picture>
     <div class="bio-texto-wrap">
       <div class="bio-nombre">Humberto Dupeyron</div>
@@ -711,8 +616,8 @@ body {
   </div>
 </section>
 
-<!-- ══ FICHA ARTÍSTICA (promo digital: equipo completo, Osterlen una sola vez) ══ -->
-<section class="seccion ficha-artistica-promo">
+<!-- ══ FICHA ARTÍSTICA ═══════════════════════════════════════ -->
+<section class="seccion seccion--mid ficha-artistica-promo">
   <div class="seccion-label">Ficha artística</div>
   <div class="ficha-lista ficha-lista--promo">
     <div class="ficha-fila"><span class="ficha-rol">Actuación</span><span class="ficha-nombre">Humberto Dupeyron</span></div>
@@ -727,16 +632,16 @@ body {
   </div>
 </section>
 
-<!-- ══ TEXTO Y DERECHOS ═════════════════════════════════════ -->
+<!-- ══ TEXTO Y DERECHOS ══════════════════════════════════════ -->
 <section class="seccion">
   <div class="seccion-label">Texto y derechos</div>
-  <p class="texto-cuerpo"><em>Un informe para una academia</em> (<em>Ein Bericht für eine Akademie</em>), de <strong>Franz Kafka</strong>: escrito en <strong>abril de 1917</strong> y publicado <strong>en noviembre del mismo año</strong>. Un simio ya humanizado comparece ante una tribuna académica y expone, con frialdad casi clínica, la renuncia y la asimilación forzada a la “forma humana”.</p>
+  <p class="texto-cuerpo"><em>Un informe para una academia</em> (<em>Ein Bericht für eine Akademie</em>), de <strong>Franz Kafka</strong>: escrito en <strong>abril de 1917</strong> y publicado <strong>en noviembre del mismo año</strong>. Un simio ya humanizado comparece ante una tribuna académica y expone, con frialdad casi clínica, la renuncia y la asimilación forzada a la "forma humana".</p>
   <p class="texto-cuerpo"><strong>Llevada al teatro</strong> desde el cuento de Kafka como <strong>monólogo</strong>, <strong>Humberto Dupeyron</strong> encarna <em>El Gorila</em> en <strong>versión e interpretación</strong> desde el <strong>estreno de 1989</strong> en el Teatro Xola (Ciudad de México). En <strong>2026</strong> suma <strong>treinta y siete años</strong> de cartelera, temporadas y giras en <strong>decenas de teatros</strong> de México. <strong>Prensa y crítica la han ubicado entre las mejores obras del teatro mexicano y como la más longeva.</strong></p>
 </section>
 
-<!-- ══ ESTO ES PARA TI — PROMO DIGITAL (v5) ═══════════════════ -->
+<!-- ══ ESTO ES PARA TI — PROMO DIGITAL (v5) ══════════════════ -->
 <!-- Cupón PROGRAMAV5: precio con descuento $350 MXN. -->
-<section class="seccion">
+<section class="seccion seccion--mid">
   <div class="seccion-label">Esto es para ti</div>
   <p class="texto-cuerpo">Gracias por leer el programa. Te dejamos un gesto de cortesía por llegar hasta aquí: al comprar tus boletos en línea, usa el código de abajo.</p>
   <div class="promo-leer-box">
@@ -752,19 +657,30 @@ body {
       <div class="promo-cupon-etiq">Cupón</div>
       <div class="promo-cupon-codigo" id="codigo-promo-v5">PROGRAMAV5</div>
     </div>
-    <a class="cta-btn cta-boleto" href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener noreferrer">Comprar boletos</a>
+    <a class="cta-btn cta-boleto"
+       href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139"
+       target="_blank" rel="noopener noreferrer">Comprar boletos</a>
     <p class="promo-viva-teatro">Que viva el teatro</p>
-    <p class="promo-nota-cupon">Al pagar en línea, ingresa el código en el paso correspondiente (cupón o descuento), según muestre Ticket Tailor. Si no aplica, escríbenos a <a href="mailto:elgorilateatro@gmail.com" style="color:var(--rojo-dim);">elgorilateatro@gmail.com</a>.</p>
+    <p class="promo-nota-cupon">Al pagar en línea, ingresa el código en el paso correspondiente (cupón o descuento), según muestre Ticket Tailor. Si no aplica, escríbenos a <a href="mailto:elgorilateatro@gmail.com" style="color:var(--gold-dim);">elgorilateatro@gmail.com</a>.</p>
   </div>
 </section>
 
-<!-- ══ CONTACTO ═════════════════════════════════════════════ -->
+<!-- ══ CONTACTO ══════════════════════════════════════════════ -->
 <section class="seccion">
   <div class="seccion-label">Contacto e informes</div>
   <div class="contacto-lista">
-    <div class="contacto-fila"><span class="contacto-etiq">Instagram</span><span class="contacto-val"><a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener" style="color:var(--crema);text-decoration:underline;">@ElGorilateatro</a></span></div>
-    <div class="contacto-fila"><span class="contacto-etiq">Web</span><span class="contacto-val"><a href="https://elgorilateatro.com.mx" target="_blank" rel="noopener" style="color:var(--crema);text-decoration:underline;">elgorilateatro.com.mx</a></span></div>
-    <div class="contacto-fila"><span class="contacto-etiq">Boletos</span><span class="contacto-val"><a href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener noreferrer" style="color:var(--crema);text-decoration:underline;">boletos.elgorilateatro.com.mx</a></span></div>
+    <div class="contacto-fila">
+      <span class="contacto-etiq">Instagram</span>
+      <span class="contacto-val"><a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener" style="color:var(--ink);text-decoration:underline;">@ElGorilateatro</a></span>
+    </div>
+    <div class="contacto-fila">
+      <span class="contacto-etiq">Web</span>
+      <span class="contacto-val"><a href="https://elgorilateatro.com.mx" target="_blank" rel="noopener" style="color:var(--ink);text-decoration:underline;">elgorilateatro.com.mx</a></span>
+    </div>
+    <div class="contacto-fila">
+      <span class="contacto-etiq">Boletos</span>
+      <span class="contacto-val"><a href="https://boletos.elgorilateatro.com.mx/events/elgorila/2124139" target="_blank" rel="noopener noreferrer" style="color:var(--ink);text-decoration:underline;">boletos.elgorilateatro.com.mx</a></span>
+    </div>
   </div>
 </section>
 
@@ -773,7 +689,7 @@ body {
   <div class="pie-numero pie-numero--mini" title="Programa digital v5">37</div>
 </div>
 
-<!-- Google Tag Manager (deferred to avoid blocking first paint) -->
+<!-- Google Tag Manager (deferred) -->
 <script>requestIdleCallback?requestIdleCallback(g):setTimeout(g,3500);function g(){var w=window,d=document,s='script',l='dataLayer',i='GTM-P4BDXRN9';w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);}</script>
 </body>
 </html>

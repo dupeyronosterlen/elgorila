@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html class="dark" lang="es"><head>
+<html class="dark" lang="es">
+<head>
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -7,166 +8,407 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
 <!-- End Google Tag Manager -->
-<meta charset="utf-8"/>
-<meta name="robots" content="noindex,nofollow"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev"/>
-<title>Checkout - EL GORILA</title>
-<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="js/analytics.js" data-meta="1"></script>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
+<title>Checkout — EL GORILA</title>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
+<link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<!-- Tailwind — mantenido para clases dinámicas del JS -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 <script>
         tailwind.config = {
-            darkMode: "class",
+    darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        primary: "#8B0000",
-                        "background-dark": "#1a150e",
-                        "text-dark": "#D4CFC3",
-                        "accent-gold": "#D4AF37",
-                        "rich-dark": "#2a1e12",
-                    },
-                    fontFamily: {
-                        display: ["Lora", "serif"],
-                        body: ["Inter", "sans-serif"],
-                    },
-                    borderRadius: { DEFAULT: "0.5rem" },
+          primary:            '#d99b3a',
+          'background-dark':  '#0a0706',
+          'text-dark':        '#f1ead9',
+          'accent-gold':      '#d99b3a',
+          'rich-dark':        '#120d0b',
+        },
                 },
             },
         };
     </script>
 <style>
-        body { background-color: #1a150e; font-family: Inter, sans-serif; }
-        h1, h2, h3, h4, h5, h6 { font-family: Lora, serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
-        .btn-granate-terciopelo {
-            background: linear-gradient(165deg, #8B3A42 0%, #6B2D35 50%, #5A252C 100%) !important;
-            color: #f5f0e8 !important;
-            font-weight: 700;
-            box-shadow: 0 2px 0 rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12), 0 0 12px rgba(201,168,75,0.3);
-            border: 1px solid rgba(201,168,75,0.6);
-            transition: box-shadow 0.2s ease, transform 0.15s ease;
-        }
-        .btn-granate-terciopelo:hover {
-            box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 6px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), 0 0 20px rgba(201,168,75,0.45);
+/* ── FUENTES ─────────────────────────────────────────────── */
+@font-face {
+  font-family: 'IM Fell English';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/im-fell-english-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Courier Prime';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/courier-prime-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal; font-weight: 300 600; font-display: swap;
+  src: url(fonts/cormorant-normal-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic; font-weight: 300 400; font-display: swap;
+  src: url(fonts/cormorant-italic-latin.woff2) format('woff2');
+}
+
+/* ── TOKENS v4 ───────────────────────────────────────────── */
+:root {
+  --bg:         #0a0706;
+  --bg2:        #120d0b;
+  --ink:        #f1ead9;
+  --ink-dim:    rgba(241,234,217,0.65);
+  --ink-faint:  rgba(241,234,217,0.10);
+  --gold:       #d99b3a;
+  --gold-dim:   rgba(217,155,58,0.50);
+  --gold-faint: rgba(217,155,58,0.12);
+  --red:        #D43A1A;
+  --green:      #4ade80;
+  --display:    'IM Fell English', Georgia, serif;
+  --cuerpo:     'Cormorant Garamond', serif;
+  --mono:       'Courier Prime', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--bg); scroll-behavior: smooth; }
+
+/* ── BODY ────────────────────────────────────────────────── */
+body {
+  background-color: var(--bg) !important;
+  color: var(--ink);
+  font-family: var(--cuerpo);
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+/* Grain */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 180px 180px; opacity: 0.04;
+  pointer-events: none; z-index: 0;
+}
+
+/* JS compat shim */
+.hidden { display: none !important; }
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── LOGO FIJO ───────────────────────────────────────────── */
+.checkout-logo {
+  position: fixed; top: 10px; left: 14px; z-index: 30;
+}
+.checkout-logo img {
+  height: 44px; width: auto; opacity: 0.9;
+  transition: opacity .2s;
+}
+.checkout-logo:hover img { opacity: 1; }
+
+/* ── LAYOUT ──────────────────────────────────────────────── */
+.checkout-main {
+  position: relative; z-index: 1;
+  flex: 1; display: flex;
+  align-items: center; justify-content: center;
+  padding: 80px 20px 40px;
+}
+.checkout-inner {
+  width: 100%; max-width: 440px; margin: 0 auto;
+}
+.checkout-title {
+  font-family: var(--display); font-size: clamp(28px, 8vw, 40px);
+  color: var(--ink); line-height: .95; letter-spacing: -.02em;
+  text-align: center; margin-bottom: 28px;
+}
+
+/* ── TARJETAS ────────────────────────────────────────────── */
+.ck-card {
+  background: rgba(32,24,16,0.72);
+  border: 1px solid var(--gold-faint);
+  padding: 24px 22px;
+  margin-bottom: 12px;
+}
+.ck-card-label {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .30em; text-transform: uppercase;
+  color: var(--gold); display: block;
+  padding-bottom: 10px;
+  border-bottom: 0.5px solid var(--gold-faint);
+  margin-bottom: 18px;
+}
+.ck-card-title {
+  font-family: var(--display); font-size: 22px;
+  color: var(--ink); margin-bottom: 16px;
+}
+
+/* ── ERRORES ─────────────────────────────────────────────── */
+#mensajes-error { margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+.error-banner {
+  padding: 14px 16px;
+  border: 1px solid rgba(212,58,26,0.35);
+  background: rgba(212,58,26,0.08);
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.error-banner .material-symbols-outlined { color: var(--red); flex-shrink: 0; font-size: 24px; margin-top: 2px; }
+.error-banner p { font-family: var(--cuerpo); font-size: 17px; color: var(--ink-dim); line-height: 1.5; margin-bottom: 6px; }
+.error-banner-btn {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--gold);
+  background: none; border: none; cursor: pointer; padding: 0;
+  text-decoration: underline; transition: color .15s;
+}
+.error-banner-btn:hover { color: var(--ink); }
+.error-banner--warn {
+  border-color: var(--gold-faint);
+  background: rgba(212,175,55,0.05);
+}
+.error-banner--warn .material-symbols-outlined { color: var(--gold); }
+
+/* ── RESUMEN ─────────────────────────────────────────────── */
+.resumen-fila {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--ink-faint);
+}
+.resumen-fila:last-child { border-bottom: none; }
+.resumen-key {
+  font-family: var(--cuerpo); font-size: 18px; color: var(--ink-dim);
+}
+.resumen-val {
+  font-family: var(--cuerpo); font-size: 18px; font-weight: 500;
+  color: var(--ink); text-align: right; max-width: 65%;
+}
+.resumen-descuento {
+  color: var(--green) !important;
+  font-size: 17px !important;
+}
+.resumen-hr {
+  border: none; border-top: 1px solid var(--ink-faint);
+  margin: 14px 0;
+}
+.resumen-total-fila {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-top: 4px;
+}
+.resumen-total-label {
+  font-family: var(--display); font-size: 24px; color: var(--ink);
+}
+#checkout-total {
+  font-family: var(--display); font-size: 28px; color: var(--gold);
+}
+
+/* ── EMAIL INPUT ─────────────────────────────────────────── */
+.email-label {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--gold-dim); display: block; margin-bottom: 8px;
+}
+#email-input {
+  display: block; width: 100%;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--ink-faint);
+  color: var(--ink);
+  font-family: var(--cuerpo); font-size: 17px;
+  outline: none; transition: border-color .15s;
+  border-radius: 0 !important;
+}
+#email-input:focus { border-color: var(--gold-dim); }
+#email-input::placeholder { color: rgba(212,207,195,0.3); }
+.email-hint {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-faint);
+  margin-top: 7px;
+}
+
+/* ── SEGURIDAD ───────────────────────────────────────────── */
+.security-box {
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.security-box .material-symbols-outlined { color: var(--gold-dim); flex-shrink: 0; font-size: 20px; margin-top: 3px; }
+.security-box-title {
+  font-family: var(--display); font-size: 18px;
+  color: var(--ink); margin-bottom: 6px;
+}
+.security-box p {
+  font-family: var(--cuerpo); font-size: 16px;
+  line-height: 1.6; color: var(--ink-dim); margin-bottom: 4px;
+}
+
+/* ── BOTÓN PAGAR ─────────────────────────────────────────── */
+#btn-pagar {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; width: 100%;
+  padding: 17px 24px; margin-bottom: 0;
+  background: var(--red) !important;
+  color: #fff !important;
+  font-family: var(--cuerpo) !important;
+  font-size: 20px !important; font-weight: 600 !important;
+  border: none !important; border-radius: 0 !important;
+  cursor: pointer; transition: opacity .15s;
+  letter-spacing: .01em;
+  -webkit-tap-highlight-color: transparent;
+}
+#btn-pagar:hover { opacity: .88; }
+#btn-pagar:disabled { opacity: 0.45 !important; cursor: not-allowed !important; }
+#btn-pagar .material-symbols-outlined { font-size: 22px !important; }
+.terms-note {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-faint);
+  text-align: center; margin-top: 14px;
+}
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+.ck-footer {
+  position: relative; z-index: 1;
+  padding: 20px 24px;
+  border-top: 0.5px solid var(--gold-faint);
+  background: var(--bg);
+  text-align: center;
+}
+.ck-footer-brand {
+  font-family: var(--display); font-size: 18px; color: var(--gold);
+}
+.ck-footer-copy {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
+  text-transform: uppercase; color: rgba(212,207,195,0.22);
+  margin-top: 5px;
+}
+.ck-footer a {
+  display: inline-block; margin-top: 8px;
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--gold-dim); text-decoration: none;
+  transition: color .15s;
+}
+.ck-footer a:hover { color: var(--gold); }
+
+@media (max-width: 480px) {
+  .checkout-main { padding: 68px 14px 32px; }
+  .ck-card { padding: 20px 16px; }
         }
     </style>
 </head>
-<body class="bg-background-dark text-text-dark font-body">
+<body class="dark">
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P4BDXRN9"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
-<div class="min-h-screen flex flex-col">
-<div class="fixed top-2 left-3 z-30">
-  <a href="index.html" aria-label="Ir al inicio"><img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="h-12 w-auto opacity-90 hover:opacity-100 transition-opacity"/></a>
-</div>
-<main class="flex-grow flex items-center justify-center p-4 sm:p-6 md:p-8 pt-24">
-<div class="w-full max-w-md mx-auto">
-<h2 class="text-4xl font-bold mb-6 text-white font-display text-center">Resumen y Pago</h2>
-<div class="space-y-4 mb-6 hidden" id="mensajes-error">
-<div class="bg-primary/90 backdrop-blur-sm border border-accent-gold/30 text-text-dark rounded-lg p-4 hidden" id="error-pago">
-<div class="flex items-center gap-4">
-<span class="material-symbols-outlined text-3xl">error</span>
-<div class="flex-grow">
-<p class="font-semibold">Pago fallido. No se ha realizado ningún cargo.</p>
-<button type="button" onclick="location.reload()" class="font-semibold underline hover:text-white transition-colors duration-200 text-sm">Reintentar pago</button>
-</div>
-</div>
-</div>
-<div class="bg-black/70 backdrop-blur-sm border border-white/20 text-text-dark rounded-lg p-4 hidden" id="error-conexion">
-<div class="flex items-center gap-4">
-<span class="material-symbols-outlined text-3xl">cloud_off</span>
-<div class="flex-grow">
-<p>Hubo un problema de conexión con Boletia. Intente de nuevo.</p>
-<button type="button" onclick="location.reload()" class="font-semibold underline hover:text-white transition-colors duration-200 text-sm">Reintentar</button>
-</div>
-</div>
-</div>
-<div class="bg-black/70 backdrop-blur-sm border border-white/20 text-text-dark rounded-lg p-4 hidden" id="advertencia-duplicado">
-<div class="flex items-center gap-4">
-<span class="material-symbols-outlined text-3xl">verified_user</span>
-<div class="flex-grow">
-<p>Detectamos un posible pago duplicado. Solo se procesará un cargo a través de Boletia. Su compra es segura.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="bg-black/60 dark:bg-black/70 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-6">
-<h3 class="text-2xl font-semibold text-white mb-6 font-display">Tu Compra</h3>
-<div class="space-y-4 text-white/90">
-<div class="flex justify-between items-center text-lg">
-<p>Función</p>
-<p class="font-semibold" id="checkout-funcion">Cargando...</p>
-</div>
-<div class="flex justify-between items-center text-lg">
-<p>Boletos</p>
-<p class="font-semibold" id="checkout-boletos">Cargando...</p>
-</div>
-<div class="flex justify-between items-center text-lg">
-<p>Subtotal</p>
-<p id="checkout-subtotal">$0.00</p>
-</div>
-<div id="checkout-descuento-container" class="flex justify-between items-center text-lg text-green-400 hidden">
-<p>Descuento <span id="checkout-codigo-info" class="text-xs text-white/60"></span></p>
-<p class="font-semibold" id="checkout-descuento">-$0.00</p>
-</div>
-<div class="flex justify-between items-center text-lg">
-<p>Cargo por servicio</p>
-<p id="checkout-cargo">$0.00</p>
-</div>
-</div>
-<hr class="border-t border-white/20 my-6"/>
-<div class="flex justify-between items-center text-white">
-<p class="text-2xl font-bold">Total</p>
-<p class="text-2xl font-bold" id="checkout-total">$0.00 MXN</p>
-</div>
-</div>
-<div class="bg-black/60 dark:bg-black/70 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-6">
-<h3 class="text-xl font-semibold text-white mb-4 font-display">Información de Contacto</h3>
-<div class="space-y-4">
-<div>
-<label for="email-input" class="block text-sm text-white/80 mb-2">Correo Electrónico *</label>
-<input type="email" id="email-input" required placeholder="tu@email.com" class="w-full px-4 py-3 bg-black/50 border border-accent-gold/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-accent-gold/50">
-<p class="text-xs text-white/60 mt-1">Te enviaremos tus boletos a este correo</p>
-</div>
-</div>
-</div>
-<div class="bg-black/60 dark:bg-black/70 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-6 flex items-start gap-4">
-<span class="material-symbols-outlined text-white/80 mt-1">lock</span>
-<div>
-<h4 class="font-bold text-white mb-2 font-display text-lg">Pago Seguro</h4>
-<p class="text-white/80 text-sm mb-3">La transacción se procesa de forma segura. Tus boletos serán enviados a tu correo electrónico al confirmar el pago.</p>
-<p class="text-white/80 text-sm italic">Tus boletos serán enviados a tu correo electrónico al confirmar el pago.</p>
-</div>
-</div>
-<div class="space-y-4">
-<button id="btn-pagar" type="button" class="w-full btn-granate-terciopelo py-4 rounded-xl flex items-center justify-center gap-3 text-xl disabled:opacity-50 disabled:cursor-not-allowed group">
-<span class="material-symbols-outlined text-2xl">confirmation_number</span>
-<span class="tracking-wide">Continuar al pago</span>
-</button>
-</div>
-<div class="text-center mt-6">
-<p class="text-xs text-white/60">Al continuar, aceptas nuestros Términos y Condiciones y Política de Privacidad.</p>
-</div>
-</div>
-</main>
-<footer class="bg-rich-dark/80 backdrop-blur-md py-8 border-t border-accent-gold/10">
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-<p class="font-display text-lg text-accent-gold">EL GORILA</p>
-<p class="text-text-dark/60 mt-2">© 2026. Todos los derechos reservados.</p>
-<a href="index.html" class="inline-block mt-4 text-accent-gold hover:text-white transition-colors">Volver al inicio</a>
-</div>
-</footer>
+
+<div class="checkout-logo">
+  <a href="index.html" aria-label="Ir al inicio">
+    <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" decoding="async">
+  </a>
 </div>
 
+<main class="checkout-main">
+  <div class="checkout-inner">
+
+    <h2 class="checkout-title">Resumen y pago</h2>
+
+    <!-- Errores -->
+    <div id="mensajes-error" class="hidden">
+      <div class="error-banner hidden" id="error-pago">
+        <span class="material-symbols-outlined">error</span>
+        <div>
+          <p>Pago fallido. No se ha realizado ningún cargo.</p>
+          <button type="button" onclick="location.reload()" class="error-banner-btn">Reintentar pago</button>
+</div>
+</div>
+      <div class="error-banner hidden" id="error-conexion">
+        <span class="material-symbols-outlined">cloud_off</span>
+        <div>
+          <p>Hubo un problema de conexión. Intente de nuevo.</p>
+          <button type="button" onclick="location.reload()" class="error-banner-btn">Reintentar</button>
+</div>
+</div>
+      <div class="error-banner error-banner--warn hidden" id="advertencia-duplicado">
+        <span class="material-symbols-outlined">verified_user</span>
+        <div>
+          <p>Detectamos un posible pago duplicado. Solo se procesará un cargo. Su compra es segura.</p>
+</div>
+</div>
+</div>
+
+    <!-- Tu Compra -->
+    <div class="ck-card">
+      <span class="ck-card-label">Tu compra</span>
+      <div class="resumen-fila">
+        <span class="resumen-key">Función</span>
+        <span class="resumen-val" id="checkout-funcion">Cargando…</span>
+</div>
+      <div class="resumen-fila">
+        <span class="resumen-key">Boletos</span>
+        <span class="resumen-val" id="checkout-boletos">Cargando…</span>
+</div>
+      <div class="resumen-fila">
+        <span class="resumen-key">Subtotal</span>
+        <span class="resumen-val" id="checkout-subtotal">$0.00</span>
+</div>
+      <div class="resumen-fila hidden" id="checkout-descuento-container">
+        <span class="resumen-key">Descuento <span id="checkout-codigo-info" style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);"></span></span>
+        <span class="resumen-val resumen-descuento" id="checkout-descuento">-$0.00</span>
+</div>
+      <div class="resumen-fila">
+        <span class="resumen-key">Cargo por servicio</span>
+        <span class="resumen-val" id="checkout-cargo">$0.00</span>
+</div>
+      <hr class="resumen-hr">
+      <div class="resumen-total-fila">
+        <span class="resumen-total-label">Total</span>
+        <span id="checkout-total">$0.00 MXN</span>
+</div>
+</div>
+
+    <!-- Email -->
+    <div class="ck-card">
+      <span class="ck-card-label">Información de contacto</span>
+      <label for="email-input" class="email-label">Correo electrónico *</label>
+      <input type="email" id="email-input" required placeholder="tu@email.com" autocomplete="email">
+      <p class="email-hint">Te enviaremos tus boletos a este correo</p>
+</div>
+
+    <!-- Seguridad -->
+    <div class="ck-card">
+      <div class="security-box">
+        <span class="material-symbols-outlined">lock</span>
+<div>
+          <div class="security-box-title">Pago seguro</div>
+          <p>La transacción se procesa de forma segura. Tus boletos serán enviados a tu correo electrónico al confirmar el pago.</p>
+          <p>Tus boletos serán enviados a tu correo electrónico al confirmar el pago.</p>
+</div>
+</div>
+</div>
+
+    <!-- Botón pagar -->
+    <button id="btn-pagar" type="button">
+      <span class="material-symbols-outlined">confirmation_number</span>
+      Continuar al pago
+</button>
+    <p class="terms-note">Al continuar, aceptas nuestros Términos y Condiciones y Política de Privacidad.</p>
+
+</div>
+</main>
+
+<footer class="ck-footer">
+  <div class="ck-footer-brand">EL GORILA</div>
+  <div class="ck-footer-copy">© 2026. Todos los derechos reservados.</div>
+  <a href="index.html">Volver al inicio</a>
+</footer>
+
+<script src="js/utm.js"></script>
 <script src="js/api-config.js"></script>
 <script src="js/inventario.js"></script>
 <script src="js/imagenes.js"></script>
 <script src="js/certificado.js"></script>
 <script src="js/checkout.js"></script>
-</body></html>
+</body>
+</html>

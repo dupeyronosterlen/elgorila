@@ -1,41 +1,44 @@
-/**
- * EL GORILA — Cloudflare Worker API
- * Autenticación JWT (admin via secrets) + checkout Stripe + inventario en KV.
- *
- * KV INVENTARIO:
- *   funciones:activas         → [{ fecha_iso, nombre, activa }]
- *   funcion:{fecha_iso}       → { total, vendidos, reservados, bloqueado, version }
- *   codigos:descuento         → { [CODIGO]: { porcentaje, nombre, activo } }
- *   ratelimit:{ip}:{ventana}  → count  [TTL: 15 min]
- *
- * KV VENTAS:
- *   venta:{session_id}        → { sessionId, codigo, fecha, cantidad, email, total, ... }
- *   cert:{codigo}             → { sessionId }
- *   ventaIdx:{fecha}:{sid}    → sessionId  (índice para filtrar por función)
- *   lista:{fecha}:{ts}        → { nombre, email, ... }  (lista de espera)
- *   fiscal:reserva:acumulado  → { acumulado: number }
- */
+// ─── WORKER: EL GORILA — BOLETAJE MULTI-VENUE v3.0 ────────────────────────────
+//
+// KV SCHEMA (namespaces: VENTAS, INVENTARIO)
+//
+// INVENTARIO:
+//   {tid}:config                   → JSON VenueConfig (nombre, venue, direccion, secciones[])
+//   {tid}:funciones:activas        → JSON array FuncionConfig
+//   {tid}:funcion:{YYYY-MM-DD}     → JSON InventarioFuncion (version, bloqueado, secciones:{})
+//   {tid}:reserva:{reservaId}      → JSON { fecha, seccionCantidades } — TTL 900s
+//   ratelimit:{ip}:{ventana}       → '1' — TTL 900s  ← GLOBAL, sin prefijo tid
+//
+// VENTAS:
+//   {tid}:venta:{sessionId}        → JSON Venta
+//   {tid}:cert:{codigo}            → JSON { sessionId }
+//   {tid}:ventaIdx:{fecha}:{sid}   → sessionId
+//   {tid}:lista:{fecha}:{ts}       → JSON entrada lista espera
+//   {tid}:fiscal:reserva:acumulado → JSON { acumulado: number }
+//
+// COMPAT GORILA: ventas pre-v3 no tienen prefijo tid. handleVenta / handleCanjear
+//                buscan primero con prefijo y como fallback sin prefijo (solo gorila).
+// ──────────────────────────────────────────────────────────────────────────────
 
-// ─── CORS ─────────────────────────────────────────────────────────────────────
+// ─── CORS + HELPERS ──────────────────────────────────────────────────────────
 
-const ALLOWED_ORIGINS = [
+const ALLOWED_ORIGINS = new Set([
   'https://elgorilateatro.com.mx',
   'https://www.elgorilateatro.com.mx',
-];
-
-function resolveOrigin(request) {
-  const origin = request.headers.get('Origin') || '';
-  if (ALLOWED_ORIGINS.includes(origin)) return origin;
-  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return origin;
-  return ALLOWED_ORIGINS[0];
-}
+  'http://localhost:3000',
+  'http://localhost:8787',
+  'http://127.0.0.1:5500',
+]);
 
 function corsHeaders(request) {
+  const origin       = request.headers.get('Origin') || '';
+  const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : 'https://elgorilateatro.com.mx';
   return {
-    'Access-Control-Allow-Origin': resolveOrigin(request),
+    'Access-Control-Allow-Origin':  allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Max-Age': '86400',
+    'Access-Control-Max-Age':       '86400',
+    'Vary':                         'Origin',
   };
 }
 
@@ -46,360 +49,407 @@ function json(data, status, request) {
   });
 }
 
-// ─── BASE64URL ────────────────────────────────────────────────────────────────
+// ─── BASE64URL + JWT ──────────────────────────────────────────────────────────
 
-function b64uEncode(buffer) {
-  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  let binary = '';
-  for (const b of bytes) binary += String.fromCharCode(b);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+function base64urlEncode(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-function b64uEncodeStr(str) {
-  return b64uEncode(new TextEncoder().encode(str));
-}
-
-function b64uDecode(str) {
-  const padded = str + '==='.slice((str.length + 3) % 4);
-  const binary = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
-  return Uint8Array.from(binary, c => c.charCodeAt(0));
-}
-
-// ─── JWT (HMAC-SHA256) ────────────────────────────────────────────────────────
-
-async function importHmacKey(secret, usage) {
-  return crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    [usage],
-  );
+function base64urlDecode(str) {
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
 }
 
 async function signJWT(payload, secret) {
-  const header = b64uEncodeStr(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const body   = b64uEncodeStr(JSON.stringify(payload));
-  const input  = `${header}.${body}`;
-  const key    = await importHmacKey(secret, 'sign');
-  const sig    = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(input));
-  return `${input}.${b64uEncode(sig)}`;
+  const enc     = new TextEncoder();
+  const header  = base64urlEncode(enc.encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' })));
+  const body    = base64urlEncode(enc.encode(JSON.stringify(payload)));
+  const key     = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig     = await crypto.subtle.sign('HMAC', key, enc.encode(`${header}.${body}`));
+  return `${header}.${body}.${base64urlEncode(sig)}`;
 }
 
 async function verifyJWT(token, secret) {
-  const parts = token.split('.');
-  if (parts.length !== 3) return null;
-  const [header, body, sig] = parts;
-  const input = `${header}.${body}`;
-  const key   = await importHmacKey(secret, 'verify');
-  const valid = await crypto.subtle.verify('HMAC', key, b64uDecode(sig), new TextEncoder().encode(input));
-  if (!valid) return null;
   try {
-    const payload = JSON.parse(new TextDecoder().decode(b64uDecode(body)));
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+    const [header, body, sig] = token.split('.');
+    if (!header || !body || !sig) return null;
+    const enc    = new TextEncoder();
+    const key    = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+    const valid  = await crypto.subtle.verify('HMAC', key, base64urlDecode(sig), enc.encode(`${header}.${body}`));
+    if (!valid) return null;
+    const payload = JSON.parse(new TextDecoder().decode(base64urlDecode(body)));
+    if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) return null;
     return payload;
   } catch { return null; }
 }
 
-// ─── STRIPE ───────────────────────────────────────────────────────────────────
+// ─── STRIPE SIGNATURE ────────────────────────────────────────────────────────
 
 async function verificarFirmaStripe(rawBody, sigHeader, secret) {
-  if (!sigHeader || !secret) return false;
-  const parts = {};
-  for (const seg of sigHeader.split(',')) {
-    const eq = seg.indexOf('=');
-    if (eq > 0) parts[seg.slice(0, eq).trim()] = seg.slice(eq + 1).trim();
-  }
-  if (!parts.t || !parts.v1) return false;
-
-  // Anti-replay: rechazar si el timestamp tiene más de 5 min de diferencia
-  if (Math.abs(Math.floor(Date.now() / 1000) - parseInt(parts.t, 10)) > 300) return false;
-
-  const key      = await importHmacKey(secret, 'sign');
-  const sigBytes = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${parts.t}.${rawBody}`));
-  const expected = Array.from(new Uint8Array(sigBytes)).map(b => b.toString(16).padStart(2, '0')).join('');
-
-  if (parts.v1.length !== expected.length) return false;
-  let acc = 0;
-  for (let i = 0; i < expected.length; i++) acc |= parts.v1.charCodeAt(i) ^ expected.charCodeAt(i);
-  return acc === 0;
+  try {
+    const parts     = sigHeader.split(',');
+    const tPart     = parts.find(p => p.startsWith('t='));
+    const v1Part    = parts.find(p => p.startsWith('v1='));
+    if (!tPart || !v1Part) return false;
+    const timestamp = tPart.slice(2);
+    const expected  = v1Part.slice(3);
+    const enc       = new TextEncoder();
+    const key       = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const signed    = await crypto.subtle.sign('HMAC', key, enc.encode(`${timestamp}.${rawBody}`));
+    const computed  = Array.from(new Uint8Array(signed)).map(b => b.toString(16).padStart(2, '0')).join('');
+    return computed === expected;
+  } catch { return false; }
 }
 
-// ─── RATE LIMITING ────────────────────────────────────────────────────────────
-
-const RATE_MAX    = 10;
-const RATE_WINDOW = 900; // 15 minutos en segundos
+// ─── RATE LIMITING (GLOBAL — sin prefijo tid) ─────────────────────────────────
 
 async function checkRateLimit(ip, env) {
-  const window = Math.floor(Date.now() / (RATE_WINDOW * 1000));
-  const key    = `ratelimit:${ip}:${window}`;
-  const raw    = await env.INVENTARIO.get(key);
-  const count  = raw ? parseInt(raw, 10) : 0;
-  if (count >= RATE_MAX) return false;
-  await env.INVENTARIO.put(key, String(count + 1), { expirationTtl: RATE_WINDOW });
+  const ventana = Math.floor(Date.now() / 900000);
+  const key     = `ratelimit:${ip}:${ventana}`;
+  const current = await env.INVENTARIO.get(key);
+  const count   = current ? parseInt(current, 10) : 0;
+  if (count >= 10) return false;
+  await env.INVENTARIO.put(key, String(count + 1), { expirationTtl: 900 });
   return true;
 }
 
-// ─── RESEND (EMAIL) ───────────────────────────────────────────────────────────
+// ─── EMAIL VÍA RESEND ────────────────────────────────────────────────────────
 
 async function enviarEmail(to, subject, html, env) {
-  if (!env.RESEND_API_KEY) return false;
+  if (!env.RESEND_API_KEY) { console.error('RESEND_API_KEY no configurada'); return false; }
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'EL GORILA <onboarding@resend.dev>',
-        to: Array.isArray(to) ? to : [to],
-        subject,
-        html,
-      }),
+      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'El Gorila Teatro <boletos@elgorilateatro.com.mx>', to, subject, html }),
     });
-    if (!res.ok) { const e = await res.text(); console.error('Resend:', res.status, e); return false; }
+    if (!res.ok) { console.error('Resend error', res.status, await res.text()); return false; }
     return true;
-  } catch (e) { console.error('Resend fetch:', e.message); return false; }
+  } catch (e) { console.error('enviarEmail exception:', e.message); return false; }
 }
 
-function htmlBoleto(venta, funcionNombre, tipos) {
-  const items = Array.isArray(venta.items) ? venta.items : [];
-  const generalItem     = items.find(i => i.tipo === 'general');
-  const tieneEspeciales = items.some(i => i.tipo !== 'general');
-  const promoGrupo      = !!(generalItem && generalItem.cantidad >= 5 && !tieneEspeciales);
-  const subtotal = items.reduce((s, i) => s + (tipos[i.tipo]?.precio || 0) * i.cantidad, 0);
-  const total    = venta.total || 0;
-  const descuentoMonto = Math.max(0, subtotal - total);
+// ─── EMAIL: BOLETO PARA EL COMPRADOR ─────────────────────────────────────────
 
-  const verUrl = `https://elgorilateatro.com.mx/verificar.html?codigo=${encodeURIComponent(venta.codigo)}`;
-  const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(verUrl)}&margin=8`;
+function htmlBoleto(venta, funcionNombre, config) {
+  const multiSeccion = config.secciones && config.secciones.length > 1;
+
+  const itemsHtml = (venta.items || []).map(item => {
+    const tipoNombre = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
+    const secNombre  = (multiSeccion && item.seccion)
+      ? ` · ${config.secciones.find(s => s.id === item.seccion)?.nombre || item.seccion}`
+      : '';
+    return `<tr>
+      <td style="padding:6px 12px;border-bottom:1px solid #eee;">${tipoNombre}${secNombre}</td>
+      <td style="padding:6px 12px;border-bottom:1px solid #eee;text-align:center;">${item.cantidad}</td>
+    </tr>`;
+  }).join('');
+
   const waText = encodeURIComponent(
-    `*EL GORILA — Boleto confirmado* 🎭\n` +
-    `Función: ${funcionNombre}\n` +
-    `Boletos: ${items.map(i => `${i.cantidad} ${tipos[i.tipo]?.nombre || i.tipo}`).join(', ')}\n` +
-    `Total: $${total.toFixed(2)} MXN\n` +
-    `Folio: ${venta.codigo}\n\n` +
-    `📍 Centro Cultural Coyoacanense, Coyoacán`
+    `¡Voy a ver EL GORILA — "${funcionNombre}"! 🎭 📍 ${config.venue}. ¿Me acompañas?`
   );
   const waUrl = `https://wa.me/?text=${waText}`;
 
-  const itemsHtml = items.map(i => {
-    const t = tipos[i.tipo] || { nombre: i.tipo, precio: 0 };
-    const p = (promoGrupo && i.tipo === 'general') ? t.precio * 0.75 : t.precio;
-    return `<tr><td style="color:#D4CFC3;font-size:14px;padding:3px 0;font-family:Arial,sans-serif;">${t.nombre} × ${i.cantidad}</td><td align="right" style="color:#D4CFC3;font-size:14px;padding:3px 0;font-family:Arial,sans-serif;">$${(p * i.cantidad).toFixed(2)}</td></tr>`;
-  }).join('');
-
-  const descuentoHtml = descuentoMonto > 0
-    ? `<tr><td style="color:#4cd964;font-size:13px;padding:3px 0;font-family:Arial,sans-serif;">Descuento 25% (5+ generales)</td><td align="right" style="color:#4cd964;font-size:13px;padding:3px 0;font-family:Arial,sans-serif;">-$${descuentoMonto.toFixed(2)}</td></tr>`
-    : '';
-
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0e0a07;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0e0a07;padding:40px 16px;">
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tu boleto — EL GORILA</title></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Georgia,serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 0;">
 <tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#1a150e;border:1px solid rgba(212,175,55,0.25);border-radius:8px;">
-<tr><td style="padding:36px 40px 28px;text-align:center;background:#130f0b;border-bottom:1px solid rgba(212,175,55,0.15);border-radius:8px 8px 0 0;">
-  <img src="https://elgorilateatro.com.mx/img/LOGO/1.jpg" width="72" height="72" alt="EL GORILA" style="border-radius:50%;display:block;margin:0 auto 16px;border:2px solid rgba(212,175,55,0.4);">
-  <h1 style="margin:0;color:#D4AF37;font-size:26px;letter-spacing:6px;font-weight:400;">EL GORILA</h1>
-  <p style="margin:8px 0 0;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;">Boleto de Entrada · Confirmado</p>
-</td></tr>
-<tr><td style="padding:28px 40px 0;">
-  <p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Función</p>
-  <p style="margin:0 0 20px;color:#EAE0D1;font-size:17px;">${funcionNombre}</p>
-  <p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Venue</p>
-  <p style="margin:0 0 4px;color:#EAE0D1;font-size:15px;">Centro Cultural Coyoacanense</p>
-  <p style="margin:0 0 24px;color:rgba(212,175,55,0.6);font-size:13px;font-family:Arial,sans-serif;">Calle Felipe Carrillo Puerto 54, Coyoacán, CDMX</p>
-  <hr style="border:none;border-top:1px solid rgba(212,175,55,0.12);margin:0 0 24px;">
-</td></tr>
-<tr><td style="padding:0 40px 24px;">
-  <p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Resumen</p>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    ${itemsHtml}
-    ${descuentoHtml}
-    <tr><td colspan="2" style="padding-top:8px;border-top:1px solid rgba(212,175,55,0.15);"></td></tr>
-    <tr><td style="color:#D4AF37;font-size:16px;font-weight:700;padding-top:6px;font-family:Arial,sans-serif;">Total</td><td align="right" style="color:#D4AF37;font-size:18px;font-weight:700;padding-top:6px;font-family:Arial,sans-serif;">$${total.toFixed(2)} MXN</td></tr>
-  </table>
-  <hr style="border:none;border-top:1px solid rgba(212,175,55,0.12);margin:24px 0 0;">
-</td></tr>
-<tr><td style="padding:20px 40px;background:rgba(0,0,0,0.25);">
-  <p style="margin:0 0 6px;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Folio</p>
-  <p style="margin:0;color:#EAE0D1;font-family:'Courier New',monospace;font-size:13px;letter-spacing:1px;">${venta.codigo}</p>
-</td></tr>
-<tr><td style="padding:28px 40px;text-align:center;background:rgba(0,0,0,0.15);">
-  <p style="margin:0 0 16px;color:rgba(212,175,55,0.5);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">Código QR para acceso</p>
-  <img src="${qrUrl}" width="160" height="160" alt="QR de acceso" style="display:block;margin:0 auto;background:#fff;padding:8px;border-radius:4px;">
-  <p style="margin:12px 0 0;color:rgba(212,175,55,0.35);font-size:11px;font-family:Arial,sans-serif;">Presenta este código en taquilla</p>
-</td></tr>
-<tr><td style="padding:24px 40px;text-align:center;">
-  <a href="${waUrl}" style="display:inline-block;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.4);color:#25d366;text-decoration:none;padding:14px 36px;border-radius:6px;font-family:Arial,sans-serif;font-size:14px;font-weight:600;">💬 &nbsp;Guardar en WhatsApp</a>
-</td></tr>
-<tr><td style="padding:24px 40px;text-align:center;background:#130f0b;border-top:1px solid rgba(212,175,55,0.12);border-radius:0 0 8px 8px;">
-  <p style="margin:0 0 6px;color:#D4AF37;font-size:15px;letter-spacing:3px;">EL GORILA</p>
-  <p style="margin:0;color:rgba(212,175,55,0.4);font-size:11px;font-family:Arial,sans-serif;">elgorilateatro@gmail.com &nbsp;·&nbsp; elgorilateatro.com.mx</p>
-</td></tr>
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1);">
+  <tr><td style="background:#1a1a1a;padding:32px;text-align:center;">
+    <h1 style="color:#e8c84a;font-size:28px;margin:0;letter-spacing:4px;">EL GORILA</h1>
+    <p style="color:#aaa;font-size:13px;margin:8px 0 0;letter-spacing:2px;">BOLETO OFICIAL</p>
+  </td></tr>
+  <tr><td style="padding:32px;">
+    <h2 style="font-size:20px;margin:0 0 4px;color:#1a1a1a;">${funcionNombre}</h2>
+    <p style="color:#555;font-size:14px;margin:0 0 24px;">
+      📍 ${config.venue}<br>
+      <span style="font-size:12px;color:#888;">${config.direccion}</span>
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:4px;margin-bottom:24px;">
+      <tr style="background:#f9f9f9;">
+        <th style="padding:8px 12px;text-align:left;font-size:12px;color:#888;font-weight:normal;letter-spacing:1px;">TIPO</th>
+        <th style="padding:8px 12px;text-align:center;font-size:12px;color:#888;font-weight:normal;letter-spacing:1px;">CANT.</th>
+      </tr>
+      ${itemsHtml}
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="font-size:13px;color:#555;">Folio</td>
+        <td style="font-size:13px;color:#1a1a1a;font-weight:bold;text-align:right;">${venta.codigo}</td>
+      </tr>
+      <tr>
+        <td style="font-size:13px;color:#555;padding-top:6px;">Total pagado</td>
+        <td style="font-size:16px;color:#1a1a1a;font-weight:bold;text-align:right;padding-top:6px;">$${venta.total?.toFixed(2)} MXN</td>
+      </tr>
+    </table>
+    <div style="background:#fffbea;border:1px solid #e8c84a;border-radius:6px;padding:16px;margin-bottom:24px;font-size:13px;color:#555;line-height:1.6;">
+      <strong>¿Cómo ingresar?</strong><br>
+      Presenta este folio en la entrada o muestra este correo. Tu folio es único — no lo compartas en redes.
+    </div>
+    <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:13px;font-family:sans-serif;">
+      📱 Compartir por WhatsApp
+    </a>
+  </td></tr>
+  <tr><td style="background:#f9f9f9;padding:16px;text-align:center;font-size:11px;color:#aaa;">
+    ${config.venue} · ${config.direccion}
+  </td></tr>
 </table>
 </td></tr>
 </table>
 </body></html>`;
 }
 
-function htmlAvisoAdmin(venta, funcionNombre, tipos) {
-  const items   = Array.isArray(venta.items) ? venta.items : [];
-  const resumen = items.map(i => `${i.cantidad}× ${tipos[i.tipo]?.nombre || i.tipo}`).join(', ') || `${venta.cantidad} boleto(s)`;
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
-<body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:32px 16px;">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;padding:32px;border:1px solid #ddd;">
-<tr><td>
-  <h2 style="margin:0 0 24px;color:#8B0000;font-size:20px;">🎭 Nueva venta — EL GORILA</h2>
-  <table width="100%" cellpadding="6" cellspacing="0" style="font-size:15px;color:#333;border-collapse:collapse;">
-    <tr><td style="color:#666;width:140px;padding:8px 0;">Función</td><td style="padding:8px 0;"><strong>${funcionNombre}</strong></td></tr>
-    <tr style="background:#fafafa;"><td style="color:#666;padding:8px 6px;">Comprador</td><td style="padding:8px 6px;">${venta.nombre ? `${venta.nombre} &lt;${venta.email}&gt;` : (venta.email || '—')}</td></tr>
-    <tr><td style="color:#666;padding:8px 0;">Boletos</td><td style="padding:8px 0;">${resumen}</td></tr>
-    <tr style="background:#fafafa;"><td style="color:#666;padding:8px 6px;">Total</td><td style="padding:8px 6px;"><strong>$${(venta.total || 0).toFixed(2)} MXN</strong></td></tr>
-    <tr><td style="color:#666;padding:8px 0;">Folio</td><td style="padding:8px 0;font-family:monospace;font-size:13px;">${venta.codigo}</td></tr>
-    <tr style="background:#fafafa;"><td style="color:#666;padding:8px 6px;">Fecha</td><td style="padding:8px 6px;">${new Date(venta.fechaCompra).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}</td></tr>
-  </table>
-</td></tr>
+// ─── EMAIL: AVISO ADMIN ───────────────────────────────────────────────────────
+
+function htmlAvisoAdmin(venta, funcionNombre, config) {
+  const multiSeccion = config.secciones && config.secciones.length > 1;
+
+  const itemsStr = (venta.items || []).map(item => {
+    const tipoNombre = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
+    const secLabel   = (multiSeccion && item.seccion)
+      ? ` [${config.secciones.find(s => s.id === item.seccion)?.nombre || item.seccion}]`
+      : '';
+    return `${tipoNombre}${secLabel}: ${item.cantidad}`;
+  }).join(' · ');
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Nueva venta — EL GORILA</title></head>
+<body style="font-family:sans-serif;padding:24px;color:#222;">
+<h2 style="color:#1a1a1a;">🎟 Nueva venta — ${config.nombre}</h2>
+<table style="border-collapse:collapse;font-size:14px;">
+  <tr><td style="padding:4px 12px 4px 0;color:#888;">TeatroId</td><td><strong>${config.id}</strong></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#888;">Función</td><td><strong>${funcionNombre}</strong></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#888;">Folio</td><td><strong>${venta.codigo}</strong></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#888;">Boletos</td><td>${itemsStr || venta.cantidad}</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#888;">Total</td><td><strong>$${venta.total?.toFixed(2)} MXN</strong></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#888;">Email</td><td>${venta.email || '—'}</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#888;">Nombre</td><td>${venta.nombre || '—'}</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#888;">Compra</td><td>${venta.fechaCompra}</td></tr>
 </table>
 </body></html>`;
 }
+
+// ─── EMAIL: AVISO LISTA DE ESPERA ─────────────────────────────────────────────
 
 function htmlAvisoListaEspera(entrada, funcionNombre) {
-  const nombre1 = entrada.nombre.split(' ')[0];
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0e0a07;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0e0a07;padding:40px 16px;">
-<tr><td align="center">
-<table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;background:#1a150e;border:1px solid rgba(212,175,55,0.25);border-radius:8px;padding:48px 40px;text-align:center;">
-<tr><td>
-  <h1 style="color:#D4AF37;font-size:24px;letter-spacing:4px;font-weight:400;margin:0 0 8px;">EL GORILA</h1>
-  <hr style="border:none;border-top:1px solid rgba(212,175,55,0.2);margin:20px 0;">
-  <p style="color:#EAE0D1;font-size:20px;margin:0 0 8px;">Hay disponibilidad, ${nombre1}.</p>
-  <p style="color:rgba(212,175,55,0.7);font-size:14px;margin:0 0 28px;font-family:Arial,sans-serif;">Quedaste en la lista de espera para <strong style="color:#D4AF37;">${funcionNombre}</strong>.<br>Acaba de liberarse un lugar.</p>
-  <a href="https://elgorilateatro.com.mx/boletos.html" style="display:inline-block;background:#8B0000;border:1px solid rgba(212,175,55,0.5);color:#f5f0e8;text-decoration:none;padding:16px 44px;border-radius:6px;font-family:Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;">Comprar boleto →</a>
-  <p style="color:rgba(212,175,55,0.3);font-size:11px;margin:28px 0 0;font-family:Arial,sans-serif;">Esta disponibilidad es limitada y puede agotarse pronto.</p>
-</td></tr>
-</table>
-</td></tr>
-</table>
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><title>¡Hay disponibilidad! — EL GORILA</title></head>
+<body style="font-family:Georgia,serif;padding:32px;color:#222;background:#f5f5f5;">
+<div style="max-width:480px;margin:0 auto;background:#fff;border-radius:8px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,.1);">
+  <h1 style="color:#e8c84a;font-size:22px;letter-spacing:3px;margin:0 0 8px;">EL GORILA</h1>
+  <h2 style="font-size:18px;margin:0 0 16px;">¡Hay boletos disponibles!</h2>
+  <p style="font-size:14px;color:#555;line-height:1.7;">
+    Hola <strong>${entrada.nombre}</strong>,<br>
+    se liberaron boletos para <strong>${funcionNombre}</strong>. Date prisa: los primeros en comprar son los primeros en entrar.
+  </p>
+  <a href="https://elgorilateatro.com.mx/boletos.html" style="display:inline-block;background:#1a1a1a;color:#e8c84a;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:14px;margin-top:8px;">
+    Comprar boletos →
+  </a>
+</div>
 </body></html>`;
 }
 
-async function notificarPrimeroListaEspera(fecha, funcionNombre, env) {
-  if (!env.VENTAS || !env.RESEND_API_KEY) return;
-  let listResult;
-  try { listResult = await env.VENTAS.list({ prefix: `lista:${fecha}:`, limit: 20 }); } catch { return; }
-  if (!listResult.keys.length) return;
+// ─── NOTIFICAR PRIMER LUGAR EN LISTA DE ESPERA ────────────────────────────────
 
-  const primerKey = listResult.keys.sort((a, b) => a.name.localeCompare(b.name))[0].name;
-  let raw;
-  try { raw = await env.VENTAS.get(primerKey); } catch { return; }
-  if (!raw) return;
+async function notificarPrimeroListaEspera(tid, fecha, funcionNombre, env) {
+  const lista = await env.VENTAS.list({ prefix: kv(tid, `lista:${fecha}:`) });
+  if (!lista.keys.length) return;
 
+  const primerKey = lista.keys[0].name;
+  const raw       = await env.VENTAS.get(primerKey);
   let entrada;
   try { entrada = JSON.parse(raw); } catch { return; }
 
   const enviado = await enviarEmail(
     entrada.email,
-    `Hay disponibilidad — EL GORILA`,
+    `¡Hay disponibilidad! — EL GORILA`,
     htmlAvisoListaEspera(entrada, funcionNombre),
     env
   );
   if (enviado) await env.VENTAS.delete(primerKey);
 }
 
+// ─── KV PREFIX HELPER ────────────────────────────────────────────────────────
+
+function kv(tid, key) { return `${tid}:${key}`; }
+
+// ─── VENUES VÁLIDOS ───────────────────────────────────────────────────────────
+
+const VALID_TEATROS = new Set(['gorila', 'wilberto', 'ccc']);
+
+// ─── VENUE CONFIG ────────────────────────────────────────────────────────────
+
+async function getVenueConfig(tid, env) {
+  const raw = await env.INVENTARIO.get(kv(tid, 'config'));
+  if (raw) {
+    try { return JSON.parse(raw); } catch {}
+  }
+  // Fallback para gorila sin KV config (compat con datos pre-v3)
+  return {
+    id:        'gorila',
+    nombre:    'El Gorila — CCC',
+    venue:     'Centro Cultural Coyoacanense',
+    direccion: 'Felipe Carrillo Puerto 54, Coyoacán, CDMX',
+    secciones: [{ id: 'general', nombre: 'General', total: 200, precio_general: 350, precio_descuento: 245 }],
+  };
+}
+
+// ─── NORMALIZAR INVENTARIO (compat flat → zone-based) ────────────────────────
+
+function normalizeInventario(raw, config) {
+  if (!raw) {
+    const secciones = {};
+    for (const s of config.secciones) {
+      secciones[s.id] = { total: s.total, vendidos: 0, reservados: 0 };
+    }
+    return { version: 0, bloqueado: false, secciones };
+  }
+  const inv = JSON.parse(raw);
+  if (inv.secciones) return inv; // ya formato nuevo
+  // Formato legacy (gorila pre-v3): flat → sección 'general'
+  return {
+    version:  inv.version  ?? 0,
+    bloqueado: inv.bloqueado || false,
+    secciones: {
+      general: {
+        total:     inv.total     ?? 200,
+        vendidos:  inv.vendidos  || 0,
+        reservados: inv.reservados || 0,
+      },
+    },
+  };
+}
+
 // ─── CONSTANTES DE NEGOCIO ────────────────────────────────────────────────────
 
+// Precios viven en config KV. Aquí solo nombres y flag de descuento.
 const TIPOS_BOLETO = {
-  general:    { precio: 350, nombre: 'General' },
-  inapam:     { precio: 245, nombre: 'INAPAM' },
-  estudiante: { precio: 245, nombre: 'Estudiante' },
-  maestro:    { precio: 245, nombre: 'Maestro' },
+  general:    { nombre: 'General',    es_descuento: false },
+  inapam:     { nombre: 'INAPAM',     es_descuento: true  },
+  estudiante: { nombre: 'Estudiante', es_descuento: true  },
+  maestro:    { nombre: 'Maestro',    es_descuento: true  },
 };
 
-const CAPACIDAD   = 200;
-const RESERVA_TTL = 900;
+function getPrecio(tipo, seccionConfig) {
+  const esDes = TIPOS_BOLETO[tipo]?.es_descuento ?? false;
+  return esDes
+    ? (seccionConfig.precio_descuento ?? 245)
+    : (seccionConfig.precio_general   ?? 350);
+}
 
-// ─── OPTIMISTIC LOCKING ───────────────────────────────────────────────────────
-// KV no tiene CAS, pero read→write→verify-version reduce el riesgo de race condition.
-// Si otro Worker escribió entre nuestro read y nuestro write, la versión diferirá
-// y reintentamos hasta 3 veces con jitter aleatorio.
+const CAPACIDAD_DEFAULT = 200;
+const RESERVA_TTL       = 900; // segundos
+const VENTA_404_MAX     = 40;  // máx. folios NO encontrados por IP / 15 min (anti-enumeración)
 
-async function reservarOptimista(fecha, cantidadTotal, env) {
+const UTM_KEYS = ['source', 'medium', 'campaign', 'content', 'term'];
+
+function sanitizarUTM(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const k of UTM_KEYS) {
+    const v = raw[k];
+    if (typeof v === 'string' && v.trim()) out[k] = v.trim().substring(0, 200);
+  }
+  return out;
+}
+
+// ─── OPTIMISTIC LOCKING (zone-aware) ─────────────────────────────────────────
+// seccionCantidades = { platea: 2, galeria: 1 }
+
+async function reservarOptimista(tid, fecha, seccionCantidades, env) {
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
 
-    const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
-    const inv = invRaw
-      ? JSON.parse(invRaw)
-      : { total: CAPACIDAD, vendidos: 0, reservados: 0, bloqueado: false, version: 0 };
+    const invRaw = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+    const inv    = normalizeInventario(invRaw, { secciones: [] });
     const version = inv.version ?? 0;
 
     if (inv.bloqueado) return { ok: false, status: 409, error: 'Ventas cerradas para esta función.' };
 
-    const disponibles = inv.total - inv.vendidos - (inv.reservados || 0);
-    if (disponibles < cantidadTotal) {
-      return { ok: false, status: 409, error: `Solo quedan ${Math.max(0, disponibles)} boleto(s) disponibles.` };
+    // Verificar disponibilidad en cada sección solicitada
+    for (const [secId, cant] of Object.entries(seccionCantidades)) {
+      const sInv       = inv.secciones[secId] || { total: CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
+      const disponibles = sInv.total - (sInv.vendidos || 0) - (sInv.reservados || 0);
+      if (disponibles < cant) {
+        const secLabel = secId.charAt(0).toUpperCase() + secId.slice(1);
+        return { ok: false, status: 409, error: `Solo quedan ${Math.max(0, disponibles)} boleto(s) en ${secLabel}.` };
+      }
     }
 
-    const invNuevo = { ...inv, reservados: (inv.reservados || 0) + cantidadTotal, version: version + 1 };
-    await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(invNuevo));
+    // Incrementar reservados por sección
+    const secciones = { ...inv.secciones };
+    for (const [secId, cant] of Object.entries(seccionCantidades)) {
+      const sInv = secciones[secId] || { total: CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
+      secciones[secId] = { ...sInv, reservados: (sInv.reservados || 0) + cant };
+    }
+    const invNuevo = { ...inv, secciones, version: version + 1 };
+    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(invNuevo));
 
-    // Verificar que nuestra escritura es la versión actual
-    const check = await env.INVENTARIO.get(`funcion:${fecha}`);
+    const check    = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
     const checkInv = check ? JSON.parse(check) : {};
     if ((checkInv.version ?? -1) === version + 1) return { ok: true };
-    // Conflicto — reintentar
+    // Conflicto de escritura — reintentar
   }
-  return { ok: false, status: 503, error: 'El sistema está concurrido. Intenta de nuevo en unos segundos.' };
+  return { ok: false, status: 503, error: 'Sistema concurrido. Intenta de nuevo en unos segundos.' };
 }
 
-async function liberarReservaOptimista(fecha, cantidadTotal, env) {
+async function liberarReservaOptimista(tid, fecha, seccionCantidades, env) {
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
 
-    const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
+    const invRaw = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
     if (!invRaw) return;
-    const inv = JSON.parse(invRaw);
+    const inv     = JSON.parse(invRaw);
     const version = inv.version ?? 0;
 
-    const invNuevo = { ...inv, reservados: Math.max(0, (inv.reservados || 0) - cantidadTotal), version: version + 1 };
-    await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(invNuevo));
+    const secciones = { ...inv.secciones };
+    for (const [secId, cant] of Object.entries(seccionCantidades)) {
+      const sInv = secciones[secId];
+      if (sInv) secciones[secId] = { ...sInv, reservados: Math.max(0, (sInv.reservados || 0) - cant) };
+    }
+    const invNuevo = { ...inv, secciones, version: version + 1 };
+    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(invNuevo));
 
-    const check = await env.INVENTARIO.get(`funcion:${fecha}`);
+    const check    = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
     const checkInv = check ? JSON.parse(check) : {};
     if ((checkInv.version ?? -1) === version + 1) return;
   }
-  console.error(`liberarReserva: conflicto persistente para ${fecha}`);
+  console.error(`liberarReserva: conflicto persistente para ${tid}/${fecha}`);
 }
 
-async function confirmarVentaOptimista(fecha, cantidadTotal, env) {
+async function confirmarVentaOptimista(tid, fecha, seccionCantidades, env) {
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
 
-    const invRaw = await env.INVENTARIO.get(`funcion:${fecha}`);
-    const inv = invRaw
-      ? JSON.parse(invRaw)
-      : { total: CAPACIDAD, vendidos: 0, reservados: 0, bloqueado: false, version: 0 };
+    const invRaw  = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+    const inv     = normalizeInventario(invRaw, { secciones: [] });
     const version = inv.version ?? 0;
 
-    const invNuevo = {
-      ...inv,
-      vendidos:   (inv.vendidos   || 0) + cantidadTotal,
-      reservados: Math.max(0, (inv.reservados || 0) - cantidadTotal),
-      version:    version + 1,
-    };
-    await env.INVENTARIO.put(`funcion:${fecha}`, JSON.stringify(invNuevo));
+    const secciones = { ...inv.secciones };
+    for (const [secId, cant] of Object.entries(seccionCantidades)) {
+      const sInv = secciones[secId] || { total: CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
+      secciones[secId] = {
+        ...sInv,
+        vendidos:   (sInv.vendidos   || 0) + cant,
+        reservados: Math.max(0, (sInv.reservados || 0) - cant),
+      };
+    }
+    const invNuevo = { ...inv, secciones, version: version + 1 };
+    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(invNuevo));
 
-    const check = await env.INVENTARIO.get(`funcion:${fecha}`);
+    const check    = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
     const checkInv = check ? JSON.parse(check) : {};
     if ((checkInv.version ?? -1) === version + 1) return;
   }
-  console.error(`confirmarVenta: conflicto persistente para ${fecha}`);
+  console.error(`confirmarVenta: conflicto persistente para ${tid}/${fecha}`);
 }
 
-// ─── ADMIN AUTH HELPERS ───────────────────────────────────────────────────────
+// ─── ADMIN AUTH ───────────────────────────────────────────────────────────────
 
 function timingSafeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
@@ -415,7 +465,7 @@ function timingSafeEqual(a, b) {
 
 async function requireAdmin(request, env) {
   if (!env.JWT_SECRET) return null;
-  const auth = request.headers.get('Authorization') || '';
+  const auth  = request.headers.get('Authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (!token) return null;
   const payload = await verifyJWT(token, env.JWT_SECRET);
@@ -425,8 +475,8 @@ async function requireAdmin(request, env) {
 
 // ─── HANDLER: FUNCIONES ACTIVAS (público) ────────────────────────────────────
 
-async function handleFunciones(request, env) {
-  const raw = await env.INVENTARIO.get('funciones:activas');
+async function handleFunciones(tid, request, env) {
+  const raw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
   if (!raw) return json([], 200, request);
   try {
     const funciones = JSON.parse(raw).filter(f => f.activa !== false);
@@ -436,23 +486,34 @@ async function handleFunciones(request, env) {
 
 // ─── HANDLER: DISPONIBILIDAD ──────────────────────────────────────────────────
 
-async function handleDisponibilidad(request, env) {
+async function handleDisponibilidad(tid, request, env) {
   const fecha = new URL(request.url).searchParams.get('fecha');
   if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
     return json({ error: 'Parámetro fecha inválido (YYYY-MM-DD).' }, 400, request);
   }
-  const raw = await env.INVENTARIO.get(`funcion:${fecha}`);
-  if (!raw) {
-    return json({ fecha, total: CAPACIDAD, vendidos: 0, disponibles: CAPACIDAD, bloqueado: false }, 200, request);
+
+  const config = await getVenueConfig(tid, env);
+  const raw    = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+  const inv    = normalizeInventario(raw, config);
+
+  const seccionesDisp = {};
+  for (const s of config.secciones) {
+    const sInv        = inv.secciones[s.id] || { total: s.total, vendidos: 0, reservados: 0 };
+    const disponibles = Math.max(0, sInv.total - (sInv.vendidos || 0) - (sInv.reservados || 0));
+    seccionesDisp[s.id] = {
+      nombre:     s.nombre,
+      total:      sInv.total,
+      vendidos:   sInv.vendidos  || 0,
+      disponibles,
+    };
   }
-  const inv = JSON.parse(raw);
-  const disponibles = Math.max(0, inv.total - inv.vendidos - (inv.reservados || 0));
-  return json({ fecha, total: inv.total, vendidos: inv.vendidos, disponibles, bloqueado: inv.bloqueado || false }, 200, request);
+
+  return json({ fecha, secciones: seccionesDisp, bloqueado: inv.bloqueado || false }, 200, request);
 }
 
 // ─── HANDLER: CHECKOUT ────────────────────────────────────────────────────────
 
-async function handleCheckout(request, env) {
+async function handleCheckout(tid, request, env) {
   if (!env.STRIPE_SECRET_KEY) return json({ error: 'Pagos no configurados.' }, 503, request);
 
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
@@ -464,24 +525,44 @@ async function handleCheckout(request, env) {
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
 
   const { items, fecha } = body;
+  const utmClean = sanitizarUTM(body.utm);
 
   if (!Array.isArray(items) || items.length === 0) {
     return json({ error: 'El carrito está vacío.' }, 400, request);
   }
 
+  const config = await getVenueConfig(tid, env);
+  if (!config.secciones || config.secciones.length === 0) {
+    return json({ error: 'Configuración de venue inválida.' }, 500, request);
+  }
+  const validSecciones = new Set(config.secciones.map(s => s.id));
+  const seccionMap     = Object.fromEntries(config.secciones.map(s => [s.id, s]));
+
   let cantidadTotal = 0;
-  const tiposVistos = new Set();
   const itemsValidados = [];
+  const tiposVistos    = new Set();
 
   for (const item of items) {
     const tipo     = typeof item.tipo === 'string' ? item.tipo.toLowerCase().trim() : '';
     const cantidad = item.cantidad;
+    // Seccion: default a sección única si solo hay una
+    const seccion  = item.seccion || (config.secciones.length === 1 ? config.secciones[0].id : null);
+
     if (!TIPOS_BOLETO[tipo]) return json({ error: `Tipo de boleto inválido: "${tipo}".` }, 400, request);
-    if (!Number.isInteger(cantidad) || cantidad < 1) return json({ error: 'Cantidad inválida en uno o más tipos.' }, 400, request);
-    if (tiposVistos.has(tipo)) return json({ error: 'Tipo de boleto duplicado en el carrito.' }, 400, request);
-    tiposVistos.add(tipo);
+    if (!Number.isInteger(cantidad) || cantidad < 1) return json({ error: 'Cantidad inválida.' }, 400, request);
+    if (!seccion || !validSecciones.has(seccion)) {
+      return json({ error: config.secciones.length > 1
+        ? `Debes seleccionar una sección válida (${[...validSecciones].join(', ')}).`
+        : `Sección inválida: "${seccion}".`
+      }, 400, request);
+    }
+
+    const tipoSecKey = `${tipo}:${seccion}`;
+    if (tiposVistos.has(tipoSecKey)) return json({ error: 'Tipo/sección duplicado en el carrito.' }, 400, request);
+    tiposVistos.add(tipoSecKey);
+
     cantidadTotal += cantidad;
-    itemsValidados.push({ tipo, cantidad });
+    itemsValidados.push({ tipo, cantidad, seccion });
   }
 
   if (cantidadTotal > 50) return json({ error: 'El máximo es 50 boletos por compra.' }, 400, request);
@@ -490,52 +571,75 @@ async function handleCheckout(request, env) {
     return json({ error: 'Fecha inválida.' }, 400, request);
   }
 
-  const funcionesRaw = await env.INVENTARIO.get('funciones:activas');
-  if (!funcionesRaw) return json({ error: 'No hay funciones activas. Contacta al administrador.' }, 503, request);
+  // Verificar función activa
+  const funcionesRaw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
+  if (!funcionesRaw) return json({ error: 'No hay funciones activas.' }, 503, request);
 
   let funcion;
   try {
-    const funciones = JSON.parse(funcionesRaw);
-    funcion = funciones.find(f => f.fecha_iso === fecha && f.activa !== false);
-  } catch {
-    return json({ error: 'Error al leer configuración. Intenta de nuevo.' }, 500, request);
-  }
+    funcion = JSON.parse(funcionesRaw).find(f => f.fecha_iso === fecha && f.activa !== false);
+  } catch { return json({ error: 'Error al leer configuración.' }, 500, request); }
   if (!funcion) return json({ error: 'Fecha de función no válida.' }, 400, request);
 
+  // Agrupar cantidades por sección para optimistic lock
+  const seccionCantidades = {};
+  for (const item of itemsValidados) {
+    seccionCantidades[item.seccion] = (seccionCantidades[item.seccion] || 0) + item.cantidad;
+  }
+
   // Optimistic lock: reservar antes de llamar a Stripe
-  const reserva = await reservarOptimista(fecha, cantidadTotal, env);
+  const reserva = await reservarOptimista(tid, fecha, seccionCantidades, env);
   if (!reserva.ok) return json({ error: reserva.error }, reserva.status, request);
 
-  const generalItem     = itemsValidados.find(i => i.tipo === 'general');
+  // Promo grupo: 25% desc en general cuando ≥5 general y sin tipos especiales
+  const cantidadGeneral = itemsValidados.filter(i => i.tipo === 'general').reduce((s, i) => s + i.cantidad, 0);
   const tieneEspeciales = itemsValidados.some(i => i.tipo !== 'general');
-  const promoGrupo      = !!(generalItem && generalItem.cantidad >= 5 && !tieneEspeciales);
+  const promoGrupo      = cantidadGeneral >= 5 && !tieneEspeciales;
 
   const reservaId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   await env.INVENTARIO.put(
-    `reserva:${reservaId}`,
-    JSON.stringify({ fecha, cantidad: cantidadTotal }),
+    kv(tid, `reserva:${reservaId}`),
+    JSON.stringify({ fecha, seccionCantidades }),
     { expirationTtl: RESERVA_TTL },
   );
 
+  const baseUrl = tid === 'gorila'
+    ? 'https://elgorilateatro.com.mx'
+    : `https://elgorilateatro.com.mx`;
+
   const params = new URLSearchParams({
     mode:        'payment',
-    success_url: 'https://elgorilateatro.com.mx/confirmacion.html?session_id={CHECKOUT_SESSION_ID}',
-    cancel_url:  'https://elgorilateatro.com.mx/boletos.html?cancelado=1',
+    success_url: `${baseUrl}/confirmacion.html?session_id={CHECKOUT_SESSION_ID}&teatro=${tid}`,
+    cancel_url:  `${baseUrl}/boletos.html?cancelado=1&teatro=${tid}`,
+    'metadata[teatroId]':       tid,
     'metadata[fecha]':          fecha,
     'metadata[cantidad]':       String(cantidadTotal),
     'metadata[reservaId]':      reservaId,
+    'metadata[seccionCants]':   JSON.stringify(seccionCantidades),
     'metadata[items]':          JSON.stringify(itemsValidados),
     'metadata[funcionNombre]':  funcion.nombre,
     'metadata[promoGrupo]':     String(promoGrupo),
   });
 
+  // UTM como metadata de Stripe
+  for (const k of Object.keys(utmClean)) {
+    params.set(`metadata[utm_${k}]`, utmClean[k]);
+  }
+
+  // Line items con precio dinámico desde config
   itemsValidados.forEach((item, idx) => {
-    const tipo         = TIPOS_BOLETO[item.tipo];
-    const unitCentavos = (promoGrupo && item.tipo === 'general')
-      ? Math.round(tipo.precio * 0.75 * 100)
-      : tipo.precio * 100;
+    const seccionConfig  = seccionMap[item.seccion];
+    const precioBase     = getPrecio(item.tipo, seccionConfig);
+    const unitCentavos   = (promoGrupo && item.tipo === 'general')
+      ? Math.round(precioBase * 0.75 * 100)
+      : precioBase * 100;
+    const tipoNombre     = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
+    const secLabel       = config.secciones.length > 1 ? ` — ${seccionConfig.nombre}` : '';
+    const promoLabel     = promoGrupo && item.tipo === 'general' ? ' (25% desc.)' : '';
+    const productName    = `EL GORILA — ${tipoNombre}${secLabel}${promoLabel}`;
+
     params.set(`line_items[${idx}][price_data][currency]`,                  'mxn');
-    params.set(`line_items[${idx}][price_data][product_data][name]`,        `EL GORILA — ${tipo.nombre}${promoGrupo && item.tipo === 'general' ? ' (25% desc.)' : ''}`);
+    params.set(`line_items[${idx}][price_data][product_data][name]`,        productName);
     params.set(`line_items[${idx}][price_data][product_data][description]`, funcion.nombre);
     params.set(`line_items[${idx}][price_data][unit_amount]`,               String(unitCentavos));
     params.set(`line_items[${idx}][quantity]`,                              String(item.cantidad));
@@ -543,9 +647,9 @@ async function handleCheckout(request, env) {
 
   try {
     const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-      method: 'POST',
+      method:  'POST',
       headers: {
-        Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+        Authorization:  `Bearer ${env.STRIPE_SECRET_KEY}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: params.toString(),
@@ -555,9 +659,8 @@ async function handleCheckout(request, env) {
     return json({ url: session.url, sessionId: session.id }, 200, request);
 
   } catch (err) {
-    // Rollback: liberar reserva si Stripe falló
-    await liberarReservaOptimista(fecha, cantidadTotal, env);
-    await env.INVENTARIO.delete(`reserva:${reservaId}`);
+    await liberarReservaOptimista(tid, fecha, seccionCantidades, env);
+    await env.INVENTARIO.delete(kv(tid, `reserva:${reservaId}`));
     console.error('Stripe checkout error:', err.message);
     return json({ error: 'Error al crear sesión de pago. Intenta de nuevo.' }, 500, request);
   }
@@ -578,14 +681,23 @@ async function handleWebhook(request, env, ctx) {
   const session = event.data.object;
   const meta    = session.metadata || {};
 
+  // teatroId con fallback para ventas pre-v3
+  const tid = meta.teatroId || 'gorila';
+
+  // seccionCantidades con fallback para ventas pre-v3
+  let seccionCantidades = {};
+  try { if (meta.seccionCants) seccionCantidades = JSON.parse(meta.seccionCants); } catch {}
+  if (!Object.keys(seccionCantidades).length) {
+    const cantLegacy = parseInt(meta.cantidad, 10) || 0;
+    if (cantLegacy) seccionCantidades = { general: cantLegacy };
+  }
+
   if (event.type === 'checkout.session.expired') {
-    const fecha    = meta.fecha;
-    const cantidad = parseInt(meta.cantidad, 10) || 0;
-    if (fecha && cantidad) {
-      await liberarReservaOptimista(fecha, cantidad, env);
-      if (meta.reservaId) await env.INVENTARIO.delete(`reserva:${meta.reservaId}`);
-      const funcionNombre = meta.funcionNombre || fecha;
-      ctx.waitUntil(notificarPrimeroListaEspera(fecha, funcionNombre, env));
+    const fecha = meta.fecha;
+    if (fecha && Object.keys(seccionCantidades).length) {
+      await liberarReservaOptimista(tid, fecha, seccionCantidades, env);
+      if (meta.reservaId) await env.INVENTARIO.delete(kv(tid, `reserva:${meta.reservaId}`));
+      ctx.waitUntil(notificarPrimeroListaEspera(tid, fecha, meta.funcionNombre || fecha, env));
     }
     return new Response('ok', { status: 200 });
   }
@@ -596,9 +708,10 @@ async function handleWebhook(request, env, ctx) {
 
   const sessionId = session.id;
 
-  // Idempotencia
-  const existing = await env.VENTAS.get(`venta:${sessionId}`);
-  if (existing) return new Response('ok', { status: 200 });
+  // Idempotencia: verificar con prefijo y sin prefijo (compat gorila pre-v3)
+  const existingNew    = await env.VENTAS.get(kv(tid, `venta:${sessionId}`));
+  const existingLegacy = (!existingNew && tid === 'gorila') ? await env.VENTAS.get(`venta:${sessionId}`) : null;
+  if (existingNew || existingLegacy) return new Response('ok', { status: 200 });
 
   const fecha         = meta.fecha;
   const cantidad      = parseInt(meta.cantidad, 10);
@@ -613,138 +726,196 @@ async function handleWebhook(request, env, ctx) {
     return new Response('ok', { status: 200 });
   }
 
-  const codigo = `CERT-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  // Folio criptográficamente aleatorio (impredecible / no enumerable).
+  const codigo = `CERT-${crypto.randomUUID().replace(/-/g, '').toUpperCase()}`;
+
+  const utm = {};
+  for (const k of UTM_KEYS) {
+    const val = meta[`utm_${k}`];
+    if (val) utm[k] = val;
+  }
+
+  const metodoPago = Array.isArray(session.payment_method_types) && session.payment_method_types.length
+    ? session.payment_method_types.join(',')
+    : 'card';
 
   const venta = {
+    teatroId:     tid,
     sessionId,
     codigo,
     fecha,
     funcionNombre,
     cantidad,
     items,
-    email:       session.customer_details?.email || session.customer_email || null,
-    nombre:      session.customer_details?.name  || null,
-    total:       session.amount_total != null ? session.amount_total / 100 : 0,
-    fechaCompra: new Date().toISOString(),
-    estado:      'completada',
+    seccionCantidades,
+    email:        session.customer_details?.email || session.customer_email || null,
+    nombre:       session.customer_details?.name  || null,
+    total:        session.amount_total != null ? session.amount_total / 100 : 0,
+    fechaCompra:  new Date().toISOString(),
+    estado:       'completada',
+    utm,
+    metodoPago,
   };
 
-  await env.VENTAS.put(`venta:${sessionId}`, JSON.stringify(venta));
-  await env.VENTAS.put(`cert:${codigo}`,      JSON.stringify({ sessionId }));
-  // Índice por fecha para filtrado en admin
-  await env.VENTAS.put(`ventaIdx:${fecha}:${sessionId}`, sessionId);
+  await env.VENTAS.put(kv(tid, `venta:${sessionId}`),  JSON.stringify(venta));
+  await env.VENTAS.put(kv(tid, `cert:${codigo}`),       JSON.stringify({ sessionId }));
+  await env.VENTAS.put(kv(tid, `ventaIdx:${fecha}:${sessionId}`), sessionId);
 
-  // Inventario: reservado → vendido (optimistic lock)
-  await confirmarVentaOptimista(fecha, cantidad, env);
-  if (reservaId) await env.INVENTARIO.delete(`reserva:${reservaId}`);
+  // Inventario: reservado → vendido
+  await confirmarVentaOptimista(tid, fecha, seccionCantidades, env);
+  if (reservaId) await env.INVENTARIO.delete(kv(tid, `reserva:${reservaId}`));
 
-  // Reserva fiscal: acumular 8% del total
+  // Reserva fiscal: 8% acumulado por teatro
   ctx.waitUntil((async () => {
     try {
-      const monto8 = Math.round(venta.total * 0.08 * 100) / 100;
-      const fiscalRaw = await env.VENTAS.get('fiscal:reserva:acumulado');
+      const monto8    = Math.round(venta.total * 0.08 * 100) / 100;
+      const fiscalRaw = await env.VENTAS.get(kv(tid, 'fiscal:reserva:acumulado'));
       const fiscal    = fiscalRaw ? JSON.parse(fiscalRaw) : { acumulado: 0 };
       fiscal.acumulado = Math.round((fiscal.acumulado + monto8) * 100) / 100;
-      await env.VENTAS.put('fiscal:reserva:acumulado', JSON.stringify(fiscal));
+      await env.VENTAS.put(kv(tid, 'fiscal:reserva:acumulado'), JSON.stringify(fiscal));
     } catch (e) { console.error('fiscal acumulado error:', e.message); }
   })());
 
-  // Emails fire-and-forget
+  // Emails
+  const config = await getVenueConfig(tid, env);
   const emailPromises = [
-    enviarEmail('elgorilateatro@gmail.com', `[GORILA] Venta ${codigo}`, htmlAvisoAdmin(venta, funcionNombre, TIPOS_BOLETO), env),
+    enviarEmail('elgorilateatro@gmail.com', `[GORILA] Venta ${codigo} — ${config.nombre}`, htmlAvisoAdmin(venta, funcionNombre, config), env),
   ];
   if (venta.email) {
     emailPromises.push(
-      enviarEmail(venta.email, `Tu boleto — EL GORILA`, htmlBoleto(venta, funcionNombre, TIPOS_BOLETO), env)
+      enviarEmail(venta.email, `Tu boleto — EL GORILA`, htmlBoleto(venta, funcionNombre, config), env)
     );
   }
   ctx.waitUntil(Promise.all(emailPromises));
 
+  // Webhook de marketing (Make/CAPI) — sin PII
+  if (env.MAKE_WEBHOOK_URL) {
+    const payloadMkt = {
+      evento:          'venta.completada',
+      teatroId:        tid,
+      codigo,
+      fecha,
+      funcionNombre,
+      items,
+      seccionCantidades,
+      cantidad,
+      total:           venta.total,
+      moneda:          'MXN',
+      fechaCompra:     venta.fechaCompra,
+      utm,
+      metodo_pago:     metodoPago,
+    };
+    ctx.waitUntil(
+      fetch(env.MAKE_WEBHOOK_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payloadMkt),
+      }).catch(e => console.error('marketing webhook:', e.message))
+    );
+  }
+
   return new Response('ok', { status: 200 });
+}
+
+// ─── LOOKUP HELPER: busca venta con prefijo y, para gorila, sin prefijo ────────
+
+async function _lookupVenta(tid, id, env) {
+  // 1. Nuevo formato con prefijo
+  let ventaRaw = await env.VENTAS.get(kv(tid, `venta:${id}`));
+  if (!ventaRaw) {
+    const certRaw = await env.VENTAS.get(kv(tid, `cert:${id}`));
+    if (certRaw) {
+      const { sessionId } = JSON.parse(certRaw);
+      ventaRaw = await env.VENTAS.get(kv(tid, `venta:${sessionId}`));
+    }
+  }
+  // 2. Fallback legacy gorila (sin prefijo)
+  if (!ventaRaw && tid === 'gorila') {
+    ventaRaw = await env.VENTAS.get(`venta:${id}`);
+    if (!ventaRaw) {
+      const certRaw = await env.VENTAS.get(`cert:${id}`);
+      if (certRaw) {
+        const { sessionId } = JSON.parse(certRaw);
+        ventaRaw = await env.VENTAS.get(`venta:${sessionId}`);
+      }
+    }
+  }
+  return ventaRaw;
 }
 
 // ─── HANDLER: VENTA PÚBLICA (sin email) ───────────────────────────────────────
 
-async function handleVenta(id, request, env) {
+async function handleVenta(tid, id, request, env) {
+  // Rate-limit anti-enumeración: solo cuenta folios NO encontrados, así el escáner
+  // de la puerta (muchos folios VÁLIDOS desde una IP) nunca se ve afectado.
+  const ip       = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const ventana  = Math.floor(Date.now() / 900000);
+  const rl404Key = `rl404:${ip}:${ventana}`;
+  const rl404    = parseInt((await env.INVENTARIO.get(rl404Key)) || '0', 10);
+  if (rl404 >= VENTA_404_MAX) {
+    return json({ error: 'Demasiados intentos. Espera unos minutos.' }, 429, request);
+  }
+
   try {
-    let ventaRaw = await env.VENTAS.get(`venta:${id}`);
-
+    const ventaRaw = await _lookupVenta(tid, id, env);
     if (!ventaRaw) {
-      const certRaw = await env.VENTAS.get(`cert:${id}`);
-      if (certRaw) {
-        const { sessionId } = JSON.parse(certRaw);
-        ventaRaw = await env.VENTAS.get(`venta:${sessionId}`);
-      }
+      await env.INVENTARIO.put(rl404Key, String(rl404 + 1), { expirationTtl: 900 });
+      return json({ error: 'Venta no encontrada.' }, 404, request);
     }
-
-    if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
     const v = JSON.parse(ventaRaw);
-
-    // Respuesta pública: sin email ni nombre del comprador
+    // Respuesta pública: sin email, nombre ni sessionId del comprador
     return json({
-      sessionId:     v.sessionId,
+      teatroId:      v.teatroId      || tid,
       codigo:        v.codigo,
       fecha:         v.fecha,
       funcionNombre: v.funcionNombre || v.fecha,
       cantidad:      v.cantidad,
-      items:         v.items || [],
+      items:         v.items         || [],
       total:         v.total,
       fechaCompra:   v.fechaCompra,
       estado:        v.estado,
-      usado:         v.usado   || false,
-      usadoEn:       v.usadoEn || null,
+      usado:         v.usado         || false,
+      usadoEn:       v.usadoEn       || null,
     }, 200, request);
-  } catch {
-    return json({ error: 'Error al obtener la venta.' }, 500, request);
-  }
+  } catch { return json({ error: 'Error al obtener la venta.' }, 500, request); }
 }
 
 // ─── HANDLER: VENTA DETALLE ADMIN (con email) ─────────────────────────────────
 
-async function handleAdminVentaDetail(id, request, env) {
+async function handleAdminVentaDetail(tid, id, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
 
   try {
-    let ventaRaw = await env.VENTAS.get(`venta:${id}`);
-    if (!ventaRaw) {
-      const certRaw = await env.VENTAS.get(`cert:${id}`);
-      if (certRaw) {
-        const { sessionId } = JSON.parse(certRaw);
-        ventaRaw = await env.VENTAS.get(`venta:${sessionId}`);
-      }
-    }
+    const ventaRaw = await _lookupVenta(tid, id, env);
     if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
     const v = JSON.parse(ventaRaw);
-
     return json({
+      teatroId:      v.teatroId      || tid,
       sessionId:     v.sessionId,
       codigo:        v.codigo,
       fecha:         v.fecha,
       funcionNombre: v.funcionNombre || v.fecha,
       cantidad:      v.cantidad,
-      items:         v.items || [],
-      email:         v.email  || null,
-      nombre:        v.nombre || null,
+      items:         v.items         || [],
+      email:         v.email         || null,
+      nombre:        v.nombre        || null,
       total:         v.total,
       fechaCompra:   v.fechaCompra,
       estado:        v.estado,
-      usado:         v.usado   || false,
-      usadoEn:       v.usadoEn || null,
+      usado:         v.usado         || false,
+      usadoEn:       v.usadoEn       || null,
     }, 200, request);
-  } catch {
-    return json({ error: 'Error al obtener la venta.' }, 500, request);
-  }
+  } catch { return json({ error: 'Error al obtener la venta.' }, 500, request); }
 }
 
-// ─── HANDLER: ADMIN LOGIN (secrets) ───────────────────────────────────────────
+// ─── HANDLER: ADMIN LOGIN ─────────────────────────────────────────────────────
 
 async function handleAdminLogin(request, env) {
-  if (!env.JWT_SECRET)   return json({ error: 'Configuración incompleta.' }, 500, request);
+  if (!env.JWT_SECRET)              return json({ error: 'Configuración incompleta.' }, 500, request);
   if (!env.ADMIN_USER || !env.ADMIN_PASS)
-    return json({ error: 'Cuentas admin no configuradas en el Worker.' }, 503, request);
+    return json({ error: 'Cuentas admin no configuradas.' }, 503, request);
 
-  // Rate limiting igual que checkout
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   if (!await checkRateLimit(ip, env)) {
     return json({ error: 'Demasiados intentos. Espera 15 minutos.' }, 429, request);
@@ -756,8 +927,8 @@ async function handleAdminLogin(request, env) {
   const { usuario, password } = body || {};
   if (!usuario || !password) return json({ error: 'Faltan usuario o contraseña.' }, 400, request);
 
-  const u = usuario.trim();
-  let match = timingSafeEqual(u, env.ADMIN_USER) && timingSafeEqual(password, env.ADMIN_PASS);
+  const u     = usuario.trim();
+  let match   = timingSafeEqual(u, env.ADMIN_USER) && timingSafeEqual(password, env.ADMIN_PASS);
   if (!match && env.ADMIN_USER_2 && env.ADMIN_PASS_2)
     match = timingSafeEqual(u, env.ADMIN_USER_2) && timingSafeEqual(password, env.ADMIN_PASS_2);
 
@@ -774,16 +945,29 @@ async function handleAdminLogin(request, env) {
 
 // ─── HANDLER: CANJEAR BOLETO ──────────────────────────────────────────────────
 
-async function handleCanjear(codigo, request, env) {
+async function handleCanjear(tid, codigo, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
   if (!codigo || !codigo.startsWith('CERT-')) return json({ error: 'Código de folio inválido.' }, 400, request);
 
-  const certRaw = await env.VENTAS.get(`cert:${codigo}`);
+  // Buscar cert con prefijo
+  let certRaw = await env.VENTAS.get(kv(tid, `cert:${codigo}`));
+  let ventaKey;
+  if (certRaw) {
+    const { sessionId } = JSON.parse(certRaw);
+    ventaKey = kv(tid, `venta:${sessionId}`);
+  } else if (tid === 'gorila') {
+    // Fallback legacy gorila
+    certRaw = await env.VENTAS.get(`cert:${codigo}`);
+    if (certRaw) {
+      const { sessionId } = JSON.parse(certRaw);
+      ventaKey = `venta:${sessionId}`;
+    }
+  }
+
   if (!certRaw) return json({ error: 'Folio no encontrado.' }, 404, request);
 
-  const { sessionId } = JSON.parse(certRaw);
-  const ventaRaw = await env.VENTAS.get(`venta:${sessionId}`);
+  const ventaRaw = await env.VENTAS.get(ventaKey);
   if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
 
   const venta = JSON.parse(ventaRaw);
@@ -795,7 +979,7 @@ async function handleCanjear(codigo, request, env) {
 
   venta.usado   = true;
   venta.usadoEn = new Date().toISOString();
-  await env.VENTAS.put(`venta:${sessionId}`, JSON.stringify(venta));
+  await env.VENTAS.put(ventaKey, JSON.stringify(venta));
 
   return json({ ok: true, usadoEn: venta.usadoEn }, 200, request);
 }
@@ -804,46 +988,42 @@ async function handleCanjear(codigo, request, env) {
 
 function _formatVenta(v) {
   return {
+    teatroId:      v.teatroId      || 'gorila',
     codigo:        v.codigo,
     fecha:         v.fecha,
     funcionNombre: v.funcionNombre || v.fecha,
     cantidad:      v.cantidad,
-    items:         v.items || [],
-    email:         v.email   || null,
-    nombre:        v.nombre  || null,
+    items:         v.items         || [],
+    email:         v.email         || null,
+    nombre:        v.nombre        || null,
     total:         v.total,
     fechaCompra:   v.fechaCompra,
-    usado:         v.usado   || false,
-    usadoEn:       v.usadoEn || null,
+    usado:         v.usado         || false,
+    usadoEn:       v.usadoEn       || null,
   };
 }
 
-async function handleVentas(request, env) {
+async function handleVentas(tid, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
 
-  const url          = new URL(request.url);
-  const fechaFiltro  = url.searchParams.get('fecha') || '';
-  const cursorParam  = url.searchParams.get('cursor') || undefined;
-  const LIMIT        = 100;
+  const url         = new URL(request.url);
+  const fechaFiltro = url.searchParams.get('fecha') || '';
+  const cursorParam = url.searchParams.get('cursor') || undefined;
+  const LIMIT       = 100;
 
-  let ventas     = [];
-  let nextCursor = null;
+  let ventas = [], nextCursor = null;
 
   if (fechaFiltro && /^\d{4}-\d{2}-\d{2}$/.test(fechaFiltro)) {
-    // Filtro por función: usar índice ventaIdx:{fecha}:*
-    const idxResult = await env.VENTAS.list({ prefix: `ventaIdx:${fechaFiltro}:` });
+    const idxResult  = await env.VENTAS.list({ prefix: kv(tid, `ventaIdx:${fechaFiltro}:`) });
     const sessionIds = (await Promise.all(
       idxResult.keys.map(k => env.VENTAS.get(k.name))
     )).filter(Boolean);
-
-    const ventasRaw = await Promise.all(sessionIds.map(sid => env.VENTAS.get(`venta:${sid}`)));
+    const ventasRaw = await Promise.all(sessionIds.map(sid => env.VENTAS.get(kv(tid, `venta:${sid}`))));
     ventas = ventasRaw.filter(Boolean).map(r => _formatVenta(JSON.parse(r)));
   } else {
-    // Paginación cursor-based en todas las ventas
-    const listResult = await env.VENTAS.list({ prefix: 'venta:', limit: LIMIT, cursor: cursorParam });
+    const listResult = await env.VENTAS.list({ prefix: kv(tid, 'venta:'), limit: LIMIT, cursor: cursorParam });
     if (!listResult.list_complete) nextCursor = listResult.cursor;
-
     const ventasRaw = await Promise.all(listResult.keys.map(k => env.VENTAS.get(k.name)));
     ventas = ventasRaw.filter(Boolean).map(r => _formatVenta(JSON.parse(r)));
   }
@@ -854,25 +1034,23 @@ async function handleVentas(request, env) {
 
 // ─── HANDLER: LISTA DE ESPERA ─────────────────────────────────────────────────
 
-async function handleListaEspera(request, env) {
-  if (!env.VENTAS) return json({ error: 'KV no disponible' }, 503, request);
-
+async function handleListaEspera(tid, request, env) {
   let body;
-  try { body = await request.json(); } catch { return json({ error: 'JSON inválido' }, 400, request); }
+  try { body = await request.json(); } catch { return json({ error: 'JSON inválido.' }, 400, request); }
 
   const { clave, fechaIso, nombre, email } = body || {};
 
   const listaId = (fechaIso && /^\d{4}-\d{2}-\d{2}$/.test(fechaIso)) ? fechaIso : clave;
   if (!listaId || typeof listaId !== 'string' || !/^[a-z0-9_-]+$/.test(listaId))
-    return json({ error: 'Función inválida' }, 400, request);
+    return json({ error: 'Función inválida.' }, 400, request);
   if (!nombre || typeof nombre !== 'string' || nombre.trim().length < 2 || nombre.trim().length > 100)
-    return json({ error: 'Nombre inválido' }, 400, request);
+    return json({ error: 'Nombre inválido.' }, 400, request);
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    return json({ error: 'Correo inválido' }, 400, request);
+    return json({ error: 'Correo inválido.' }, 400, request);
 
-  const key = `lista:${listaId}:${Date.now()}`;
+  const key = kv(tid, `lista:${listaId}:${Date.now()}`);
   await env.VENTAS.put(key, JSON.stringify({
-    clave:    clave   || listaId,
+    clave:    clave    || listaId,
     fechaIso: fechaIso || null,
     nombre:   nombre.trim().substring(0, 100),
     email:    email.trim().substring(0, 254),
@@ -884,21 +1062,174 @@ async function handleListaEspera(request, env) {
 
 // ─── HANDLERS: RESERVA FISCAL ────────────────────────────────────────────────
 
-async function handleFiscalReserva(request, env) {
+async function handleFiscalReserva(tid, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
 
-  const raw    = await env.VENTAS.get('fiscal:reserva:acumulado');
+  const raw    = await env.VENTAS.get(kv(tid, 'fiscal:reserva:acumulado'));
   const fiscal = raw ? JSON.parse(raw) : { acumulado: 0 };
-  return json({ acumulado: fiscal.acumulado || 0 }, 200, request);
+  return json({ teatroId: tid, acumulado: fiscal.acumulado || 0 }, 200, request);
 }
 
-async function handleFiscalReset(request, env) {
+async function handleFiscalReset(tid, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
 
-  await env.VENTAS.put('fiscal:reserva:acumulado', JSON.stringify({ acumulado: 0 }));
-  return json({ ok: true, acumulado: 0 }, 200, request);
+  await env.VENTAS.put(kv(tid, 'fiscal:reserva:acumulado'), JSON.stringify({ acumulado: 0 }));
+  return json({ ok: true, teatroId: tid, acumulado: 0 }, 200, request);
+}
+
+// ─── HANDLER: REPORTE READ-ONLY (agencia) — MULTI-VENUE ──────────────────────
+// Protegido por REPORTE_TOKEN (separado del JWT admin). NO escribe nada. Sin PII.
+
+const REPORTE_CACHE_KEY = 'https://reporte.cache/v3-multivenue';
+const REPORTE_CACHE_TTL = 60;
+
+async function handleReporte(request, env, ctx) {
+  if (!env.REPORTE_TOKEN) return json({ error: 'Reporte no configurado.' }, 503, request);
+
+  const auth  = request.headers.get('Authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (!token || !timingSafeEqual(token, env.REPORTE_TOKEN)) {
+    return json({ error: 'No autorizado.' }, 401, request);
+  }
+
+  // Cache corto por colo
+  const cache    = caches.default;
+  const cacheReq = new Request(REPORTE_CACHE_KEY);
+  const hit      = await cache.match(cacheReq);
+  if (hit) {
+    const body = await hit.text();
+    return new Response(body, {
+      status: 200,
+      headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders(request) },
+    });
+  }
+
+  let totGlobalVendidos = 0, totGlobalIngreso = 0;
+  const porTeatro = {};
+
+  for (const tid of VALID_TEATROS) {
+    const config = await getVenueConfig(tid, env);
+
+    let funciones = [];
+    try {
+      const raw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
+      funciones = raw ? JSON.parse(raw) : [];
+    } catch {}
+
+    if (funciones.length === 0) continue; // teatro sin funciones activas: omitir
+
+    const reporteFunciones = [];
+    let totVendidos = 0, totIngreso = 0, sumaOcup = 0, nFunc = 0;
+
+    for (const f of funciones) {
+      const fecha = f.fecha_iso;
+      if (!fecha) continue;
+
+      const invRaw = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+      const inv    = normalizeInventario(invRaw, config);
+
+      // Totales de inventario por secciones
+      let aforoTotal = 0, vendidosTotal = 0, reservadosTotal = 0;
+      const invPorSeccion = {};
+      for (const s of config.secciones) {
+        const sInv     = inv.secciones[s.id] || { total: s.total, vendidos: 0, reservados: 0 };
+        aforoTotal     += sInv.total;
+        vendidosTotal  += sInv.vendidos  || 0;
+        reservadosTotal += sInv.reservados || 0;
+        invPorSeccion[s.id] = {
+          nombre:     s.nombre,
+          total:      sInv.total,
+          vendidos:   sInv.vendidos  || 0,
+          disponibles: Math.max(0, sInv.total - (sInv.vendidos||0) - (sInv.reservados||0)),
+        };
+      }
+      const disponibles = Math.max(0, aforoTotal - vendidosTotal - reservadosTotal);
+      const ocupacion   = aforoTotal > 0 ? Math.round((vendidosTotal / aforoTotal) * 1000) / 10 : 0;
+
+      // Agregados desde ventas individuales
+      const porTipo = Object.fromEntries(Object.keys(TIPOS_BOLETO).map(k => [k, 0]));
+      let ingreso = 0, checkins = 0;
+
+      const idx  = await env.VENTAS.list({ prefix: kv(tid, `ventaIdx:${fecha}:`) });
+      const sids = (await Promise.all(idx.keys.map(k => env.VENTAS.get(k.name)))).filter(Boolean);
+      const ventasRaw = await Promise.all(sids.map(sid => env.VENTAS.get(kv(tid, `venta:${sid}`))));
+
+      for (const r of ventasRaw) {
+        if (!r) continue;
+        let v; try { v = JSON.parse(r); } catch { continue; }
+        ingreso += (v.total || 0);
+        if (v.usado) checkins += (v.cantidad || 0);
+        if (Array.isArray(v.items)) {
+          for (const it of v.items) {
+            if (porTipo[it.tipo] != null) porTipo[it.tipo] += (it.cantidad || 0);
+          }
+        }
+      }
+
+      let listaEspera = 0;
+      try {
+        const le = await env.VENTAS.list({ prefix: kv(tid, `lista:${fecha}:`) });
+        listaEspera = le.keys.length;
+      } catch {}
+
+      reporteFunciones.push({
+        fecha,
+        nombre:        f.nombre || fecha,
+        aforo:         aforoTotal,
+        vendidos:      vendidosTotal,
+        reservados:    reservadosTotal,
+        disponibles,
+        ocupacion_pct: ocupacion,
+        ingreso_total: Math.round(ingreso * 100) / 100,
+        por_tipo:      porTipo,
+        por_seccion:   invPorSeccion,
+        checkins,
+        lista_espera:  listaEspera,
+      });
+
+      totVendidos += vendidosTotal;
+      totIngreso  += ingreso;
+      sumaOcup    += ocupacion;
+      nFunc       += 1;
+    }
+
+    porTeatro[tid] = {
+      nombre:   config.nombre,
+      venue:    config.venue,
+      funciones: reporteFunciones,
+      totales: {
+        vendidos:               totVendidos,
+        ingreso_total:          Math.round(totIngreso * 100) / 100,
+        ocupacion_promedio_pct: nFunc > 0 ? Math.round((sumaOcup / nFunc) * 10) / 10 : 0,
+      },
+    };
+
+    totGlobalVendidos += totVendidos;
+    totGlobalIngreso  += totIngreso;
+  }
+
+  const resultado = {
+    generado:   new Date().toISOString(),
+    moneda:     'MXN',
+    por_teatro: porTeatro,
+    totales: {
+      vendidos:      totGlobalVendidos,
+      ingreso_total: Math.round(totGlobalIngreso * 100) / 100,
+    },
+  };
+
+  const bodyStr  = JSON.stringify(resultado);
+  const cacheResp = new Response(bodyStr, {
+    headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': `max-age=${REPORTE_CACHE_TTL}` },
+  });
+  ctx.waitUntil(cache.put(cacheReq, cacheResp));
+
+  return new Response(bodyStr, {
+    status: 200,
+    headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders(request) },
+  });
 }
 
 // ─── ROUTER ───────────────────────────────────────────────────────────────────
@@ -912,50 +1243,67 @@ export default {
     const { pathname } = new URL(request.url);
     const method       = request.method;
 
-    // Webhook primero (necesita raw body)
+    // Rutas globales (sin teatroId)
     if (method === 'POST' && pathname === '/api/webhook') {
       return handleWebhook(request, env, ctx);
     }
-
     if (method === 'GET' && pathname === '/api/health') {
-      return json({ status: 'ok', version: '2.0' }, 200, request);
+      return json({ status: 'ok', version: '3.0' }, 200, request);
     }
-
-    // Funciones activas (público — frontend lo usa para mostrar la cartelera)
-    if (method === 'GET' && pathname === '/api/funciones') {
-      return handleFunciones(request, env);
-    }
-
-    // Admin login (secrets-based)
     if (method === 'POST' && pathname === '/api/admin/login') {
       return handleAdminLogin(request, env);
     }
-
-    // Checkout público
-    if (method === 'GET'  && pathname === '/api/disponibilidad') return handleDisponibilidad(request, env);
-    if (method === 'POST' && pathname === '/api/checkout')       return handleCheckout(request, env);
-    if (method === 'POST' && pathname === '/api/lista-espera')   return handleListaEspera(request, env);
-
-    // Admin: canjear folio y listado de ventas
-    const canjearMatch = pathname.match(/^\/api\/canjear\/([^/]+)$/);
-    if (method === 'POST' && canjearMatch)
-      return handleCanjear(decodeURIComponent(canjearMatch[1]), request, env);
-    if (method === 'GET' && pathname === '/api/ventas') return handleVentas(request, env);
-
-    // Detalle venta: público (sin email) vs admin (con email)
-    const ventaMatch = pathname.match(/^\/api\/venta\/([^/]+)$/);
-    if (method === 'GET' && ventaMatch) {
-      return handleVenta(decodeURIComponent(ventaMatch[1]), request, env);
-    }
-    const adminVentaMatch = pathname.match(/^\/api\/admin\/venta\/([^/]+)$/);
-    if (method === 'GET' && adminVentaMatch) {
-      return handleAdminVentaDetail(decodeURIComponent(adminVentaMatch[1]), request, env);
+    if (method === 'GET' && pathname === '/api/reporte') {
+      return handleReporte(request, env, ctx);
     }
 
-    // Reserva fiscal
-    if (method === 'GET'  && pathname === '/api/admin/fiscal')       return handleFiscalReserva(request, env);
-    if (method === 'POST' && pathname === '/api/admin/fiscal/reset') return handleFiscalReset(request, env);
+    // Parsear partes del path
+    const parts = pathname.split('/').filter(Boolean);
+    // parts[0] == 'api'
 
-    return json({ error: 'not found' }, 404, request);
+    if (parts[0] !== 'api') {
+      return json({ error: 'Not found.' }, 404, request);
+    }
+
+    // ── /api/admin/{tid}/... ───────────────────────────────────────────────────
+    if (parts[1] === 'admin') {
+      const tid = parts[2];
+      if (!tid || !VALID_TEATROS.has(tid)) {
+        return json({ error: 'Teatro inválido.' }, 404, request);
+      }
+      const sub = parts.slice(3).join('/');
+
+      if (method === 'GET'  && sub === 'ventas')         return handleVentas(tid, request, env);
+      if (method === 'GET'  && sub === 'fiscal')         return handleFiscalReserva(tid, request, env);
+      if (method === 'POST' && sub === 'fiscal/reset')   return handleFiscalReset(tid, request, env);
+
+      const ventaAdminMatch = sub.match(/^venta\/([^/]+)$/);
+      if (method === 'GET' && ventaAdminMatch)
+        return handleAdminVentaDetail(tid, decodeURIComponent(ventaAdminMatch[1]), request, env);
+
+      const canjearMatch = sub.match(/^canjear\/([^/]+)$/);
+      if (method === 'POST' && canjearMatch)
+        return handleCanjear(tid, decodeURIComponent(canjearMatch[1]), request, env);
+
+      return json({ error: 'Not found.' }, 404, request);
+    }
+
+    // ── /api/{tid}/... ────────────────────────────────────────────────────────
+    const tid = parts[1];
+    if (!tid || !VALID_TEATROS.has(tid)) {
+      return json({ error: 'Teatro inválido.' }, 404, request);
+    }
+    const sub = parts.slice(2).join('/');
+
+    if (method === 'GET'  && sub === 'funciones')      return handleFunciones(tid, request, env);
+    if (method === 'GET'  && sub === 'disponibilidad') return handleDisponibilidad(tid, request, env);
+    if (method === 'POST' && sub === 'checkout')       return handleCheckout(tid, request, env);
+    if (method === 'POST' && sub === 'lista-espera')   return handleListaEspera(tid, request, env);
+
+    const ventaMatch = sub.match(/^venta\/([^/]+)$/);
+    if (method === 'GET' && ventaMatch)
+      return handleVenta(tid, decodeURIComponent(ventaMatch[1]), request, env);
+
+    return json({ error: 'Not found.' }, 404, request);
   },
 };

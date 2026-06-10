@@ -14,9 +14,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta name="description" content="Taquilla: venta de boletos y códigos de ingreso para El Gorila de Franz Kafka."/>
     <title>Taquilla - El Gorila de Franz Kafka</title>
     <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="fonts/cormorant-normal-latin.woff2" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -26,32 +26,104 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             theme: {
                 extend: {
                     colors: {
-                        primary: "#b89025",
-                        'brand-garnet': '#800020',
-                        'brand-mustard': '#c8a951',
-                        'brand-cream': '#fdf8ef'
+                        primary:       "#d99b3a",
+                        'brand-garnet':'#D43A1A',
+                        'brand-mustard':'#d99b3a',
+                        'brand-cream': '#f1ead9',
                     },
                     fontFamily: {
-                        display: ["Cormorant Garamond", "serif"],
-                        sans: ["Work Sans", "sans-serif"],
+                        display: ["'IM Fell English'", "Georgia", "serif"],
+                        sans:    ["'Cormorant Garamond'", "serif"],
+                        mono:    ["'Courier Prime'", "monospace"],
                     },
                 },
             },
         };
     </script>
     <style>
+        @font-face {
+            font-family: 'IM Fell English';
+            font-style: normal; font-weight: 400; font-display: swap;
+            src: url(fonts/im-fell-english-latin.woff2) format('woff2');
+        }
+        @font-face {
+            font-family: 'Courier Prime';
+            font-style: normal; font-weight: 400; font-display: swap;
+            src: url(fonts/courier-prime-latin.woff2) format('woff2');
+        }
+        @font-face {
+            font-family: 'Cormorant Garamond';
+            font-style: normal; font-weight: 300 600; font-display: swap;
+            src: url(fonts/cormorant-normal-latin.woff2) format('woff2');
+        }
+        :root {
+            --d-bg:    #0a0706;
+            --d-bg2:   #120d0b;
+            --d-fg:    #f1ead9;
+            --d-soft:  rgba(241,234,217,.65);
+            --d-faint: rgba(241,234,217,.10);
+            --gold:    #d99b3a;
+            --red:     #D43A1A;
+        }
         body {
-            font-family: 'Work Sans', sans-serif;
+            background: var(--d-bg) !important;
+            font-family: 'Cormorant Garamond', serif !important;
+            color: var(--d-fg);
         }
         h1, h2, h3, h4, h5, h6 {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'IM Fell English', Georgia, serif;
         }
+        /* Wrapper del gradient → fondo plano v4 */
+        .bg-gradient-to-br { background: var(--d-bg) !important; }
+        /* Tarjetas blancas → oscuro v4 */
+        .bg-white\/90, .bg-white\/80, .bg-white {
+            background: var(--d-bg2) !important;
+            color: var(--d-fg) !important;
+        }
+        /* Textos grises → v4 */
+        .text-gray-800, .text-gray-900 { color: var(--d-fg) !important; }
+        .text-gray-700, .text-gray-600 { color: var(--d-soft) !important; }
+        .text-gray-500, .text-gray-400 { color: rgba(241,234,217,.40) !important; }
+        /* Borders */
+        .border-gray-300, .border-gray-200 { border-color: var(--d-faint) !important; }
+        .border-primary { border-color: var(--gold) !important; }
+        /* Inputs */
+        input, select, textarea {
+            background: rgba(10,7,6,0.6) !important;
+            border-color: var(--d-faint) !important;
+            color: var(--d-fg) !important;
+            font-family: 'Cormorant Garamond', serif !important;
+            border-radius: 0 !important;
+        }
+        input::placeholder, textarea::placeholder {
+            color: rgba(241,234,217,.30) !important;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--gold) !important;
+            outline: none !important;
+        }
+        /* Background input light → dark */
+        .bg-gray-50 { background: rgba(10,7,6,0.8) !important; }
+        /* Header */
+        header.bg-black\/60 { background: rgba(10,7,6,0.92) !important; }
+        /* Botones */
+        button, [type="submit"] {
+            font-family: 'Cormorant Garamond', serif !important;
+            border-radius: 0 !important;
+        }
+        /* Tabla */
+        th { color: var(--d-soft) !important; font-family: 'Courier Prime', monospace !important; font-size: 11px !important; letter-spacing: .12em; text-transform: uppercase; }
+        td { font-family: 'Cormorant Garamond', serif !important; font-size: 1rem !important; }
+        .rounded-lg, .rounded-xl, .rounded-md, .rounded { border-radius: 0 !important; }
+        .shadow-lg { box-shadow: 0 8px 40px rgba(0,0,0,0.6) !important; }
+        /* Código QR container */
+        #codigo-generado .bg-gray-50 { background: rgba(18,13,11,0.8) !important; border-color: var(--gold) !important; }
         .material-symbols-outlined {
-          font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24
+          font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="dark font-sans">
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P4BDXRN9"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>

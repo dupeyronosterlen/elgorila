@@ -17,6 +17,7 @@ function cargarOrden() {
     try {
         ordenCompra = JSON.parse(ordenGuardada);
         mostrarDatosOrden();
+        if (window.ElGorilaAnalytics) ElGorilaAnalytics.beginCheckout(ordenCompra);
     } catch (error) {
         console.error('Error al cargar la orden:', error);
         alert('Error al cargar los datos de la orden. Por favor, intenta de nuevo.');
@@ -99,6 +100,8 @@ async function procesarPago() {
         return;
     }
 
+    if (window.ElGorilaAnalytics) ElGorilaAnalytics.addPaymentInfo(ordenCompra);
+
     // --- CHECKOUT: llamar al Worker ---
     if (window.API_BASE) {
         const btn = document.getElementById('btn-pagar');
@@ -110,6 +113,7 @@ async function procesarPago() {
                 body: JSON.stringify({
                     items: ordenCompra.items,
                     fecha: ordenCompra.fechaIso,
+                    utm: (typeof window.obtenerUTM === 'function' ? window.obtenerUTM() : {}),
                 }),
             });
             const data = await res.json();

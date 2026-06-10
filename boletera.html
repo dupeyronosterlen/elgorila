@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
+<title>Boletera — El Gorila</title>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
+<link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/cormorant-normal-latin.woff2" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          primary:          '#d99b3a',
+          'background-dark':'#0a0706',
+          'surface-dark':   '#120d0b',
+          'text-dark':      '#f1ead9',
+          'accent-red':     '#D43A1A',
+        },
+        fontFamily: {
+          display: ["'IM Fell English'", 'Georgia', 'serif'],
+          body:    ["'Cormorant Garamond'", 'serif'],
+          mono:    ["'Courier Prime'", 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+<style>
+@font-face {
+  font-family: 'IM Fell English';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/im-fell-english-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'IM Fell English';
+  font-style: italic; font-weight: 400; font-display: optional;
+  src: url(fonts/im-fell-english-italic-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Courier Prime';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/courier-prime-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal; font-weight: 300 600; font-display: swap;
+  src: url(fonts/cormorant-normal-latin.woff2) format('woff2');
+}
+:root {
+  --d-bg:    #0a0706;
+  --d-bg2:   #120d0b;
+  --d-fg:    #f1ead9;
+  --d-soft:  rgba(241,234,217,.65);
+  --d-faint: rgba(241,234,217,.10);
+  --gold:    #d99b3a;
+  --gold-dim:rgba(217,155,58,.45);
+  --red:     #D43A1A;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--d-bg); }
+body {
+  background: var(--d-bg) !important;
+  color: var(--d-fg);
+  font-family: 'Cormorant Garamond', serif;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-family: 'IM Fell English', Georgia, serif; }
+.rounded-lg, .rounded-xl, .rounded-md, .rounded { border-radius: 0 !important; }
+input, select, textarea {
+  background: rgba(10,7,6,0.7) !important;
+  border-color: var(--d-faint) !important;
+  color: var(--d-fg) !important;
+  font-family: 'Cormorant Garamond', serif !important;
+  font-size: 1.05rem !important;
+  border-radius: 0 !important;
+}
+input::placeholder, textarea::placeholder { color: rgba(241,234,217,.28) !important; }
+input:focus, select:focus { border-color: var(--gold) !important; outline: none !important; box-shadow: none !important; }
+button { font-family: 'Cormorant Garamond', serif; border-radius: 0 !important; }
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── PANTALLA LOGIN ───────────────────────────────────────── */
+#login-screen {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.login-card {
+  width: 100%; max-width: 380px;
+  background: var(--d-bg2);
+  border: 1px solid rgba(217,155,58,.22);
+  padding: 36px 32px 32px;
+}
+.login-linea-roja {
+  width: 40px; height: 2px;
+  background: var(--red); margin: 0 auto 18px;
+}
+.login-titulo {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 40px; line-height: .88;
+  color: var(--d-fg); text-align: center;
+  margin-bottom: 6px;
+}
+.login-sub {
+  font-family: 'Courier Prime', monospace;
+  font-size: 9px; letter-spacing: .28em; text-transform: uppercase;
+  color: rgba(217,155,58,.5); text-align: center; margin-bottom: 28px;
+}
+.login-label {
+  display: block; font-family: 'Courier Prime', monospace;
+  font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--d-soft); margin-bottom: 8px;
+}
+.login-input {
+  display: block; width: 100%;
+  padding: 11px 14px; margin-bottom: 14px;
+}
+.login-btn {
+  display: block; width: 100%; padding: 14px 24px;
+  background: var(--red); color: #fff;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; font-weight: 600; text-align: center;
+  border: none; cursor: pointer; transition: opacity .15s;
+  margin-top: 6px;
+}
+.login-btn:hover { opacity: .88; }
+.login-error {
+  background: rgba(212,58,26,.1); border: 1px solid rgba(212,58,26,.3);
+  color: #f87171; padding: 10px 14px; margin-top: 12px;
+  font-family: 'Courier Prime', monospace; font-size: 12px;
+  letter-spacing: .06em; text-align: center;
+}
+
+/* ── PANEL BOLETERA ──────────────────────────────────────── */
+#panel-boletera { display: none; min-height: 100vh; }
+
+/* Header fijo */
+.bol-header {
+  position: sticky; top: 0; z-index: 40;
+  background: rgba(10,7,6,0.96);
+  border-bottom: 1px solid var(--d-faint);
+  padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.bol-header-titulo {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 22px; color: var(--gold); line-height: 1;
+}
+.bol-header-sub {
+  font-family: 'Courier Prime', monospace;
+  font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--d-soft); display: block; margin-top: 3px;
+}
+.bol-header-actions { display: flex; gap: 8px; align-items: center; }
+.btn-accion {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 14px;
+  background: rgba(217,155,58,.1); border: 1px solid var(--gold-dim);
+  color: var(--gold); font-family: 'Courier Prime', monospace;
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  cursor: pointer; transition: background .15s;
+  text-decoration: none;
+}
+.btn-accion:hover { background: rgba(217,155,58,.18); }
+.btn-salir {
+  background: rgba(212,58,26,.1); border-color: rgba(212,58,26,.3);
+  color: var(--red);
+}
+.btn-salir:hover { background: rgba(212,58,26,.18); }
+
+/* Main content */
+.bol-main { max-width: 800px; margin: 0 auto; padding: 28px 20px 60px; }
+
+/* Cards de sección */
+.bol-card {
+  background: var(--d-bg2);
+  border: 1px solid var(--d-faint);
+  padding: 24px; margin-bottom: 20px;
+}
+.bol-card-title {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 22px; color: var(--gold); margin-bottom: 6px;
+  line-height: 1;
+}
+.bol-card-rule {
+  height: 1px; background: var(--d-faint);
+  margin: 12px 0 18px;
+}
+.sec-label {
+  font-family: 'Courier Prime', monospace; font-size: 9px;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--gold-dim); display: block; margin-bottom: 14px;
+}
+
+/* Grid disponibilidad */
+#disponibilidad-fechas {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.fecha-card {
+  background: rgba(10,7,6,0.6); border: 1px solid var(--d-faint);
+  padding: 14px;
+}
+.fecha-card-nombre {
+  font-family: 'Cormorant Garamond', serif; font-size: 17px;
+  font-weight: 600; color: var(--d-fg); margin-bottom: 6px;
+}
+.fecha-card-dato {
+  font-family: 'Courier Prime', monospace; font-size: 10px;
+  letter-spacing: .1em; color: var(--d-soft);
+}
+.fecha-card-disponible { color: #4ade80; }
+.fecha-card-agotada    { color: #f87171; }
+
+/* Formulario efectivo */
+.form-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  margin-bottom: 14px;
+}
+@media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
+.form-label {
+  display: block; font-family: 'Courier Prime', monospace;
+  font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--d-soft); margin-bottom: 8px;
+}
+.form-input {
+  display: block; width: 100%; padding: 11px 14px;
+}
+.form-select {
+  display: block; width: 100%; padding: 11px 14px;
+  background: rgba(10,7,6,0.7) !important;
+  border: 1px solid var(--d-faint) !important;
+  color: var(--d-fg) !important;
+  font-family: 'Cormorant Garamond', serif !important;
+  font-size: 1.05rem !important; border-radius: 0 !important;
+  -webkit-appearance: none; appearance: none;
+}
+.form-select option { background: #0a0706; color: #f1ead9; }
+.btn-generar {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 28px; margin-top: 4px;
+  background: var(--red); color: #fff;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; font-weight: 600;
+  border: none; cursor: pointer; transition: opacity .15s;
+}
+.btn-generar:hover { opacity: .88; }
+.btn-generar:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Código generado */
+#codigo-generado {
+  background: rgba(10,7,6,0.8); border: 2px solid var(--gold-dim);
+  padding: 24px; margin-top: 20px; text-align: center;
+}
+#qr-codigo-efectivo { margin-bottom: 16px; display: flex; justify-content: center; }
+#codigo-texto {
+  font-family: 'Courier Prime', monospace; font-size: 22px;
+  color: var(--d-fg); margin-bottom: 8px; letter-spacing: .1em;
+}
+#codigo-info {
+  font-family: 'Courier Prime', monospace; font-size: 11px;
+  letter-spacing: .1em; color: var(--d-soft); margin-bottom: 16px;
+}
+.btn-copiar {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 20px;
+  background: rgba(217,155,58,.15); border: 1px solid var(--gold-dim);
+  color: var(--gold); font-family: 'Courier Prime', monospace;
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  cursor: pointer; transition: background .15s;
+}
+.btn-copiar:hover { background: rgba(217,155,58,.25); }
+
+/* Tabla de boletos hoy */
+.tabla-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  font-family: 'Courier Prime', monospace; font-size: 10px;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold-dim); padding: 0 10px 10px 0;
+  border-bottom: 1px solid var(--d-faint); text-align: left;
+}
+tbody td {
+  font-family: 'Cormorant Garamond', serif; font-size: 17px;
+  color: var(--d-soft); padding: 10px 10px 10px 0;
+  border-bottom: 1px solid var(--d-faint);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { color: var(--d-fg); }
+.td-code { font-family: 'Courier Prime', monospace; font-size: 12px; letter-spacing: .05em; }
+.badge-activo   { color: #4ade80; font-size: 11px; }
+.badge-cancelado { color: #f87171; font-size: 11px; }
+</style>
+</head>
+<body class="dark">
+
+<!-- ══ PANTALLA DE LOGIN ══════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-linea-roja"></div>
+    <h1 class="login-titulo">El Gorila</h1>
+    <span class="login-sub">Boletera · Acceso al sistema</span>
+
+    <label class="login-label" for="bol-usuario">Usuario</label>
+    <input type="text" id="bol-usuario" class="login-input"
+           placeholder="taquilla1, boletera, etc."
+           autocomplete="username">
+
+    <label class="login-label" for="bol-password">Contraseña</label>
+    <input type="password" id="bol-password" class="login-input"
+           placeholder="Contraseña"
+           autocomplete="current-password">
+
+    <button type="button" class="login-btn" onclick="boletaAcceder()">
+      Acceder
+    </button>
+    <div id="login-error" class="login-error" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ══ PANEL BOLETERA ════════════════════════════════════════ -->
+<div id="panel-boletera">
+
+  <header class="bol-header">
+    <div>
+      <span class="bol-header-titulo">Boletera</span>
+      <span class="bol-header-sub">El Gorila · <span id="boletera-usuario-nombre">—</span></span>
+    </div>
+    <div class="bol-header-actions">
+      <a href="verificar.html" class="btn-accion" target="_blank">
+        <span class="material-symbols-outlined" style="font-size:16px;">qr_code_scanner</span>
+        Verificar QR
+      </a>
+      <button type="button" class="btn-accion btn-salir" onclick="boletaSalir()">
+        <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
+        Salir
+      </button>
+    </div>
+  </header>
+
+  <main class="bol-main">
+
+    <!-- 1. DISPONIBILIDAD -->
+    <div class="bol-card">
+      <h2 class="bol-card-title">Disponibilidad</h2>
+      <div class="bol-card-rule"></div>
+      <span class="sec-label">Funciones activas</span>
+      <div id="disponibilidad-fechas">
+        <p style="font-family:var(--mono,monospace);font-size:11px;color:var(--d-soft);letter-spacing:.1em;">Cargando…</p>
+      </div>
+    </div>
+
+    <!-- 2. VENTA EN EFECTIVO -->
+    <div class="bol-card">
+      <h2 class="bol-card-title">Venta en efectivo</h2>
+      <div class="bol-card-rule"></div>
+      <span class="sec-label">Generar código de ingreso</span>
+
+      <form id="form-efectivo" onsubmit="event.preventDefault(); generarCodigo();">
+        <div class="form-grid">
+          <div>
+            <label class="form-label" for="fecha-efectivo">Función</label>
+            <select id="fecha-efectivo" class="form-select" required>
+              <option value="">Selecciona función…</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" for="cantidad-efectivo">Cantidad</label>
+            <input type="number" id="cantidad-efectivo" min="1" max="10"
+                   class="form-input" placeholder="1-10" required>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div>
+            <label class="form-label" for="tipo-efectivo">Tipo de boleto</label>
+            <select id="tipo-efectivo" class="form-select">
+              <option value="general">General — $350</option>
+              <option value="inapam">INAPAM — $245</option>
+              <option value="estudiante">Estudiante — $245</option>
+              <option value="maestro">Maestro — $245</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" for="notas-efectivo">Notas (opcional)</label>
+            <input type="text" id="notas-efectivo" class="form-input"
+                   placeholder="Observaciones…">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-generar" id="btn-generar">
+          <span class="material-symbols-outlined" style="font-size:20px;">confirmation_number</span>
+          Generar código de ingreso
+        </button>
+      </form>
+
+      <!-- Código generado -->
+      <div id="codigo-generado" style="display:none;">
+        <div id="qr-codigo-efectivo"></div>
+        <p id="codigo-texto">—</p>
+        <p id="codigo-info">—</p>
+        <button type="button" class="btn-copiar" onclick="copiarCodigo()">
+          <span class="material-symbols-outlined" style="font-size:14px;">content_copy</span>
+          Copiar código
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. BOLETOS DE HOY -->
+    <div class="bol-card">
+      <h2 class="bol-card-title">Boletos en efectivo hoy</h2>
+      <div class="bol-card-rule"></div>
+      <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Función</th>
+              <th>Cantidad</th>
+              <th>Estado</th>
+              <th>Info</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-efectivo">
+            <tr><td colspan="5" style="text-align:center;color:var(--d-faint);font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:.1em;">Sin registros hoy</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Scripts -->
+<script src="js/inventario.js"></script>
+<script src="js/fechas.js"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/taquilla.js"></script>
+<script src="js/taquilla-ui.js"></script>
+
+<script>
+/* ── AUTENTICACIÓN BOLETERA ─────────────────────────────────
+   Reutiliza AuthManager (auth.js) pero acepta roles taquilla/admin/gerente.
+   Se guarda sesión en localStorage igual que admin.html.
+── */
+const ROLES_BOLETERA = ['taquilla', 'admin', 'gerente', 'reclamos'];
+
+async function boletaAcceder() {
+  const id  = (document.getElementById('bol-usuario')?.value || '').trim();
+  const pwd = document.getElementById('bol-password')?.value || '';
+  const err = document.getElementById('login-error');
+  if (err) err.style.display = 'none';
+
+  if (!id || !pwd) {
+    _boletaError('Ingresa usuario y contraseña'); return;
+  }
+
+  try {
+    const res = await AuthManager.autenticarAdmin(id, pwd);
+    if (!res.exito) { _boletaError(res.error || 'Credenciales incorrectas'); return; }
+    if (!ROLES_BOLETERA.includes(res.usuario.rol)) {
+      _boletaError('No tienes acceso a la boletera'); return;
+    }
+    _boletaMostrarPanel(res.usuario);
+  } catch (e) {
+    _boletaError('Error de conexión');
+  }
+}
+
+function _boletaError(msg) {
+  const el = document.getElementById('login-error');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function _boletaMostrarPanel(u) {
+  document.getElementById('login-screen').style.display = 'none';
+  const panel = document.getElementById('panel-boletera');
+  panel.style.display = 'block';
+  const nom = document.getElementById('boletera-usuario-nombre');
+  if (nom) nom.textContent = u.nombre || u.usuarioId;
+  _boletaIniciar();
+}
+
+function boletaSalir() {
+  if (typeof AuthManager !== 'undefined') AuthManager.cerrarSesion?.();
+  document.getElementById('panel-boletera').style.display = 'none';
+  document.getElementById('login-screen').style.display = '';
+  const err = document.getElementById('login-error');
+  if (err) err.style.display = 'none';
+}
+
+async function _boletaIniciar() {
+  await Promise.all([
+    _boletaCargarDisponibilidad(),
+    _boletaCargarTablaDia(),
+    _boletaLlenarSelectFunciones(),
+  ]);
+}
+
+/* Disponibilidad */
+async function _boletaCargarDisponibilidad() {
+  const cont = document.getElementById('disponibilidad-fechas');
+  if (!cont) return;
+  try {
+    const res  = await fetch(window.API_BASE + '/api/funciones');
+    if (!res.ok) return;
+    const fns  = await res.json();
+    if (!fns.length) {
+      cont.innerHTML = '<p style="font-size:14px;color:var(--d-soft);">Sin funciones activas.</p>';
+      return;
+    }
+    cont.innerHTML = fns.map(f => {
+      const disp = (f.capacidad || 0) - (f.vendidos || 0);
+      const cls  = disp > 0 ? 'fecha-card-disponible' : 'fecha-card-agotada';
+      const txt  = disp > 0 ? disp + ' disponibles' : 'Agotada';
+      return `<div class="fecha-card">
+        <div class="fecha-card-nombre">${f.nombre || f.fecha_iso}</div>
+        <div class="fecha-card-dato ${cls}">${txt}</div>
+        <div class="fecha-card-dato">${f.vendidos || 0} vendidos</div>
+      </div>`;
+    }).join('');
+  } catch (e) { cont.innerHTML = '<p style="font-size:13px;color:#f87171;">Error de conexión</p>'; }
+}
+
+/* Llenar select de funciones */
+async function _boletaLlenarSelectFunciones() {
+  const sel = document.getElementById('fecha-efectivo');
+  if (!sel) return;
+  try {
+    const res = await fetch(window.API_BASE + '/api/funciones');
+    if (!res.ok) return;
+    const fns = await res.json();
+    fns.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value       = f.fecha_iso;
+      opt.textContent = f.nombre || f.fecha_iso;
+      sel.appendChild(opt);
+    });
+  } catch (e) {}
+}
+
+/* Tabla de boletos del día */
+async function _boletaCargarTablaDia() {
+  if (typeof cargarBoletosHoy === 'function') {
+    try { await cargarBoletosHoy(); } catch(e) {}
+  }
+}
+
+/* Generar código (delega a taquilla.js si existe, si no usa taquilla-ui.js) */
+async function generarCodigo() {
+  if (typeof generarCodigoEfectivo === 'function') {
+    generarCodigoEfectivo();
+  } else {
+    console.warn('generarCodigoEfectivo no disponible en taquilla.js');
+  }
+}
+
+function copiarCodigo() {
+  const txt = document.getElementById('codigo-texto')?.textContent;
+  if (txt && txt !== '—') {
+    navigator.clipboard?.writeText(txt).catch(() => {});
+  }
+}
+
+/* Tecla Enter en el login */
+document.addEventListener('DOMContentLoaded', function() {
+  ['bol-usuario', 'bol-password'].forEach(id => {
+    document.getElementById(id)?.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') boletaAcceder();
+    });
+  });
+
+  /* Si ya hay sesión activa y es rol boletera, saltar login */
+  try {
+    const u = AuthManager.obtenerUsuarioActual();
+    if (u && ROLES_BOLETERA.includes(u.rol)) _boletaMostrarPanel(u);
+  } catch(e) {}
+});
+</script>
+</body>
+</html>

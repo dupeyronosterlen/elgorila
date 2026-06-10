@@ -15,10 +15,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta name="description" content="Panel de administración: ventas, inventario, usuarios y configuración del sitio El Gorila."/>
     <title>Panel de Administración - El Gorila de Franz Kafka</title>
     <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet"/>
+    <link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="fonts/cormorant-normal-latin.woff2" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script>
@@ -27,38 +26,110 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             theme: {
                 extend: {
                     colors: {
-                        primary: "#A97C22",
-                        "background-dark": "#1F1A12",
-                        "surface-dark": "#312A22",
-                        "text-dark": "#EAE0D1",
-                        "accent-gold": "#D4AF37",
+                        primary:            "#d99b3a",
+                        "background-dark":  "#0a0706",
+                        "surface-dark":     "#120d0b",
+                        "text-dark":        "#f1ead9",
+                        "accent-gold":      "#d99b3a",
+                        "accent-red":       "#D43A1A",
                     },
                     fontFamily: {
-                        display: ["Cinzel", "serif"],
-                        body: ["Lato", "sans-serif"],
+                        display: ["'IM Fell English'", "Georgia", "serif"],
+                        body:    ["'Cormorant Garamond'", "serif"],
+                        mono:    ["'Courier Prime'", "monospace"],
                     },
                 },
             },
         };
     </script>
     <style>
+        @font-face {
+            font-family: 'IM Fell English';
+            font-style: normal; font-weight: 400; font-display: swap;
+            src: url(fonts/im-fell-english-latin.woff2) format('woff2');
+        }
+        @font-face {
+            font-family: 'IM Fell English';
+            font-style: italic; font-weight: 400; font-display: optional;
+            src: url(fonts/im-fell-english-italic-latin.woff2) format('woff2');
+        }
+        @font-face {
+            font-family: 'Courier Prime';
+            font-style: normal; font-weight: 400; font-display: swap;
+            src: url(fonts/courier-prime-latin.woff2) format('woff2');
+        }
+        @font-face {
+            font-family: 'Cormorant Garamond';
+            font-style: normal; font-weight: 300 600; font-display: swap;
+            src: url(fonts/cormorant-normal-latin.woff2) format('woff2');
+        }
+        :root {
+            --d-bg:    #0a0706;
+            --d-bg2:   #120d0b;
+            --d-fg:    #f1ead9;
+            --d-soft:  rgba(241,234,217,.65);
+            --d-faint: rgba(241,234,217,.10);
+            --gold:    #d99b3a;
+            --red:     #D43A1A;
+        }
         body {
-            background: linear-gradient(160deg, #1a150e 0%, #2a1e12 45%, #1a150e 100%);
+            background: var(--d-bg) !important;
+            font-family: 'Cormorant Garamond', serif;
         }
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.75);
-            z-index: -1;
-            pointer-events: none;
-        }
+        /* Eliminar bordes redondeados → estilo v4 (esquinas vivas) */
+        .rounded-lg, .rounded-xl, .rounded-md { border-radius: 0 !important; }
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
         }
+        /* Login v4 — línea roja + título IM Fell English */
+        #login-screen { background: var(--d-bg) !important; }
+        .login-card-inner {
+            border-color: rgba(217,155,58,.25) !important;
+        }
+        .login-card-inner::before {
+            content: '';
+            display: block; width: 44px; height: 2px;
+            background: var(--red); margin: 0 auto 18px;
+        }
+        /* Admin header v4 */
+        #admin-panel > header h1 {
+            font-family: 'IM Fell English', Georgia, serif !important;
+            font-size: clamp(2rem, 5vw, 2.75rem) !important;
+            letter-spacing: -.02em !important;
+            line-height: .92 !important;
+        }
+        /* Nav links */
+        #admin-nav {
+            background: rgba(10,7,6,.95) !important;
+            border-color: rgba(217,155,58,.2) !important;
+        }
+        /* Section headings */
+        .font-display {
+            font-family: 'IM Fell English', Georgia, serif !important;
+        }
+        /* Table rows use Cormorant */
+        #tabla-ventas td, #tabla-usuarios td,
+        #tabla-funciones-especiales td, #tabla-auditoria td,
+        #tabla-efectivo td {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+        }
+        /* Inputs v4 */
+        input, select, textarea {
+            font-family: 'Cormorant Garamond', serif !important;
+            font-size: 1rem !important;
+            border-radius: 0 !important;
+        }
+        /* Botones v4 */
+        button, [type="button"], [type="submit"] {
+            font-family: 'Cormorant Garamond', serif;
+            border-radius: 0 !important;
+        }
+        /* Modals v4 */
+        #modal-funcion > div,
+        #modal-usuario > div,
+        #modal-scanner-admin > div { border-radius: 0 !important; }
+        /* Logo flotante */
         html { scroll-behavior: smooth; }
         #admin-nav {
             overflow-x: auto;
@@ -97,8 +168,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </a>
     <!-- Pantalla de Login -->
     <div id="login-screen" class="min-h-screen flex items-center justify-center">
-        <div class="bg-surface-dark/90 backdrop-blur-sm p-8 rounded-lg border border-primary/30 max-w-md w-full mx-4">
-            <h2 class="text-3xl font-display font-bold text-primary mb-2 text-center">Acceso al Sistema</h2>
+        <div class="login-card-inner bg-surface-dark/90 backdrop-blur-sm p-8 rounded-lg border border-primary/30 max-w-md w-full mx-4 text-center">
+            <h2 class="text-3xl font-display font-bold text-primary mb-2 text-center">El Gorila</h2>
+            <p class="text-sm font-mono text-text-dark/50 mb-6 tracking-widest uppercase text-center">Acceso al sistema</p>
             <div class="space-y-4 mt-6">
                 <div>
                     <label class="block text-text-dark/70 mb-2">Usuario ID</label>

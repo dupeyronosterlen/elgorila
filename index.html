@@ -7,6 +7,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
 <!-- End Google Tag Manager -->
+<script src="js/analytics.js"></script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate"/>
@@ -29,17 +30,17 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <style id="loader-critical">
   /* Pantalla de carga: crítica, sin Tailwind, se pinta al instante */
   #loading-overlay {
-    position: fixed; inset: 0; background: #1a150e; z-index: 9999;
+    position: fixed; inset: 0; background: #0e0b08; z-index: 9999;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem;
     transition: opacity 0.35s ease-out;
   }
   #loading-overlay.hidden { opacity: 0; pointer-events: none; }
-  .loader-title { color: #D4AF37; font-size: clamp(1.25rem, 4vw, 1.75rem); font-family: Georgia, serif; letter-spacing: 0.08em; }
+  .loader-title { color: #d99b3a; font-size: clamp(1.25rem, 4vw, 1.75rem); font-family: 'IM Fell English', Georgia, serif; letter-spacing: 0.08em; }
   .loader-gorila-run {
     display: flex; align-items: flex-end; justify-content: center; gap: 0.35rem; height: 24px;
   }
   .loader-gorila-run span {
-    width: 8px; height: 8px; border-radius: 50%; background: #D4AF37;
+    width: 8px; height: 8px; border-radius: 50%; background: #d99b3a;
     animation: loader-step 0.5s ease-in-out infinite;
   }
   .loader-gorila-run span:nth-child(1) { animation-delay: 0s; }
@@ -88,6 +89,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </style>
 <link rel="preconnect" href="https://www.googletagmanager.com"/>
 <link rel="preconnect" href="https://connect.facebook.net"/>
+<!-- Tipografía v4: Cormorant Garamond + EB Garamond + JetBrains Mono -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2?v=2" crossorigin/>
 <link rel="preload" as="font" type="font/woff2" href="fonts/lora-latin.woff2?v=2" crossorigin/>
 <!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
@@ -418,39 +423,129 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     /* Mejorar contraste de texto sobre fondos blurry - máximo contraste */
     .section-with-bg .text-text-dark,
     .section-with-bg p {
-      text-shadow: 0 3px 8px rgba(0, 0, 0, 0.98), 0 5px 12px rgba(0, 0, 0, 0.95), 0 0 15px rgba(0, 0, 0, 0.9), 0 0 8px rgba(212, 175, 55, 0.15);
-      color: #f5f3ed !important;
+      text-shadow: 0 3px 8px rgba(0, 0, 0, 0.98), 0 5px 12px rgba(0, 0, 0, 0.95), 0 0 15px rgba(0, 0, 0, 0.9), 0 0 8px rgba(217, 155, 58, 0.12);
+      color: #f1ead9 !important;
     }
     .section-with-bg .text-white,
     .section-with-bg h2,
     .section-with-bg h3 {
-      text-shadow: 0 3px 10px rgba(0, 0, 0, 0.98), 0 5px 15px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 0, 0, 0.9), 0 0 25px rgba(212, 175, 55, 0.3);
+      text-shadow: 0 3px 10px rgba(0, 0, 0, 0.98), 0 5px 15px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 0, 0, 0.9), 0 0 25px rgba(217, 155, 58, 0.25);
       color: #ffffff !important;
     }
     .section-with-bg .text-accent-gold {
-      text-shadow: 0 3px 10px rgba(0, 0, 0, 0.98), 0 5px 15px rgba(0, 0, 0, 0.95), 0 0 25px rgba(212, 175, 55, 0.5), 0 0 35px rgba(212, 175, 55, 0.3);
-      color: #d4af37 !important;
+      text-shadow: 0 3px 10px rgba(0, 0, 0, 0.98), 0 5px 15px rgba(0, 0, 0, 0.95), 0 0 25px rgba(217, 155, 58, 0.45), 0 0 35px rgba(217, 155, 58, 0.25);
+      color: #d99b3a !important;
     }
     /* Iluminación escenográfica para textos - alto contraste */
     h1, h2, h3, h4, h5, h6 {
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.98), 0 4px 12px rgba(0, 0, 0, 0.95), 0 0 15px rgba(212, 175, 55, 0.25);
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.98), 0 4px 12px rgba(0, 0, 0, 0.95), 0 0 15px rgba(217, 155, 58, 0.22);
       color: #ffffff !important;
     }
     .text-white {
-      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.98), 0 4px 10px rgba(0, 0, 0, 0.95), 0 0 12px rgba(212, 175, 55, 0.15);
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.98), 0 4px 10px rgba(0, 0, 0, 0.95), 0 0 12px rgba(217, 155, 58, 0.12);
       color: #ffffff !important;
     }
     .text-accent-gold {
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.98), 0 4px 12px rgba(0, 0, 0, 0.95), 0 0 18px rgba(212, 175, 55, 0.4), 0 0 25px rgba(212, 175, 55, 0.2);
-      color: #d4af37 !important;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.98), 0 4px 12px rgba(0, 0, 0, 0.95), 0 0 18px rgba(217, 155, 58, 0.38), 0 0 25px rgba(217, 155, 58, 0.18);
+      color: #d99b3a !important;
     }
     .text-text-dark {
-      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.98), 0 4px 10px rgba(0, 0, 0, 0.95), 0 0 8px rgba(212, 175, 55, 0.12);
-      color: #e8e6e0 !important;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.98), 0 4px 10px rgba(0, 0, 0, 0.95), 0 0 8px rgba(217, 155, 58, 0.10);
+      color: #f1ead9 !important;
     }
     p {
-      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.95), 0 4px 8px rgba(0, 0, 0, 0.9), 0 0 6px rgba(212, 175, 55, 0.1);
-      color: #e8e6e0 !important;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.95), 0 4px 8px rgba(0, 0, 0, 0.9), 0 0 6px rgba(217, 155, 58, 0.08);
+      color: #e8e2d8 !important;
+    }
+    /* ── Cohesión v4: IM Fell English para el título hero ── */
+    .titulo-el-gorila {
+      font-family: 'IM Fell English', Lora, Georgia, serif !important;
+      font-weight: 400 !important;
+    }
+    /* ── Cohesión v4: línea roja sutil antes de encabezados de sección ── */
+    .seccion-heading-v4::before {
+      content: '';
+      display: block;
+      width: 36px; height: 2px;
+      background: #D43A1A;
+      margin-bottom: 10px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       TIPOGRAFÍA v4 — CUERPO EDITORIAL
+       El cartel/hero permanece igual (IM Fell English via .titulo-el-gorila).
+       El resto de la página adopta el sistema Cormorant + EB Garamond.
+    ══════════════════════════════════════════════════════════════ */
+
+    /* Cuerpo base: EB Garamond — coincide con v4 body font */
+    body {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 18px;
+      line-height: 1.72;
+    }
+    /* Párrafos de sección: tamaño editorial sereno */
+    .section-with-bg p,
+    .contenedor-texto-scroll p,
+    .texto-contacto,
+    .font-body p {
+      font-family: 'EB Garamond', Georgia, serif !important;
+      font-size: 17px !important;
+      line-height: 1.75 !important;
+      font-weight: 400 !important;
+      letter-spacing: 0.01em;
+    }
+    /* Nombre del actor en la portada: debe vencer la regla de 17px de arriba */
+    .cartel-texto-block .portada-nombre-actor {
+      font-family: 'Lora', Georgia, serif !important;
+      font-size: clamp(17px, 3.8vw, 31px) !important;
+      line-height: 1.05 !important;
+      font-weight: 400 !important;
+      font-style: italic !important;
+      white-space: nowrap !important;
+    }
+    /* Encabezados h2 de sección: Cormorant Garamond, proportiones v4 */
+    .seccion-heading-v4 {
+      font-family: 'Cormorant Garamond', Georgia, serif !important;
+      font-weight: 500 !important;
+      font-size: clamp(28px, 5.5vw, 44px) !important;
+      line-height: 0.95 !important;
+      letter-spacing: -0.02em !important;
+      tracking: 0 !important;
+    }
+    /* FAQ: sumarios con Cormorant Garamond para más peso teatral */
+    details summary span {
+      font-family: 'Cormorant Garamond', Georgia, serif !important;
+      font-size: clamp(16px, 3.2vw, 20px) !important;
+      font-weight: 500 !important;
+      letter-spacing: 0.01em;
+    }
+    /* Etiquetas pequeñas mono — kickers tipo v4 */
+    .font-mono,
+    .font-body.font-semibold.text-accent-gold {
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 11px !important;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    /* Citas editoriales entre secciones — dorado v4 */
+    .text-center p[style*="color:#cd7f32"],
+    .text-center p[style*="color: #cd7f32"] {
+      font-family: 'Cormorant Garamond', Georgia, serif !important;
+      font-size: clamp(18px, 3.8vw, 26px) !important;
+      font-weight: 300 !important;
+      font-style: italic !important;
+      letter-spacing: 0.04em;
+      line-height: 1.45;
+      color: #d99b3a !important;
+      text-shadow: 0 2px 8px rgba(0,0,0,.9), 0 0 18px rgba(217,155,58,.3) !important;
+    }
+    /* Botones / navegación: preservar legibilidad (no serifa) */
+    button, a.btn, nav, .font-mono-override {
+      font-family: 'JetBrains Mono', 'Courier Prime', monospace;
+    }
+    /* ── obra-actor-texto-indicator en amber v4 ── */
+    .obra-actor-texto-indicator {
+      color: rgba(217, 155, 58, 0.82) !important;
     }
     /* La Obra / El Actor: layout desktop */
     @media (min-width: 1230px) {
@@ -651,6 +746,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       }
       #cartel-rotatorio {
         width: 100% !important;
+        min-width: 0 !important;
         height: 100% !important;
         min-height: 180px !important;
         background-position: center center !important;
@@ -738,6 +834,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       }
     }
     @media (min-width: 1230px) {
+      /* En desktop el nombre va a la mitad (junto a la imagen): se limita para que quepa en una línea */
+      .cartel-texto-block .portada-nombre-actor {
+        font-size: clamp(17px, 1.9vw, 24px) !important;
+      }
       .cartel-informativo-container {
         position: relative !important;
         height: 100% !important;
@@ -789,6 +889,57 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         opacity: 1 !important;
         display: block !important;
         visibility: visible !important;
+      }
+    }
+    /*
+     * ── Cartel rotatorio: umbrales de presentación ─────────────────────────
+     *
+     *  >= 375px  (iPhone mini / estándar moderno)
+     *            → CONTAIN: imagen completa, sin recorte, nunca toca márgenes.
+     *              El min-width: 512px ya fue neutralizado en el bloque 1229px.
+     *
+     *  <  375px  (iPhone 5, SE 1ª gen, Androids pequeños — aprox. 320-374px)
+     *            → COVER (zoom): la pintura llena todo el espacio disponible.
+     *              Se ancla en "center 15%" para mostrar siempre el tercio
+     *              superior (rostro del gorila) aunque se recorten los bordes.
+     *              min-height garantiza que el área de pintura nunca sea
+     *              demasiado pequeña.
+     *
+     * ────────────────────────────────────────────────────────────────────── */
+
+    /* Zona segura 375-479px: contain pleno, ancho completo */
+    @media (max-width: 479px) and (min-width: 375px) {
+      #cartel-rotatorio {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        background-size: contain !important;
+        background-position: center center !important;
+      }
+      .cartel-rotatorio-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        left: 0 !important;
+        transform: none !important;
+      }
+    }
+
+    /* Zona zoom < 375px: cover, pintura llena el espacio */
+    @media (max-width: 374px) {
+      #cartel-rotatorio {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        background-size: cover !important;
+        background-position: center 15% !important;
+        min-height: 260px !important;
+      }
+      .cartel-rotatorio-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        left: 0 !important;
+        transform: none !important;
+        min-height: 260px !important;
       }
     }
     /* Hero cartel: en desktop pegar carteles al banner, reducir altura para que quepa el botón */
@@ -891,18 +1042,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .btn-presskit-sello {
       font-family: Georgia, "Times New Roman", serif;
-      font-size: 0.625rem;
+      font-size: 0.845rem;       /* +35% sobre 0.625rem */
       font-weight: 500;
       letter-spacing: 0.1em;
       color: rgba(212, 175, 55, 0.85);
       text-decoration: none;
-      padding: 2px 0 3px;
+      padding: 3px 0 4px;
       border-bottom: 1px solid rgba(212, 175, 55, 0.35);
       line-height: 1.2;
       white-space: nowrap;
       pointer-events: auto;
       position: relative;
       z-index: 1;
+      margin-top: 20vh;          /* 1/5 de página por debajo del logo */
       transition: color 0.2s ease, border-color 0.2s ease;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
@@ -1544,19 +1696,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       theme: {
         extend: {
           colors: {
-            primary: "#8B0000",
+            primary: "#D43A1A",
             "background-light": "#F5F5DC",
-            "background-dark": "#1a150e",
+            "background-dark": "#0e0b08",
             "text-light": "#333333",
-            "text-dark": "#D4CFC3",
-            "accent-gold": "#D4AF37",
-            "rich-dark": "#2a1e12",
+            "text-dark": "#f1ead9",
+            "accent-gold": "#d99b3a",
+            "rich-dark": "#120d0b",
             "deep-forest": "#1e2a1e",
             "granate": "#6B2D35",
           },
           fontFamily: {
-            display: ["Lora", "serif"],
-            body: ["Inter", "sans-serif"],
+            display: ["'IM Fell English'", "Lora", "Georgia", "serif"],
+            body:    ["'EB Garamond'", "Georgia", "serif"],
+            serif:   ["'Cormorant Garamond'", "Georgia", "serif"],
+            mono:    ["'JetBrains Mono'", "monospace"],
           },
           borderRadius: {
             DEFAULT: "8px",
@@ -1693,7 +1847,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Lado Derecho: Solo bloque de texto (cartel informativo sustituido por texto). -->
 <div class="cartel-informativo-container reading-mode-solo w-full md:w-1/2 h-full flex items-center justify-center relative order-1 md:order-2" id="cartel-informativo-wrap">
     <div class="cartel-texto-block" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:clamp(11px,2.2vw,18px); max-width:400px; padding:1rem 1rem 1.5rem; font-family: Lora, Georgia, serif;">
-      <p style="font-size:clamp(21px,5.8vw,36px); color:rgba(242,237,228,0.6); font-style:italic; letter-spacing:0.05em; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">Humberto Dupeyron en</p>
+      <p class="portada-nombre-actor" style="font-size:clamp(17px,3.8vw,31px); color:rgba(242,237,228,0.6); font-style:italic; letter-spacing:0.05em; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">Humberto Dupeyron en</p>
       <h1 class="titulo-el-gorila" style="font-size:clamp(40px, 13.3vw, 85px); color:#B85C38; line-height:0.9; letter-spacing:-0.02em; margin:0; font-weight:700; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">EL GORILA</h1>
       <p style="font-size:clamp(15px,3.6vw,26px); color:rgba(242,237,228,0.5); letter-spacing:0.15em; text-transform:uppercase; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">de Franz Kafka</p>
       <div style="width:60px; height:1.5px; background:#B85C38; opacity:0.6; margin:6px 0;"></div>
@@ -1802,7 +1956,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </section>
 <section id="sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-4 sm:mt-6 section-with-bg" data-bg-sinopsis="img/SINOPSIS/mobile/1.webp">
-<h2 class="mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
+<h2 class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
             <div class="mx-auto max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left break-words bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 relative contenedor-texto-scroll">
                 <div id="sinopsis-texto" class="w-full space-y-4">
                 <p class="w-full">El Gorila es una pieza que cruza pensamiento filosófico, humor incisivo y una animalidad siempre latente. El discurso avanza con aparente orden, pero se tensiona a través de la ironía, el juego y una risa que no busca alivio, sino conciencia. Lo que inicia como una explicación razonable se va transformando en un reflejo incómodo de nuestra propia necesidad de adaptación.</p>
@@ -1822,7 +1976,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
         <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
             <div class="flex-1 w-full min-w-0 order-2 md:order-1 flex flex-col min-h-0 bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
-                <h2 class="preview-fellenglish mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">La Obra</h2>
+                <h2 class="seccion-heading-v4 preview-fellenglish mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">La Obra</h2>
                 <div class="flex-1 min-h-0 flex flex-col">
                 <div id="obra-texto-carrusel" class="relative flex-1 min-h-0 cursor-pointer select-none text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (3 en total)">
                     <div class="obra-texto-slide texto-slide-activo absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-center" data-index="0">
@@ -1856,11 +2010,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
             <div class="imagen-obra-actor w-full md:w-[500px] lg:w-[600px] flex-shrink-0 order-1 md:order-1">
                 <div class="imagen-obra-actor-inner relative w-full aspect-[4/3] sm:aspect-[5/4] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border-2 border-accent-gold/30 max-h-[300px] sm:max-h-[380px] md:max-h-none shadow-lg">
-                    <img id="actor-imagen" alt="Humberto Dupeyrón" class="w-full h-full object-cover transition-opacity duration-150" src="img/HUMBERTO DUPEYRON/01.jpg" loading="lazy" decoding="async" fetchpriority="low" onerror="this.src='img/HUMBERTO DUPEYRON/02.JPG'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/03.jpg'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/04.jpg'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/05.jpg'; this.onerror=null;};};};"/>
+                    <img id="actor-imagen" alt="Humberto Dupeyrón" class="w-full h-full object-cover transition-opacity duration-150" style="object-position: center 25%;" src="img/HUMBERTO DUPEYRON/01.jpg" loading="lazy" decoding="async" fetchpriority="low" onerror="this.src='img/HUMBERTO DUPEYRON/02.JPG'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/03.jpg'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/04.jpg'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/05.jpg'; this.onerror=null;};};};"/>
                 </div>
             </div>
             <div class="flex-1 w-full min-w-0 order-2 md:order-2 flex flex-col min-h-0 bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
-                <h2 class="mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">El Actor</h2>
+                <h2 class="seccion-heading-v4 mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">El Actor</h2>
                 <div class="flex-1 min-h-0 flex flex-col">
                 <div id="actor-texto-carrusel" class="relative flex-1 min-h-0 cursor-pointer select-none text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (3 en total)">
                     <div class="actor-texto-slide texto-slide-activo absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-start" data-index="0">
@@ -2006,7 +2160,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <svg class="h-8 w-8 sm:h-10 sm:w-10 text-accent-gold mb-3 sm:mb-4 opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round"></path>
 </svg>
-<h2 class="mb-3 sm:mb-4 text-center font-display text-2xl sm:text-3xl md:text-4xl text-white">Preguntas Frecuentes</h2>
+<h2 class="seccion-heading-v4 mb-3 sm:mb-4 text-center font-display text-2xl sm:text-3xl md:text-4xl text-white">Preguntas Frecuentes</h2>
 </div>
 <div class="mx-auto max-w-3xl divide-y divide-accent-gold/20 contenedor-texto-scroll">
 <details class="group py-3 sm:py-4 faq-destacado" open>
@@ -2078,7 +2232,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="flex flex-col items-center text-center">
 <div class="contacto-grupo-1 mb-6">
 <svg class="h-8 w-8 sm:h-10 sm:w-10 text-accent-gold mx-auto mb-3 opacity-80 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-<h2 class="mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white">Contacto</h2>
+<h2 class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white">Contacto</h2>
 <p class="texto-contacto text-text-dark/90 text-sm sm:text-base mx-auto">Para consultas, reservas o más información sobre la obra, escríbenos. Te respondemos a la brevedad.</p>
 </div>
 <div class="contacto-grupo-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
@@ -2202,9 +2356,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Barra fija de compra -->
 <div class="barra-compra-fija">
   <a class="link-venta-boletos" data-fuera-temporada="1" href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" aria-label="Sigue a El Gorila Teatro en Instagram — próxima temporada">
-    <span class="barra-compra-titulo">El gorila descansa.</span>
+    <span class="barra-compra-titulo">El gorila está preparando su informe.</span>
     <span class="barra-compra-meta" aria-hidden="true">
-      <span class="barra-compra-precio">Síguenos para la próxima temporada.</span>
+      <span class="barra-compra-precio">Síguenos para saber cuándo presentará en tu ciudad.</span>
     </span>
   </a>
 </div>

@@ -14,9 +14,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev"/>
     <title>Verificar Boleto - El Gorila de Franz Kafka</title>
     <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
+    <link rel="preload" as="font" type="font/woff2" href="fonts/cormorant-normal-latin.woff2" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -26,62 +26,101 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             theme: {
                 extend: {
                     colors: {
-                        primary: "#b89025",
-                        "background-light": "#fdf8ef",
-                        "background-dark": "#1a1a1a",
-                        'brand-garnet': '#800020',
-                        'brand-mustard': '#c8a951',
-                        'brand-cream': '#fdf8ef'
+                        primary:            "#d99b3a",
+                        "background-light": "#f1ead9",
+                        "background-dark":  "#0a0706",
+                        'brand-garnet':     '#D43A1A',
+                        'brand-mustard':    '#d99b3a',
+                        'brand-cream':      '#f1ead9',
                     },
                     fontFamily: {
-                        display: ["Cormorant Garamond", "serif"],
-                        sans: ["Work Sans", "sans-serif"],
+                        display: ["'IM Fell English'", "Georgia", "serif"],
+                        sans:    ["'Cormorant Garamond'", "serif"],
+                        mono:    ["'Courier Prime'", "monospace"],
                     },
                 },
             },
         };
     </script>
     <style>
-        .background-gradient {
-            background: linear-gradient(160deg, #1a150e 0%, #2a1e12 45%, #1a150e 100%);
-            position: relative;
+        @font-face {
+            font-family: 'IM Fell English';
+            font-style: normal; font-weight: 400; font-display: swap;
+            src: url(fonts/im-fell-english-latin.woff2) format('woff2');
         }
-        .background-gradient::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 0;
-            pointer-events: none;
+        @font-face {
+            font-family: 'Courier Prime';
+            font-style: normal; font-weight: 400; font-display: swap;
+            src: url(fonts/courier-prime-latin.woff2) format('woff2');
         }
-        .background-gradient > * {
-            position: relative;
-            z-index: 1;
+        @font-face {
+            font-family: 'Cormorant Garamond';
+            font-style: normal; font-weight: 300 600; font-display: swap;
+            src: url(fonts/cormorant-normal-latin.woff2) format('woff2');
+        }
+        :root {
+            --d-bg:    #0a0706;
+            --d-bg2:   #120d0b;
+            --d-fg:    #f1ead9;
+            --d-soft:  rgba(241,234,217,.65);
+            --d-faint: rgba(241,234,217,.10);
+            --gold:    #d99b3a;
+            --red:     #D43A1A;
         }
         body {
-            font-family: 'Work Sans', sans-serif;
+            background: var(--d-bg) !important;
+            font-family: 'Cormorant Garamond', serif !important;
+            color: var(--d-fg);
         }
         h1, h2, h3, h4, h5, h6 {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'IM Fell English', Georgia, serif;
         }
+        .background-gradient {
+            background: var(--d-bg) !important;
+            position: relative;
+        }
+        .background-gradient::before { display: none; }
+        /* Header fijo */
+        header.fixed, header.bg-black\/60 {
+            background: rgba(10,7,6,0.94) !important;
+            border-color: rgba(217,155,58,.2) !important;
+        }
+        /* Tarjeta de input */
+        .bg-black\/60 { background: rgba(18,13,11,0.85) !important; }
+        .border-white\/20 { border-color: rgba(217,155,58,.2) !important; }
+        /* Inputs */
+        input, select, textarea {
+            background: rgba(10,7,6,0.7) !important;
+            border-color: var(--d-faint) !important;
+            color: var(--d-fg) !important;
+            font-family: 'Cormorant Garamond', serif !important;
+            border-radius: 0 !important;
+        }
+        input::placeholder { color: rgba(241,234,217,.30) !important; }
+        input:focus { border-color: var(--gold) !important; outline: none !important; }
+        /* Botones */
+        button, [type="button"] {
+            font-family: 'Cormorant Garamond', serif !important;
+            border-radius: 0 !important;
+        }
+        /* Resultado válido */
+        .bg-green-900\/50 { background: rgba(10,7,6,0.85) !important; border-color: rgba(74,222,128,.3) !important; }
+        /* Resultado inválido */
+        .bg-red-900\/50   { background: rgba(10,7,6,0.85) !important; }
+        /* Textos blancos */
+        .text-white { color: var(--d-fg) !important; }
+        .text-white\/80, .text-white\/90 { color: var(--d-soft) !important; }
+        .text-white\/70, .text-white\/60 { color: rgba(241,234,217,.50) !important; }
+        /* Texto labels */
+        .text-sm { font-size: 0.95rem !important; }
+        .rounded-lg, .rounded-xl, .rounded-md, .rounded { border-radius: 0 !important; }
+        #qr-code { width: 200px; height: 200px; margin: 0 auto; }
         .material-symbols-outlined {
-          font-variation-settings:
-          'FILL' 0,
-          'wght' 300,
-          'GRAD' 0,
-          'opsz' 24
-        }
-        #qr-code {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto;
+          font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
         }
     </style>
 </head>
-<body class="bg-background-light font-sans">
+<body class="dark font-sans">
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P4BDXRN9"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>

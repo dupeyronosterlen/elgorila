@@ -22,11 +22,22 @@ function totalCantidad() {
     return Object.values(cantidades).reduce((s, c) => s + c, 0);
 }
 
+// Descuento Manada: 5+ generales → 29% off sobre todos los generales.
+// Se aplica aunque haya boletos especiales (inapam/estudiante/maestro).
+const DESCUENTO_MANADA_MIN  = 5;      // mínimo de generales para activar
+const DESCUENTO_MANADA_PCT  = 0.29;   // porcentaje de descuento
+const DESCUENTO_ESPECIALES  = 0.30;   // porcentaje de descuento para tipos especiales
+
+function promoManadaActiva() {
+    return cantidades.general >= DESCUENTO_MANADA_MIN;
+}
+
 function calcularTotal() {
-    const tieneEspeciales = cantidades.inapam > 0 || cantidades.estudiante > 0 || cantidades.maestro > 0;
-    const promoGrupo = cantidades.general >= 5 && !tieneEspeciales;
+    const manada = promoManadaActiva();
     return TIPOS_BOLETO.reduce((s, t) => {
-        const precio = (promoGrupo && t.tipo === 'general') ? t.precio * 0.75 : t.precio;
+        const precio = (manada && t.tipo === 'general')
+            ? t.precio * (1 - DESCUENTO_MANADA_PCT)
+            : t.precio;
         return s + precio * (cantidades[t.tipo] || 0);
     }, 0);
 }
@@ -161,9 +172,7 @@ function refrescarDisponibilidadWorker() {
 
 // --- FUNCIÓN 3: ACTUALIZAR PANTALLA ---
 function actualizarPantalla() {
-    // Estado de promoción
-    const tieneEspeciales = cantidades.inapam > 0 || cantidades.estudiante > 0 || cantidades.maestro > 0;
-    const promoGrupo = cantidades.general >= 5 && !tieneEspeciales;
+    const manada = promoManadaActiva();
 
     // Cantidad por tipo
     TIPOS_BOLETO.forEach(t => {
@@ -175,17 +184,49 @@ function actualizarPantalla() {
     const cajitaFecha = document.getElementById('fecha-seleccionada-texto');
     if (cajitaFecha) cajitaFecha.innerText = nombreFecha || 'Selecciona una fecha';
 
-    // Resumen de items en el panel de precio
+    // Precio del general en la fila (actualiza el label dinámicamente)
+    const precioGeneralEl = document.getElementById('precio-general-display');
+    if (precioGeneralEl) {
+        if (manada) {
+            const precioDesc = (350 * (1 - DESCUENTO_MANADA_PCT)).toFixed(2);
+            precioGeneralEl.innerHTML =
+                `<span style="text-decoration:line-through;opacity:.45;">$350</span> ` +
+                `<span style="color:#4ade80;">$${precioDesc} MXN</span> ` +
+                `<span style="opacity:.55;">· −${Math.round(DESCUENTO_MANADA_PCT * 100)}%</span>`;
+        } else {
+            precioGeneralEl.innerHTML = '$350 MXN';
+        }
+    }
+
+    // Resumen de items
     const resumenEl = document.getElementById('items-resumen');
     if (resumenEl) {
         const activos = TIPOS_BOLETO.filter(t => cantidades[t.tipo] > 0);
-        resumenEl.innerHTML = activos.map(t => {
-            const precio = (promoGrupo && t.tipo === 'general') ? t.precio * 0.75 : t.precio;
+        let html = activos.map(t => {
+            const esGeneral = t.tipo === 'general';
+            const precioUnit = (manada && esGeneral)
+                ? t.precio * (1 - DESCUENTO_MANADA_PCT)
+                : t.precio;
+            const subtipo = (manada && esGeneral)
+                ? ` <span style="color:#4ade80;font-size:.8em;">−${Math.round(DESCUENTO_MANADA_PCT*100)}%</span>`
+                : (t.desc ? ` <span style="color:#4ade80;font-size:.8em;">−30%</span>` : '');
             return `<div class="flex justify-between text-text-dark text-sm">
-                <span>${t.nombre} × ${cantidades[t.tipo]}</span>
-                <span>$${(precio * cantidades[t.tipo]).toFixed(2)}</span>
+                <span>${t.nombre} × ${cantidades[t.tipo]}${subtipo}</span>
+                <span>$${(precioUnit * cantidades[t.tipo]).toFixed(2)}</span>
             </div>`;
         }).join('');
+
+        // Línea de descuento total (si hay algún descuento activo)
+        const subtotalBruto = TIPOS_BOLETO.reduce((s, t) => s + t.precio * (cantidades[t.tipo] || 0), 0);
+        const totalDesc = calcularTotal();
+        const montoDescuento = subtotalBruto - totalDesc;
+        if (montoDescuento > 0.01 && activos.length > 0) {
+            html += `<div class="flex justify-between text-sm" style="color:#4ade80;border-top:0.5px solid rgba(241,234,217,0.10);padding-top:6px;margin-top:4px;">
+                <span>Descuento aplicado</span>
+                <span>−$${montoDescuento.toFixed(2)}</span>
+            </div>`;
+        }
+        resumenEl.innerHTML = html;
     }
 
     // Total
@@ -193,7 +234,7 @@ function actualizarPantalla() {
     const totalEl = document.getElementById('total-precio');
     if (totalEl) totalEl.textContent = `$${total.toFixed(2)} MXN`;
 
-    // Banner promo 5+ generales sin especiales
+    // Banner "Descuento Manada"
     let promoBanner = document.getElementById('promo-grupo-banner');
     if (!promoBanner && totalEl && totalEl.parentNode) {
         promoBanner = document.createElement('div');
@@ -201,12 +242,22 @@ function actualizarPantalla() {
         totalEl.parentNode.insertBefore(promoBanner, totalEl);
     }
     if (promoBanner) {
-        if (promoGrupo) {
+        if (manada) {
+            const ahorro = (350 * DESCUENTO_MANADA_PCT * cantidades.general).toFixed(2);
             promoBanner.className = 'text-xs text-green-400 font-semibold my-1';
-            promoBanner.textContent = `🎟 Promoción: 25% de descuento en tus ${cantidades.general} boletos generales`;
+            promoBanner.innerHTML =
+                `✓ Descuento Manada activo — ${Math.round(DESCUENTO_MANADA_PCT*100)}% off · ` +
+                `ahorras $${ahorro} MXN en ${cantidades.general} boletos generales`;
+        } else if (cantidades.general > 0 && cantidades.general < DESCUENTO_MANADA_MIN) {
+            promoBanner.className = 'text-xs my-1';
+            promoBanner.style.color = 'rgba(217,155,58,.6)';
+            promoBanner.innerHTML =
+                `Agrega ${DESCUENTO_MANADA_MIN - cantidades.general} general(es) más para activar el ` +
+                `<strong>Descuento Manada (${Math.round(DESCUENTO_MANADA_PCT*100)}%)</strong>`;
         } else {
             promoBanner.className = 'hidden';
-            promoBanner.textContent = '';
+            promoBanner.innerHTML = '';
+            promoBanner.style.color = '';
         }
     }
 
@@ -249,7 +300,7 @@ function actualizarPantalla() {
     // GA4 notificación grupo grande — una vez por umbral
     if (esGrupoGrande && !_grupoGrandeNotificado) {
         _grupoGrandeNotificado = true;
-        if (typeof gtag === 'function') gtag('event', 'grupo_grande', { cantidad: totalCantidad() });
+        if (window.ElGorilaAnalytics) ElGorilaAnalytics.grupoGrande(totalCantidad());
     } else if (!esGrupoGrande) {
         _grupoGrandeNotificado = false;
     }
@@ -303,14 +354,90 @@ function irAConfirmacion() {
 
     try {
         localStorage.setItem('orden_compra', JSON.stringify(orden));
-        navegandoACheckout = true;
-        window.location.href = 'checkout.html';
+
+        if (window.ElGorilaAnalytics) ElGorilaAnalytics.addToCart(orden);
+
+        // Si existe el panel inline en boletos.html, mostrarlo en lugar de navegar.
+        // Fallback a checkout.html si el panel no existe (otras páginas o JS sin DOM).
+        if (typeof mostrarCheckoutInline === 'function' && document.getElementById('inline-checkout')) {
+            navegandoACheckout = true; // evita liberar la reserva al hacer scroll
+            mostrarCheckoutInline(orden);
+        } else {
+            navegandoACheckout = true;
+            window.location.href = 'checkout.html';
+        }
         return true;
     } catch (error) {
         console.error('Error al guardar la orden:', error);
         alert('Error al guardar la orden. Por favor intenta de nuevo.');
         return false;
     }
+}
+
+// --- FUNCIÓN 5: MOSTRAR CHECKOUT INLINE ---
+function mostrarCheckoutInline(orden) {
+    const panel = document.getElementById('inline-checkout');
+    if (!panel) { window.location.href = 'checkout.html'; return; }
+
+    // Fecha
+    const fechaEl = document.getElementById('ichk-fecha');
+    if (fechaEl) fechaEl.textContent = orden.fecha || '—';
+
+    // Ítems del pedido
+    const itemsWrap = document.getElementById('ichk-items-wrap');
+    if (itemsWrap && Array.isArray(orden.items)) {
+        const NOMBRES = {
+            general:    'General',
+            inapam:     'INAPAM',
+            estudiante: 'Desc. 30%',
+            maestro:    'Maestro',
+        };
+        itemsWrap.innerHTML = orden.items.map(item => {
+            const precioUnit = (promoManadaActiva() && item.tipo === 'general')
+                ? TIPOS_BOLETO.find(t => t.tipo === 'general').precio * (1 - DESCUENTO_MANADA_PCT)
+                : (TIPOS_BOLETO.find(t => t.tipo === item.tipo) || { precio: 0 }).precio;
+            const sub = (precioUnit * item.cantidad).toFixed(0);
+            return `<div class="ichk-item-fila">
+                <span class="ichk-etiq">${NOMBRES[item.tipo] || item.tipo} × ${item.cantidad}</span>
+                <span class="ichk-val">$${sub}</span>
+            </div>`;
+        }).join('');
+    }
+
+    // Descuento (si aplica)
+    const descEl = document.getElementById('ichk-descuento-wrap');
+    if (descEl) {
+        if (orden.descuentoMonto > 0) {
+            descEl.style.display = '';
+            const dMonto = document.getElementById('ichk-descuento-monto');
+            if (dMonto) dMonto.textContent = `−$${orden.descuentoMonto.toFixed(2)}`;
+        } else {
+            descEl.style.display = 'none';
+        }
+    }
+
+    // Total
+    const totalEl = document.getElementById('ichk-total');
+    if (totalEl) totalEl.textContent = `$${orden.total.toFixed(2)} MXN`;
+
+    // Mostrar panel y desplazar
+    panel.style.display = '';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => {
+        const emailInput = document.getElementById('ichk-email-input');
+        if (emailInput) emailInput.focus();
+    }, 700);
+
+    if (window.ElGorilaAnalytics) ElGorilaAnalytics.beginCheckout(orden);
+}
+
+// --- FUNCIÓN 6: VOLVER A EDITAR ---
+function editarPedido() {
+    const panel = document.getElementById('inline-checkout');
+    if (panel) panel.style.display = 'none';
+    navegandoACheckout = false;
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // --- LIMPIAR RESERVA AL SALIR ---

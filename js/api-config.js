@@ -1,6 +1,6 @@
 /**
  * Configuración de la API de boletera
- * En producción: añade <meta name="api-base" content="https://tu-api.onrender.com">
+ * En producción: añade <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
  * o define window.API_BASE_URL antes de cargar este script
  */
 (function() {

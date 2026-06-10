@@ -8,203 +8,438 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
 <!-- End Google Tag Manager -->
-    <meta charset="utf-8"/>
-<meta name="robots" content="noindex,nofollow"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-    <meta name="apple-mobile-web-app-capable" content="yes"/>
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-    <meta name="theme-color" content="#800020"/>
-    <title>Acomodadores - El Gorila</title>
-    <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#b89025",
-                        'brand-garnet': '#800020',
-                    },
-                },
-            },
-        };
-    </script>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        }
-        /* Estilo tipo app */
-        @media (display-mode: standalone) {
-            body {
-                padding-top: env(safe-area-inset-top);
-                padding-bottom: env(safe-area-inset-bottom);
-            }
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a150e">
+<title>Acomodadores — El Gorila</title>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
+<link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<!-- Tailwind — mantenido para clases dinámicas de acomodadores.js -->
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary:       '#d99b3a',
+          'brand-garnet':'#0a0706',
+        },
+      },
+    },
+  };
+</script>
+<style>
+/* ── FUENTES ─────────────────────────────────────────────── */
+@font-face {
+  font-family: 'IM Fell English';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/im-fell-english-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Courier Prime';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url(fonts/courier-prime-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal; font-weight: 300 600; font-display: swap;
+  src: url(fonts/cormorant-normal-latin.woff2) format('woff2');
+}
+
+/* ── TOKENS v4 ───────────────────────────────────────────── */
+:root {
+  --bg:         #0a0706;
+  --bg2:        #120d0b;
+  --bg3:        #1a1310;
+  --ink:        #f1ead9;
+  --ink-dim:    rgba(241,234,217,0.65);
+  --ink-faint:  rgba(241,234,217,0.10);
+  --gold:       #d99b3a;
+  --gold-dim:   rgba(217,155,58,0.50);
+  --gold-faint: rgba(217,155,58,0.12);
+  --red:        #D43A1A;
+  --green:      #4ade80;
+  --blue:       #60a5fa;
+  --yellow:     #facc15;
+  --display:    'IM Fell English', Georgia, serif;
+  --cuerpo:     'Cormorant Garamond', serif;
+  --mono:       'Courier Prime', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--bg); }
+
+body {
+  background-color: var(--bg) !important;
+  color: var(--ink);
+  font-family: var(--mono), -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  padding-bottom: 80px; /* espacio para footer sticky */
+}
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}
+
+/* JS compat */
+.hidden { display: none !important; }
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── HEADER FIJO ─────────────────────────────────────────── */
+.aco-header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--gold-faint);
+  position: sticky; top: 0; z-index: 50;
+  padding: 12px 16px;
+}
+.aco-header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.aco-header h1 {
+  font-family: var(--display); font-size: 22px;
+  color: var(--ink); line-height: 1; margin: 0;
+}
+.aco-refresh-btn {
+  padding: 8px; background: rgba(212,175,55,0.12);
+  border: 1px solid var(--gold-faint);
+  color: var(--gold); cursor: pointer;
+  transition: background .15s;
+  display: flex; align-items: center;
+}
+.aco-refresh-btn:hover { background: rgba(212,175,55,0.22); }
+.aco-refresh-btn .material-symbols-outlined { font-size: 20px !important; }
+
+/* ── SELECTOR FUNCIÓN ────────────────────────────────────── */
+.aco-funcion-bar {
+  background: var(--bg3);
+  border-bottom: 1px solid var(--ink-faint);
+  position: sticky; top: 57px; z-index: 40;
+  padding: 10px 16px;
+}
+#selector-funcion {
+  width: 100%; background: var(--bg2);
+  border: 1px solid var(--ink-faint);
+  color: var(--ink);
+  font-family: var(--mono); font-size: 14px; font-weight: 500;
+  padding: 10px 14px;
+  outline: none; border-radius: 0 !important;
+  cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23D4AF37' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+#selector-funcion:focus { border-color: var(--gold-dim); }
+
+/* ── CONTENIDO ───────────────────────────────────────────── */
+.aco-content { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ── RESUMEN FUNCIÓN ─────────────────────────────────────── */
+.aco-card {
+  background: var(--bg2);
+  border: 1px solid var(--ink-faint);
+  padding: 16px;
+}
+.aco-card-label {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--gold-dim); display: block;
+  margin-bottom: 12px;
+}
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.stat-item {
+  background: rgba(0,0,0,0.2);
+  padding: 12px;
+  border: 1px solid var(--ink-faint);
+}
+.stat-label {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink-faint); display: block; margin-bottom: 4px;
+}
+.stat-value {
+  font-family: var(--display); font-size: 32px;
+  line-height: 1; color: var(--ink);
+}
+.stat-value--green  { color: var(--green); }
+.stat-value--yellow { color: var(--yellow); }
+.stat-value--blue   { color: var(--blue); }
+
+/* ── ALERTA DISCAPACIDAD ─────────────────────────────────── */
+#alerta-discapacidad:not(.hidden) {
+  display: block;
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.3);
+  padding: 14px 16px;
+}
+.alerta-inner { display: flex; gap: 12px; align-items: flex-start; }
+.alerta-inner .material-symbols-outlined { color: var(--blue); font-size: 26px !important; flex-shrink: 0; }
+.alerta-title {
+  font-family: var(--mono); font-size: 13px;
+  font-weight: 500; color: var(--blue); margin-bottom: 4px;
+}
+#info-discapacidad {
+  font-family: var(--mono); font-size: 12px; color: var(--ink-dim);
+}
+
+/* ── VERIFICADOR ─────────────────────────────────────────── */
+.verificar-form { display: flex; gap: 8px; }
+#codigo-verificar {
+  flex: 1; background: rgba(0,0,0,0.35);
+  border: 1px solid var(--ink-faint);
+  color: var(--ink);
+  font-family: var(--mono); font-size: 15px;
+  padding: 12px 14px; outline: none;
+  transition: border-color .15s;
+  border-radius: 0 !important;
+  -webkit-appearance: none;
+}
+#codigo-verificar:focus { border-color: var(--gold-dim); }
+#codigo-verificar::placeholder { color: rgba(212,207,195,0.3); }
+.verificar-btn {
+  padding: 12px 16px;
+  background: var(--gold); color: var(--bg);
+  font-family: var(--mono); font-size: 13px;
+  font-weight: 700; border: none; cursor: pointer;
+  transition: opacity .15s; display: flex; align-items: center;
+  border-radius: 0 !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.verificar-btn:hover { opacity: .85; }
+.verificar-btn .material-symbols-outlined { font-size: 20px !important; }
+
+/* ── RESULTADOS ──────────────────────────────────────────── */
+#resultado-verificacion:not(.hidden) { display: block; }
+
+.resultado-valido-card {
+  background: rgba(74,222,128,0.07);
+  border: 1px solid rgba(74,222,128,0.3);
+  padding: 16px;
+}
+.resultado-valido-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+.resultado-valido-header .material-symbols-outlined { color: var(--green); font-size: 32px !important; flex-shrink: 0; }
+.resultado-val-title { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--green); margin-bottom: 10px; }
+.resultado-detalles { display: flex; flex-direction: column; gap: 6px; }
+.resultado-fila { display: flex; justify-content: space-between; align-items: baseline; }
+.resultado-key { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-dim); }
+.resultado-val { font-family: var(--mono); font-size: 13px; color: var(--ink); }
+.discapacidad-badge {
+  background: rgba(96,165,250,0.1);
+  border: 1px solid rgba(96,165,250,0.3);
+  padding: 8px 12px; margin-top: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.discapacidad-badge .material-symbols-outlined { color: var(--blue); font-size: 18px !important; }
+.discapacidad-badge span { font-family: var(--mono); font-size: 11px; color: var(--blue); }
+.btn-confirmar-ingreso {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; width: 100%;
+  padding: 14px 24px;
+  background: var(--green); color: #0f2b18;
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  border: none; cursor: pointer; transition: opacity .15s;
+  border-radius: 0 !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-confirmar-ingreso:hover { opacity: .85; }
+.btn-confirmar-ingreso .material-symbols-outlined { font-size: 18px !important; }
+
+.resultado-invalido-card {
+  background: rgba(248,113,113,0.07);
+  border: 1px solid rgba(248,113,113,0.3);
+  padding: 16px;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.resultado-invalido-card .material-symbols-outlined { color: #f87171; font-size: 30px !important; flex-shrink: 0; }
+.invalido-title { font-family: var(--mono); font-size: 14px; font-weight: 700; color: #f87171; margin-bottom: 6px; }
+#res-error { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); }
+
+/* ── PENDIENTES ──────────────────────────────────────────── */
+.pendientes-titulo {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 10px;
+}
+#lista-pendientes { display: flex; flex-direction: column; gap: 8px; }
+
+/* ── FOOTER FIJO ─────────────────────────────────────────── */
+.aco-footer {
+  background: var(--bg2);
+  border-top: 1px solid var(--gold-faint);
+  position: sticky; bottom: 0; z-index: 40;
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+.btn-instalar {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; width: 100%;
+  padding: 13px 24px;
+  background: var(--gold); color: var(--bg);
+  font-family: var(--mono); font-size: 12px;
+  font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  border: none; cursor: pointer; transition: opacity .15s;
+  border-radius: 0 !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-instalar:hover { opacity: .85; }
+.btn-instalar .material-symbols-outlined { font-size: 18px !important; }
+</style>
 </head>
-<body class="bg-gray-900 text-white">
+<body>
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P4BDXRN9"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
-    <!-- Header fijo -->
-    <header class="bg-brand-garnet sticky top-0 z-50 shadow-lg">
-        <div class="px-4 py-3">
-            <div class="flex items-center justify-between">
-                <h1 class="text-xl font-bold">Acomodadores</h1>
-                <button onclick="actualizarDatos()" class="p-2 bg-white/20 rounded-full">
-                    <span class="material-symbols-outlined text-white">refresh</span>
-                </button>
-            </div>
-        </div>
-    </header>
 
-    <!-- Selector de Funci?n -->
-    <div class="bg-gray-800 border-b border-gray-700 sticky top-[57px] z-40">
-        <div class="px-4 py-3">
-            <select id="selector-funcion" class="w-full bg-gray-700 text-white rounded-lg px-4 py-3 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary">
-                <option value="viernes">Viernes 20 Oct - 20:30</option>
-                <option value="sabado">S?bado 21 Oct - 19:00</option>
-                <option value="domingo">Domingo 22 Oct</option>
-            </select>
+<!-- Header fijo -->
+<header class="aco-header">
+  <div class="aco-header-inner">
+    <h1>Acomodadores</h1>
+    <button type="button" class="aco-refresh-btn" onclick="actualizarDatos()" aria-label="Actualizar">
+      <span class="material-symbols-outlined">refresh</span>
+    </button>
+  </div>
+</header>
+
+<!-- Selector de Función -->
+<div class="aco-funcion-bar">
+  <select id="selector-funcion">
+    <option value="viernes">Viernes 20 Oct — 20:30</option>
+    <option value="sabado">Sábado 21 Oct — 19:00</option>
+    <option value="domingo">Domingo 22 Oct</option>
+  </select>
+</div>
+
+<!-- Contenido principal -->
+<div class="aco-content">
+
+  <!-- Estadísticas -->
+  <div class="aco-card">
+    <span class="aco-card-label">Resumen de la función</span>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-label">Total esperado</span>
+        <span class="stat-value" id="total-esperado">—</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Ingresados</span>
+        <span class="stat-value stat-value--green" id="total-ingresados">—</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Pendientes</span>
+        <span class="stat-value stat-value--yellow" id="total-pendientes">—</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Con discapacidad</span>
+        <span class="stat-value stat-value--blue" id="total-discapacidad">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerta discapacidad -->
+  <div id="alerta-discapacidad" class="hidden">
+    <div class="alerta-inner">
+      <span class="material-symbols-outlined">accessible</span>
+      <div>
+        <div class="alerta-title">Atención especial</div>
+        <p id="info-discapacidad">—</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verificador de Boletos -->
+  <div class="aco-card">
+    <span class="aco-card-label">Verificar boleto</span>
+    <div class="verificar-form">
+      <input type="text" id="codigo-verificar"
+             placeholder="Escanear o ingresar código"
+             autocomplete="off" autocorrect="off"
+             autocapitalize="off" spellcheck="false">
+      <button type="button" class="verificar-btn" onclick="verificarBoleto()">
+        <span class="material-symbols-outlined">search</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Resultado Válido -->
+  <div id="resultado-verificacion" class="hidden">
+    <div class="resultado-valido-card hidden" id="resultado-valido">
+      <div class="resultado-valido-header">
+        <span class="material-symbols-outlined">check_circle</span>
+        <div style="flex:1;">
+          <div class="resultado-val-title">Boleto válido</div>
+          <div class="resultado-detalles">
+            <div class="resultado-fila">
+              <span class="resultado-key">Código</span>
+              <span class="resultado-val" id="res-codigo">—</span>
+            </div>
+            <div class="resultado-fila">
+              <span class="resultado-key">Función</span>
+              <span class="resultado-val" id="res-fecha">—</span>
+            </div>
+            <div class="resultado-fila">
+              <span class="resultado-key">Cantidad</span>
+              <span class="resultado-val" id="res-cantidad">—</span>
+            </div>
+          </div>
+          <div id="res-discapacidad-container" class="hidden">
+            <div class="discapacidad-badge">
+              <span class="material-symbols-outlined">accessible</span>
+              <span>Persona con discapacidad</span>
+            </div>
+          </div>
         </div>
+      </div>
+      <button type="button" class="btn-confirmar-ingreso" onclick="marcarIngreso()">
+        <span class="material-symbols-outlined">check</span>
+        Confirmar ingreso
+      </button>
     </div>
 
-    <!-- Estad?sticas R?pidas -->
-    <div class="p-4 space-y-3">
-        <div class="bg-gray-800 rounded-xl p-4">
-            <h2 class="text-sm text-gray-400 mb-3 uppercase tracking-wide">Resumen de la Funci?n</h2>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-gray-700/50 rounded-lg p-3">
-                    <p class="text-xs text-gray-400 mb-1">Total Esperado</p>
-                    <p class="text-2xl font-bold" id="total-esperado">-</p>
-                </div>
-                <div class="bg-gray-700/50 rounded-lg p-3">
-                    <p class="text-xs text-gray-400 mb-1">Ingresados</p>
-                    <p class="text-2xl font-bold text-green-400" id="total-ingresados">-</p>
-                </div>
-                <div class="bg-gray-700/50 rounded-lg p-3">
-                    <p class="text-xs text-gray-400 mb-1">Pendientes</p>
-                    <p class="text-2xl font-bold text-yellow-400" id="total-pendientes">-</p>
-                </div>
-                <div class="bg-gray-700/50 rounded-lg p-3">
-                    <p class="text-xs text-gray-400 mb-1">Con Discapacidad</p>
-                    <p class="text-2xl font-bold text-blue-400" id="total-discapacidad">-</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Alerta de Discapacidad -->
-        <div id="alerta-discapacidad" class="bg-blue-900/50 border border-blue-500/50 rounded-xl p-4 hidden">
-            <div class="flex items-start gap-3">
-                <span class="material-symbols-outlined text-blue-400 text-3xl">accessible</span>
-                <div>
-                    <h3 class="font-bold text-lg mb-1">Atenci?n Especial</h3>
-                    <p class="text-sm text-gray-300" id="info-discapacidad">-</p>
-                </div>
-            </div>
-        </div>
+    <div class="resultado-invalido-card hidden" id="resultado-invalido">
+      <span class="material-symbols-outlined">cancel</span>
+      <div>
+        <div class="invalido-title">Boleto inválido</div>
+        <p id="res-error">—</p>
+      </div>
     </div>
+  </div>
 
-    <!-- Verificador de Boletos -->
-    <div class="px-4 mb-4">
-        <div class="bg-gray-800 rounded-xl p-4">
-            <h2 class="text-lg font-bold mb-3">Verificar Boleto</h2>
-            <div class="flex gap-2">
-                <input 
-                    type="text" 
-                    id="codigo-verificar" 
-                    placeholder="Escanear o ingresar c?digo"
-                    class="flex-1 bg-gray-700 text-white rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    autocomplete="off"
-                />
-                <button 
-                    onclick="verificarBoleto()" 
-                    class="px-6 py-3 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-colors"
-                >
-                    <span class="material-symbols-outlined align-middle">search</span>
-                </button>
-            </div>
-        </div>
+  <!-- Lista de Pendientes -->
+  <div>
+    <div class="pendientes-titulo">Pendientes de ingreso</div>
+    <div id="lista-pendientes">
+      <!-- Se llenará con JavaScript -->
     </div>
+  </div>
 
-    <!-- Resultado de Verificaci?n -->
-    <div id="resultado-verificacion" class="px-4 mb-4 hidden">
-        <div id="resultado-valido" class="bg-green-900/50 border border-green-500/50 rounded-xl p-4 hidden">
-            <div class="flex items-start gap-3 mb-4">
-                <span class="material-symbols-outlined text-green-400 text-4xl">check_circle</span>
-                <div class="flex-grow">
-                    <h3 class="font-bold text-xl mb-2">Boleto V?lido</h3>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">C?digo:</span>
-                            <span class="font-mono font-semibold" id="res-codigo">-</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Funci?n:</span>
-                            <span class="font-semibold" id="res-fecha">-</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Cantidad:</span>
-                            <span class="font-semibold" id="res-cantidad">-</span>
-                        </div>
-                        <div id="res-discapacidad-container" class="hidden">
-                            <div class="bg-blue-900/30 rounded-lg p-2 mt-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-blue-400">accessible</span>
-                                    <span class="text-blue-300 font-semibold">Persona con discapacidad</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <button 
-                onclick="marcarIngreso()" 
-                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg transition-colors"
-            >
-                <span class="material-symbols-outlined align-middle">check</span>
-                Confirmar Ingreso
-            </button>
-        </div>
+</div><!-- /aco-content -->
 
-        <div id="resultado-invalido" class="bg-red-900/50 border border-red-500/50 rounded-xl p-4 hidden">
-            <div class="flex items-start gap-3">
-                <span class="material-symbols-outlined text-red-400 text-4xl">cancel</span>
-                <div>
-                    <h3 class="font-bold text-xl mb-2">Boleto Inv?lido</h3>
-                    <p class="text-sm" id="res-error">-</p>
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- Footer fijo -->
+<footer class="aco-footer">
+  <button type="button" class="btn-instalar" onclick="instalarApp()">
+    <span class="material-symbols-outlined">download</span>
+    Instalar app
+  </button>
+</footer>
 
-    <!-- Lista de Boletos Pendientes -->
-    <div class="px-4 mb-4">
-        <h2 class="text-lg font-bold mb-3">Pendientes de Ingreso</h2>
-        <div id="lista-pendientes" class="space-y-2">
-            <!-- Se llenar? con JavaScript -->
-        </div>
-    </div>
-
-    <!-- Footer fijo para descarga -->
-    <footer class="bg-gray-800 border-t border-gray-700 sticky bottom-0 p-4">
-        <button onclick="instalarApp()" class="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-primary/90 transition-colors">
-            <span class="material-symbols-outlined align-middle">download</span>
-            Instalar App
-        </button>
-    </footer>
-
-    <script src="js/config.js"></script>
-    <script src="js/certificado.js"></script>
-    <script src="js/fechas.js"></script>
-    <script src="js/taquilla.js"></script>
-    <script src="js/acomodadores.js"></script>
+<script src="js/config.js"></script>
+<script src="js/certificado.js"></script>
+<script src="js/fechas.js"></script>
+<script src="js/taquilla.js"></script>
+<script src="js/acomodadores.js"></script>
 </body>
 </html>

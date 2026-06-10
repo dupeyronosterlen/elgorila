@@ -15,13 +15,19 @@ async function cargarConfirmacion() {
                 const res = await fetch(window.API_BASE + '/api/venta/' + encodeURIComponent(sessionId));
                 if (res.ok) {
                     const venta = await res.json();
+                    let local = null;
+                    try { local = JSON.parse(localStorage.getItem('orden_compra') || 'null'); } catch (_) {}
                     ordenCompra = {
                         estado: 'completada',
-                        email: venta.email,
-                        numeroOrden: venta.numeroOrden,
+                        email: (local && local.email) || venta.email || '',
+                        numeroOrden: venta.codigo || (local && local.numeroOrden) || sessionId,
+                        sessionId,
                         cantidad: venta.cantidad,
-                        fecha: venta.fecha,
-                        total: venta.total
+                        cantidadTotal: venta.cantidad,
+                        fecha: venta.funcionNombre || venta.fecha,
+                        items: venta.items || (local && local.items) || [],
+                        total: venta.total,
+                        descuentoMonto: (local && local.descuentoMonto) || 0,
                     };
                     mostrarExito();
                     return;
@@ -184,6 +190,12 @@ function mostrarExito() {
 
     if (contenedorPago) contenedorPago.classList.add('hidden');
     if (contenedorExito) contenedorExito.classList.remove('hidden');
+
+    if (window.ElGorilaAnalytics && ordenCompra) {
+        const params = new URLSearchParams(window.location.search);
+        const txId = ordenCompra.numeroOrden || params.get('session_id') || '';
+        ElGorilaAnalytics.purchase(ordenCompra, txId);
+    }
 
     // Mostrar datos finales
     document.getElementById('confirmacion-email-final').textContent = ordenCompra.email || 'No especificado';

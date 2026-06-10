@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html class="dark" lang="es"><head>
+<html lang="es">
+<head>
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -7,165 +8,416 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
 <!-- End Google Tag Manager -->
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-NXF8093MDJ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-NXF8093MDJ');
-  gtag('config', 'AW-17961021514');
-</script>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<meta name="robots" content="noindex, nofollow"/>
+<script src="js/analytics.js" data-meta="1"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Listo — EL GORILA</title>
-<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
-<noscript><link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/></noscript>
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-<script>
-  tailwind.config = {
-    darkMode: 'class',
-    theme: {
-      extend: {
-        colors: {
-          primary: '#8B0000',
-          'background-dark': '#1a150e',
-          'text-dark': '#D4CFC3',
-          'accent-gold': '#D4AF37',
-          'rich-dark': '#2a1e12',
-        },
-        fontFamily: {
-          display: ['Lora', 'serif'],
-          body: ['Inter', 'sans-serif'],
-        },
-      },
-    },
-  };
-</script>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  body {
-    background-color: #1a150e;
-    font-family: Inter, sans-serif;
-    position: relative;
-    min-height: 100vh;
-  }
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.14;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23t)' opacity='0.35'/%3E%3C/svg%3E");
-    background-repeat: repeat;
-    background-size: 180px 180px;
-  }
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background: radial-gradient(ellipse 85% 70% at 50% 35%, rgba(42, 30, 18, 0.35) 0%, transparent 55%);
-  }
-  .gracias-shell {
-    position: relative;
-    z-index: 1;
-  }
+/* ── TOKENS (sistema v3) ─────────────────────────────────── */
+:root {
+  --p-bg:    #f1ead9;
+  --p-ink:   #1a1411;
+  --p-soft:  #3a2e26;
+  --p-rule:  #a89578;
+  --d-bg:    #0a0706;
+  --d-bg2:   #120d0b;
+  --d-fg:    #f1ead9;
+  --d-soft:  rgba(241,234,217,.72);
+  --d-faint: rgba(241,234,217,.1);
+  --red:     #D43A1A;
+  --red-dim: rgba(212,58,26,.6);
+  --gold:    #d99b3a;
+  --gold-dim:rgba(217,155,58,.6);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--d-bg); scroll-behavior: smooth; }
+body {
+  background: var(--d-bg);
+  color: var(--d-fg);
+  font-family: "EB Garamond", Georgia, serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+img { display: block; max-width: 100%; }
+a   { color: inherit; }
+
+/* ── PÁGINA ──────────────────────────────────────────────── */
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+/* ── HEADER ──────────────────────────────────────────────── */
+.site-header {
+  padding: 36px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.site-logo {
+  height: 44px;
+  width: auto;
+  opacity: .9;
+  object-fit: contain;
+}
+.header-rule {
+  width: 100%;
+  height: 0.5px;
+  background: var(--gold-dim);
+}
+
+/* ── INTRO — confirmación ────────────────────────────────── */
+.confirm-intro {
+  padding: 32px 28px 36px;
+  text-align: center;
+}
+.confirm-title {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 500;
+  font-size: clamp(28px, 7vw, 38px);
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  color: var(--d-fg);
+  margin-bottom: 12px;
+}
+.confirm-sub {
+  font-family: "EB Garamond", serif;
+  font-size: 19px;
+  color: var(--d-soft);
+}
+
+/* ── SECCIONES ───────────────────────────────────────────── */
+.sd {
+  padding: 36px 28px;
+  background: var(--d-bg);
+  border-top: 0.5px solid var(--d-faint);
+}
+.sd--mid {
+  padding: 36px 28px;
+  background: var(--d-bg2);
+  border-top: 0.5px solid var(--d-faint);
+}
+.sp {
+  padding: 36px 28px;
+  background: var(--p-bg);
+  color: var(--p-ink);
+  border-top: none;
+}
+.sp + .sd  { border-top: none; }
+.sp + .sd--mid { border-top: none; }
+.sd + .sp  { border-top: none; }
+.sd--mid + .sp { border-top: none; }
+
+/* ── CABECERA DE SECCIÓN — OSCURO ────────────────────────── */
+.sd .sec-head,
+.sd--mid .sec-head { margin-bottom: 18px; }
+.sd .sec-num,
+.sd--mid .sec-num {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: block;
+  margin-bottom: 5px;
+}
+.sd .sec-title,
+.sd--mid .sec-title {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 500;
+  font-size: 34px;
+  line-height: .95;
+  letter-spacing: -.02em;
+  color: var(--d-fg);
+}
+.sd .sec-title em,
+.sd--mid .sec-title em { font-style: italic; color: var(--gold); }
+.sd .rule,
+.sd--mid .rule { height: 1px; background: var(--d-faint); margin: 0 0 22px; }
+
+/* ── CABECERA DE SECCIÓN — PAPEL ─────────────────────────── */
+.sp .sec-head { margin-bottom: 18px; }
+.sp .sec-num {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--red);
+  display: block;
+  margin-bottom: 5px;
+}
+.sp .sec-title {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 500;
+  font-size: 34px;
+  line-height: .95;
+  letter-spacing: -.02em;
+  color: var(--p-ink);
+}
+.sp .sec-title em { font-style: italic; color: var(--red); }
+.sp .rule { height: 1px; background: var(--p-rule); margin: 0 0 22px; }
+
+/* ── HORARIOS — tabla tipo ficha ─────────────────────────── */
+.horario-tabla { border-top: 2px solid rgba(241,234,217,.45); }
+.horario-fila {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: baseline;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--d-faint);
+}
+.horario-fila:last-child { border-bottom: none; }
+.horario-k {
+  font-family: "EB Garamond", serif;
+  font-size: 18px;
+  color: var(--d-soft);
+}
+.horario-v {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--d-fg);
+  white-space: nowrap;
+}
+.horario-v--gold { color: var(--gold); }
+.horario-loc {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9.5px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-top: 18px;
+  text-align: center;
+}
+
+/* ── RECOMENDACIONES — lista en papel ────────────────────── */
+.rec-lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.rec-lista li {
+  display: flex;
+  gap: 14px;
+  font-family: "EB Garamond", serif;
+  font-size: 18px;
+  line-height: 1.68;
+  color: var(--p-soft);
+}
+.rec-lista li::before {
+  content: "—";
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--red);
+  flex-shrink: 0;
+  padding-top: 5px;
+}
+.rec-lista strong {
+  font-weight: 600;
+  color: var(--p-ink);
+}
+
+/* ── BOTONES ─────────────────────────────────────────────── */
+.cta-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cta-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 24px;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 20px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: .01em;
+  transition: opacity .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cta-btn:active { opacity: .8; }
+.cta-primary {
+  background: var(--red);
+  color: #fff;
+  border: none;
+}
+.cta-primary .arrow { color: var(--gold); }
+
+/* WhatsApp (generado por JS — estilos sin Tailwind) */
+#gracias-wa-btn a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 24px;
+  border: 1px solid rgba(74,222,128,.3);
+  background: rgba(20,83,45,.2);
+  color: #4ade80;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background .15s;
+}
+#gracias-wa-btn a:hover { background: rgba(20,83,45,.35); }
+#gracias-wa-btn a svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+.site-footer {
+  padding: 24px 28px 36px;
+  text-align: center;
+  border-top: 0.5px solid var(--d-faint);
+  margin-top: auto;
+}
+.site-footer a {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: rgba(241,234,217,.3);
+  text-decoration: none;
+  transition: color .2s;
+}
+.site-footer a:hover { color: rgba(241,234,217,.55); }
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .site-header  { padding: 28px 20px 22px; }
+  .confirm-intro { padding: 24px 20px 28px; }
+  .sd, .sd--mid, .sp { padding: 28px 20px; }
+  .confirm-title { font-size: clamp(24px, 7vw, 32px); }
+  .site-footer  { padding: 20px 20px 28px; }
+}
 </style>
 </head>
-<body class="bg-background-dark text-text-dark font-body antialiased">
+<body>
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P4BDXRN9"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-<div class="gracias-shell min-h-screen flex flex-col">
-  <header class="shrink-0 pt-10 sm:pt-12 pb-2 px-4 sm:px-6 text-center">
-    <div class="mx-auto max-w-lg">
-      <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="" class="mx-auto h-11 sm:h-14 md:h-16 w-auto max-w-full object-contain opacity-[0.92] select-none pointer-events-none" decoding="async" fetchpriority="high"/>
-    </div>
-    <div class="mx-auto mt-8 max-w-xs border-t border-accent-gold/20" aria-hidden="true"></div>
+<div class="page">
+
+  <!-- ══ HEADER ══════════════════════════════════════════════ -->
+  <header class="site-header">
+    <img class="site-logo"
+         src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png"
+         alt="El Gorila — de Franz Kafka"
+         fetchpriority="high" decoding="async">
+    <div class="header-rule"></div>
   </header>
 
-  <main class="flex flex-1 flex-col items-center justify-center px-4 sm:px-6 py-10 sm:py-12">
-    <div class="w-full max-w-xl rounded-xl border border-accent-gold/15 bg-rich-dark/55 px-5 py-8 text-left shadow-[0_25px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:px-9 sm:py-10">
-      <div class="text-center">
-        <h1 class="font-display text-2xl leading-snug tracking-wide text-white sm:text-3xl">
-          ¡Listo! Nos vemos en el teatro.
-        </h1>
-        <p class="mt-4 font-body text-base text-text-dark sm:text-lg">Revisa tu correo — ahí están tus boletos.</p>
-      </div>
+  <!-- ══ INTRO ═══════════════════════════════════════════════ -->
+  <div class="confirm-intro">
+    <h1 class="confirm-title">¡Listo! Nos vemos en el teatro.</h1>
+    <p class="confirm-sub">Revisa tu correo — ahí están tus boletos.</p>
+  </div>
 
-      <div class="mt-8 border-t border-accent-gold/15 pt-8">
-        <h2 class="font-display text-center text-lg text-accent-gold/95 sm:text-xl">Horarios de acceso</h2>
-        <dl class="mt-5 space-y-0 font-body text-sm sm:text-base">
-          <div class="flex items-baseline justify-between gap-4 border-b border-accent-gold/10 py-3">
-            <dt class="text-left text-text-dark/85">Acceso al área de espera</dt>
-            <dd class="shrink-0 font-semibold tabular-nums text-white">16:00 hrs</dd>
-          </div>
-          <div class="flex items-baseline justify-between gap-4 border-b border-accent-gold/10 py-3">
-            <dt class="text-left text-text-dark/85">Asignación de lugares</dt>
-            <dd class="shrink-0 font-semibold tabular-nums text-white">17:15 hrs</dd>
-          </div>
-          <div class="flex items-baseline justify-between gap-4 py-3">
-            <dt class="text-left text-text-dark/85">Primera llamada</dt>
-            <dd class="shrink-0 font-semibold tabular-nums text-accent-gold">17:30 hrs</dd>
-          </div>
-        </dl>
-        <p class="mt-4 text-center text-sm text-text-dark/75 sm:text-base">Nueva Carpa Geodésica · Insurgentes Sur 2135</p>
-      </div>
-
-      <div class="mt-8 border-t border-accent-gold/15 pt-8">
-        <h2 class="font-display text-center text-lg text-accent-gold/95 sm:text-xl">Recomendaciones</h2>
-        <ul class="mt-5 list-none space-y-4 pl-0 text-sm leading-relaxed text-text-dark/95 sm:text-base">
-          <li class="flex gap-3"><span class="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent-gold/70" aria-hidden="true"></span><span>El recinto cuenta con servicio de valet parking. Recomendamos salir con anticipación para llegar con tranquilidad.</span></li>
-          <li class="flex gap-3"><span class="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent-gold/70" aria-hidden="true"></span><span>Para el ingreso, presente identificación oficial, su boleto (digital o impreso) y, en su caso, la confirmación de compra.</span></li>
-          <li class="flex gap-3"><span class="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-accent-gold/70" aria-hidden="true"></span><span>Si adquirió boletos con tarifa de <strong class="font-medium text-white/95">estudiante</strong>, <strong class="font-medium text-white/95">INAPAM</strong> o <strong class="font-medium text-white/95">maestro</strong>, deberá exhibir en el acceso la credencial vigente que acredite el beneficio.</span></li>
-        </ul>
-      </div>
-
-      <div class="mt-8 border-t border-accent-gold/15 pt-8 space-y-3">
-        <div id="gracias-wa-btn"></div>
-        <a class="flex w-full items-center justify-center gap-2 rounded-xl border border-accent-gold/50 bg-primary px-6 py-4 font-display text-lg font-bold tracking-wide text-white shadow-[0_8px_24px_rgba(139,0,0,0.35)] transition-all duration-300 hover:border-accent-gold hover:opacity-95 sm:text-xl" href="programa/v3.html" target="_blank" rel="noopener noreferrer">
-          <span>Ver programa de mano</span>
-          <span aria-hidden="true" class="text-accent-gold">→</span>
-        </a>
-      </div>
-      <script>
-        (function() {
-          var orden = null;
-          try { orden = JSON.parse(localStorage.getItem('orden_compra') || 'null'); } catch {}
-          var fecha   = (orden && orden.fecha)        || 'próxima función';
-          var total   = (orden && orden.total != null) ? '$' + Number(orden.total).toFixed(2) + ' MXN' : '';
-          var norden  = (orden && orden.numeroOrden)   ? '\nOrden: ' + orden.numeroOrden : '';
-          var msg = encodeURIComponent(
-            '*EL GORILA — Boleto confirmado* 🎭\n' +
-            'Función: ' + fecha + '\n' +
-            (total ? 'Total: ' + total + '\n' : '') +
-            norden + '\n\n' +
-            '📍 Centro Cultural Coyoacanense, Coyoacán'
-          );
-          var btn = document.getElementById('gracias-wa-btn');
-          if (btn) btn.innerHTML =
-            '<a href="https://wa.me/?text=' + msg + '" target="_blank" rel="noopener noreferrer" ' +
-            'class="flex items-center justify-center gap-2 w-full rounded-xl border border-green-600/50 bg-green-900/30 hover:bg-green-800/40 text-green-400 font-semibold py-3 transition-colors text-sm">' +
-            '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.109.549 4.09 1.508 5.814L0 24l6.335-1.496A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.882 9.882 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374A9.858 9.858 0 012.106 12c0-5.455 4.44-9.894 9.894-9.894 5.455 0 9.894 4.439 9.894 9.894 0 5.455-4.439 9.894-9.894 9.894z"/></svg>' +
-            'Guardar en WhatsApp</a>';
-        })();
-      </script>
+  <!-- ══ HORARIOS — oscuro (sd--mid) ═════════════════════════ -->
+  <section class="sd--mid">
+    <div class="sec-head">
+      <span class="sec-num">Acceso</span>
+      <h2 class="sec-title">Horarios de <em>acceso</em></h2>
     </div>
-  </main>
+    <div class="rule"></div>
+    <div class="horario-tabla">
+      <div class="horario-fila">
+        <span class="horario-k">Acceso al área de espera</span>
+        <span class="horario-v">16:00 hrs</span>
+      </div>
+      <div class="horario-fila">
+        <span class="horario-k">Asignación de lugares</span>
+        <span class="horario-v">17:15 hrs</span>
+      </div>
+      <div class="horario-fila">
+        <span class="horario-k">Primera llamada</span>
+        <span class="horario-v horario-v--gold">17:30 hrs</span>
+      </div>
+    </div>
+    <p class="horario-loc">Nueva Carpa Geodésica · Insurgentes Sur 2135</p>
+  </section>
 
-  <footer class="shrink-0 px-4 pb-8 pt-2 text-center">
-    <a class="font-body text-[10px] tracking-[0.2em] text-text-dark/35 transition-colors hover:text-text-dark/55 sm:text-xs sm:tracking-[0.25em]" href="index.html" aria-label="EL GORILA — página principal del teatro">elgorilateatro.com.mx</a>
+  <!-- ══ RECOMENDACIONES — papel (sp) ════════════════════════ -->
+  <section class="sp">
+    <div class="sec-head">
+      <span class="sec-num">Info</span>
+      <h2 class="sec-title"><em>Recomendaciones</em></h2>
+    </div>
+    <div class="rule"></div>
+    <ul class="rec-lista">
+      <li>El recinto cuenta con servicio de valet parking. Recomendamos salir con anticipación para llegar con tranquilidad.</li>
+      <li>Para el ingreso, presente identificación oficial, su boleto (digital o impreso) y, en su caso, la confirmación de compra.</li>
+      <li>Si adquirió boletos con tarifa de <strong>estudiante</strong>, <strong>INAPAM</strong> o <strong>maestro</strong>, deberá exhibir en el acceso la credencial vigente que acredite el beneficio.</li>
+    </ul>
+  </section>
+
+  <!-- ══ ACCIONES — oscuro (sd) ══════════════════════════════ -->
+  <section class="sd">
+    <div class="cta-stack">
+      <div id="gracias-wa-btn"></div>
+      <a class="cta-btn cta-primary"
+         href="programa/v3.html"
+         target="_blank"
+         rel="noopener noreferrer">
+        Ver programa de mano
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+    <script>
+      (function() {
+        var orden = null;
+        try { orden = JSON.parse(localStorage.getItem('orden_compra') || 'null'); } catch {}
+        var fecha   = (orden && orden.fecha)        || 'próxima función';
+        var total   = (orden && orden.total != null) ? '$' + Number(orden.total).toFixed(2) + ' MXN' : '';
+        var norden  = (orden && orden.numeroOrden)   ? '\nOrden: ' + orden.numeroOrden : '';
+        var msg = encodeURIComponent(
+          '*EL GORILA — Boleto confirmado* 🎭\n' +
+          'Función: ' + fecha + '\n' +
+          (total ? 'Total: ' + total + '\n' : '') +
+          norden + '\n\n' +
+          '📍 Centro Cultural Coyoacanense, Coyoacán'
+        );
+        var btn = document.getElementById('gracias-wa-btn');
+        if (btn) btn.innerHTML =
+          '<a href="https://wa.me/?text=' + msg + '" target="_blank" rel="noopener noreferrer">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.109.549 4.09 1.508 5.814L0 24l6.335-1.496A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.882 9.882 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374A9.858 9.858 0 012.106 12c0-5.455 4.44-9.894 9.894-9.894 5.455 0 9.894 4.439 9.894 9.894 0 5.455-4.439 9.894-9.894 9.894z"/></svg>' +
+          'Guardar en WhatsApp</a>';
+      })();
+    </script>
+  </section>
+
+  <!-- ══ FOOTER ═══════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <a href="index.html" aria-label="EL GORILA — página principal">elgorilateatro.com.mx</a>
   </footer>
-</div>
 
+</div>
+<script>
+(function () {
+  if (!window.ElGorilaAnalytics) return;
+  var orden = null;
+  try { orden = JSON.parse(localStorage.getItem('orden_compra') || 'null'); } catch (_) {}
+  if (orden) ElGorilaAnalytics.purchase(orden, orden.numeroOrden || '');
+})();
+</script>
 </body>
 </html>
