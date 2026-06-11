@@ -100,9 +100,18 @@ function seleccionarFecha(clave, texto, funcion = null) {
     fechaSeleccionada = clave;
     nombreFecha       = texto;
 
-    if (funcion && funcion.fecha) {
+    if (funcion && funcion.fecha_iso) {
+        fechaIsoActual = funcion.fecha_iso;
+        refrescarDisponibilidadWorker();
+    } else if (funcion && funcion.fecha) {
         const d = funcion.fecha instanceof Date ? funcion.fecha : new Date(funcion.fecha);
-        fechaIsoActual = d.toISOString().split('T')[0];
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        fechaIsoActual = `${y}-${m}-${day}`;
+        refrescarDisponibilidadWorker();
+    } else if (clave && /^\d{4}-\d{2}-\d{2}$/.test(clave)) {
+        fechaIsoActual = clave;
         refrescarDisponibilidadWorker();
     }
 
@@ -359,6 +368,10 @@ function irAConfirmacion() {
         alert('Por favor selecciona una fecha para continuar');
         return false;
     }
+    if (!fechaIsoActual || !/^\d{4}-\d{2}-\d{2}$/.test(fechaIsoActual)) {
+        alert('No se detectó la fecha de la función. Vuelve a tocar el día en el calendario.');
+        return false;
+    }
 
     const items = TIPOS_BOLETO
         .filter(t => cantidades[t.tipo] > 0)
@@ -523,8 +536,7 @@ function cargarFechas() {
         const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
 
         if (esAgotada) {
-            const dFuncion  = funcion.fecha instanceof Date ? funcion.fecha : new Date(funcion.fecha);
-            const fechaIsoF = dFuncion.toISOString().split('T')[0];
+            const fechaIsoF = funcion.fecha_iso || funcion.clave;
             html += `
             <div data-fecha-item data-fecha-mes="${claveStr.slice(0, 7)}">
                 <button type="button" disabled data-fecha-clave="${claveStr}" data-fecha-mes="${claveStr.slice(0, 7)}"

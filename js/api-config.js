@@ -14,11 +14,26 @@
   window.API_BASE = window.API_BASE || API_BASE;
   window.API_DISPONIBLE = !!window.API_BASE;
 
-  if (!window.TEATRO_ID) window.TEATRO_ID = 'wilberto';
+  const ALIASES = { gorila: 'wilberto', elgorila: 'wilberto' };
+
+  if (!window.teatroIdActivo) {
+    window.teatroIdActivo = function teatroIdActivo() {
+      try {
+        const t = new URLSearchParams(window.location.search).get('teatro');
+        if (t) {
+          const norm = t.toLowerCase().trim();
+          if (ALIASES[norm]) return ALIASES[norm];
+          if (['wilberto', 'ccc'].includes(norm)) return norm;
+        }
+      } catch (_) {}
+      return window.TEATRO_ID || 'wilberto';
+    };
+  }
+  if (!window.TEATRO_ID) window.TEATRO_ID = window.teatroIdActivo();
 
   if (!window.teatroApi) {
     window.teatroApi = function teatroApi(subpath) {
-      const tid = window.TEATRO_ID || 'wilberto';
+      const tid = window.teatroIdActivo();
       const path = subpath.startsWith('/') ? subpath.slice(1) : subpath;
       return `${window.API_BASE}/api/${tid}/${path}`;
     };
@@ -26,7 +41,7 @@
 
   if (!window.teatroAdminApi) {
     window.teatroAdminApi = function teatroAdminApi(subpath) {
-      const tid = window.TEATRO_ID || 'wilberto';
+      const tid = window.teatroIdActivo();
       const path = subpath.startsWith('/') ? subpath.slice(1) : subpath;
       return `${window.API_BASE}/api/admin/${tid}/${path}`;
     };
@@ -34,11 +49,7 @@
 
   if (!window.teatroIdFromUrl) {
     window.teatroIdFromUrl = function teatroIdFromUrl() {
-      try {
-        const t = new URLSearchParams(window.location.search).get('teatro');
-        if (t && ['gorila', 'wilberto', 'ccc'].includes(t)) return t;
-      } catch (_) {}
-      return window.TEATRO_ID || 'wilberto';
+      return window.teatroIdActivo();
     };
   }
 })();

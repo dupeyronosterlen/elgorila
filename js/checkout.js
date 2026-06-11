@@ -107,6 +107,11 @@ async function procesarPago() {
         const btn = document.getElementById('btn-pagar');
         if (btn) { btn.disabled = true; btn.querySelector('span:last-child').textContent = 'Procesando...'; }
         try {
+            if (!ordenCompra.fechaIso || !/^\d{4}-\d{2}-\d{2}$/.test(ordenCompra.fechaIso)) {
+                alert('Falta la fecha de la función. Regresa a boletos y elige el día otra vez.');
+                window.location.href = 'boletos.html';
+                return;
+            }
             const res = await fetch(window.teatroApi('checkout'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

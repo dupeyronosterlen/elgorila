@@ -282,7 +282,7 @@ async function notificarPrimeroListaEspera(tid, fecha, funcionNombre, env) {
 // ─── KV PREFIX HELPER ────────────────────────────────────────────────────────
 
 /** Alias de URL → ID canónico en KV (un solo inventario por recinto/temporada). */
-const TEATRO_ALIASES = { gorila: 'wilberto' };
+const TEATRO_ALIASES = { gorila: 'wilberto', elgorila: 'wilberto' };
 
 function resolveTid(tid) {
   return TEATRO_ALIASES[tid] || tid;
@@ -292,7 +292,7 @@ function kv(tid, key) { return `${resolveTid(tid)}:${key}`; }
 
 // ─── VENUES VÁLIDOS ───────────────────────────────────────────────────────────
 
-const VALID_TEATROS = new Set(['gorila', 'wilberto', 'ccc']);
+const VALID_TEATROS = new Set(['gorila', 'elgorila', 'wilberto', 'ccc']);
 
 // ─── VENUE CONFIG ────────────────────────────────────────────────────────────
 

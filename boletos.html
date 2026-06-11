@@ -1304,6 +1304,13 @@ async function procesarPagoInline() {
   }
   const orden = JSON.parse(ordenRaw);
 
+  if (!orden.fechaIso || !/^\d{4}-\d{2}-\d{2}$/.test(orden.fechaIso)) {
+    mostrarError('Vuelve a elegir la fecha de la función y los boletos.');
+    localStorage.removeItem('orden_compra');
+    if (typeof editarPedido === 'function') editarPedido();
+    return;
+  }
+
   if (window.ElGorilaAnalytics) ElGorilaAnalytics.addPaymentInfo(orden);
 
   orden.email = email;

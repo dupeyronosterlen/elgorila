@@ -1,0 +1,21 @@
+# Páginas operativas / funnel — no indexar (refuerzo además de meta robots)
+/boletos.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+/checkout.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+/confirmacion.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+/gracias.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+/admin.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+/boletera.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+/verificar.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+/taquilla.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+/acomodadores.html
+  X-Robots-Tag: noindex, nofollow, noarchive
+/acta.html
+  X-Robots-Tag: noindex, nofollow, noarchive
