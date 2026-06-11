@@ -2533,10 +2533,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 <!-- Barra fija de compra -->
 <div class="barra-compra-fija">
-  <a class="link-venta-boletos" href="boletos.html" aria-label="Comprar boletos para El Gorila — temporada julio–septiembre 2026">
-    <span class="barra-compra-titulo">Adquiere tus boletos</span>
+  <a class="link-venta-boletos" href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" data-fuera-temporada="1" aria-label="Próximamente — síguenos en Instagram para avisos de boletos">
+    <span class="barra-compra-titulo">Próximamente</span>
     <span class="barra-compra-meta" aria-hidden="true">
-      <span class="barra-compra-precio">Estreno 8 jul · Miércoles 20:30</span>
+      <span class="barra-compra-precio">@elgorilateatro</span>
     </span>
   </a>
 </div>
@@ -2633,6 +2633,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     window.addEventListener('resize', reaplicarFondosYaCargados);
   })();
   (function() {
+    /** false = «Próximamente» → Instagram. true = venta oficial en boletos.html */
+    var VENTA_PUBLICA_ABIERTA = false;
     var URL_VENTA_DEFAULT = 'boletos.html';
     function getLocalConfig() {
       var c = {};
@@ -2688,7 +2690,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     function applyVenta() {
       var links = document.querySelectorAll('.link-venta-boletos');
-      var fueraTemporada = links.length && links[0].getAttribute('data-fuera-temporada') === '1';
+      var fueraTemporada = !VENTA_PUBLICA_ABIERTA
+        || (links.length && links[0].getAttribute('data-fuera-temporada') === '1');
       if (fueraTemporada) {
         var urlIg = 'https://www.instagram.com/elgorilateatro';
         try {
@@ -2699,13 +2702,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           a.href = urlIg;
           a.setAttribute('target', '_blank');
           a.setAttribute('rel', 'noopener noreferrer');
+          a.setAttribute('aria-label', 'Próximamente — síguenos en Instagram para avisos de boletos');
+          var tit = a.querySelector('.barra-compra-titulo');
+          if (tit) tit.textContent = 'Próximamente';
+          var precio = a.querySelector('.barra-compra-precio');
+          if (precio) precio.textContent = '@elgorilateatro';
         });
         return;
       }
-      /* Forzar URL oficial para evitar redirecciones externas por configuración dinámica. */
+      /* Venta abierta: boletos.html (ignora url_venta dinámica para evitar enlaces externos). */
       var urlVenta = URL_VENTA_DEFAULT;
       if (urlVenta) links.forEach(function(a) {
         a.href = urlVenta;
+        a.setAttribute('aria-label', 'Comprar boletos para El Gorila — temporada julio–septiembre 2026');
+        a.removeAttribute('data-fuera-temporada');
+        var tit = a.querySelector('.barra-compra-titulo');
+        if (tit) tit.textContent = 'Adquiere tus boletos';
+        var precio = a.querySelector('.barra-compra-precio');
+        if (precio) precio.textContent = 'Estreno 8 jul · Miércoles 20:30';
         if (urlVenta.indexOf('http') === 0) {
           a.setAttribute('target', '_blank');
           a.setAttribute('rel', 'noopener');
