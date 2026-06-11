@@ -15,8 +15,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
 <title>Checkout — EL GORILA</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
-<link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
-<link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <!-- Tailwind — mantenido para clases dinámicas del JS -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
@@ -37,43 +38,23 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         };
     </script>
 <style>
-/* ── FUENTES ─────────────────────────────────────────────── */
-@font-face {
-  font-family: 'IM Fell English';
-  font-style: normal; font-weight: 400; font-display: swap;
-  src: url(fonts/im-fell-english-latin.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'Courier Prime';
-  font-style: normal; font-weight: 400; font-display: swap;
-  src: url(fonts/courier-prime-latin.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'Cormorant Garamond';
-  font-style: normal; font-weight: 300 600; font-display: swap;
-  src: url(fonts/cormorant-normal-latin.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'Cormorant Garamond';
-  font-style: italic; font-weight: 300 400; font-display: swap;
-  src: url(fonts/cormorant-italic-latin.woff2) format('woff2');
-}
-
-/* ── TOKENS v4 ───────────────────────────────────────────── */
+/* ── TOKENS v3 (programa de mano) ────────────────────────── */
 :root {
   --bg:         #0a0706;
   --bg2:        #120d0b;
   --ink:        #f1ead9;
-  --ink-dim:    rgba(241,234,217,0.65);
-  --ink-faint:  rgba(241,234,217,0.10);
+  --ink-dim:    rgba(241,234,217,.92);
+  --ink-muted:  rgba(241,234,217,.78);
+  --ink-faint:  rgba(241,234,217,.1);
+  --mono-min:   13px;
   --gold:       #d99b3a;
-  --gold-dim:   rgba(217,155,58,0.50);
-  --gold-faint: rgba(217,155,58,0.12);
+  --gold-dim:   rgba(217,155,58,.6);
+  --gold-faint: rgba(217,155,58,.12);
   --red:        #D43A1A;
   --green:      #4ade80;
-  --display:    'IM Fell English', Georgia, serif;
-  --cuerpo:     'Cormorant Garamond', serif;
-  --mono:       'Courier Prime', monospace;
+  --display:    "Cormorant Garamond", Georgia, serif;
+  --cuerpo:     "EB Garamond", Georgia, serif;
+  --mono:       "JetBrains Mono", ui-monospace, monospace;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { background: var(--bg); scroll-behavior: smooth; }
@@ -83,6 +64,8 @@ body {
   background-color: var(--bg) !important;
   color: var(--ink);
   font-family: var(--cuerpo);
+  font-size: 18px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   position: relative;
   min-height: 100vh;
@@ -121,11 +104,11 @@ body::before {
   padding: 80px 20px 40px;
 }
 .checkout-inner {
-  width: 100%; max-width: 440px; margin: 0 auto;
+  width: 100%; max-width: 540px; margin: 0 auto; padding: 0 28px;
 }
 .checkout-title {
-  font-family: var(--display); font-size: clamp(28px, 8vw, 40px);
-  color: var(--ink); line-height: .95; letter-spacing: -.02em;
+  font-family: var(--display); font-size: clamp(34px, 9vw, 42px);
+  font-weight: 500; color: var(--ink); line-height: .95; letter-spacing: -.02em;
   text-align: center; margin-bottom: 28px;
 }
 
@@ -137,16 +120,16 @@ body::before {
   margin-bottom: 12px;
 }
 .ck-card-label {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: .30em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 13px;
+  letter-spacing: .22em; text-transform: uppercase;
   color: var(--gold); display: block;
   padding-bottom: 10px;
   border-bottom: 0.5px solid var(--gold-faint);
   margin-bottom: 18px;
 }
 .ck-card-title {
-  font-family: var(--display); font-size: 22px;
-  color: var(--ink); margin-bottom: 16px;
+  font-family: var(--display); font-size: 28px; font-weight: 500;
+  color: var(--ink); margin-bottom: 16px; line-height: .98;
 }
 
 /* ── ERRORES ─────────────────────────────────────────────── */
@@ -158,9 +141,9 @@ body::before {
   display: flex; align-items: flex-start; gap: 14px;
 }
 .error-banner .material-symbols-outlined { color: var(--red); flex-shrink: 0; font-size: 24px; margin-top: 2px; }
-.error-banner p { font-family: var(--cuerpo); font-size: 17px; color: var(--ink-dim); line-height: 1.5; margin-bottom: 6px; }
+.error-banner p { font-family: var(--cuerpo); font-size: 18px; color: var(--ink-dim); line-height: 1.72; margin-bottom: 6px; }
 .error-banner-btn {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 13px; letter-spacing: .18em;
   text-transform: uppercase; color: var(--gold);
   background: none; border: none; cursor: pointer; padding: 0;
   text-decoration: underline; transition: color .15s;
@@ -183,12 +166,12 @@ body::before {
   font-family: var(--cuerpo); font-size: 18px; color: var(--ink-dim);
 }
 .resumen-val {
-  font-family: var(--cuerpo); font-size: 18px; font-weight: 500;
-  color: var(--ink); text-align: right; max-width: 65%;
+  font-family: var(--display); font-size: 20px; font-weight: 500;
+  color: var(--ink); text-align: right; max-width: 65%; line-height: 1.2;
 }
 .resumen-descuento {
   color: var(--green) !important;
-  font-size: 17px !important;
+  font-size: 18px !important;
 }
 .resumen-hr {
   border: none; border-top: 1px solid var(--ink-faint);
@@ -199,16 +182,17 @@ body::before {
   padding-top: 4px;
 }
 .resumen-total-label {
-  font-family: var(--display); font-size: 24px; color: var(--ink);
+  font-family: var(--display); font-size: 28px; font-weight: 500; color: var(--ink);
 }
 #checkout-total {
-  font-family: var(--display); font-size: 28px; color: var(--gold);
+  font-family: var(--display); font-size: 34px; font-weight: 500;
+  color: var(--gold); line-height: .88;
 }
 
 /* ── EMAIL INPUT ─────────────────────────────────────────── */
 .email-label {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: .18em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 13px;
+  letter-spacing: .22em; text-transform: uppercase;
   color: var(--gold-dim); display: block; margin-bottom: 8px;
 }
 #email-input {
@@ -217,15 +201,15 @@ body::before {
   background: rgba(0,0,0,0.4);
   border: 1px solid var(--ink-faint);
   color: var(--ink);
-  font-family: var(--cuerpo); font-size: 17px;
+  font-family: var(--cuerpo); font-size: 18px;
   outline: none; transition: border-color .15s;
   border-radius: 0 !important;
 }
 #email-input:focus { border-color: var(--gold-dim); }
-#email-input::placeholder { color: rgba(212,207,195,0.3); }
+#email-input::placeholder { color: rgba(212,207,195,0.48); }
 .email-hint {
-  font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--ink-faint);
+  font-family: var(--mono); font-size: 13px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-muted);
   margin-top: 7px;
 }
 
@@ -235,12 +219,12 @@ body::before {
 }
 .security-box .material-symbols-outlined { color: var(--gold-dim); flex-shrink: 0; font-size: 20px; margin-top: 3px; }
 .security-box-title {
-  font-family: var(--display); font-size: 18px;
-  color: var(--ink); margin-bottom: 6px;
+  font-family: var(--display); font-size: 22px; font-weight: 500;
+  color: var(--ink); margin-bottom: 6px; line-height: 1.1;
 }
 .security-box p {
-  font-family: var(--cuerpo); font-size: 16px;
-  line-height: 1.6; color: var(--ink-dim); margin-bottom: 4px;
+  font-family: var(--cuerpo); font-size: 18px;
+  line-height: 1.72; color: var(--ink-dim); margin-bottom: 4px;
 }
 
 /* ── BOTÓN PAGAR ─────────────────────────────────────────── */
@@ -261,10 +245,16 @@ body::before {
 #btn-pagar:disabled { opacity: 0.45 !important; cursor: not-allowed !important; }
 #btn-pagar .material-symbols-outlined { font-size: 22px !important; }
 .terms-note {
-  font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--ink-faint);
-  text-align: center; margin-top: 14px;
+  font-family: var(--cuerpo); font-size: 16px; letter-spacing: .01em;
+  color: var(--ink-muted);
+  text-align: center; margin-top: 14px; line-height: 1.55;
 }
+.terms-note a {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.terms-note a:hover { color: var(--ink); }
 
 /* ── FOOTER ──────────────────────────────────────────────── */
 .ck-footer {
@@ -275,26 +265,29 @@ body::before {
   text-align: center;
 }
 .ck-footer-brand {
-  font-family: var(--display); font-size: 18px; color: var(--gold);
+  font-family: var(--display); font-size: 22px; font-weight: 500;
+  color: var(--gold); letter-spacing: -.01em;
 }
 .ck-footer-copy {
-  font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
-  text-transform: uppercase; color: rgba(212,207,195,0.22);
+  font-family: var(--mono); font-size: 12px; letter-spacing: .12em;
+  text-transform: uppercase; color: rgba(241,234,217,.62);
   margin-top: 5px;
 }
 .ck-footer a {
   display: inline-block; margin-top: 8px;
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: .14em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 13px;
+  letter-spacing: .18em; text-transform: uppercase;
   color: var(--gold-dim); text-decoration: none;
   transition: color .15s;
 }
 .ck-footer a:hover { color: var(--gold); }
 
 @media (max-width: 480px) {
-  .checkout-main { padding: 68px 14px 32px; }
+  .checkout-main { padding: 68px 0 32px; }
+  .checkout-inner { padding: 0 20px; }
   .ck-card { padding: 20px 16px; }
-        }
+  .checkout-title { font-size: 34px; }
+}
     </style>
 </head>
 <body class="dark">
@@ -354,7 +347,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span class="resumen-val" id="checkout-subtotal">$0.00</span>
 </div>
       <div class="resumen-fila hidden" id="checkout-descuento-container">
-        <span class="resumen-key">Descuento <span id="checkout-codigo-info" style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);"></span></span>
+        <span class="resumen-key">Descuento <span id="checkout-codigo-info" style="font-family:var(--mono);font-size:13px;color:var(--ink-muted);"></span></span>
         <span class="resumen-val resumen-descuento" id="checkout-descuento">-$0.00</span>
 </div>
       <div class="resumen-fila">
@@ -383,7 +376,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div>
           <div class="security-box-title">Pago seguro</div>
           <p>La transacción se procesa de forma segura. Tus boletos serán enviados a tu correo electrónico al confirmar el pago.</p>
-          <p>Tus boletos serán enviados a tu correo electrónico al confirmar el pago.</p>
 </div>
 </div>
 </div>
@@ -393,7 +385,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span class="material-symbols-outlined">confirmation_number</span>
       Continuar al pago
 </button>
-    <p class="terms-note">Al continuar, aceptas nuestros Términos y Condiciones y Política de Privacidad.</p>
+    <p class="terms-note">Al continuar, aceptas los <a href="terminos.html" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a> y la <a href="terminos.html#privacidad" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.</p>
 
 </div>
 </main>

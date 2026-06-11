@@ -60,36 +60,37 @@ const AuthManager = {
 
     // ─── PERMISOS ─────────────────────────────────────────────────────────────
 
+    // admin = decisiones · gerente/taquilla = consulta operativa · validacion = solo QR en puerta
     PERMISOS: {
         admin: {
-            verInventario: true, verVentas: true, modificarInventario: true,
-            resetearInventario: true, limpiarReservas: true, limpiarVentas: true,
-            verificarBoletos: true, gestionarReclamos: true, gestionarUsuarios: true,
-            verAuditoria: true, exportarDatos: true,
+            verInventario: true, verVentas: true, verFiscal: true, fiscalReset: true,
+            venderEfectivo: true, verificarBoletos: true, verificarPorNombre: true,
+            reagendar: true, exportarDatos: true, verAuditoria: true,
+            gestionarEquipo: true, editarSitio: true, accesoAdmin: true,
         },
         gerente: {
-            verInventario: true, verVentas: true, modificarInventario: true,
-            resetearInventario: true, limpiarReservas: true, limpiarVentas: true,
-            verificarBoletos: true, gestionarReclamos: true, gestionarUsuarios: true,
-            verAuditoria: true, exportarDatos: true,
+            verInventario: true, verVentas: true, verFiscal: true, fiscalReset: false,
+            venderEfectivo: false, verificarBoletos: true, verificarPorNombre: false,
+            reagendar: false, exportarDatos: true, verAuditoria: true,
+            gestionarEquipo: false, editarSitio: false, accesoAdmin: true,
         },
         taquilla: {
-            verInventario: true, verVentas: true, modificarInventario: false,
-            resetearInventario: false, limpiarReservas: false, limpiarVentas: false,
-            verificarBoletos: false, gestionarReclamos: false, gestionarUsuarios: false,
-            verAuditoria: false, exportarDatos: true,
+            verInventario: true, verVentas: true, verFiscal: false, fiscalReset: false,
+            venderEfectivo: true, verificarBoletos: false, verificarPorNombre: false,
+            reagendar: false, exportarDatos: false, verAuditoria: false,
+            gestionarEquipo: false, editarSitio: false, accesoAdmin: false,
         },
         validacion: {
-            verInventario: false, verVentas: false, modificarInventario: false,
-            resetearInventario: false, limpiarReservas: false, limpiarVentas: false,
-            verificarBoletos: true, gestionarReclamos: false, gestionarUsuarios: false,
-            verAuditoria: false, exportarDatos: false,
+            verInventario: false, verVentas: false, verFiscal: false, fiscalReset: false,
+            venderEfectivo: false, verificarBoletos: true, verificarPorNombre: false,
+            reagendar: false, exportarDatos: false, verAuditoria: false,
+            gestionarEquipo: false, editarSitio: false, accesoAdmin: false,
         },
         reclamos: {
-            verInventario: false, verVentas: true, modificarInventario: false,
-            resetearInventario: false, limpiarReservas: false, limpiarVentas: false,
-            verificarBoletos: false, gestionarReclamos: true, gestionarUsuarios: false,
-            verAuditoria: false, exportarDatos: false,
+            verInventario: false, verVentas: true, verFiscal: false, fiscalReset: false,
+            venderEfectivo: false, verificarBoletos: false, verificarPorNombre: false,
+            reagendar: false, exportarDatos: false, verAuditoria: false,
+            gestionarEquipo: false, editarSitio: false, accesoAdmin: true,
         },
     },
 
@@ -107,7 +108,7 @@ const AuthManager = {
             const data = await res.json();
             if (!res.ok || !data.token) return { exito: false, error: data.error || 'Credenciales incorrectas.' };
             localStorage.setItem('elgorila_admin_token', data.token);
-            const sesion = { usuarioId: data.usuario, nombre: data.nombre || data.usuario, rol: 'admin', fechaLogin: new Date().toISOString() };
+            const sesion = { usuarioId: data.usuario, nombre: data.nombre || data.usuario, rol: data.rol || 'admin', fechaLogin: new Date().toISOString() };
             localStorage.setItem('elgorila_admin_sesion', JSON.stringify(sesion));
             return { exito: true, usuario: sesion };
         } catch (err) {
@@ -134,12 +135,26 @@ const AuthManager = {
         } catch { return null; }
     },
 
-    // Sesión activa: token admin en localStorage (30 días)
+    /** Sesión local sin JWT (cuando ADMIN_SIN_LOGIN + ADMIN_PUBLIC en el Worker). */
+    _sesionLocalAdmin() {
+        if (!(window.ADMIN_SIN_LOGIN)) return null;
+        return {
+            usuarioId:  'admin',
+            nombre:     'Administrador',
+            rol:        'admin',
+            fechaLogin: new Date().toISOString(),
+        };
+    },
+
+    // Sesión activa: token admin en localStorage (30 días) o modo sin login
     obtenerUsuarioActual() {
+        const local = this._sesionLocalAdmin();
+        if (local) return local;
+
         const adminToken = localStorage.getItem('elgorila_admin_token');
         if (!adminToken) return null;
         const p = this._decodeJWT(adminToken);
-        if (p) return { usuarioId: p.usuario, nombre: p.nombre || p.usuario, rol: p.rol, fechaLogin: p.iat ? new Date(p.iat * 1000).toISOString() : new Date().toISOString() };
+        if (p) return { usuarioId: p.usuario, nombre: p.nombre || p.usuario, rol: p.rol || 'admin', fechaLogin: p.iat ? new Date(p.iat * 1000).toISOString() : new Date().toISOString() };
         // Token expirado — limpiar
         localStorage.removeItem('elgorila_admin_token');
         localStorage.removeItem('elgorila_admin_sesion');
@@ -148,7 +163,7 @@ const AuthManager = {
 
     cerrarSesion() {
         const usuario = this.obtenerUsuarioActual();
-        if (usuario) {
+        if (usuario && !window.ADMIN_SIN_LOGIN) {
             this.registrarAuditoria({ accion: 'logout', usuario: usuario.nombre, rol: usuario.rol, detalles: 'Cierre de sesión' });
         }
         localStorage.removeItem('elgorila_admin_token');
@@ -163,9 +178,12 @@ const AuthManager = {
     },
 
     puedeHacerCambios() {
-        const usuario = this.obtenerUsuarioActual();
-        if (!usuario) return false;
-        return usuario.rol === this.ROLES.ADMIN || usuario.rol === this.ROLES.GERENTE;
+        return this.tienePermiso('editarSitio');
+    },
+
+    rolActual() {
+        const u = this.obtenerUsuarioActual();
+        return u ? u.rol : null;
     },
 
     // ─── GESTIÓN DE USUARIOS (panel admin, localStorage) ─────────────────────

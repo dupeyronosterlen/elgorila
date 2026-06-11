@@ -16,7 +16,7 @@ async function verificarBoleto() {
     if (btnV) { btnV.disabled = true; btnV.textContent = 'Verificando…'; }
 
     try {
-        const res  = await fetch(`${window.API_BASE}/api/venta/${encodeURIComponent(codigo)}`);
+        const res  = await fetch(window.teatroApi(`venta/${encodeURIComponent(codigo)}`));
         const data = await res.json();
 
         if (!res.ok) {
@@ -46,22 +46,26 @@ function mostrarValido(venta) {
 
     document.getElementById('resultado-codigo').textContent  = venta.codigo;
     document.getElementById('resultado-fecha').textContent   = venta.funcionNombre || venta.fecha || '—';
-    document.getElementById('resultado-orden').textContent   = venta.nombre || venta.email || '—';
-    document.getElementById('resultado-email').textContent   = venta.email || '—';
+    const filaComprador = document.getElementById('fila-comprador');
+    const filaEmail     = document.getElementById('fila-email');
+    const mostrarPii    = _puedeVerComprador() && (venta.nombre || venta.email);
+    if (filaComprador) {
+        filaComprador.classList.toggle('hidden', !mostrarPii);
+        document.getElementById('resultado-orden').textContent = venta.nombre || venta.email || '—';
+    }
+    if (filaEmail) {
+        filaEmail.classList.toggle('hidden', !(mostrarPii && venta.email));
+        document.getElementById('resultado-email').textContent = venta.email || '—';
+    }
 
     const estadoEl = document.getElementById('resultado-estado');
     estadoEl.textContent = 'VÁLIDO — No canjeado';
     estadoEl.className   = 'font-semibold text-green-400';
 
-    // Mostrar botón solo si hay sesión admin
     const btnU = document.getElementById('btn-marcar-usado');
     if (btnU) {
-        const tieneAdmin = !!obtenerTokenAdmin();
-        btnU.classList.toggle('hidden', !tieneAdmin);
+        btnU.classList.toggle('hidden', !_puedeCanjear());
         btnU.disabled = false;
-        btnU.className = tieneAdmin
-            ? 'w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all duration-300'
-            : 'hidden';
     }
 }
 
@@ -74,10 +78,12 @@ function mostrarYaCanjeado(venta, cuandoMX) {
 
     const info = document.getElementById('resultado-info-adicional');
     info.classList.remove('hidden');
+    const emailRow = (_puedeVerComprador() && venta.email)
+        ? `<div class="resultado-fila"><span>Email</span><span>${venta.email}</span></div>` : '';
     info.innerHTML = `
-        <div class="flex justify-between"><span>Función:</span><span>${venta.funcionNombre || venta.fecha || '—'}</span></div>
-        <div class="flex justify-between"><span>Email:</span><span>${venta.email || '—'}</span></div>
-        <div class="flex justify-between"><span>Folio:</span><span>${venta.codigo}</span></div>`;
+        <div class="resultado-fila"><span>Función</span><span>${venta.funcionNombre || venta.fecha || '—'}</span></div>
+        ${emailRow}
+        <div class="resultado-fila"><span>Folio</span><span>${venta.codigo}</span></div>`;
 }
 
 function mostrarInvalido(mensaje) {
@@ -101,7 +107,7 @@ async function marcarComoUsado() {
     if (btnU) { btnU.disabled = true; btnU.textContent = 'Canjeando…'; }
 
     try {
-        const res  = await fetch(`${window.API_BASE}/api/canjear/${encodeURIComponent(_codigoActual)}`, {
+        const res  = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(_codigoActual)}`), {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -109,7 +115,7 @@ async function marcarComoUsado() {
 
         if (!res.ok) {
             alert(data.error || 'Error al canjear');
-            if (btnU) { btnU.disabled = false; btnU.textContent = 'Marcar como Usado (Entrada)'; }
+            if (btnU) { btnU.disabled = false; }
             return;
         }
 
@@ -117,13 +123,13 @@ async function marcarComoUsado() {
         const estadoEl = document.getElementById('resultado-estado');
         estadoEl.textContent = '✓ CANJEADO';
         estadoEl.className   = 'font-semibold text-yellow-400';
-        if (btnU) { btnU.disabled = true; btnU.className = 'w-full px-6 py-3 bg-gray-700 text-gray-400 font-bold rounded-lg cursor-not-allowed'; btnU.textContent = 'Canjeado'; }
+        if (btnU) { btnU.disabled = true; btnU.classList.add('hidden'); }
 
         _ventaActual.usado   = true;
         _ventaActual.usadoEn = data.usadoEn;
     } catch {
         alert('Error de conexión');
-        if (btnU) { btnU.disabled = false; btnU.textContent = 'Marcar como Usado (Entrada)'; }
+        if (btnU) { btnU.disabled = false; }
     }
 }
 
@@ -138,14 +144,14 @@ let _scannerStream = null;
 
 function abrirScanner() {
     const modal = document.getElementById('modal-scanner');
-    if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
     iniciarCamara();
 }
 
 function cerrarScanner() {
     pararCamara();
     const modal = document.getElementById('modal-scanner');
-    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
 }
 
 async function iniciarCamara() {
@@ -195,6 +201,148 @@ function escanearFrame() {
     requestAnimationFrame(escanearFrame);
 }
 
+// ── Modo nombre / lote ─────────────────────────────────────────────────────────
+
+let _ventasNombre = [];
+const INGRESOS_KEY = 'elgorila_ingresos_puerta';
+
+function _sesion() {
+    return typeof AuthManager !== 'undefined' ? AuthManager.obtenerUsuarioActual() : null;
+}
+
+function _puedeCanjear() {
+    const u = _sesion();
+    return u && AuthManager.tienePermiso('verificarBoletos') && !!obtenerTokenAdmin();
+}
+
+function _puedeBuscarNombre() {
+    const u = _sesion();
+    return u && AuthManager.tienePermiso('verificarPorNombre');
+}
+
+function _puedeVerComprador() {
+    const u = _sesion();
+    return u && u.rol !== 'validacion' && AuthManager.tienePermiso('verVentas');
+}
+
+function _aplicarUIPermisos() {
+    const buscar = _puedeBuscarNombre();
+    document.getElementById('panel-nombre')?.classList.toggle('hidden', !buscar);
+    document.getElementById('panel-ingresados')?.classList.toggle('hidden', !buscar);
+}
+
+function _cargarIngresados() {
+    const ul = document.getElementById('lista-ingresados');
+    if (!ul) return;
+    let list = [];
+    try { list = JSON.parse(sessionStorage.getItem(INGRESOS_KEY) || '[]'); } catch { list = []; }
+    if (!list.length) {
+        ul.innerHTML = '<li style="color:var(--d-faint);font-family:var(--mono);font-size:11px;">Nadie aún</li>';
+        return;
+    }
+    ul.innerHTML = list.slice(0, 40).map(i =>
+        `<li style="padding:6px 0;border-bottom:1px solid var(--d-faint);">${i.nombre || '—'} · ${i.cantidad || 1} · <span style="font-family:var(--mono);font-size:11px;">${i.hora}</span></li>`
+    ).join('');
+}
+
+function _agregarIngreso(nombre, cantidad) {
+    let list = [];
+    try { list = JSON.parse(sessionStorage.getItem(INGRESOS_KEY) || '[]'); } catch { list = []; }
+    list.unshift({
+        nombre,
+        cantidad,
+        hora: new Date().toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit' }),
+    });
+    sessionStorage.setItem(INGRESOS_KEY, JSON.stringify(list.slice(0, 200)));
+    _cargarIngresados();
+}
+
+async function cargarFuncionesNombre() {
+    const sel = document.getElementById('nombre-funcion');
+    if (!sel || !window.API_BASE) return;
+    try {
+        const res = await fetch(window.teatroApi('funciones'));
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.funciones || []);
+        sel.innerHTML = list.map(f =>
+            `<option value="${f.fecha_iso}">${f.nombre}</option>`
+        ).join('');
+    } catch { sel.innerHTML = '<option value="">—</option>'; }
+}
+
+async function buscarPorNombre() {
+    const q = document.getElementById('nombre-buscar')?.value?.trim();
+    const fecha = document.getElementById('nombre-funcion')?.value;
+    const cont = document.getElementById('nombre-resultados');
+    const btnLote = document.getElementById('btn-canjear-seleccion');
+    if (!q || !fecha || !cont) return;
+    if (!_puedeBuscarNombre()) {
+        document.getElementById('nombre-sin-sesion')?.classList.remove('hidden');
+        return;
+    }
+    const token = obtenerTokenAdmin();
+    if (!token) {
+        document.getElementById('nombre-sin-sesion')?.classList.remove('hidden');
+        return;
+    }
+    cont.innerHTML = '<p style="color:var(--d-soft);font-size:14px;">Buscando…</p>';
+    try {
+        const url = window.teatroAdminApi(`ventas?fecha=${encodeURIComponent(fecha)}&q=${encodeURIComponent(q)}`);
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        _ventasNombre = (data.ventas || []).filter(v => !v.usado);
+        if (!_ventasNombre.length) {
+            cont.innerHTML = '<p style="color:var(--d-soft);">Sin boletos activos para ese nombre.</p>';
+            btnLote?.classList.add('hidden');
+            return;
+        }
+        const total = _ventasNombre.reduce((s, v) => s + (v.cantidad || 1), 0);
+        cont.innerHTML = `<p style="margin-bottom:10px;color:var(--gold);">${_ventasNombre[0].nombre || _ventasNombre[0].email} — <strong>${total}</strong> boleto(s)</p>` +
+            _ventasNombre.map((v, i) => `
+            <label style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--d-faint);cursor:pointer;">
+              <input type="checkbox" class="chk-nombre" data-idx="${i}" checked>
+              <span style="font-family:var(--mono);font-size:11px;">${v.codigo}</span>
+              <span>${v.cantidad || 1} · ${v.funcionNombre || v.fecha}</span>
+            </label>`).join('');
+        btnLote?.classList.remove('hidden');
+    } catch (e) {
+        cont.innerHTML = `<p style="color:#f87171;">${e.message}</p>`;
+    }
+}
+
+async function canjearSeleccionados() {
+    const token = obtenerTokenAdmin();
+    if (!token) return;
+    const checks = document.querySelectorAll('.chk-nombre:checked');
+    const codigos = [];
+    let nombre = '';
+    let cant = 0;
+    checks.forEach(ch => {
+        const v = _ventasNombre[parseInt(ch.dataset.idx, 10)];
+        if (v && !v.usado) {
+            codigos.push(v.codigo);
+            nombre = v.nombre || v.email || nombre;
+            cant += v.cantidad || 1;
+        }
+    });
+    if (!codigos.length) { alert('Selecciona al menos un boleto'); return; }
+    if (!confirm(`¿Marcar entrada de ${cant} boleto(s)?`)) return;
+    try {
+        const res = await fetch(window.teatroAdminApi('canjear-lote'), {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ codigos }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+        _agregarIngreso(nombre, cant);
+        document.getElementById('nombre-resultados').innerHTML = '<p style="color:#4ade80;">✓ Entrada registrada</p>';
+        document.getElementById('btn-canjear-seleccion')?.classList.add('hidden');
+        _ventasNombre = [];
+    } catch (e) { alert(e.message); }
+}
+
 // ── Inicialización ─────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -225,4 +373,15 @@ document.addEventListener('DOMContentLoaded', function() {
         input.value = codigoURL.toUpperCase();
         setTimeout(verificarBoleto, 300);
     }
+
+    _aplicarUIPermisos();
+    if (_puedeBuscarNombre()) {
+        cargarFuncionesNombre();
+        _cargarIngresados();
+    }
+    document.getElementById('btn-buscar-nombre')?.addEventListener('click', buscarPorNombre);
+    document.getElementById('btn-canjear-seleccion')?.addEventListener('click', canjearSeleccionados);
+    document.getElementById('nombre-buscar')?.addEventListener('keypress', e => {
+        if (e.key === 'Enter') buscarPorNombre();
+    });
 });

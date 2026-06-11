@@ -1,0 +1,56 @@
+# EL GORILA — Credenciales de producción
+# Guarda una copia como: CREDENCIALES-ELGORILA.txt (ese archivo NO va a git)
+# Última actualización: ___________
+# Quién la actualizó: ___________
+
+═══════════════════════════════════════════════════════════════
+1. ADMIN / BOLETERA (login en admin.html y boletera.html)
+   Cloudflare → elgorila-api → Settings → Variables and secrets
+═══════════════════════════════════════════════════════════════
+ADMIN_USER (cuenta principal):     _______________________
+ADMIN_PASS:                        _______________________
+
+ADMIN_USER_2 (opcional):           _______________________
+ADMIN_PASS_2 (opcional):           _______________________
+
+ADMIN_USER_UNIVERSAL (equipo):     gorila
+ADMIN_PASS_UNIVERSAL (equipo):     _______________________
+  → admin.html y boletera.html (cuenta compartida del equipo)
+
+═══════════════════════════════════════════════════════════════
+2. SISTEMA (generados por ti — NO compartir)
+═══════════════════════════════════════════════════════════════
+JWT_SECRET (sesión 30 días):       _______________________
+REPORTE_TOKEN (reporte ventas):    _______________________
+
+═══════════════════════════════════════════════════════════════
+3. STRIPE (copiar desde dashboard.stripe.com — NO inventar)
+   Developers → API keys / Webhooks
+═══════════════════════════════════════════════════════════════
+STRIPE_SECRET_KEY (sk_live_…):     _______________________
+STRIPE_WEBHOOK_SECRET (whsec_…):   _______________________
+Webhook URL en Stripe debe ser:
+  https://elgorila-api.dupeyronosterlen.workers.dev/api/webhook
+
+═══════════════════════════════════════════════════════════════
+4. EMAIL (copiar desde resend.com → API Keys)
+═══════════════════════════════════════════════════════════════
+RESEND_API_KEY (re_…):             _______________________
+Remitente configurado: boletos@elgorilateatro.com.mx
+
+═══════════════════════════════════════════════════════════════
+5. URLs de referencia (no son contraseñas)
+═══════════════════════════════════════════════════════════════
+Sitio web:     https://elgorilateatro.com.mx
+Worker API:    https://elgorila-api.dupeyronosterlen.workers.dev
+Cloudflare:    Workers & Pages → elgorila-api
+Admin:         https://elgorilateatro.com.mx/admin.html
+Boletera:      https://elgorilateatro.com.mx/boletera.html  (venta efectivo)
+Verificar:     https://elgorilateatro.com.mx/verificar.html (puerta / QR)
+
+═══════════════════════════════════════════════════════════════
+NOTAS
+═══════════════════════════════════════════════════════════════
+- Si cambias JWT_SECRET, todos deben volver a iniciar sesión en admin.
+- Si cambias STRIPE_WEBHOOK_SECRET, actualiza también en Stripe Webhooks.
+- Nunca subas este archivo a GitHub ni lo envíes por WhatsApp.

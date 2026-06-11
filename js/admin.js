@@ -55,8 +55,8 @@ function configurarPermisos(rol) {
     const accionesAdmin = document.getElementById('acciones-admin');
     const gestionUsuarios = document.getElementById('gestion-usuarios');
     const auditoria = document.getElementById('auditoria');
-    const linkTaquilla = document.getElementById('link-taquilla');
-    const linkAcomodadores = document.getElementById('link-acomodadores');
+    const linkBoletera = document.getElementById('link-boletera');
+    const linkVerificar = document.getElementById('link-verificar');
     
     // Mostrar/ocultar secciones según permisos
     if (AuthManager.tienePermiso('modificarInventario')) {
@@ -111,13 +111,11 @@ function configurarPermisos(rol) {
         auditoria.classList.add('hidden');
     }
     
-    // Mostrar enlaces según permisos
-    if (AuthManager.tienePermiso('verInventario')) {
-        if (linkTaquilla) linkTaquilla.classList.remove('hidden');
+    if (AuthManager.tienePermiso('verInventario') || AuthManager.tienePermiso('verVentas')) {
+        if (linkBoletera) linkBoletera.classList.remove('hidden');
     }
-    
     if (AuthManager.tienePermiso('verificarBoletos')) {
-        if (linkAcomodadores) linkAcomodadores.classList.remove('hidden');
+        if (linkVerificar) linkVerificar.classList.remove('hidden');
     }
     
     // Mostrar/ocultar secciones según permisos de visualización
@@ -166,7 +164,7 @@ function actualizarNavAdmin() {
 // Verificar si ya hay sesión activa
 function verificarSesion() {
     const usuario = AuthManager.obtenerUsuarioActual();
-    
+
     if (usuario) {
         mostrarPanel(usuario);
     }
@@ -824,7 +822,7 @@ function mostrarFormularioUsuario(usuarioId = null) {
         var selectRol = document.getElementById('modal-usuario-rol');
         var rolesPermitidos = ['admin', 'gerente', 'taquilla', 'validacion', 'reclamos'].filter(function(r) { return AuthManager.puedeCrearRol(r); });
         selectRol.innerHTML = '';
-        var labels = { admin: 'Administrador', gerente: 'Gerente', taquilla: 'Taquilla', validacion: 'Validación QR', reclamos: 'Reclamos' };
+        var labels = { admin: 'Administrador', gerente: 'Gerente', taquilla: 'Boletera', validacion: 'Puerta (verificar)', reclamos: 'Reclamos' };
         rolesPermitidos.forEach(function(r) {
             var opt = document.createElement('option');
             opt.value = r;

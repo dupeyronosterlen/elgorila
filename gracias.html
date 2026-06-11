@@ -84,15 +84,16 @@ a   { color: inherit; }
 .confirm-title {
   font-family: "Cormorant Garamond", serif;
   font-weight: 500;
-  font-size: clamp(28px, 7vw, 38px);
-  line-height: 1.05;
+  font-size: clamp(34px, 9vw, 42px);
+  line-height: .95;
   letter-spacing: -.02em;
   color: var(--d-fg);
   margin-bottom: 12px;
 }
 .confirm-sub {
   font-family: "EB Garamond", serif;
-  font-size: 19px;
+  font-size: 18px;
+  line-height: 1.72;
   color: var(--d-soft);
 }
 
@@ -135,7 +136,7 @@ a   { color: inherit; }
 .sd--mid .sec-title {
   font-family: "Cormorant Garamond", serif;
   font-weight: 500;
-  font-size: 34px;
+  font-size: 38px;
   line-height: .95;
   letter-spacing: -.02em;
   color: var(--d-fg);
@@ -159,7 +160,7 @@ a   { color: inherit; }
 .sp .sec-title {
   font-family: "Cormorant Garamond", serif;
   font-weight: 500;
-  font-size: 34px;
+  font-size: 38px;
   line-height: .95;
   letter-spacing: -.02em;
   color: var(--p-ink);
@@ -290,21 +291,22 @@ a   { color: inherit; }
 }
 .site-footer a {
   font-family: "JetBrains Mono", monospace;
-  font-size: 9px;
-  letter-spacing: .28em;
+  font-size: 10px;
+  letter-spacing: .18em;
   text-transform: uppercase;
   color: rgba(241,234,217,.3);
   text-decoration: none;
   transition: color .2s;
 }
-.site-footer a:hover { color: rgba(241,234,217,.55); }
+.site-footer a:hover { color: var(--gold-dim); }
 
 /* ── RESPONSIVE ──────────────────────────────────────────── */
 @media (max-width: 400px) {
   .site-header  { padding: 28px 20px 22px; }
   .confirm-intro { padding: 24px 20px 28px; }
   .sd, .sd--mid, .sp { padding: 28px 20px; }
-  .confirm-title { font-size: clamp(24px, 7vw, 32px); }
+  .confirm-title { font-size: 34px; }
+  .sd .sec-title, .sd--mid .sec-title, .sp .sec-title { font-size: 34px; }
   .site-footer  { padding: 20px 20px 28px; }
 }
 </style>
@@ -341,19 +343,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="rule"></div>
     <div class="horario-tabla">
       <div class="horario-fila">
-        <span class="horario-k">Acceso al área de espera</span>
-        <span class="horario-v">16:00 hrs</span>
+        <span class="horario-k">Sede</span>
+        <span class="horario-v horario-v--gold">Teatro Wilberto Cantón</span>
       </div>
       <div class="horario-fila">
-        <span class="horario-k">Asignación de lugares</span>
-        <span class="horario-v">17:15 hrs</span>
+        <span class="horario-k">Dirección</span>
+        <span class="horario-v">José María Velasco 59, San José Insurgentes, CDMX</span>
       </div>
       <div class="horario-fila">
-        <span class="horario-k">Primera llamada</span>
-        <span class="horario-v horario-v--gold">17:30 hrs</span>
+        <span class="horario-k">Ingreso recomendado</span>
+        <span class="horario-v">Al menos 30 min antes (20:00 hrs)</span>
+      </div>
+      <div class="horario-fila">
+        <span class="horario-k">Inicio de función</span>
+        <span class="horario-v horario-v--gold">20:30 hrs</span>
       </div>
     </div>
-    <p class="horario-loc">Nueva Carpa Geodésica · Insurgentes Sur 2135</p>
+    <p class="horario-loc" id="horario-loc-sede">El acceso puede cerrarse al iniciar la función. Los detalles de tu compra están en el boleto que recibiste por correo.</p>
   </section>
 
   <!-- ══ RECOMENDACIONES — papel (sp) ════════════════════════ -->
@@ -364,7 +370,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
     <div class="rule"></div>
     <ul class="rec-lista">
-      <li>El recinto cuenta con servicio de valet parking. Recomendamos salir con anticipación para llegar con tranquilidad.</li>
+      <li>El recinto cuenta con estacionamiento. Recomendamos salir con anticipación para llegar al menos 30 minutos antes.</li>
       <li>Para el ingreso, presente identificación oficial, su boleto (digital o impreso) y, en su caso, la confirmación de compra.</li>
       <li>Si adquirió boletos con tarifa de <strong>estudiante</strong>, <strong>INAPAM</strong> o <strong>maestro</strong>, deberá exhibir en el acceso la credencial vigente que acredite el beneficio.</li>
     </ul>
@@ -394,7 +400,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           'Función: ' + fecha + '\n' +
           (total ? 'Total: ' + total + '\n' : '') +
           norden + '\n\n' +
-          '📍 Centro Cultural Coyoacanense, Coyoacán'
+          '📍 Teatro Wilberto Cantón, San José Insurgentes, CDMX'
         );
         var btn = document.getElementById('gracias-wa-btn');
         if (btn) btn.innerHTML =

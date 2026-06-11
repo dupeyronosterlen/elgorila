@@ -7,9 +7,9 @@
 <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
 <title>Boletera — El Gorila</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
-<link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
-<link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
-<link rel="preload" as="font" type="font/woff2" href="fonts/cormorant-normal-latin.woff2" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -26,280 +26,32 @@
           'accent-red':     '#D43A1A',
         },
         fontFamily: {
-          display: ["'IM Fell English'", 'Georgia', 'serif'],
-          body:    ["'Cormorant Garamond'", 'serif'],
-          mono:    ["'Courier Prime'", 'monospace'],
+          display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+          body:    ['"EB Garamond"', 'Georgia', 'serif'],
+          mono:    ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
         },
       },
     },
   };
 </script>
+<link rel="stylesheet" href="css/operaciones.css">
 <style>
-@font-face {
-  font-family: 'IM Fell English';
-  font-style: normal; font-weight: 400; font-display: swap;
-  src: url(fonts/im-fell-english-latin.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'IM Fell English';
-  font-style: italic; font-weight: 400; font-display: optional;
-  src: url(fonts/im-fell-english-italic-latin.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'Courier Prime';
-  font-style: normal; font-weight: 400; font-display: swap;
-  src: url(fonts/courier-prime-latin.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'Cormorant Garamond';
-  font-style: normal; font-weight: 300 600; font-display: swap;
-  src: url(fonts/cormorant-normal-latin.woff2) format('woff2');
-}
-:root {
-  --d-bg:    #0a0706;
-  --d-bg2:   #120d0b;
-  --d-fg:    #f1ead9;
-  --d-soft:  rgba(241,234,217,.65);
-  --d-faint: rgba(241,234,217,.10);
-  --gold:    #d99b3a;
-  --gold-dim:rgba(217,155,58,.45);
-  --red:     #D43A1A;
-}
-*, *::before, *::after { box-sizing: border-box; }
-html { background: var(--d-bg); }
-body {
-  background: var(--d-bg) !important;
-  color: var(--d-fg);
-  font-family: 'Cormorant Garamond', serif;
-  -webkit-font-smoothing: antialiased;
-}
-h1, h2, h3, h4 { font-family: 'IM Fell English', Georgia, serif; }
-.rounded-lg, .rounded-xl, .rounded-md, .rounded { border-radius: 0 !important; }
-input, select, textarea {
-  background: rgba(10,7,6,0.7) !important;
-  border-color: var(--d-faint) !important;
-  color: var(--d-fg) !important;
-  font-family: 'Cormorant Garamond', serif !important;
-  font-size: 1.05rem !important;
-  border-radius: 0 !important;
-}
-input::placeholder, textarea::placeholder { color: rgba(241,234,217,.28) !important; }
-input:focus, select:focus { border-color: var(--gold) !important; outline: none !important; box-shadow: none !important; }
-button { font-family: 'Cormorant Garamond', serif; border-radius: 0 !important; }
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-}
-
-/* ── PANTALLA LOGIN ───────────────────────────────────────── */
-#login-screen {
-  min-height: 100vh;
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px;
-}
-.login-card {
-  width: 100%; max-width: 380px;
-  background: var(--d-bg2);
-  border: 1px solid rgba(217,155,58,.22);
-  padding: 36px 32px 32px;
-}
-.login-linea-roja {
-  width: 40px; height: 2px;
-  background: var(--red); margin: 0 auto 18px;
-}
-.login-titulo {
-  font-family: 'IM Fell English', Georgia, serif;
-  font-size: 40px; line-height: .88;
-  color: var(--d-fg); text-align: center;
-  margin-bottom: 6px;
-}
-.login-sub {
-  font-family: 'Courier Prime', monospace;
-  font-size: 9px; letter-spacing: .28em; text-transform: uppercase;
-  color: rgba(217,155,58,.5); text-align: center; margin-bottom: 28px;
-}
-.login-label {
-  display: block; font-family: 'Courier Prime', monospace;
-  font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
-  color: var(--d-soft); margin-bottom: 8px;
-}
-.login-input {
-  display: block; width: 100%;
-  padding: 11px 14px; margin-bottom: 14px;
-}
-.login-btn {
-  display: block; width: 100%; padding: 14px 24px;
-  background: var(--red); color: #fff;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 18px; font-weight: 600; text-align: center;
-  border: none; cursor: pointer; transition: opacity .15s;
-  margin-top: 6px;
-}
-.login-btn:hover { opacity: .88; }
-.login-error {
-  background: rgba(212,58,26,.1); border: 1px solid rgba(212,58,26,.3);
-  color: #f87171; padding: 10px 14px; margin-top: 12px;
-  font-family: 'Courier Prime', monospace; font-size: 12px;
-  letter-spacing: .06em; text-align: center;
-}
-
-/* ── PANEL BOLETERA ──────────────────────────────────────── */
 #panel-boletera { display: none; min-height: 100vh; }
-
-/* Header fijo */
-.bol-header {
-  position: sticky; top: 0; z-index: 40;
-  background: rgba(10,7,6,0.96);
-  border-bottom: 1px solid var(--d-faint);
-  padding: 12px 20px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.bol-header-titulo {
-  font-family: 'IM Fell English', Georgia, serif;
-  font-size: 22px; color: var(--gold); line-height: 1;
-}
-.bol-header-sub {
-  font-family: 'Courier Prime', monospace;
-  font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
-  color: var(--d-soft); display: block; margin-top: 3px;
-}
-.bol-header-actions { display: flex; gap: 8px; align-items: center; }
-.btn-accion {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 7px 14px;
-  background: rgba(217,155,58,.1); border: 1px solid var(--gold-dim);
-  color: var(--gold); font-family: 'Courier Prime', monospace;
-  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
-  cursor: pointer; transition: background .15s;
-  text-decoration: none;
-}
-.btn-accion:hover { background: rgba(217,155,58,.18); }
-.btn-salir {
-  background: rgba(212,58,26,.1); border-color: rgba(212,58,26,.3);
-  color: var(--red);
-}
-.btn-salir:hover { background: rgba(212,58,26,.18); }
-
-/* Main content */
-.bol-main { max-width: 800px; margin: 0 auto; padding: 28px 20px 60px; }
-
-/* Cards de sección */
-.bol-card {
-  background: var(--d-bg2);
-  border: 1px solid var(--d-faint);
-  padding: 24px; margin-bottom: 20px;
-}
-.bol-card-title {
-  font-family: 'IM Fell English', Georgia, serif;
-  font-size: 22px; color: var(--gold); margin-bottom: 6px;
-  line-height: 1;
-}
-.bol-card-rule {
-  height: 1px; background: var(--d-faint);
-  margin: 12px 0 18px;
-}
-.sec-label {
-  font-family: 'Courier Prime', monospace; font-size: 9px;
-  letter-spacing: .22em; text-transform: uppercase;
-  color: var(--gold-dim); display: block; margin-bottom: 14px;
-}
-
-/* Grid disponibilidad */
-#disponibilidad-fechas {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
-}
-.fecha-card {
-  background: rgba(10,7,6,0.6); border: 1px solid var(--d-faint);
-  padding: 14px;
-}
-.fecha-card-nombre {
-  font-family: 'Cormorant Garamond', serif; font-size: 17px;
-  font-weight: 600; color: var(--d-fg); margin-bottom: 6px;
-}
-.fecha-card-dato {
-  font-family: 'Courier Prime', monospace; font-size: 10px;
-  letter-spacing: .1em; color: var(--d-soft);
-}
-.fecha-card-disponible { color: #4ade80; }
-.fecha-card-agotada    { color: #f87171; }
-
-/* Formulario efectivo */
-.form-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
-  margin-bottom: 14px;
-}
-@media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
-.form-label {
-  display: block; font-family: 'Courier Prime', monospace;
-  font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
-  color: var(--d-soft); margin-bottom: 8px;
-}
-.form-input {
-  display: block; width: 100%; padding: 11px 14px;
-}
 .form-select {
   display: block; width: 100%; padding: 11px 14px;
-  background: rgba(10,7,6,0.7) !important;
-  border: 1px solid var(--d-faint) !important;
-  color: var(--d-fg) !important;
-  font-family: 'Cormorant Garamond', serif !important;
-  font-size: 1.05rem !important; border-radius: 0 !important;
   -webkit-appearance: none; appearance: none;
 }
 .form-select option { background: #0a0706; color: #f1ead9; }
-.btn-generar {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 14px 28px; margin-top: 4px;
-  background: var(--red); color: #fff;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 18px; font-weight: 600;
-  border: none; cursor: pointer; transition: opacity .15s;
-}
-.btn-generar:hover { opacity: .88; }
-.btn-generar:disabled { opacity: .4; cursor: not-allowed; }
-
-/* Código generado */
-#codigo-generado {
-  background: rgba(10,7,6,0.8); border: 2px solid var(--gold-dim);
-  padding: 24px; margin-top: 20px; text-align: center;
-}
 #qr-codigo-efectivo { margin-bottom: 16px; display: flex; justify-content: center; }
 #codigo-texto {
-  font-family: 'Courier Prime', monospace; font-size: 22px;
+  font-family: var(--mono); font-size: 22px;
   color: var(--d-fg); margin-bottom: 8px; letter-spacing: .1em;
 }
 #codigo-info {
-  font-family: 'Courier Prime', monospace; font-size: 11px;
+  font-family: var(--mono); font-size: 11px;
   letter-spacing: .1em; color: var(--d-soft); margin-bottom: 16px;
 }
-.btn-copiar {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 10px 20px;
-  background: rgba(217,155,58,.15); border: 1px solid var(--gold-dim);
-  color: var(--gold); font-family: 'Courier Prime', monospace;
-  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
-  cursor: pointer; transition: background .15s;
-}
-.btn-copiar:hover { background: rgba(217,155,58,.25); }
-
-/* Tabla de boletos hoy */
-.tabla-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-thead th {
-  font-family: 'Courier Prime', monospace; font-size: 10px;
-  letter-spacing: .16em; text-transform: uppercase;
-  color: var(--gold-dim); padding: 0 10px 10px 0;
-  border-bottom: 1px solid var(--d-faint); text-align: left;
-}
-tbody td {
-  font-family: 'Cormorant Garamond', serif; font-size: 17px;
-  color: var(--d-soft); padding: 10px 10px 10px 0;
-  border-bottom: 1px solid var(--d-faint);
-}
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { color: var(--d-fg); }
-.td-code { font-family: 'Courier Prime', monospace; font-size: 12px; letter-spacing: .05em; }
-.badge-activo   { color: #4ade80; font-size: 11px; }
+.badge-activo    { color: #4ade80; font-size: 11px; }
 .badge-cancelado { color: #f87171; font-size: 11px; }
 </style>
 </head>
@@ -314,7 +66,7 @@ tbody tr:hover td { color: var(--d-fg); }
 
     <label class="login-label" for="bol-usuario">Usuario</label>
     <input type="text" id="bol-usuario" class="login-input"
-           placeholder="taquilla1, boletera, etc."
+           placeholder="gorila"
            autocomplete="username">
 
     <label class="login-label" for="bol-password">Contraseña</label>
@@ -335,12 +87,12 @@ tbody tr:hover td { color: var(--d-fg); }
   <header class="bol-header">
     <div>
       <span class="bol-header-titulo">Boletera</span>
-      <span class="bol-header-sub">El Gorila · <span id="boletera-usuario-nombre">—</span></span>
+      <span class="bol-header-sub">Teatro Wilberto Cantón · <span id="boletera-teatro-id">wilberto</span> · <span id="boletera-usuario-nombre">—</span></span>
     </div>
     <div class="bol-header-actions">
-      <a href="verificar.html" class="btn-accion" target="_blank">
+      <a href="verificar.html" class="btn-accion">
         <span class="material-symbols-outlined" style="font-size:16px;">qr_code_scanner</span>
-        Verificar QR
+        Verificar
       </a>
       <button type="button" class="btn-accion btn-salir" onclick="boletaSalir()">
         <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
@@ -361,11 +113,11 @@ tbody tr:hover td { color: var(--d-fg); }
       </div>
     </div>
 
-    <!-- 2. VENTA EN EFECTIVO -->
+    <!-- 2. VENTA MANUAL (EFECTIVO) -->
     <div class="bol-card">
-      <h2 class="bol-card-title">Venta en efectivo</h2>
+      <h2 class="bol-card-title">Venta manual — efectivo</h2>
       <div class="bol-card-rule"></div>
-      <span class="sec-label">Generar código de ingreso</span>
+      <span class="sec-label">Registra en el servidor · folio CERT- · QR verificable</span>
 
       <form id="form-efectivo" onsubmit="event.preventDefault(); generarCodigo();">
         <div class="form-grid">
@@ -393,33 +145,65 @@ tbody tr:hover td { color: var(--d-fg); }
             </select>
           </div>
           <div>
+            <label class="form-label" for="nombre-efectivo">Nombre comprador</label>
+            <input type="text" id="nombre-efectivo" class="form-input"
+                   placeholder="Opcional">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div>
+            <label class="form-label" for="email-efectivo">Correo (envía boleto)</label>
+            <input type="email" id="email-efectivo" class="form-input"
+                   placeholder="correo@ejemplo.com" autocomplete="email">
+          </div>
+          <div>
+            <label class="form-label" for="telefono-efectivo">WhatsApp (solo números)</label>
+            <input type="tel" id="telefono-efectivo" class="form-input"
+                   placeholder="52… (código país + número)">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div style="grid-column:1/-1;">
             <label class="form-label" for="notas-efectivo">Notas (opcional)</label>
             <input type="text" id="notas-efectivo" class="form-input"
-                   placeholder="Observaciones…">
+                   placeholder="Observaciones internas…">
           </div>
         </div>
 
         <button type="submit" class="btn-generar" id="btn-generar">
           <span class="material-symbols-outlined" style="font-size:20px;">confirmation_number</span>
-          Generar código de ingreso
+          Registrar venta y generar folio
         </button>
       </form>
 
-      <!-- Código generado -->
-      <div id="codigo-generado" style="display:none;">
-        <div id="qr-codigo-efectivo"></div>
-        <p id="codigo-texto">—</p>
-        <p id="codigo-info">—</p>
-        <button type="button" class="btn-copiar" onclick="copiarCodigo()">
-          <span class="material-symbols-outlined" style="font-size:14px;">content_copy</span>
-          Copiar código
-        </button>
+      <div id="venta-error" style="display:none;margin-top:10px;color:#f87171;font-size:15px;"></div>
+
+      <!-- Folio generado -->
+      <div id="codigo-generado" style="display:none;margin-top:18px;">
+        <div id="qr-codigo-efectivo" style="margin-bottom:12px;"></div>
+        <p id="codigo-texto" style="font-family:var(--mono);font-size:13px;letter-spacing:.08em;word-break:break-all;">—</p>
+        <p id="codigo-info" style="font-size:15px;color:var(--d-soft);margin-top:8px;line-height:1.5;">—</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+          <button type="button" class="btn-copiar" onclick="copiarCodigo()">
+            <span class="material-symbols-outlined" style="font-size:14px;">content_copy</span>
+            Copiar folio
+          </button>
+          <a id="btn-wa-enviar" class="btn-copiar" href="#" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(37,211,102,.15);border-color:rgba(37,211,102,.4);">
+            <span class="material-symbols-outlined" style="font-size:14px;">chat</span>
+            Enviar por WhatsApp
+          </a>
+          <button type="button" class="btn-copiar" onclick="copiarTextoWa()">
+            Copiar texto WA
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- 3. BOLETOS DE HOY -->
+    <!-- 3. VENTAS MANUALES HOY -->
     <div class="bol-card">
-      <h2 class="bol-card-title">Boletos en efectivo hoy</h2>
+      <h2 class="bol-card-title">Ventas manuales hoy</h2>
       <div class="bol-card-rule"></div>
       <div class="tabla-wrap">
         <table>
@@ -433,7 +217,7 @@ tbody tr:hover td { color: var(--d-fg); }
             </tr>
           </thead>
           <tbody id="tabla-efectivo">
-            <tr><td colspan="5" style="text-align:center;color:var(--d-faint);font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:.1em;">Sin registros hoy</td></tr>
+            <tr><td colspan="5" style="text-align:center;color:var(--d-faint);font-family:var(--mono);font-size:10px;letter-spacing:.18em;">Sin registros hoy</td></tr>
           </tbody>
         </table>
       </div>
@@ -443,19 +227,15 @@ tbody tr:hover td { color: var(--d-fg); }
 </div>
 
 <!-- Scripts -->
-<script src="js/inventario.js"></script>
-<script src="js/fechas.js"></script>
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
-<script src="js/taquilla.js"></script>
-<script src="js/taquilla-ui.js"></script>
 
 <script>
 /* ── AUTENTICACIÓN BOLETERA ─────────────────────────────────
-   Reutiliza AuthManager (auth.js) pero acepta roles taquilla/admin/gerente.
+   Solo taquilla y admin venden en efectivo.
    Se guarda sesión en localStorage igual que admin.html.
 ── */
-const ROLES_BOLETERA = ['taquilla', 'admin', 'gerente', 'reclamos'];
+const ROLES_BOLETERA = ['taquilla', 'admin'];
 
 async function boletaAcceder() {
   const id  = (document.getElementById('bol-usuario')?.value || '').trim();
@@ -514,7 +294,7 @@ async function _boletaCargarDisponibilidad() {
   const cont = document.getElementById('disponibilidad-fechas');
   if (!cont) return;
   try {
-    const res  = await fetch(window.API_BASE + '/api/funciones');
+    const res  = await fetch(window.teatroApi('funciones'));
     if (!res.ok) return;
     const fns  = await res.json();
     if (!fns.length) {
@@ -522,13 +302,27 @@ async function _boletaCargarDisponibilidad() {
       return;
     }
     cont.innerHTML = fns.map(f => {
-      const disp = (f.capacidad || 0) - (f.vendidos || 0);
+      const disp = typeof f.disponibles === 'number'
+        ? f.disponibles
+        : Math.max(0, (f.capacidad || 0) - (f.vendidos || 0));
       const cls  = disp > 0 ? 'fecha-card-disponible' : 'fecha-card-agotada';
-      const txt  = disp > 0 ? disp + ' disponibles' : 'Agotada';
+      const zona = f.galeria_abierta ? ' · galería abierta' : '';
+      const txt  = disp > 0 ? disp + ' disponibles' + zona : 'Agotada';
+      const secs = f.secciones || {};
+      let desglose = '';
+      if (secs.platea) {
+        desglose += `Platea: ${secs.platea.disponibles ?? '—'} disp. · ${secs.platea.vendidos || 0} vend.`;
+      }
+      if (secs.galeria) {
+        desglose += (desglose ? '<br>' : '') +
+          `Galería: ${secs.galeria.disponibles ?? '—'} disp. · ${secs.galeria.vendidos || 0} vend.`;
+      }
+      if (f.reservados) desglose += (desglose ? '<br>' : '') + `${f.reservados} en carrito web`;
       return `<div class="fecha-card">
         <div class="fecha-card-nombre">${f.nombre || f.fecha_iso}</div>
         <div class="fecha-card-dato ${cls}">${txt}</div>
-        <div class="fecha-card-dato">${f.vendidos || 0} vendidos</div>
+        <div class="fecha-card-dato">${f.vendidos || 0} vendidos · cap. ${f.capacidad || '—'}</div>
+        ${desglose ? `<div class="fecha-card-dato" style="font-size:13px;margin-top:4px;">${desglose}</div>` : ''}
       </div>`;
     }).join('');
   } catch (e) { cont.innerHTML = '<p style="font-size:13px;color:#f87171;">Error de conexión</p>'; }
@@ -539,7 +333,7 @@ async function _boletaLlenarSelectFunciones() {
   const sel = document.getElementById('fecha-efectivo');
   if (!sel) return;
   try {
-    const res = await fetch(window.API_BASE + '/api/funciones');
+    const res = await fetch(window.teatroApi('funciones'));
     if (!res.ok) return;
     const fns = await res.json();
     fns.forEach(f => {
@@ -558,20 +352,138 @@ async function _boletaCargarTablaDia() {
   }
 }
 
-/* Generar código (delega a taquilla.js si existe, si no usa taquilla-ui.js) */
-async function generarCodigo() {
-  if (typeof generarCodigoEfectivo === 'function') {
-    generarCodigoEfectivo();
-  } else {
-    console.warn('generarCodigoEfectivo no disponible en taquilla.js');
+let _ultimoWaTexto = '';
+
+async function generarCodigoEfectivo() {
+  const errEl    = document.getElementById('venta-error');
+  const btn      = document.getElementById('btn-generar');
+  const token    = typeof AuthManager !== 'undefined' ? AuthManager.obtenerAdminToken() : null;
+
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  if (!token) { alert('Sesión expirada. Vuelve a entrar.'); boletaSalir(); return; }
+
+  const fechaIso = document.getElementById('fecha-efectivo')?.value;
+  const cantidad = parseInt(document.getElementById('cantidad-efectivo')?.value, 10);
+  const tipo     = document.getElementById('tipo-efectivo')?.value || 'general';
+  const email    = (document.getElementById('email-efectivo')?.value || '').trim();
+  const nombre   = (document.getElementById('nombre-efectivo')?.value || '').trim();
+  const telefono = (document.getElementById('telefono-efectivo')?.value || '').trim();
+  const notas    = (document.getElementById('notas-efectivo')?.value || '').trim();
+
+  if (!fechaIso || !cantidad || cantidad < 1) {
+    if (errEl) { errEl.textContent = 'Selecciona función y cantidad.'; errEl.style.display = 'block'; }
+    return;
   }
+
+  let seccion = 'platea';
+  try {
+    const dr = await fetch(window.teatroApi(`disponibilidad?fecha=${encodeURIComponent(fechaIso)}`));
+    if (dr.ok) {
+      const d = await dr.json();
+      if (d.galeria_abierta) seccion = 'galeria';
+    }
+  } catch (_) {}
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Registrando…'; }
+
+  try {
+    const res = await fetch(window.teatroAdminApi('venta-manual'), {
+      method:  'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization:  `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        fecha: fechaIso,
+        items: [{ tipo, cantidad, seccion }],
+        email: email || undefined,
+        nombre: nombre || undefined,
+        telefono: telefono || undefined,
+        notas: notas || undefined,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (errEl) { errEl.textContent = data.error || 'No se pudo registrar la venta.'; errEl.style.display = 'block'; }
+      return;
+    }
+
+    _ultimoWaTexto = data.waTexto || '';
+    const box = document.getElementById('codigo-generado');
+    const txt = document.getElementById('codigo-texto');
+    const inf = document.getElementById('codigo-info');
+    const qr  = document.getElementById('qr-codigo-efectivo');
+    const wa  = document.getElementById('btn-wa-enviar');
+
+    if (box) box.style.display = 'block';
+    if (txt) txt.textContent = data.codigo;
+    if (inf) {
+      const mailNote = data.emailEnviado ? ' · correo enviado' : (email ? ' · correo en cola' : '');
+      inf.innerHTML = `${data.funcionNombre}<br>${cantidad} × ${tipo} (${seccion}) · $${data.total} MXN${mailNote}`;
+    }
+    if (wa && data.waUrl) wa.href = data.waUrl;
+    if (qr && typeof QRCode !== 'undefined' && data.verificarUrl) {
+      qr.innerHTML = '';
+      QRCode.toCanvas(qr, data.verificarUrl, { width: 180, margin: 1 });
+    }
+
+    document.getElementById('form-efectivo')?.reset();
+    await Promise.all([_boletaCargarDisponibilidad(), _boletaCargarTablaDia()]);
+  } catch (_) {
+    if (errEl) { errEl.textContent = 'Error de conexión.'; errEl.style.display = 'block'; }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;">confirmation_number</span> Registrar venta y generar folio';
+    }
+  }
+}
+
+async function generarCodigo() { await generarCodigoEfectivo(); }
+
+async function cargarBoletosHoy() {
+  const tbody = document.getElementById('tabla-efectivo');
+  const token = typeof AuthManager !== 'undefined' ? AuthManager.obtenerAdminToken() : null;
+  if (!tbody || !token) return;
+
+  const hoyMx = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+
+  try {
+    const res = await fetch(window.teatroAdminApi('ventas'), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return;
+    const { ventas } = await res.json();
+    const hoy = (ventas || [])
+      .filter(v => v.metodoPago === 'efectivo' && (v.fechaCompra || '').slice(0, 10) === hoyMx)
+      .sort((a, b) => new Date(b.fechaCompra) - new Date(a.fechaCompra));
+
+    if (!hoy.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--d-faint);font-family:var(--mono);font-size:10px;letter-spacing:.18em;">Sin ventas manuales hoy</td></tr>';
+      return;
+    }
+    tbody.innerHTML = hoy.map(v => {
+      const st = v.usado ? 'badge-cancelado' : 'badge-activo';
+      const lb = v.usado ? 'Canjeado' : 'Válido';
+      const info = [v.nombre, v.email].filter(Boolean).join(' · ') || '—';
+      return `<tr>
+        <td class="td-code">${v.codigo}</td>
+        <td>${v.funcionNombre || v.fecha}</td>
+        <td>${v.cantidad}</td>
+        <td class="${st}">${lb}</td>
+        <td style="font-size:14px;">${info}</td>
+      </tr>`;
+    }).join('');
+  } catch (_) {}
 }
 
 function copiarCodigo() {
   const txt = document.getElementById('codigo-texto')?.textContent;
-  if (txt && txt !== '—') {
-    navigator.clipboard?.writeText(txt).catch(() => {});
-  }
+  if (txt && txt !== '—') navigator.clipboard?.writeText(txt).catch(() => {});
+}
+
+function copiarTextoWa() {
+  if (_ultimoWaTexto) navigator.clipboard?.writeText(_ultimoWaTexto).catch(() => {});
 }
 
 /* Tecla Enter en el login */

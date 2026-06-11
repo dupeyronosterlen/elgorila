@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex,nofollow"/>
 <meta name="description" content="Kit de prensa — EL GORILA, monólogo de Humberto Dupeyrón. Producción de El Gorila Teatro, CDMX 2026."/>
-<link rel="canonical" href="https://elgorilateatro.com.mx/"/>
 <title>Kit de Prensa · El Gorila</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -588,6 +587,69 @@
   }
   .runner span{color:#c9302c}
 
+  /* ============== PRINT ============== */
+  @media print {
+    @page { size: A4 portrait; margin: 0; }
+    html, body {
+      background: var(--paper);
+      font-size: 11pt;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .runner, .presskit-back { display: none !important; }
+
+    body > section {
+      page-break-before: always;
+      break-before: page;
+      page-break-after: always;
+      break-after: page;
+      page-break-inside: avoid;
+    }
+    body > section:first-of-type {
+      page-break-before: avoid;
+      break-before: avoid;
+    }
+
+    .sheet { padding: 48px 56px; max-width: none; }
+
+    .cover {
+      min-height: auto;
+      height: 100vh;
+      padding: 40px 48px;
+    }
+    .cover__name { font-size: 180px; }
+    .cover__strap { font-size: 22px; }
+    .cover__stat .num { font-size: 52px; }
+
+    .sheet--bleed { padding: 0; }
+    .bleed-photo { height: 100vh; min-height: 0; }
+    .photo-strip { height: 100vh; min-height: 0; }
+
+    .ficha, .sinopsis, .historial, .bio, .nota, .contacto,
+    .stats, .pull-quote, .contact-card, .index {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .sinopsis { gap: 32px; }
+    .historial { gap: 32px; }
+    .historial .sidebar { position: static; }
+
+    .bio + .bio { margin-top: 48px; padding-top: 48px; }
+
+    .sheet--dark { background: #100c0a !important; }
+    .colophon { background: #0a0706 !important; }
+
+    .section-head .ttl { font-size: 44px; }
+    .section-head .num { font-size: 52px; }
+
+    a { text-decoration: none; }
+
+    .nota .body[style*="column-count"] { column-count: 2 !important; column-gap: 40px !important; }
+
+    img { max-width: 100%; }
+  }
+
   @media (max-width: 900px){
     .sheet{padding:64px 32px}
     .cover{padding:32px 24px}
@@ -621,7 +683,7 @@
   }
   .presskit-back:hover{color:#f1ead9;border-color:rgba(217,155,58,.5)}
 </style>
-<link rel="canonical" href="https://elgorilateatro.com.mx/presskit/" />
+<link rel="canonical" href="https://elgorilateatro.com.mx/presskit/presskit2026.html" />
 </head>
 <body>
 
@@ -710,7 +772,7 @@
     <div class="row"><div class="k">Clasificación</div><div class="v">Todo público</div></div>
     <div class="row"><div class="k">Idioma</div><div class="v">Español</div></div>
     <div class="row row--wide"><div class="k">Disponibilidad</div><div class="v">Disponible para temporada y gira<small>Ciudad de México y república mexicana</small></div></div>
-    <div class="row"><div class="k">Programación</div><div class="v">Por anunciar<small>fechas y sede de la próxima temporada</small></div></div>
+    <div class="row"><div class="k">Programación</div><div class="v">Jul–Sep 2026<small>Teatro Wilberto Cantón · miércoles 20:30 · estreno 8 jul · cierre 30 sep</small></div></div>
     <div class="row row--wide"><div class="k">Web</div><div class="v"><a href="https://elgorilateatro.com.mx">elgorilateatro.com.mx</a></div></div>
   </div>
 </section>
@@ -770,7 +832,7 @@
       <p><em>El Gorila</em> lleva 37 temporadas consecutivas en escena, posicionándose como el monólogo más longevo de México. Desde su estreno en 1989 en el Teatro Xola, la obra ha permanecido ininterrumpidamente en cartelera, acumulando más de mil funciones y varias generaciones.</p>
       <p>El texto original —"Un informe para la Academia" (<em>Ein Bericht für eine Akademie</em>, 1917)— es uno de los relatos más célebres de Franz Kafka. La primera adaptación teatral fue realizada en 1968 por Alejandro Jodorowsky, quien confió la interpretación a Narciso Busquets. Años más tarde, Jodorowsky otorgó los derechos de representación a Humberto Dupeyron, quien desde entonces ha dedicado casi cuatro décadas a este personaje.</p>
       <p>A lo largo de su trayectoria, <em>El Gorila</em> ha sido reconocida no solo por su vigencia temática, sino por la disciplina actoral que exige: un actor solo en escena durante 90 minutos, sosteniendo un texto denso, físicamente demandante y emocionalmente complejo.</p>
-      <p>La obra ha sido presentada en diversos foros de la Ciudad de México, así como en el interior de la república, en ciudades como Oaxaca, Chiapas, Puebla, Aguascalientes, Monterrey, Guadalajara, Morelia, Acapulco, Chihuahua, Querétaro, Veracruz, Tijuana, la Paz, Ensenada, los Cabos entre muchas ciudades más, incluyendo recientemente La Nueva Carpa Geodésica en San Ángel. Su permanencia en cartelera la ha consolidado como una referencia obligada del teatro contemporáneo en México.</p>
+      <p>La obra ha sido presentada en diversos foros de la Ciudad de México, así como en el interior de la república, en ciudades como Oaxaca, Chiapas, Puebla, Aguascalientes, Monterrey, Guadalajara, Morelia, Acapulco, Chihuahua, Querétaro, Veracruz, Tijuana, la Paz, Ensenada, los Cabos entre muchas ciudades más, entre muchos otros foros de la ciudad. Su permanencia en cartelera la ha consolidado como una referencia obligada del teatro contemporáneo en México.</p>
     </div>
 
     <div class="sidebar">

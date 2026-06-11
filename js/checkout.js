@@ -107,7 +107,7 @@ async function procesarPago() {
         const btn = document.getElementById('btn-pagar');
         if (btn) { btn.disabled = true; btn.querySelector('span:last-child').textContent = 'Procesando...'; }
         try {
-            const res = await fetch(window.API_BASE + '/api/checkout', {
+            const res = await fetch(window.teatroApi('checkout'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

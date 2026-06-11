@@ -26,3 +26,5 @@ preview_id = "8342e8b9abe14759ae1e6ea07d8bbd8c"
 # Configurar ÚNICAMENTE en:
 #   Cloudflare Dashboard → Workers & Pages → elgorila-api
 #   → Settings → Variables and Secrets → Add secret
+#
+# ADMIN_USER_UNIVERSAL / ADMIN_PASS_UNIVERSAL → cuenta compartida admin y boletera (ej. gorila)

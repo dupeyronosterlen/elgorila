@@ -16,9 +16,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <title>Boletos — EL GORILA</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
 <link rel="preconnect" href="https://www.googletagmanager.com">
-<link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
-<link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
-<link rel="preload" as="font" type="font/woff2" href="fonts/cormorant-normal-latin.woff2" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- Material Symbols para iconos en modales -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <!-- Tailwind — necesario para clases dinámicas de main.js -->
@@ -32,7 +32,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           primary:            '#8B0000',
           'background-dark':  '#1a150e',
           'text-dark':        '#f1ead9',
-          'text-muted-dark':  'rgba(241,234,217,.55)',
+          'text-muted-dark':  'rgba(241,234,217,.88)',
           'accent-gold':      '#d99b3a',
           'rich-dark':        '#120d0b',
           'accent-green-dark':'#346F63',
@@ -43,34 +43,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   };
 </script>
 <style>
-/* ── FUENTES ─────────────────────────────────────────────── */
-@font-face {
-  font-family: 'IM Fell English';
-  font-style: normal; font-weight: 400; font-display: swap;
-  src: url(fonts/im-fell-english-latin.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'IM Fell English';
-  font-style: italic; font-weight: 400; font-display: optional;
-  src: url(fonts/im-fell-english-italic-latin.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'Courier Prime';
-  font-style: normal; font-weight: 400; font-display: swap;
-  src: url(fonts/courier-prime-latin.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'Cormorant Garamond';
-  font-style: normal; font-weight: 300 600; font-display: swap;
-  src: url(fonts/cormorant-normal-latin.woff2) format('woff2');
-}
-@font-face {
-  font-family: 'Cormorant Garamond';
-  font-style: italic; font-weight: 300 400; font-display: swap;
-  src: url(fonts/cormorant-italic-latin.woff2) format('woff2');
-}
-
-/* ── TOKENS v4 ───────────────────────────────────────────── */
+/* ── TOKENS v3 (programa de mano) ────────────────────────── */
 :root {
   /* papel */
   --p-bg:    #f1ead9;
@@ -82,17 +55,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   --d-bg:    #0a0706;
   --d-bg2:   #120d0b;
   --d-fg:    #f1ead9;
-  --d-soft:  rgba(241,234,217,.72);
-  --d-faint: rgba(241,234,217,.10);
+  --d-soft:  rgba(241,234,217,.94);
+  --mono-min: 13px;
+  --label-min: 13px;
+  --d-faint: rgba(241,234,217,.1);
   /* acentos */
   --red:     #D43A1A;
-  --red-dim: rgba(212,58,26,.55);
+  --red-dim: rgba(212,58,26,.6);
   --gold:    #d99b3a;
-  --gold-dim:rgba(217,155,58,.55);
-  /* tipografía */
-  --display: 'IM Fell English', Georgia, serif;
-  --cuerpo:  'Cormorant Garamond', serif;
-  --mono:    'Courier Prime', monospace;
+  --gold-dim:rgba(217,155,58,.6);
+  /* tipografía — v3 */
+  --display: "Cormorant Garamond", Georgia, serif;
+  --cuerpo:  "EB Garamond", Georgia, serif;
+  --mono:    "JetBrains Mono", ui-monospace, monospace;
 }
 
 /* ── RESET ───────────────────────────────────────────────── */
@@ -102,7 +77,7 @@ body {
   background: var(--d-bg) !important;
   color: var(--d-fg);
   font-family: var(--cuerpo);
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -121,7 +96,7 @@ a   { color: inherit; }
 .mt-2                { margin-top: 0.5rem; }
 .mt-3                { margin-top: 0.75rem; }
 .my-1                { margin-top: 0.25rem; margin-bottom: 0.25rem; }
-.text-xs             { font-size: 0.75rem; line-height: 1rem; }
+.text-xs             { font-size: 0.875rem; line-height: 1.35rem; }
 .text-sm             { font-size: 0.875rem; line-height: 1.25rem; }
 .text-green-400      { color: #4ade80; }
 .text-red-400        { color: #f87171; }
@@ -195,10 +170,11 @@ a   { color: inherit; }
   padding: 18px 22px; border-bottom: 1px solid var(--d-faint);
 }
 .croquis-header h3 {
-  font-family: var(--display); font-size: 20px; color: var(--red); margin: 0;
+  font-family: var(--display); font-size: 28px; font-weight: 500;
+  color: var(--gold); margin: 0; line-height: .98;
 }
 .croquis-header p {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .18em;
+  font-family: var(--mono); font-size: 13px; letter-spacing: .18em;
   text-transform: uppercase; color: var(--d-soft); margin: 5px 0 0;
 }
 .croquis-close {
@@ -214,31 +190,46 @@ a   { color: inherit; }
 }
 .croquis-legend-item {
   display: flex; align-items: center; gap: 8px;
-  font-family: var(--mono); font-size: 9px;
+  font-family: var(--mono); font-size: 12px;
   letter-spacing: .12em; text-transform: uppercase; color: var(--d-soft);
 }
 .croquis-legend-dot { width: 12px; height: 12px; flex-shrink: 0; }
 
-/* ── SISTEMA DE SECCIONES v4 ─────────────────────────────── */
+/* ── SISTEMA DE SECCIONES v3 ─────────────────────────────── */
 .inner {
-  max-width: 560px; margin: 0 auto; padding: 0 24px;
+  max-width: 540px; margin: 0 auto; padding: 0 28px;
 }
-/* Sección oscura */
 .sd {
+  padding: 40px 0;
   background: var(--d-bg);
   color: var(--d-fg);
-  padding: 40px 0;
+  border-top: 0.5px solid var(--d-faint);
 }
 .sd--mid {
+  padding: 40px 0;
   background: var(--d-bg2);
   color: var(--d-fg);
-  padding: 40px 0;
+  border-top: 0.5px solid var(--d-faint);
 }
-/* Sección papel */
 .sp {
+  padding: 40px 0;
   background: var(--p-bg);
   color: var(--p-ink);
-  padding: 40px 0;
+  border-top: 1px solid var(--p-rule);
+}
+.sp + .sp { border-top: 1px solid var(--p-rule); }
+.sd + .sp,
+.sd--mid + .sp { border-top: none; }
+.sp + .sd,
+.sp + .sd--mid { border-top: none; }
+#main-content {
+  border-top: none;
+  padding-top: max(7.75rem, calc(6.5rem + env(safe-area-inset-top)));
+}
+@media (max-width: 767px) {
+  #main-content {
+    padding-top: max(5.75rem, calc(5rem + env(safe-area-inset-top)));
+  }
 }
 
 /* ── CABECERA DE PORTADA (compacta) ──────────────────────── */
@@ -257,9 +248,9 @@ a   { color: inherit; }
   color: var(--d-fg); margin-bottom: 14px;
 }
 .cover-kicker {
-  font-family: var(--mono); font-size: 10px;
+  font-family: var(--mono); font-size: 13px;
   letter-spacing: .28em; text-transform: uppercase;
-  color: rgba(241,234,217,.28);
+  color: rgba(241,234,217,.72);
 }
 .cover-datos {
   display: flex; gap: 0;
@@ -274,7 +265,7 @@ a   { color: inherit; }
 }
 .cover-dato:last-child { border-right: none; margin-right: 0; padding-right: 0; }
 .cover-dato-etiq {
-  font-family: var(--mono); font-size: 8px;
+  font-family: var(--mono); font-size: 12px;
   letter-spacing: .22em; text-transform: uppercase;
   color: var(--gold-dim); display: block; margin-bottom: 4px;
 }
@@ -282,17 +273,17 @@ a   { color: inherit; }
   font-family: var(--cuerpo); font-size: 16px; color: var(--d-fg);
 }
 
-/* ── CABECERA DE SECCIÓN (v4) ─────────────────────────────── */
-.sec-head { margin-bottom: 16px; }
+/* ── CABECERA DE SECCIÓN v3 ──────────────────────────────── */
+.sec-head { margin-bottom: 18px; }
 .sec-num {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: .22em; text-transform: uppercase;
-  display: block; margin-bottom: 5px;
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .18em; text-transform: uppercase;
+  display: block; margin-bottom: 8px;
 }
-.sd .sec-num, .sd--mid .sec-num { color: var(--gold); }
+.sd .sec-num, .sd--mid .sec-num { color: var(--gold); opacity: .95; }
 .sp .sec-num { color: var(--red); }
 .sec-title {
-  font-family: var(--cuerpo); font-size: 34px;
+  font-family: var(--display); font-size: 38px;
   font-weight: 500; line-height: .95; letter-spacing: -.02em;
 }
 .sd .sec-title, .sd--mid .sec-title { color: var(--d-fg); }
@@ -300,15 +291,15 @@ a   { color: inherit; }
 .sec-title em { font-style: italic; }
 .sd .sec-title em, .sd--mid .sec-title em { color: var(--gold); }
 .sp .sec-title em { color: var(--red); }
-.rule { height: 1px; margin: 14px 0 22px; }
+.rule { height: 1px; margin: 0 0 22px; }
 .sd .rule, .sd--mid .rule { background: var(--d-faint); }
 .sp .rule { background: var(--p-rule); }
 
 /* ── SECCIÓN: FECHAS ─────────────────────────────────────── */
 .fecha-sub-label {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: .22em; text-transform: uppercase;
-  color: var(--gold-dim); display: block; margin-bottom: 12px;
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold); display: block; margin-bottom: 14px;
 }
 #botones-fecha {
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
@@ -316,29 +307,58 @@ a   { color: inherit; }
 @media (min-width: 420px) {
   #botones-fecha { grid-template-columns: 1fr 1fr 1fr; }
 }
-/* Botón "Ver más fechas" */
-#btn-fechas-toggle {
+/* Despliegue progresivo de fechas por mes */
+#fechas-progressive-ui { margin-top: 10px; }
+.fechas-mes-nota {
+  margin: 14px 0 8px; padding: 12px 14px;
+  border-left: 2px solid var(--gold-dim);
+  background: rgba(217,155,58,.06);
+}
+.fechas-mes-nota--extension {
+  border-left-color: var(--red-dim);
+  background: rgba(212,58,26,.08);
+}
+.fechas-mes-nota__titulo {
+  font-family: var(--display); font-size: 20px; font-weight: 500;
+  color: var(--d-fg); margin: 0 0 4px;
+}
+.fechas-mes-nota__sub {
+  font-family: var(--cuerpo); font-size: 16px; color: var(--d-soft);
+  margin: 0; font-style: italic;
+}
+.btn-fechas-toggle {
   display: block; width: 100%; margin-top: 8px;
-  padding: 10px 14px; background: transparent;
-  border: 1px dashed rgba(217,155,58,.3);
-  color: var(--gold-dim);
-  font-family: var(--mono); font-size: 10px;
-  letter-spacing: .18em; text-transform: uppercase;
+  padding: 14px 16px; background: transparent;
+  border: 1px dashed rgba(217,155,58,.45);
+  color: var(--gold);
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .14em; text-transform: uppercase;
   cursor: pointer; text-align: center;
   transition: border-color .15s, color .15s;
   -webkit-tap-highlight-color: transparent;
 }
-#btn-fechas-toggle:hover { border-color: var(--gold-dim); color: var(--gold); }
+.btn-fechas-toggle:hover { border-color: var(--gold-dim); color: var(--gold); }
 
-/* Override de botones de fecha JS (amber Tailwind → v4 gold-dark) */
+/* Override de botones de fecha JS (amber Tailwind → v3 gold-dark) */
 #botones-fecha button:not([disabled]),
 #botones-fecha > div > button:not([disabled]) {
   background: rgba(217,155,58,.10) !important;
   border-color: rgba(217,155,58,.4) !important;
   color: var(--d-fg) !important;
   font-family: var(--cuerpo) !important;
+  font-size: 17px !important;
+  line-height: 1.35 !important;
+  padding: 14px 12px !important;
   border-radius: 0 !important;
   transition: background .15s !important;
+}
+#botones-fecha button:not([disabled]) .block.font-bold {
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+}
+#botones-fecha button:not([disabled]) .text-sm {
+  font-size: 0.95rem !important;
+  opacity: 1 !important;
 }
 #botones-fecha button:not([disabled]):hover,
 #botones-fecha > div > button:not([disabled]):hover {
@@ -348,21 +368,34 @@ a   { color: inherit; }
   background: transparent !important; border: none !important;
   color: var(--gold-dim) !important;
   font-family: var(--mono) !important;
-  font-size: 10px !important; letter-spacing: .10em !important;
+  font-size: 13px !important; letter-spacing: .10em !important;
 }
 #botones-fecha > div > button.underline:hover { color: var(--gold) !important; }
 
 #fecha-seleccionada-texto {
-  font-family: var(--mono); font-size: 10px;
-  letter-spacing: .14em; text-transform: uppercase;
-  color: var(--d-soft); margin-top: 10px;
+  font-family: var(--cuerpo); font-size: 18px;
+  letter-spacing: .01em;
+  color: var(--d-fg); margin-top: 14px;
+  line-height: 1.4;
+}
+
+/* ── ETIQUETA ESTRENO EN BOTÓN DE FECHA ──────────────────── */
+.fecha-estreno-tag {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 3px 8px;
+  font-family: var(--mono); font-size: 13px;
+  letter-spacing: .16em; text-transform: uppercase;
+  background: rgba(212,58,26,.18);
+  border: 1px solid rgba(212,58,26,.45);
+  color: var(--red);
 }
 
 /* ── SECCIÓN: TIPOS DE BOLETO ────────────────────────────── */
 .boletos-sub-label {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: .22em; text-transform: uppercase;
-  color: var(--gold-dim); display: block;
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold); display: block;
   margin: 22px 0 12px;
   padding-top: 16px;
   border-top: 0.5px solid var(--d-faint);
@@ -375,23 +408,23 @@ a   { color: inherit; }
 }
 .ticket-fila:last-child { border-bottom: none; }
 .ticket-nombre {
-  font-family: var(--cuerpo); font-size: 20px;
-  font-weight: 500; color: var(--d-fg); line-height: 1.15;
+  font-family: var(--display); font-size: 24px;
+  font-weight: 500; color: var(--d-fg); line-height: 1.25;
 }
 .ticket-precio {
-  font-family: var(--mono); font-size: 10px;
-  letter-spacing: .12em; text-transform: uppercase;
-  color: var(--gold-dim); margin-top: 2px;
+  font-family: var(--cuerpo); font-size: 18px;
+  letter-spacing: .02em;
+  color: var(--d-soft); margin-top: 4px;
 }
 .ticket-precio-promo { color: #4ade80; }
 .ticket-controls { display: flex; align-items: center; gap: 14px; }
 .qty-btn {
-  width: 36px; height: 36px;
+  width: 44px; height: 44px;
   background: transparent !important;
   border: 1px solid var(--d-faint) !important;
   color: var(--gold) !important;
   font-family: var(--mono) !important;
-  font-size: 20px !important; font-weight: 400 !important;
+  font-size: 24px !important; font-weight: 400 !important;
   line-height: 1; cursor: pointer;
   transition: background .15s, border-color .15s;
   display: flex; align-items: center; justify-content: center;
@@ -403,8 +436,8 @@ a   { color: inherit; }
   border-color: var(--gold-dim) !important;
 }
 .qty-count {
-  width: 28px; text-align: center;
-  font-family: var(--mono); font-size: 20px;
+  width: 32px; text-align: center;
+  font-family: var(--mono); font-size: 24px;
   color: var(--d-fg); line-height: 1;
 }
 
@@ -416,40 +449,56 @@ a   { color: inherit; }
 #items-resumen {
   display: flex; flex-direction: column;
   gap: 4px; margin-bottom: 10px;
-  font-family: var(--cuerpo); font-size: 17px; color: var(--d-soft);
+  font-family: var(--cuerpo); font-size: 18px; color: var(--d-fg);
 }
 .total-fila {
   display: flex; justify-content: space-between; align-items: baseline;
   padding-top: 10px; border-top: 0.5px solid var(--d-faint);
 }
 .total-label {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--gold);
 }
 #total-precio {
-  font-family: var(--display); font-size: 28px;
-  color: var(--d-fg); line-height: 1;
+  font-family: var(--display); font-size: 34px;
+  font-weight: 500; color: var(--d-fg); line-height: .88;
 }
 
 /* Mensajes de disponibilidad */
-#disponibilidad-info { margin-top: 8px; }
+#disponibilidad-info { margin-top: 10px; }
+#seccion-venta-info { margin-top: 8px; }
+.seccion-venta-aviso {
+  font-family: var(--cuerpo); font-size: 15px; line-height: 1.45;
+  color: var(--d-soft); padding: 8px 12px;
+  border-left: 2px solid rgba(217,155,58,.45);
+}
+.seccion-venta-aviso--galeria {
+  color: var(--gold);
+  border-left-color: var(--gold);
+  background: rgba(217,155,58,.06);
+}
+#disponibilidad-info p {
+  font-family: var(--cuerpo) !important;
+  font-size: 17px !important;
+  line-height: 1.45 !important;
+}
 #mensaje-agotado:not(.hidden) {
   display: block; margin-top: 8px;
   padding: 10px 14px;
   background: rgba(212,58,26,.08);
   border: 1px solid rgba(212,58,26,.25);
-  font-family: var(--mono); font-size: 10px;
+  font-family: var(--mono); font-size: 13px;
   letter-spacing: .12em; text-transform: uppercase; color: var(--gold);
 }
 
 /* ── BOTÓN CONTINUAR ─────────────────────────────────────── */
 #btn-continuar {
   display: block; width: 100%;
-  margin-top: 22px; padding: 17px 24px;
+  margin-top: 22px; padding: 20px 24px;
   background: var(--red) !important;
   color: #fff !important;
   font-family: var(--cuerpo) !important;
-  font-size: 20px !important; font-weight: 600 !important;
+  font-size: 22px !important; font-weight: 600 !important;
   letter-spacing: .01em !important;
   text-align: center; border: none !important;
   border-radius: 0 !important; cursor: pointer;
@@ -461,10 +510,12 @@ a   { color: inherit; }
 
 /* ── SINOPSIS (papel) ────────────────────────────────────── */
 .sinopsis-texto {
-  font-family: var(--cuerpo); font-size: 19px;
+  font-family: var(--cuerpo); font-size: 18px;
   line-height: 1.72; color: var(--p-soft);
-  margin-bottom: 14px;
+  text-align: justify; hyphens: auto;
+  margin-bottom: 13px;
 }
+.sinopsis-texto + .sinopsis-texto { text-indent: 1.15em; margin-top: 13px; }
 .sinopsis-texto:last-child { margin-bottom: 0; }
 #imagen-sinopsis { display: none; }
 @media (min-width: 768px) {
@@ -486,8 +537,8 @@ a   { color: inherit; }
   display: flex; justify-content: space-between; align-items: center;
   cursor: pointer; list-style: none;
   padding: 14px 0; gap: 12px;
-  font-family: var(--cuerpo); font-size: 19px; font-weight: 500;
-  color: var(--d-fg); line-height: 1.3; transition: color .15s;
+  font-family: var(--display); font-size: 20px; font-weight: 500;
+  color: var(--d-fg); line-height: 1.2; transition: color .15s;
 }
 .faq-summary::-webkit-details-marker { display: none; }
 .faq-summary:hover { color: var(--gold); }
@@ -498,18 +549,18 @@ a   { color: inherit; }
 details[open] .faq-chevron { transform: rotate(45deg); }
 .faq-resp {
   padding: 0 0 16px;
-  font-family: var(--cuerpo); font-size: 17px;
-  line-height: 1.7; color: var(--d-soft);
+  font-family: var(--cuerpo); font-size: 18px;
+  line-height: 1.72; color: var(--d-soft);
 }
 
 /* ── TEATRO / MAPA (papel) ───────────────────────────────── */
 .mapa-titulo {
-  font-family: var(--cuerpo); font-size: 19px; font-weight: 500;
+  font-family: var(--display); font-size: 20px; font-weight: 500;
   color: var(--p-ink); margin-bottom: 10px;
   display: flex; align-items: center; justify-content: space-between;
 }
 .mapa-badge {
-  font-family: var(--mono); font-size: 8px;
+  font-family: var(--mono); font-size: 12px;
   letter-spacing: .16em; text-transform: uppercase;
   color: var(--red); background: rgba(212,58,26,.08);
   padding: 3px 8px;
@@ -527,12 +578,12 @@ details[open] .faq-chevron { transform: rotate(45deg); }
 }
 .map-croquis-btn {
   background: rgba(212,58,26,.82); color: #fff;
-  font-family: var(--mono); font-size: 9px;
+  font-family: var(--mono); font-size: 12px;
   letter-spacing: .18em; text-transform: uppercase;
   padding: 8px 14px; display: flex; align-items: center; gap: 6px;
 }
 .mapa-nota {
-  font-family: var(--mono); font-size: 9px;
+  font-family: var(--mono); font-size: 12px;
   letter-spacing: .12em; text-transform: uppercase;
   color: var(--p-rule); text-align: center; margin-top: 10px;
 }
@@ -550,12 +601,12 @@ details[open] .faq-chevron { transform: rotate(45deg); }
 .contacto-icon { color: var(--red); flex-shrink: 0; }
 .contacto-icon svg { width: 18px; height: 18px; }
 .contacto-etiq {
-  font-family: var(--mono); font-size: 8px;
+  font-family: var(--mono); font-size: 12px;
   letter-spacing: .18em; text-transform: uppercase;
   color: var(--p-rule); display: block; margin-bottom: 2px;
 }
 .contacto-val {
-  font-family: var(--cuerpo); font-size: 17px;
+  font-family: var(--display); font-size: 20px;
   font-weight: 500; color: var(--p-ink);
 }
 
@@ -574,11 +625,11 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   margin-bottom: 22px;
 }
 .ichk-paso {
-  font-family: var(--mono); font-size: 10px;
+  font-family: var(--mono); font-size: 13px;
   letter-spacing: .2em; text-transform: uppercase;
-  color: rgba(26,20,17,.3);
+  color: rgba(26,20,17,.55);
 }
-.ichk-paso.hecho  { color: rgba(26,20,17,.45); }
+.ichk-paso.hecho  { color: rgba(26,20,17,.68); }
 .ichk-paso.actual { color: var(--red); font-weight: 600; }
 .ichk-paso-sep { color: rgba(26,20,17,.2); font-size: 13px; }
 
@@ -604,24 +655,24 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   margin-top: 6px;
 }
 .ichk-etiq {
-  font-family: var(--mono); font-size: 10px;
+  font-family: var(--mono); font-size: 13px;
   letter-spacing: .18em; text-transform: uppercase;
-  color: rgba(26,20,17,.5); flex-shrink: 0;
+  color: rgba(26,20,17,.72); flex-shrink: 0;
 }
 .ichk-val {
-  font-family: var(--cuerpo); font-size: 19px;
-  color: var(--p-ink); text-align: right;
+  font-family: var(--display); font-size: 20px;
+  font-weight: 500; color: var(--p-ink); text-align: right;
 }
 .ichk-val.grande {
-  font-size: 28px; font-weight: 600;
+  font-size: 34px; font-weight: 500; line-height: .88;
 }
 .ichk-desc-val { color: #2a7a44; }
 
 /* Botón "cambiar entradas" */
 .ichk-btn-editar {
-  font-family: var(--mono); font-size: 11px;
+  font-family: var(--mono); font-size: 13px;
   letter-spacing: .15em; text-transform: uppercase;
-  color: rgba(26,20,17,.45);
+  color: rgba(26,20,17,.68);
   background: none; border: none; cursor: pointer;
   padding: 2px 0; margin-bottom: 28px; display: block;
   text-decoration: underline;
@@ -634,14 +685,14 @@ details[open] .faq-chevron { transform: rotate(45deg); }
 /* Campo de correo — grande */
 .ichk-label {
   display: block;
-  font-family: var(--cuerpo); font-size: 21px; font-weight: 500;
-  color: var(--p-ink); margin-bottom: 6px; line-height: 1.3;
+  font-family: var(--display); font-size: 22px; font-weight: 500;
+  color: var(--p-ink); margin-bottom: 6px; line-height: 1.2;
 }
 .ichk-hint {
   display: block;
-  font-family: var(--mono); font-size: 10px;
+  font-family: var(--mono); font-size: 13px;
   letter-spacing: .15em; text-transform: uppercase;
-  color: rgba(26,20,17,.42); margin-top: 4px; font-weight: 400;
+  color: rgba(26,20,17,.65); margin-top: 4px; font-weight: 400;
 }
 .ichk-input {
   width: 100%; height: 62px; padding: 0 18px;
@@ -653,7 +704,7 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   -webkit-tap-highlight-color: transparent;
 }
 .ichk-input:focus { border-color: var(--red); }
-.ichk-input::placeholder { color: rgba(26,20,17,.28); }
+.ichk-input::placeholder { color: rgba(26,20,17,.45); }
 .ichk-input-wrap { margin-bottom: 22px; }
 
 /* Botón de pago — protagónico */
@@ -683,10 +734,24 @@ details[open] .faq-chevron { transform: rotate(45deg); }
 
 /* Nota de seguridad */
 .ichk-seguridad {
-  font-family: var(--mono); font-size: 10px;
+  font-family: var(--mono); font-size: 13px;
   letter-spacing: .12em; text-transform: uppercase;
-  color: rgba(26,20,17,.38); text-align: center; margin-top: 4px;
+  color: rgba(26,20,17,.62); text-align: center; margin-top: 4px;
 }
+.ichk-terminos {
+  font-family: var(--cuerpo);
+  font-size: 16px;
+  line-height: 1.55;
+  color: rgba(26,20,17,.78);
+  text-align: center;
+  margin-top: 12px;
+}
+.ichk-terminos a {
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ichk-terminos a:hover { color: var(--p-ink); }
 
 /* ── FOOTER (oscuro) ─────────────────────────────────────── */
 .bol-footer {
@@ -694,7 +759,7 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   border-top: 1px solid var(--d-faint);
 }
 .bol-footer-inner {
-  max-width: 560px; margin: 0 auto; padding: 32px 24px 28px;
+  max-width: 540px; margin: 0 auto; padding: 32px 28px 28px;
   display: grid; grid-template-columns: 1fr 1fr 1fr;
   gap: 16px; align-items: start;
 }
@@ -702,7 +767,7 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   .bol-footer-inner { grid-template-columns: 1fr; gap: 18px; text-align: center; }
 }
 .footer-col-label {
-  font-family: var(--mono); font-size: 8px;
+  font-family: var(--mono); font-size: 12px;
   letter-spacing: .22em; text-transform: uppercase;
   color: var(--gold); display: flex;
   align-items: center; gap: 6px; margin-bottom: 8px;
@@ -714,10 +779,13 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   transition: color .15s;
 }
 .footer-link:hover { color: var(--gold); }
-.footer-brand { font-family: var(--display); font-size: 18px; color: var(--gold); }
+.footer-brand {
+  font-family: var(--display); font-size: 22px; font-weight: 500;
+  color: var(--gold); letter-spacing: -.01em;
+}
 .footer-copy {
-  font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
-  text-transform: uppercase; color: rgba(241,234,217,.2); margin-top: 5px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: .12em;
+  text-transform: uppercase; color: rgba(241,234,217,.58); margin-top: 5px;
 }
 .footer-social {
   display: flex; justify-content: center; gap: 10px;
@@ -755,11 +823,11 @@ details[open] .faq-chevron { transform: rotate(45deg); }
 }
 .modal-espera-close:hover { color: var(--red); }
 .modal-espera-title {
-  font-family: var(--display); font-size: 24px;
-  color: var(--d-fg); line-height: 1.1; margin-bottom: 6px;
+  font-family: var(--display); font-size: 28px; font-weight: 500;
+  color: var(--d-fg); line-height: .98; margin-bottom: 6px;
 }
 #espera-funcion-texto {
-  font-family: var(--mono); font-size: 10px;
+  font-family: var(--mono); font-size: 13px;
   letter-spacing: .14em; text-transform: uppercase;
   color: var(--d-soft); margin-bottom: 22px; display: block;
 }
@@ -771,7 +839,7 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   outline: none; transition: border-color .15s; border-radius: 0 !important;
 }
 .modal-input:focus { border-color: var(--gold-dim); }
-.modal-input::placeholder { color: rgba(241,234,217,.25); }
+.modal-input::placeholder { color: rgba(241,234,217,.45); }
 .btn-espera-submit {
   display: block; width: 100%;
   padding: 15px 24px; margin-bottom: 10px;
@@ -785,9 +853,10 @@ details[open] .faq-chevron { transform: rotate(45deg); }
 #espera-mensaje { font-family: var(--cuerpo); font-size: 16px; line-height: 1.5; }
 
 @media (max-width: 400px) {
-  .inner { padding: 0 18px; }
+  .inner { padding: 0 20px; }
   .cover-section { padding: 88px 0 32px; }
-  .sd, .sd--mid, .sp { padding: 28px 0; }
+  .sd, .sd--mid, .sp { padding: 32px 0; }
+  .sec-title { font-size: 34px; }
 }
 </style>
 </head>
@@ -873,8 +942,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- Fechas -->
     <span class="fecha-sub-label">Selecciona la fecha</span>
     <div id="botones-fecha"><!-- JS --></div>
+    <div id="fechas-progressive-ui" aria-live="polite"></div>
     <p id="fecha-seleccionada-texto">Selecciona una fecha</p>
     <div id="disponibilidad-info" class="hidden"></div>
+    <div id="seccion-venta-info" aria-live="polite"></div>
     <div id="mensaje-agotado" class="hidden"></div>
 
     <!-- Tipos de boleto -->
@@ -885,8 +956,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div>
         <div class="ticket-nombre">General</div>
         <div class="ticket-precio" id="precio-general-display">$350 MXN</div>
-        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(217,155,58,.42);margin-top:3px;">
-          5+ boletos → <strong style="color:rgba(74,222,128,.7);">−29% Descuento Manada</strong>
+        <div style="font-family:var(--cuerpo);font-size:16px;color:var(--d-soft);margin-top:5px;line-height:1.4;">
+          5+ boletos → <strong style="color:#4ade80;">−20% Descuento Manada</strong>
         </div>
       </div>
       <div class="ticket-controls">
@@ -906,7 +977,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <span class="ticket-precio-promo">$245 MXN</span>
           <span style="opacity:.55;"> · −30%</span>
         </div>
-        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(241,234,217,.3);margin-top:3px;">
+        <div style="font-family:var(--cuerpo);font-size:16px;color:var(--d-soft);margin-top:5px;line-height:1.4;">
           Credencial requerida al ingresar
         </div>
       </div>
@@ -1014,6 +1085,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <p class="ichk-seguridad" aria-label="Pago seguro">
       🔒 Pago con tarjeta · Procesado por Stripe · Conexión cifrada
     </p>
+    <p class="ichk-terminos">Al continuar, aceptas los <a href="terminos.html" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a> y la <a href="terminos.html#privacidad" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.</p>
 
   </div>
 </section>
@@ -1047,7 +1119,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span>¿Puedo cambiar mis boletos para otra fecha?</span>
         <span class="faq-chevron" aria-hidden="true">+</span>
       </summary>
-      <p class="faq-resp">Los cambios de fecha están sujetos a disponibilidad y deben solicitarse con al menos 48 horas de antelación. Por favor, contáctanos para más detalles.</p>
+      <p class="faq-resp">Las compras son finales. Solo hay cambio de fecha si la producción cancela o reprograma la función; en ese caso te contactamos por correo.</p>
     </details>
 
     <details class="faq-item">
@@ -1055,7 +1127,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span>¿Hay descuentos disponibles?</span>
         <span class="faq-chevron" aria-hidden="true">+</span>
       </summary>
-      <p class="faq-resp">Ofrecemos descuentos para estudiantes, INAPAM y maestros. Es necesario presentar credencial vigente al ingresar al teatro. Los descuentos no son acumulables.</p>
+      <p class="faq-resp">Ofrecemos descuentos para estudiantes, INAPAM y maestros (presenta credencial vigente al ingresar). Con <strong>5 o más boletos generales</strong> aplica el descuento Manada del <strong>20%</strong>. Los descuentos no son acumulables.</p>
     </details>
 
     <details class="faq-item">
@@ -1071,7 +1143,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span>¿A qué hora debo llegar?</span>
         <span class="faq-chevron" aria-hidden="true">+</span>
       </summary>
-      <p class="faq-resp">Recomendamos llegar 30 minutos antes del inicio. Las puertas del teatro abren 45 minutos antes de cada función.</p>
+      <p class="faq-resp">Te recomendamos llegar con al menos <strong>30 minutos de anticipación</strong> (antes de las 20:00 hrs). El acceso puede cerrarse al iniciar la función a las 20:30.</p>
     </details>
   </div>
 </section>
@@ -1242,7 +1314,7 @@ async function procesarPagoInline() {
     btnEl.disabled = true;
     if (textoBtn) textoBtn.textContent = 'Un momento...';
     try {
-      const res  = await fetch(window.API_BASE + '/api/checkout', {
+      const res  = await fetch(window.teatroApi('checkout'), {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
@@ -1299,35 +1371,129 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Limitar fechas visibles: muestra 3 por defecto, el resto tras "ver más" -->
+<!-- Fechas: 3 iniciales → resto del mes → siguiente mes (3) → … -->
 <script>
 (function() {
-  var MAX = 3;
+  var MESES_ES = ['','enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+  function nombreMes(mesIso) {
+    var n = parseInt((mesIso || '').split('-')[1], 10);
+    return MESES_ES[n] || mesIso;
+  }
+
+  function flattenItems(container) {
+    var out = [];
+    Array.from(container.children).forEach(function(el) {
+      var mes = el.getAttribute('data-fecha-mes')
+        || (el.querySelector('[data-fecha-mes]') && el.querySelector('[data-fecha-mes]').getAttribute('data-fecha-mes'))
+        || (el.querySelector('[data-fecha-clave]') && el.querySelector('[data-fecha-clave]').getAttribute('data-fecha-clave').slice(0, 7));
+      if (!mes) return;
+      out.push({ el: el, mes: mes, idx: out.length });
+    });
+    return out;
+  }
+
+  function buildSteps(items) {
+    if (!items.length) return [];
+    var months = [];
+    items.forEach(function(it) {
+      if (months.indexOf(it.mes) === -1) months.push(it.mes);
+    });
+    months.sort();
+
+    var steps = [];
+    months.forEach(function(mes, mi) {
+      var idxs = items.filter(function(it) { return it.mes === mes; }).map(function(it) { return it.idx; });
+      var nom = nombreMes(mes);
+      var nomCap = nom.charAt(0).toUpperCase() + nom.slice(1);
+      var nextMes = mi < months.length - 1 ? months[mi + 1] : null;
+      var nextNom = nextMes ? nombreMes(nextMes) : null;
+      var isExtension = mi === months.length - 1 && months.length >= 3;
+      var firstBatch = mi === 0 ? Math.min(3, idxs.length) : Math.min(3, idxs.length);
+
+      if (mi === 0) {
+        steps.push({
+          maxIdx: idxs[firstBatch - 1],
+          btn: idxs.length > firstBatch
+            ? 'Ver más fechas de ' + nom + ' \u2192'
+            : (nextNom ? 'Ver funciones de ' + nextNom + ' \u2192' : null)
+        });
+        if (idxs.length > firstBatch) {
+          steps.push({
+            maxIdx: idxs[idxs.length - 1],
+            btn: nextNom ? 'Ver funciones de ' + nextNom + ' \u2192' : null
+          });
+        }
+      } else {
+        var endFirst = idxs[firstBatch - 1];
+        steps.push({
+          maxIdx: endFirst,
+          monthLabel: isExtension
+            ? { title: 'Temporada alargada', sub: 'Porque ustedes lo pidieron — ' + nom + ' ' + mes.split('-')[0], extension: true }
+            : { title: nomCap },
+          btn: idxs.length > firstBatch
+            ? 'Ver más fechas de ' + nom + ' \u2192'
+            : (nextNom ? 'Ver funciones de ' + nextNom + ' \u2192' : null)
+        });
+        if (idxs.length > firstBatch) {
+          steps.push({
+            maxIdx: idxs[idxs.length - 1],
+            btn: nextNom ? 'Ver funciones de ' + nextNom + ' \u2192' : null
+          });
+        }
+      }
+    });
+    return steps;
+  }
+
+  function renderNotas(ui, stepIndex, steps) {
+    ui.querySelectorAll('.fechas-mes-nota').forEach(function(n) { n.remove(); });
+    for (var s = 1; s <= stepIndex && s < steps.length; s++) {
+      var lbl = steps[s].monthLabel;
+      if (!lbl) continue;
+      var box = document.createElement('div');
+      box.className = 'fechas-mes-nota' + (lbl.extension ? ' fechas-mes-nota--extension' : '');
+      box.innerHTML = '<p class="fechas-mes-nota__titulo">' + lbl.title + '</p>'
+        + (lbl.sub ? '<p class="fechas-mes-nota__sub">' + lbl.sub + '</p>' : '');
+      ui.insertBefore(box, ui.firstChild);
+    }
+  }
+
+  function applyStep(items, stepIndex, steps, ui) {
+    var maxIdx = steps[stepIndex].maxIdx;
+    items.forEach(function(it, i) {
+      it.el.style.display = i <= maxIdx ? '' : 'none';
+    });
+    renderNotas(ui, stepIndex, steps);
+    ui.querySelectorAll('.btn-fechas-toggle').forEach(function(b) { b.remove(); });
+    var btnText = steps[stepIndex].btn;
+    if (btnText && stepIndex < steps.length - 1) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-fechas-toggle';
+      btn.textContent = btnText;
+      btn.addEventListener('click', function() {
+        applyStep(items, stepIndex + 1, steps, ui);
+      });
+      ui.appendChild(btn);
+    }
+  }
+
   function procesarFechas() {
     var container = document.getElementById('botones-fecha');
-    if (!container) return;
-    var items = Array.from(container.children);
-    if (items.length <= MAX) return;
-    var prev = document.getElementById('btn-fechas-toggle');
-    if (prev) prev.remove();
-    var expanded = false;
-    items.forEach(function(el, i) {
-      el.style.display = i >= MAX ? 'none' : '';
+    var ui = document.getElementById('fechas-progressive-ui');
+    if (!container || !ui) return;
+    var items = flattenItems(container);
+    if (!items.length) return;
+    var steps = buildSteps(items);
+    if (!steps.length) return;
+    items.forEach(function(it, i) {
+      it.el.style.display = i <= steps[0].maxIdx ? '' : 'none';
     });
-    var btn = document.createElement('button');
-    btn.id = 'btn-fechas-toggle'; btn.type = 'button';
-    btn.textContent = 'Ver todas las fechas (' + items.length + ') \u2192';
-    btn.addEventListener('click', function() {
-      expanded = !expanded;
-      items.forEach(function(el, i) {
-        if (i >= MAX) el.style.display = expanded ? '' : 'none';
-      });
-      btn.textContent = expanded
-        ? '\u2190 Ocultar fechas'
-        : 'Ver todas las fechas (' + items.length + ') \u2192';
-    });
-    container.after(btn);
+    ui.innerHTML = '';
+    applyStep(items, 0, steps, ui);
   }
+
   var observer = new MutationObserver(procesarFechas);
   document.addEventListener('DOMContentLoaded', function() {
     var c = document.getElementById('botones-fecha');

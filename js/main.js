@@ -14,7 +14,21 @@ let fechaIsoActual    = null;  // YYYY-MM-DD para el Worker
 let nombreFecha       = '';    // texto largo para mostrar al comprador
 let reservaId         = null;
 let disponibilidadInfo = null;
+let seccionActiva      = 'platea';
+let _galeriaAbierta    = false;
 let _grupoGrandeNotificado = false;
+
+function seccionVentaConfig() {
+    const map = window.SECCIONES_VENTA || {};
+    return map[seccionActiva] || map.platea || { precio_general: 350, precio_descuento: 245, nombre: 'Platea' };
+}
+
+function precioUnitario(tipo) {
+    const sec = seccionVentaConfig();
+    const base = tipo === 'general' ? sec.precio_general : sec.precio_descuento;
+    if (promoManadaActiva() && tipo === 'general') return base * (1 - DESCUENTO_MANADA_PCT);
+    return base;
+}
 
 // --- HELPERS DE CARRITO ---
 
@@ -22,24 +36,26 @@ function totalCantidad() {
     return Object.values(cantidades).reduce((s, c) => s + c, 0);
 }
 
-// Descuento Manada: 5+ generales → 29% off sobre todos los generales.
+// Descuento Manada: 5+ generales → 20% off sobre todos los generales.
 // Se aplica aunque haya boletos especiales (inapam/estudiante/maestro).
-const DESCUENTO_MANADA_MIN  = 5;      // mínimo de generales para activar
-const DESCUENTO_MANADA_PCT  = 0.29;   // porcentaje de descuento
-const DESCUENTO_ESPECIALES  = 0.30;   // porcentaje de descuento para tipos especiales
+const DESCUENTO_MANADA_MIN  = 5;
+const DESCUENTO_MANADA_PCT  = 0.20;
+const DESCUENTO_ESPECIALES  = 0.30;
+const NOMBRE_CREDENCIAL     = 'INAPAM · Estudiante · Maestro';
+const TIPOS_CREDENCIAL      = ['inapam', 'estudiante', 'maestro'];
+
+function nombreBoletoEnResumen(tipo) {
+    if (TIPOS_CREDENCIAL.includes(tipo)) return NOMBRE_CREDENCIAL;
+    const t = TIPOS_BOLETO.find(x => x.tipo === tipo);
+    return t ? t.nombre : tipo;
+}
 
 function promoManadaActiva() {
     return cantidades.general >= DESCUENTO_MANADA_MIN;
 }
 
 function calcularTotal() {
-    const manada = promoManadaActiva();
-    return TIPOS_BOLETO.reduce((s, t) => {
-        const precio = (manada && t.tipo === 'general')
-            ? t.precio * (1 - DESCUENTO_MANADA_PCT)
-            : t.precio;
-        return s + precio * (cantidades[t.tipo] || 0);
-    }, 0);
+    return TIPOS_BOLETO.reduce((s, t) => s + precioUnitario(t.tipo) * (cantidades[t.tipo] || 0), 0);
 }
 
 // --- FUNCIÓN 1: CAMBIAR CANTIDAD POR TIPO ---
@@ -142,17 +158,32 @@ function verificarDisponibilidad() {
 function actualizarIndicadorDisponibilidad() {
     const indicador      = document.getElementById('disponibilidad-info');
     const mensajeAgotado = document.getElementById('mensaje-agotado');
+    const seccionInfo    = document.getElementById('seccion-venta-info');
+
+    if (indicador) indicador.classList.remove('hidden');
 
     if (disponibilidadInfo) {
         if (disponibilidadInfo.disponible > 0) {
-            if (indicador) indicador.innerHTML = `<p class="text-xs text-green-400">✓ ${disponibilidadInfo.disponible} boletos disponibles</p>`;
+            const zona = _galeriaAbierta ? 'Galería (arriba)' : 'Platea (abajo)';
+            if (indicador) {
+                indicador.innerHTML = `<p class="text-xs text-green-400">✓ ${disponibilidadInfo.disponible} en ${zona}</p>`;
+            }
+            if (seccionInfo) {
+                if (_galeriaAbierta) {
+                    seccionInfo.innerHTML = '<p class="seccion-venta-aviso seccion-venta-aviso--galeria">Platea agotada — abrimos <strong>galería (arriba)</strong> al mismo precio</p>';
+                } else {
+                    seccionInfo.innerHTML = '<p class="seccion-venta-aviso">Venta en <strong>platea (abajo)</strong>. La galería se abre si se llena.</p>';
+                }
+            }
             if (mensajeAgotado) mensajeAgotado.classList.add('hidden');
         } else {
             if (indicador) indicador.innerHTML = `<p class="text-xs text-red-400">✗ Agotado</p>`;
+            if (seccionInfo) seccionInfo.innerHTML = '';
             if (mensajeAgotado) mensajeAgotado.classList.remove('hidden');
         }
     } else {
         if (indicador) indicador.innerHTML = `<p class="text-xs text-text-muted-dark">Selecciona una fecha para ver disponibilidad</p>`;
+        if (seccionInfo) seccionInfo.innerHTML = '';
         if (mensajeAgotado) mensajeAgotado.classList.add('hidden');
     }
 }
@@ -160,12 +191,25 @@ function actualizarIndicadorDisponibilidad() {
 // --- DISPONIBILIDAD REAL DESDE EL WORKER (fire-and-forget) ---
 function refrescarDisponibilidadWorker() {
     if (!fechaIsoActual || !window.API_BASE) return;
-    fetch(`${window.API_BASE}/api/disponibilidad?fecha=${encodeURIComponent(fechaIsoActual)}`)
+    fetch(window.teatroApi(`disponibilidad?fecha=${encodeURIComponent(fechaIsoActual)}`))
         .then(r => r.ok ? r.json() : null)
         .then(data => {
-            if (!data || typeof data.disponibles !== 'number') return;
-            disponibilidadInfo = { total: data.total, vendidos: data.vendidos, reservados: 0, disponible: data.disponibles };
+            if (!data) return;
+            const platea  = data.secciones?.platea?.disponibles ?? 0;
+            const galeria = data.secciones?.galeria?.disponibles ?? 0;
+            _galeriaAbierta = !!data.galeria_abierta || (platea === 0 && galeria > 0);
+            seccionActiva   = _galeriaAbierta ? 'galeria' : 'platea';
+            const disp      = typeof data.disponibles === 'number'
+                ? data.disponibles
+                : (_galeriaAbierta ? galeria : platea);
+            disponibilidadInfo = {
+                disponible: disp,
+                platea,
+                galeria,
+                galeria_abierta: _galeriaAbierta,
+            };
             actualizarIndicadorDisponibilidad();
+            actualizarPantalla();
         })
         .catch(() => {});
 }
@@ -184,17 +228,18 @@ function actualizarPantalla() {
     const cajitaFecha = document.getElementById('fecha-seleccionada-texto');
     if (cajitaFecha) cajitaFecha.innerText = nombreFecha || 'Selecciona una fecha';
 
-    // Precio del general en la fila (actualiza el label dinámicamente)
+    const secCfg = seccionVentaConfig();
     const precioGeneralEl = document.getElementById('precio-general-display');
     if (precioGeneralEl) {
+        const base = secCfg.precio_general;
         if (manada) {
-            const precioDesc = (350 * (1 - DESCUENTO_MANADA_PCT)).toFixed(2);
+            const precioDesc = (base * (1 - DESCUENTO_MANADA_PCT)).toFixed(2);
             precioGeneralEl.innerHTML =
-                `<span style="text-decoration:line-through;opacity:.45;">$350</span> ` +
+                `<span style="text-decoration:line-through;opacity:.45;">$${base}</span> ` +
                 `<span style="color:#4ade80;">$${precioDesc} MXN</span> ` +
                 `<span style="opacity:.55;">· −${Math.round(DESCUENTO_MANADA_PCT * 100)}%</span>`;
         } else {
-            precioGeneralEl.innerHTML = '$350 MXN';
+            precioGeneralEl.innerHTML = `$${base} MXN`;
         }
     }
 
@@ -204,20 +249,22 @@ function actualizarPantalla() {
         const activos = TIPOS_BOLETO.filter(t => cantidades[t.tipo] > 0);
         let html = activos.map(t => {
             const esGeneral = t.tipo === 'general';
-            const precioUnit = (manada && esGeneral)
-                ? t.precio * (1 - DESCUENTO_MANADA_PCT)
-                : t.precio;
+            const precioUnit = precioUnitario(t.tipo);
             const subtipo = (manada && esGeneral)
                 ? ` <span style="color:#4ade80;font-size:.8em;">−${Math.round(DESCUENTO_MANADA_PCT*100)}%</span>`
                 : (t.desc ? ` <span style="color:#4ade80;font-size:.8em;">−30%</span>` : '');
             return `<div class="flex justify-between text-text-dark text-sm">
-                <span>${t.nombre} × ${cantidades[t.tipo]}${subtipo}</span>
+                <span>${nombreBoletoEnResumen(t.tipo)} × ${cantidades[t.tipo]}${subtipo}</span>
                 <span>$${(precioUnit * cantidades[t.tipo]).toFixed(2)}</span>
             </div>`;
         }).join('');
 
         // Línea de descuento total (si hay algún descuento activo)
-        const subtotalBruto = TIPOS_BOLETO.reduce((s, t) => s + t.precio * (cantidades[t.tipo] || 0), 0);
+        const subtotalBruto = TIPOS_BOLETO.reduce((s, t) => {
+            const sec = seccionVentaConfig();
+            const base = t.tipo === 'general' ? sec.precio_general : sec.precio_descuento;
+            return s + base * (cantidades[t.tipo] || 0);
+        }, 0);
         const totalDesc = calcularTotal();
         const montoDescuento = subtotalBruto - totalDesc;
         if (montoDescuento > 0.01 && activos.length > 0) {
@@ -243,7 +290,7 @@ function actualizarPantalla() {
     }
     if (promoBanner) {
         if (manada) {
-            const ahorro = (350 * DESCUENTO_MANADA_PCT * cantidades.general).toFixed(2);
+            const ahorro = (seccionVentaConfig().precio_general * DESCUENTO_MANADA_PCT * cantidades.general).toFixed(2);
             promoBanner.className = 'text-xs text-green-400 font-semibold my-1';
             promoBanner.innerHTML =
                 `✓ Descuento Manada activo — ${Math.round(DESCUENTO_MANADA_PCT*100)}% off · ` +
@@ -315,7 +362,7 @@ function irAConfirmacion() {
 
     const items = TIPOS_BOLETO
         .filter(t => cantidades[t.tipo] > 0)
-        .map(t => ({ tipo: t.tipo, cantidad: cantidades[t.tipo] }));
+        .map(t => ({ tipo: t.tipo, cantidad: cantidades[t.tipo], seccion: seccionActiva }));
 
     if (items.length === 0) {
         alert('Por favor selecciona al menos un boleto');
@@ -335,7 +382,11 @@ function irAConfirmacion() {
         }
     }
 
-    const subtotalSinDescuento = TIPOS_BOLETO.reduce((s, t) => s + t.precio * (cantidades[t.tipo] || 0), 0);
+    const subtotalSinDescuento = TIPOS_BOLETO.reduce((s, t) => {
+        const sec = seccionVentaConfig();
+        const base = t.tipo === 'general' ? sec.precio_general : sec.precio_descuento;
+        return s + base * (cantidades[t.tipo] || 0);
+    }, 0);
     const totalConDescuento = calcularTotal();
     const descuentoMonto = subtotalSinDescuento - totalConDescuento;
 
@@ -386,19 +437,15 @@ function mostrarCheckoutInline(orden) {
     // Ítems del pedido
     const itemsWrap = document.getElementById('ichk-items-wrap');
     if (itemsWrap && Array.isArray(orden.items)) {
-        const NOMBRES = {
-            general:    'General',
-            inapam:     'INAPAM',
-            estudiante: 'Desc. 30%',
-            maestro:    'Maestro',
-        };
         itemsWrap.innerHTML = orden.items.map(item => {
-            const precioUnit = (promoManadaActiva() && item.tipo === 'general')
-                ? TIPOS_BOLETO.find(t => t.tipo === 'general').precio * (1 - DESCUENTO_MANADA_PCT)
-                : (TIPOS_BOLETO.find(t => t.tipo === item.tipo) || { precio: 0 }).precio;
+            const prevSec = item.seccion || seccionActiva;
+            const secMap = window.SECCIONES_VENTA || {};
+            const sec = secMap[prevSec] || secMap.platea || { precio_general: 350, precio_descuento: 245 };
+            let precioUnit = item.tipo === 'general' ? sec.precio_general : sec.precio_descuento;
+            if (promoManadaActiva() && item.tipo === 'general') precioUnit *= (1 - DESCUENTO_MANADA_PCT);
             const sub = (precioUnit * item.cantidad).toFixed(0);
             return `<div class="ichk-item-fila">
-                <span class="ichk-etiq">${NOMBRES[item.tipo] || item.tipo} × ${item.cantidad}</span>
+                <span class="ichk-etiq">${nombreBoletoEnResumen(item.tipo)} × ${item.cantidad}</span>
                 <span class="ichk-val">$${sub}</span>
             </div>`;
         }).join('');
@@ -466,8 +513,12 @@ function cargarFechas() {
         const bloqueada      = funcion.bloqueada;
         const esAgotada      = funcion.agotada === true;
         const esSeleccionada = fechaSeleccionada === funcion.clave;
-        const fechaCorta     = funcion.nombre.split(' - ')[0];
-        const hora           = funcion.nombre.split(' - ')[1] || '';
+        const partesNombre   = funcion.nombre.split(/\s*[—–-]\s*/);
+        const fechaCorta     = partesNombre[0] || funcion.nombre;
+        const hora           = partesNombre[1] || '20:30 hrs';
+        const estrenoTag     = funcion.estreno
+            ? '<span class="fecha-estreno-tag">Estreno</span>'
+            : '';
         const claveStr       = funcion.clave;
         const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
 
@@ -475,8 +526,8 @@ function cargarFechas() {
             const dFuncion  = funcion.fecha instanceof Date ? funcion.fecha : new Date(funcion.fecha);
             const fechaIsoF = dFuncion.toISOString().split('T')[0];
             html += `
-            <div>
-                <button type="button" disabled data-fecha-clave="${claveStr}"
+            <div data-fecha-item data-fecha-mes="${claveStr.slice(0, 7)}">
+                <button type="button" disabled data-fecha-clave="${claveStr}" data-fecha-mes="${claveStr.slice(0, 7)}"
                     class="w-full p-4 rounded-lg text-center border border-red-800/50 bg-red-950/30 text-red-300 cursor-not-allowed backdrop-blur-sm">
                     <span class="block font-bold text-sm">${fechaCorta}</span>
                     <span class="inline-block mt-1 bg-red-700 text-white text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">Agotado</span>
@@ -497,16 +548,19 @@ function cargarFechas() {
             ? 'border: 3px solid white; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); -webkit-tap-highlight-color: transparent;'
             : '-webkit-tap-highlight-color: transparent;');
 
+        const mesIso = claveStr.slice(0, 7);
         html += `
             <button
                 type="button"
                 data-fecha-clave="${claveStr}"
+                data-fecha-mes="${mesIso}"
                 onclick="${bloqueada ? '' : `seleccionarFecha('${claveStr}', '${nombreStr}', ${JSON.stringify(funcion).replace(/"/g, '&quot;')})`}"
                 class="${claseBoton}"
                 ${bloqueada ? 'disabled' : ''}
                 style="${estiloBoton}"
             >
                 <span class="block font-bold ${bloqueada ? 'opacity-60' : ''}">${fechaCorta}</span>
+                ${estrenoTag}
                 <span class="text-sm ${bloqueada ? 'opacity-60' : 'font-medium opacity-90'}">
                     ${bloqueada ? 'Ventas bloqueadas' : hora}
                 </span>
@@ -577,7 +631,7 @@ async function enviarListaEspera() {
 
     try {
         if (window.API_BASE) {
-            const res = await fetch(window.API_BASE + '/api/lista-espera', {
+            const res = await fetch(window.teatroApi('lista-espera'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ clave: _listaEsperaClave, fechaIso: _listaEsperaFechaIso, nombre, email })

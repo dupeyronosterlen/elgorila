@@ -12,7 +12,8 @@ async function cargarConfirmacion() {
     if (sessionId && window.API_BASE) {
         for (let intento = 0; intento < 3; intento++) {
             try {
-                const res = await fetch(window.API_BASE + '/api/venta/' + encodeURIComponent(sessionId));
+                const tid = typeof window.teatroIdFromUrl === 'function' ? window.teatroIdFromUrl() : (window.TEATRO_ID || 'wilberto');
+                const res = await fetch(`${window.API_BASE}/api/${tid}/venta/` + encodeURIComponent(sessionId));
                 if (res.ok) {
                     const venta = await res.json();
                     let local = null;
@@ -223,7 +224,7 @@ function mostrarExito() {
             `Boletos: ${boletosTexto}\n` +
             `Total: $${total.toFixed(2)} MXN\n` +
             `Orden: ${orden}\n\n` +
-            `📍 Centro Cultural Coyoacanense, Coyoacán`
+            `📍 Teatro Wilberto Cantón, San José Insurgentes, CDMX`
         );
         waContainer.innerHTML = `
             <a href="https://wa.me/?text=${msg}" target="_blank" rel="noopener noreferrer"

@@ -1,12 +1,41 @@
+/** Sedes — cada una con paleta propia para futuros teatros simultáneos */
+const SEDES = {
+  'teatro-wilberto-canton': {
+    id:        'teatro-wilberto-canton',
+    nombre:    'Teatro Wilberto Cantón',
+    direccion: 'José María Velasco 59, San José Insurgentes, CDMX',
+    zona:      'Ciudad de México',
+    palette:   'cafe',
+    teatroId:  'wilberto',
+  },
+  'ccc': {
+    id:        'ccc',
+    nombre:    'Centro Cultural Coyoacanense',
+    direccion: 'Felipe Carrillo Puerto 54, Coyoacán, CDMX',
+    zona:      'Ciudad de México',
+    palette:   'ccc',
+    teatroId:  'ccc',
+    activo:    false,
+  },
+};
+
+const SEDE_TEMPORADA = 'teatro-wilberto-canton';
+
+/** Temporada 2026 — miércoles 8 jul al último miércoles de sep (30 sep), 20:30 */
 const FUNCIONES_TEMPORADA = [
-  { fecha_iso: '2026-06-10', nombre: 'Miércoles 10 Jun — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-06-17', nombre: 'Miércoles 17 Jun — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-06-24', nombre: 'Miércoles 24 Jun — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-07-01', nombre: 'Miércoles 1 Jul — 20:30 hrs',  activa: true },
-  { fecha_iso: '2026-07-08', nombre: 'Miércoles 8 Jul — 20:30 hrs',  activa: true },
-  { fecha_iso: '2026-07-15', nombre: 'Miércoles 15 Jul — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-07-22', nombre: 'Miércoles 22 Jul — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-07-29', nombre: 'Miércoles 29 Jul — 20:30 hrs', activa: true },
+  { fecha_iso: '2026-07-08', nombre: 'Miércoles 8 Jul — 20:30 hrs',  sede: SEDE_TEMPORADA, estreno: true,  activa: true },
+  { fecha_iso: '2026-07-15', nombre: 'Miércoles 15 Jul — 20:30 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-07-22', nombre: 'Miércoles 22 Jul — 20:30 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-07-29', nombre: 'Miércoles 29 Jul — 20:30 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-08-05', nombre: 'Miércoles 5 Ago — 20:30 hrs',  sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-08-12', nombre: 'Miércoles 12 Ago — 20:30 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-08-19', nombre: 'Miércoles 19 Ago — 20:30 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-08-26', nombre: 'Miércoles 26 Ago — 20:30 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-09-02', nombre: 'Miércoles 2 Sep — 20:30 hrs',  sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-09-09', nombre: 'Miércoles 9 Sep — 20:30 hrs',  sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-09-16', nombre: 'Miércoles 16 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-09-23', nombre: 'Miércoles 23 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-09-30', nombre: 'Miércoles 30 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: true },
 ];
 
 const FechasManager = {
@@ -14,13 +43,12 @@ const FechasManager = {
     HORA_FUNCION:              20,
     MINUTOS_FUNCION:           30,
     MINUTOS_BLOQUEO:           30,
-    TOTAL_BOLETOS:            200,
+    TOTAL_BOLETOS:            325,
   },
 
   formatearFecha(fechaIso) {
     const dias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
     const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    // Parsear como fecha local (sin conversión UTC)
     const [y, m, d] = fechaIso.split('-').map(Number);
     const fecha = new Date(y, m - 1, d, this.CONFIG.HORA_FUNCION, this.CONFIG.MINUTOS_FUNCION);
     const h = String(fecha.getHours()).padStart(2, '0');
@@ -40,6 +68,10 @@ const FechasManager = {
     return new Date() > new Date(y, m - 1, d, 23, 59, 59);
   },
 
+  obtenerSede(sedeId) {
+    return SEDES[sedeId] || null;
+  },
+
   obtenerFunciones() {
     const activas = FUNCIONES_TEMPORADA
       .filter(f => f.activa !== false && !this.yaPaso(f.fecha_iso))
@@ -54,7 +86,6 @@ const FechasManager = {
     return { regulares: activas, especiales: [] };
   },
 
-  // Compatibilidad con código existente
   obtenerFuncionesEspeciales() { return []; },
   guardarFuncionesEspeciales() {},
   crearFuncionEspecial()       { return null; },
@@ -75,4 +106,6 @@ const FechasManager = {
 
 if (typeof window !== 'undefined') {
   window.FechasManager = FechasManager;
+  window.SEDES = SEDES;
+  window.FUNCIONES_TEMPORADA = FUNCIONES_TEMPORADA;
 }

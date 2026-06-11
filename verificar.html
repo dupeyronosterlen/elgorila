@@ -1,293 +1,137 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
-<!-- End Google Tag Manager -->
-    <meta charset="utf-8"/>
-    <meta name="robots" content="noindex,nofollow"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev"/>
-    <title>Verificar Boleto - El Gorila de Franz Kafka</title>
-    <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg"/>
-    <link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
-    <link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
-    <link rel="preload" as="font" type="font/woff2" href="fonts/cormorant-normal-latin.woff2" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        primary:            "#d99b3a",
-                        "background-light": "#f1ead9",
-                        "background-dark":  "#0a0706",
-                        'brand-garnet':     '#D43A1A',
-                        'brand-mustard':    '#d99b3a',
-                        'brand-cream':      '#f1ead9',
-                    },
-                    fontFamily: {
-                        display: ["'IM Fell English'", "Georgia", "serif"],
-                        sans:    ["'Cormorant Garamond'", "serif"],
-                        mono:    ["'Courier Prime'", "monospace"],
-                    },
-                },
-            },
-        };
-    </script>
-    <style>
-        @font-face {
-            font-family: 'IM Fell English';
-            font-style: normal; font-weight: 400; font-display: swap;
-            src: url(fonts/im-fell-english-latin.woff2) format('woff2');
-        }
-        @font-face {
-            font-family: 'Courier Prime';
-            font-style: normal; font-weight: 400; font-display: swap;
-            src: url(fonts/courier-prime-latin.woff2) format('woff2');
-        }
-        @font-face {
-            font-family: 'Cormorant Garamond';
-            font-style: normal; font-weight: 300 600; font-display: swap;
-            src: url(fonts/cormorant-normal-latin.woff2) format('woff2');
-        }
-        :root {
-            --d-bg:    #0a0706;
-            --d-bg2:   #120d0b;
-            --d-fg:    #f1ead9;
-            --d-soft:  rgba(241,234,217,.65);
-            --d-faint: rgba(241,234,217,.10);
-            --gold:    #d99b3a;
-            --red:     #D43A1A;
-        }
-        body {
-            background: var(--d-bg) !important;
-            font-family: 'Cormorant Garamond', serif !important;
-            color: var(--d-fg);
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'IM Fell English', Georgia, serif;
-        }
-        .background-gradient {
-            background: var(--d-bg) !important;
-            position: relative;
-        }
-        .background-gradient::before { display: none; }
-        /* Header fijo */
-        header.fixed, header.bg-black\/60 {
-            background: rgba(10,7,6,0.94) !important;
-            border-color: rgba(217,155,58,.2) !important;
-        }
-        /* Tarjeta de input */
-        .bg-black\/60 { background: rgba(18,13,11,0.85) !important; }
-        .border-white\/20 { border-color: rgba(217,155,58,.2) !important; }
-        /* Inputs */
-        input, select, textarea {
-            background: rgba(10,7,6,0.7) !important;
-            border-color: var(--d-faint) !important;
-            color: var(--d-fg) !important;
-            font-family: 'Cormorant Garamond', serif !important;
-            border-radius: 0 !important;
-        }
-        input::placeholder { color: rgba(241,234,217,.30) !important; }
-        input:focus { border-color: var(--gold) !important; outline: none !important; }
-        /* Botones */
-        button, [type="button"] {
-            font-family: 'Cormorant Garamond', serif !important;
-            border-radius: 0 !important;
-        }
-        /* Resultado válido */
-        .bg-green-900\/50 { background: rgba(10,7,6,0.85) !important; border-color: rgba(74,222,128,.3) !important; }
-        /* Resultado inválido */
-        .bg-red-900\/50   { background: rgba(10,7,6,0.85) !important; }
-        /* Textos blancos */
-        .text-white { color: var(--d-fg) !important; }
-        .text-white\/80, .text-white\/90 { color: var(--d-soft) !important; }
-        .text-white\/70, .text-white\/60 { color: rgba(241,234,217,.50) !important; }
-        /* Texto labels */
-        .text-sm { font-size: 0.95rem !important; }
-        .rounded-lg, .rounded-xl, .rounded-md, .rounded { border-radius: 0 !important; }
-        #qr-code { width: 200px; height: 200px; margin: 0 auto; }
-        .material-symbols-outlined {
-          font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
+<title>Verificar — El Gorila</title>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/operaciones.css">
 </head>
-<body class="dark font-sans">
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P4BDXRN9"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-    <div class="background-gradient">
-        <div class="bg-black/50 dark:bg-black/70 min-h-screen flex flex-col">
-            <header class="fixed top-0 left-0 right-0 z-10 bg-black/60 backdrop-blur-sm border-b border-white/10">
-                <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex items-center justify-center h-20">
-                        <a class="flex items-center" href="index.html">
-                            <img alt="Logo de El Gorila de Franz Kafka" class="h-10 w-auto" src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png"/>
-                        </a>
-                    </div>
-                </div>
-            </header>
+<body class="dark">
 
-            <main class="flex-grow flex items-center justify-center p-4 sm:p-6 md:p-8 pt-24 pb-10">
-                <div class="w-full max-w-2xl mx-auto">
-                    <h1 class="text-4xl font-bold mb-6 text-white font-display text-center">Verificar Boleto</h1>
-                    
-                    <!-- Formulario de verificación -->
-                    <div class="bg-black/60 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-6">
-                        <div class="mb-6">
-                            <label for="codigo-qr-input" class="block text-sm text-white/80 mb-2 font-semibold">
-                                Código QR del Boleto
-                            </label>
-                            <div class="flex gap-2">
-                                <input 
-                                    type="text" 
-                                    id="codigo-qr-input" 
-                                    placeholder="Escanee o ingrese el código QR (CERT-...)" 
-                                    class="flex-1 px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-primary"
-                                    autocomplete="off"
-                                />
-                                <button 
-                                    id="btn-verificar" 
-                                    type="button"
-                                    class="px-6 py-3 bg-gradient-to-br from-[#4a0010] to-[#800020] text-[#ffdf80] font-bold rounded-lg hover:from-[#66001a] hover:to-[#990026] transition-all duration-300"
-                                >
-                                    Verificar
-                                </button>
-                            </div>
-                            <p class="text-xs text-white/60 mt-2">Ingrese el código QR del boleto para verificar su validez</p>
-                        </div>
+<header class="bol-header">
+  <div>
+    <span class="bol-header-titulo">Verificar</span>
+    <span class="bol-header-sub">Puerta · Teatro Wilberto Cantón</span>
+  </div>
+  <div class="bol-header-actions">
+    <a href="boletera.html" class="btn-accion">
+      <span class="material-symbols-outlined" style="font-size:16px;">confirmation_number</span>
+      Boletera
+    </a>
+    <a href="index.html" class="btn-accion">
+      <span class="material-symbols-outlined" style="font-size:16px;">home</span>
+      Sitio
+    </a>
+  </div>
+</header>
 
-                        <!-- Botón escanear con cámara -->
-                        <div class="text-center">
-                            <button
-                                id="btn-escanear"
-                                type="button"
-                                class="text-white/80 hover:text-white text-sm underline"
-                            >
-                                <span class="material-symbols-outlined align-middle text-lg">qr_code_scanner</span>
-                                Escanear con cámara
-                            </button>
-                        </div>
-                    </div>
+<main class="bol-main">
 
-                    <!-- Resultado de verificación -->
-                    <div id="resultado-verificacion" class="hidden">
-                        <!-- Resultado válido -->
-                        <div id="resultado-valido" class="bg-green-900/50 backdrop-blur-sm border border-green-500/30 rounded-lg p-6 mb-6 hidden">
-                            <div class="flex items-start gap-4">
-                                <span class="material-symbols-outlined text-green-400 text-4xl">check_circle</span>
-                                <div class="flex-grow">
-                                    <h3 class="text-2xl font-bold text-white mb-4 font-display">Boleto Válido</h3>
-                                    <div class="space-y-2 text-white/90">
-                                        <div class="flex justify-between">
-                                            <span class="text-white/70">Código:</span>
-                                            <span class="font-semibold" id="resultado-codigo">-</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-white/70">Función:</span>
-                                            <span class="font-semibold" id="resultado-fecha">-</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-white/70">Número de Orden:</span>
-                                            <span class="font-semibold" id="resultado-orden">-</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-white/70">Email:</span>
-                                            <span class="font-semibold" id="resultado-email">-</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-white/70">Estado:</span>
-                                            <span class="font-semibold text-green-400" id="resultado-estado">Activo</span>
-                                        </div>
-                                    </div>
-                                    <div class="mt-6 pt-6 border-t border-white/20">
-                                        <button 
-                                            id="btn-marcar-usado" 
-                                            type="button"
-                                            class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all duration-300"
-                                        >
-                                            <span class="material-symbols-outlined align-middle">check</span>
-                                            Marcar como Usado (Entrada)
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+  <div class="bol-card">
+    <h2 class="bol-card-title">Folio o QR</h2>
+    <div class="bol-card-rule"></div>
+    <span class="sec-label">Escanea o escribe el código CERT-</span>
 
-                        <!-- Resultado inválido -->
-                        <div id="resultado-invalido" class="bg-red-900/50 backdrop-blur-sm border border-red-500/30 rounded-lg p-6 mb-6 hidden">
-                            <div class="flex items-start gap-4">
-                                <span class="material-symbols-outlined text-red-400 text-4xl">cancel</span>
-                                <div class="flex-grow">
-                                    <h3 class="text-2xl font-bold text-white mb-2 font-display">Boleto Inválido</h3>
-                                    <p class="text-white/90" id="resultado-error">-</p>
-                                    <div id="resultado-info-adicional" class="mt-4 space-y-2 text-white/70 text-sm hidden">
-                                        <!-- Información adicional si el boleto existe pero está usado -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-            <!-- Estadísticas rápidas -->
-            <div class="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-4">
-                <div class="flex justify-between items-center text-white/60 text-sm mb-2">
-                    <span>Total certificados:</span>
-                    <span id="stats-total" class="font-semibold text-white">-</span>
-                </div>
-                <div class="flex justify-between items-center text-white/60 text-sm mb-2">
-                    <span>Activos:</span>
-                    <span id="stats-activos" class="font-semibold text-green-400">-</span>
-                </div>
-                <div class="flex justify-between items-center text-white/60 text-sm">
-                    <span>Usados:</span>
-                    <span id="stats-usados" class="font-semibold text-yellow-400">-</span>
-                </div>
-            </div>
-                </div>
-            </main>
-
-            <footer class="bg-black/60 backdrop-blur-sm text-white/80 py-8 border-t border-white/10">
-                <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex flex-col md:flex-row justify-between items-center text-center md:text-left space-y-6 md:space-y-0">
-                        <div class="text-xs text-white/50">
-                            <p>© 2024 Teatro El Laberinto. Todos los derechos reservados.</p>
-                        </div>
-                        <nav class="flex items-center space-x-6">
-                            <a class="text-white hover:text-brand-mustard transition-colors" href="index.html" title="Inicio">
-                                <span class="material-symbols-outlined text-3xl">home</span>
-                            </a>
-                        </nav>
-                    </div>
-                </div>
-            </footer>
-        </div>
+    <label class="form-label" for="codigo-qr-input">Código del boleto</label>
+    <div class="form-row" style="margin-bottom:14px;">
+      <input type="text" id="codigo-qr-input" class="form-input"
+             placeholder="CERT-…" autocomplete="off" autocapitalize="characters">
+      <button type="button" id="btn-verificar" class="btn-primario" style="flex:0 0 auto;">
+        Verificar
+      </button>
     </div>
 
-    <!-- Modal cámara QR -->
-    <div id="modal-scanner" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/90">
-        <div class="relative w-full max-w-sm">
-            <button type="button" onclick="cerrarScanner()" class="absolute top-3 right-3 z-10 bg-black/60 text-white rounded-full p-2">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-            <video id="scanner-video" class="w-full rounded-lg" playsinline autoplay muted></video>
-            <canvas id="scanner-canvas" class="hidden"></canvas>
-            <p class="text-center text-white/70 text-sm mt-3">Apunta la cámara al código QR del boleto</p>
-        </div>
+    <button type="button" id="btn-escanear" class="btn-link">
+      <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">qr_code_scanner</span>
+      Escanear con cámara
+    </button>
+  </div>
+
+  <div id="resultado-verificacion" class="hidden">
+
+    <div id="resultado-valido" class="bol-card resultado-panel hidden">
+      <div class="resultado-ok">
+        <h3 class="resultado-titulo ok">
+          <span class="material-symbols-outlined">check_circle</span>
+          Boleto válido
+        </h3>
+        <div class="resultado-fila"><span>Folio</span><span id="resultado-codigo">—</span></div>
+        <div class="resultado-fila"><span>Función</span><span id="resultado-fecha">—</span></div>
+        <div class="resultado-fila hidden" id="fila-comprador"><span>Comprador</span><span id="resultado-orden">—</span></div>
+        <div class="resultado-fila hidden" id="fila-email"><span>Email</span><span id="resultado-email">—</span></div>
+        <div class="resultado-fila"><span>Estado</span><span id="resultado-estado" style="color:#4ade80;">Válido</span></div>
+        <button type="button" id="btn-marcar-usado" class="btn-canjear hidden">
+          <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;">done</span>
+          Marcar entrada (canjear)
+        </button>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="js/api-config.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/verificar.js"></script>
+    <div id="resultado-invalido" class="bol-card resultado-panel hidden">
+      <div class="resultado-error-box">
+        <h3 class="resultado-titulo bad">
+          <span class="material-symbols-outlined">cancel</span>
+          No válido
+        </h3>
+        <p id="resultado-error" style="color:var(--d-soft);margin:0;">—</p>
+        <div id="resultado-info-adicional" class="hidden" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bol-card" id="panel-nombre">
+    <h2 class="bol-card-title">Por nombre (cola rápida)</h2>
+    <div class="bol-card-rule"></div>
+    <span class="sec-label">Busca comprador · marca entrada sin escanear cada QR</span>
+    <p id="nombre-sin-sesion" class="hidden" style="font-size:14px;color:#f87171;margin-bottom:12px;">
+      Inicia sesión en <a href="boletera.html" style="color:var(--gold);">boletera</a> o admin con usuario de puerta.
+    </p>
+    <label class="form-label" for="nombre-funcion">Función</label>
+    <select id="nombre-funcion" class="form-input" style="margin-bottom:12px;"></select>
+    <label class="form-label" for="nombre-buscar">Nombre o email</label>
+    <div class="form-row" style="margin-bottom:12px;">
+      <input type="search" id="nombre-buscar" class="form-input" placeholder="María, lopez@…">
+      <button type="button" id="btn-buscar-nombre" class="btn-primario" style="flex:0 0 auto;">Buscar</button>
+    </div>
+    <div id="nombre-resultados"></div>
+    <button type="button" id="btn-canjear-seleccion" class="btn-canjear hidden" style="margin-top:14px;">
+      Marcar entrada seleccionados
+    </button>
+  </div>
+
+  <div class="bol-card" id="panel-ingresados">
+    <h2 class="bol-card-title">Ingresados hoy</h2>
+    <div class="bol-card-rule"></div>
+    <ul id="lista-ingresados" style="list-style:none;padding:0;margin:0;font-size:15px;color:var(--d-soft);"></ul>
+  </div>
+
+</main>
+
+<div id="modal-scanner" class="modal-scanner hidden" style="display:none;">
+  <div style="width:100%;max-width:360px;position:relative;">
+    <button type="button" onclick="cerrarScanner()" class="btn-accion" style="position:absolute;top:0;right:0;z-index:10;">
+      <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+      Cerrar
+    </button>
+    <video id="scanner-video" playsinline autoplay muted></video>
+    <canvas id="scanner-canvas" class="hidden"></canvas>
+    <p style="text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--d-soft);margin-top:12px;">
+      Apunta al QR del boleto
+    </p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/verificar.js"></script>
 </body>
 </html>

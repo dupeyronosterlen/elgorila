@@ -6,7 +6,7 @@
 //   {tid}:config                   → JSON VenueConfig (nombre, venue, direccion, secciones[])
 //   {tid}:funciones:activas        → JSON array FuncionConfig
 //   {tid}:funcion:{YYYY-MM-DD}     → JSON InventarioFuncion (version, bloqueado, secciones:{})
-//   {tid}:reserva:{reservaId}      → JSON { fecha, seccionCantidades } — TTL 900s
+//   inventario.holds[reservaId]    → hold sin pago (15 min); vendidos = pagados
 //   ratelimit:{ip}:{ventana}       → '1' — TTL 900s  ← GLOBAL, sin prefijo tid
 //
 // VENTAS:
@@ -16,9 +16,14 @@
 //   {tid}:lista:{fecha}:{ts}       → JSON entrada lista espera
 //   {tid}:fiscal:reserva:acumulado → JSON { acumulado: number }
 //
-// COMPAT GORILA: ventas pre-v3 no tienen prefijo tid. handleVenta / handleCanjear
-//                buscan primero con prefijo y como fallback sin prefijo (solo gorila).
+// TEATRO IDs: wilberto, ccc, gira-xxx…  «gorila» es alias histórico → wilberto (mismo KV).
+// COMPAT: ventas pre-v3 sin prefijo tid; _lookupVenta busca legacy solo para gorila.
 // ──────────────────────────────────────────────────────────────────────────────
+
+import {
+  findKVUser, getUsuariosKV, saveUsuariosKV, hashPasswordPBKDF2,
+  registrarAuditoria, listAuditoria, getSitioConfig, saveSitioConfig,
+} from './admin-extra.js';
 
 // ─── CORS + HELPERS ──────────────────────────────────────────────────────────
 
@@ -276,7 +281,14 @@ async function notificarPrimeroListaEspera(tid, fecha, funcionNombre, env) {
 
 // ─── KV PREFIX HELPER ────────────────────────────────────────────────────────
 
-function kv(tid, key) { return `${tid}:${key}`; }
+/** Alias de URL → ID canónico en KV (un solo inventario por recinto/temporada). */
+const TEATRO_ALIASES = { gorila: 'wilberto' };
+
+function resolveTid(tid) {
+  return TEATRO_ALIASES[tid] || tid;
+}
+
+function kv(tid, key) { return `${resolveTid(tid)}:${key}`; }
 
 // ─── VENUES VÁLIDOS ───────────────────────────────────────────────────────────
 
@@ -284,37 +296,62 @@ const VALID_TEATROS = new Set(['gorila', 'wilberto', 'ccc']);
 
 // ─── VENUE CONFIG ────────────────────────────────────────────────────────────
 
-async function getVenueConfig(tid, env) {
-  const raw = await env.INVENTARIO.get(kv(tid, 'config'));
-  if (raw) {
-    try { return JSON.parse(raw); } catch {}
-  }
-  // Fallback para gorila sin KV config (compat con datos pre-v3)
-  return {
-    id:        'gorila',
-    nombre:    'El Gorila — CCC',
+const SECCIONES_WILBERTO_FALLBACK = [
+  { id: 'platea',  nombre: 'Platea (abajo)',  total: 250, precio_general: 350, precio_descuento: 245 },
+  { id: 'galeria', nombre: 'Galería (arriba)', total: 75,  precio_general: 350, precio_descuento: 245 },
+];
+
+const VENUE_FALLBACKS = {
+  wilberto: {
+    id:        'wilberto',
+    nombre:    'El Gorila — Teatro Wilberto Cantón',
+    venue:     'Teatro Wilberto Cantón',
+    direccion: 'José María Velasco 59, San José Insurgentes, CDMX',
+    secciones: SECCIONES_WILBERTO_FALLBACK,
+  },
+  ccc: {
+    id:        'ccc',
+    nombre:    'El Gorila — Centro Cultural Coyoacanense',
     venue:     'Centro Cultural Coyoacanense',
     direccion: 'Felipe Carrillo Puerto 54, Coyoacán, CDMX',
     secciones: [{ id: 'general', nombre: 'General', total: 200, precio_general: 350, precio_descuento: 245 }],
-  };
+  },
+};
+
+async function getVenueConfig(tid, env) {
+  const canonical = resolveTid(tid);
+  const raw = await env.INVENTARIO.get(kv(canonical, 'config'));
+  if (raw) {
+    try { return JSON.parse(raw); } catch {}
+  }
+  return VENUE_FALLBACKS[canonical] || VENUE_FALLBACKS.wilberto;
 }
 
 // ─── NORMALIZAR INVENTARIO (compat flat → zone-based) ────────────────────────
 
 function normalizeInventario(raw, config) {
+  const cfgSecs = config?.secciones || [];
   if (!raw) {
     const secciones = {};
-    for (const s of config.secciones) {
+    for (const s of cfgSecs) {
       secciones[s.id] = { total: s.total, vendidos: 0, reservados: 0 };
     }
-    return { version: 0, bloqueado: false, secciones };
+    return { version: 0, bloqueado: false, holds: {}, secciones };
   }
   const inv = JSON.parse(raw);
-  if (inv.secciones) return inv; // ya formato nuevo
+  if (inv.secciones) {
+    if (inv.secciones.general && cfgSecs.some(s => s.id === 'platea') && !inv.secciones.platea) {
+      inv.secciones.platea = inv.secciones.general;
+      delete inv.secciones.general;
+    }
+    if (!inv.holds) inv.holds = {};
+    return inv;
+  }
   // Formato legacy (gorila pre-v3): flat → sección 'general'
   return {
     version:  inv.version  ?? 0,
     bloqueado: inv.bloqueado || false,
+    holds:    {},
     secciones: {
       general: {
         total:     inv.total     ?? 200,
@@ -343,8 +380,102 @@ function getPrecio(tipo, seccionConfig) {
 }
 
 const CAPACIDAD_DEFAULT = 200;
-const RESERVA_TTL       = 900; // segundos
+/** Tiempo máximo en pantalla de pago (Stripe + hold en inventario). No 24h. */
+const RESERVA_TTL       = 900; // 15 minutos
 const VENTA_404_MAX     = 40;  // máx. folios NO encontrados por IP / 15 min (anti-enumeración)
+
+// ─── HOLDS (reservas sin pago — no bloquean para siempre) ─────────────────────
+// vendidos = pagados (intocables). holds = carritos en checkout. Al vencer o al
+// necesitar cupo, se liberan holds; si tenían sesión Stripe, se expira vía API.
+
+function recalcReservadosDesdeHolds(inv, config) {
+  const holds  = inv.holds || {};
+  const now    = Date.now();
+  const counts = {};
+  for (const h of Object.values(holds)) {
+    if ((h.expiresAt || 0) > now) {
+      for (const [secId, cant] of Object.entries(h.seccionCantidades || {})) {
+        counts[secId] = (counts[secId] || 0) + cant;
+      }
+    }
+  }
+  const secciones = { ...(inv.secciones || {}) };
+  for (const s of config?.secciones || []) {
+    const sInv = secciones[s.id] || { total: s.total, vendidos: 0, reservados: 0 };
+    secciones[s.id] = { ...sInv, reservados: counts[s.id] || 0 };
+  }
+  return { ...inv, secciones };
+}
+
+function purgarHoldsVencidos(inv) {
+  const holds = { ...(inv.holds || {}) };
+  const now   = Date.now();
+  for (const [id, h] of Object.entries(holds)) {
+    if ((h.expiresAt || 0) <= now) delete holds[id];
+  }
+  return { ...inv, holds };
+}
+
+function cupoSeccion(inv, secId, config) {
+  const cfgSec = config?.secciones?.find(s => s.id === secId);
+  const sInv   = inv.secciones?.[secId] || { total: cfgSec?.total ?? CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
+  return Math.max(0, sInv.total - (sInv.vendidos || 0) - (sInv.reservados || 0));
+}
+
+function hayCupo(inv, config, seccionCantidades) {
+  for (const [secId, cant] of Object.entries(seccionCantidades)) {
+    if (cupoSeccion(inv, secId, config) < cant) return false;
+  }
+  return true;
+}
+
+/** Libera holds más antiguos (sin pago) hasta abrir cupo. Devuelve sessionIds a expirar en Stripe. */
+function evictarHoldsFIFO(inv, seccionCantidades, config) {
+  const sessionIds = [];
+  let work = { ...inv, holds: { ...(inv.holds || {}) } };
+  const ordenados = Object.entries(work.holds)
+    .sort((a, b) => (a[1].createdAt || 0) - (b[1].createdAt || 0));
+
+  for (const [holdId, h] of ordenados) {
+    if (hayCupo(work, config, seccionCantidades)) break;
+    if (h.sessionId) sessionIds.push(h.sessionId);
+    delete work.holds[holdId];
+    work = recalcReservadosDesdeHolds(work, config);
+  }
+  return { inv: work, sessionIds };
+}
+
+async function expirarSesionesStripe(sessionIds, env) {
+  if (!env.STRIPE_SECRET_KEY || !sessionIds?.length) return;
+  for (const sid of sessionIds) {
+    try {
+      await fetch(`https://api.stripe.com/v1/checkout/sessions/${sid}/expire`, {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+      });
+    } catch (e) { console.error('expire session:', sid, e.message); }
+  }
+}
+
+async function prepararInventarioParaVenta(tid, fecha, seccionCantidades, env, opts = {}) {
+  const config = await getVenueConfig(tid, env);
+  const invRaw = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+  let inv      = normalizeInventario(invRaw, config);
+  inv          = purgarHoldsVencidos(inv);
+  inv          = recalcReservadosDesdeHolds(inv, config);
+
+  let evictedSessions = [];
+  if (!hayCupo(inv, config, seccionCantidades)) {
+    const ev = evictarHoldsFIFO(inv, seccionCantidades, config);
+    inv = ev.inv;
+    evictedSessions = ev.sessionIds;
+  }
+
+  if (!hayCupo(inv, config, seccionCantidades) && !opts.permitirSinCupo) {
+    return { ok: false, inv, evictedSessions };
+  }
+  return { ok: true, inv, config, evictedSessions };
+}
 
 const UTM_KEYS = ['source', 'medium', 'campaign', 'content', 'term'];
 
@@ -361,59 +492,88 @@ function sanitizarUTM(raw) {
 // ─── OPTIMISTIC LOCKING (zone-aware) ─────────────────────────────────────────
 // seccionCantidades = { platea: 2, galeria: 1 }
 
-async function reservarOptimista(tid, fecha, seccionCantidades, env) {
+function disponiblesSeccion(inv, secId, config) {
+  const cfgSec = config?.secciones?.find(s => s.id === secId);
+  const sInv   = inv.secciones[secId] || { total: cfgSec?.total ?? CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
+  return Math.max(0, sInv.total - (sInv.vendidos || 0) - (sInv.reservados || 0));
+}
+
+async function reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, ctx) {
+  const config = await getVenueConfig(tid, env);
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
 
-    const invRaw = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
-    const inv    = normalizeInventario(invRaw, { secciones: [] });
-    const version = inv.version ?? 0;
+    const prep = await prepararInventarioParaVenta(tid, fecha, seccionCantidades, env);
+    if (prep.evictedSessions?.length && ctx) {
+      ctx.waitUntil(expirarSesionesStripe(prep.evictedSessions, env));
+    }
 
+    let inv = prep.inv;
     if (inv.bloqueado) return { ok: false, status: 409, error: 'Ventas cerradas para esta función.' };
 
-    // Verificar disponibilidad en cada sección solicitada
-    for (const [secId, cant] of Object.entries(seccionCantidades)) {
-      const sInv       = inv.secciones[secId] || { total: CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
-      const disponibles = sInv.total - (sInv.vendidos || 0) - (sInv.reservados || 0);
-      if (disponibles < cant) {
-        const secLabel = secId.charAt(0).toUpperCase() + secId.slice(1);
-        return { ok: false, status: 409, error: `Solo quedan ${Math.max(0, disponibles)} boleto(s) en ${secLabel}.` };
-      }
+    if (!hayCupo(inv, config, seccionCantidades)) {
+      const secId = Object.keys(seccionCantidades)[0] || 'platea';
+      const disp  = cupoSeccion(inv, secId, config);
+      const secLabel = secId.charAt(0).toUpperCase() + secId.slice(1);
+      return { ok: false, status: 409, error: `Solo quedan ${disp} boleto(s) en ${secLabel}.` };
     }
 
-    // Incrementar reservados por sección
-    const secciones = { ...inv.secciones };
-    for (const [secId, cant] of Object.entries(seccionCantidades)) {
-      const sInv = secciones[secId] || { total: CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
-      secciones[secId] = { ...sInv, reservados: (sInv.reservados || 0) + cant };
-    }
-    const invNuevo = { ...inv, secciones, version: version + 1 };
+    const version  = inv.version ?? 0;
+    const now      = Date.now();
+    const holds    = { ...(inv.holds || {}) };
+    holds[reservaId] = {
+      seccionCantidades,
+      createdAt: now,
+      expiresAt: now + RESERVA_TTL * 1000,
+      sessionId: null,
+    };
+    let invNuevo = recalcReservadosDesdeHolds({ ...inv, holds, version: version + 1 }, config);
     await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(invNuevo));
 
     const check    = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
     const checkInv = check ? JSON.parse(check) : {};
     if ((checkInv.version ?? -1) === version + 1) return { ok: true };
-    // Conflicto de escritura — reintentar
   }
   return { ok: false, status: 503, error: 'Sistema concurrido. Intenta de nuevo en unos segundos.' };
 }
 
-async function liberarReservaOptimista(tid, fecha, seccionCantidades, env) {
+async function vincularSessionAlHold(tid, fecha, reservaId, sessionId, env) {
+  const config = await getVenueConfig(tid, env);
+  const invRaw = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+  if (!invRaw) return;
+  const inv   = normalizeInventario(invRaw, config);
+  const holds = { ...(inv.holds || {}) };
+  if (!holds[reservaId]) return;
+  holds[reservaId] = { ...holds[reservaId], sessionId };
+  const invNuevo = { ...inv, holds, version: (inv.version ?? 0) + 1 };
+  await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(invNuevo));
+}
+
+async function liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env) {
+  const config = await getVenueConfig(tid, env);
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
 
     const invRaw = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
     if (!invRaw) return;
-    const inv     = JSON.parse(invRaw);
+    let inv     = normalizeInventario(invRaw, config);
     const version = inv.version ?? 0;
+    const holds   = { ...(inv.holds || {}) };
 
-    const secciones = { ...inv.secciones };
-    for (const [secId, cant] of Object.entries(seccionCantidades)) {
-      const sInv = secciones[secId];
-      if (sInv) secciones[secId] = { ...sInv, reservados: Math.max(0, (sInv.reservados || 0) - cant) };
+    if (reservaId && holds[reservaId]) {
+      delete holds[reservaId];
+    } else if (seccionCantidades) {
+      // Fallback legacy: quitar primer hold que coincida en cantidades
+      for (const [hid, h] of Object.entries(holds)) {
+        if (JSON.stringify(h.seccionCantidades) === JSON.stringify(seccionCantidades)) {
+          delete holds[hid];
+          break;
+        }
+      }
     }
-    const invNuevo = { ...inv, secciones, version: version + 1 };
-    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(invNuevo));
+
+    inv = recalcReservadosDesdeHolds({ ...inv, holds, version: version + 1 }, config);
+    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(inv));
 
     const check    = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
     const checkInv = check ? JSON.parse(check) : {};
@@ -422,31 +582,68 @@ async function liberarReservaOptimista(tid, fecha, seccionCantidades, env) {
   console.error(`liberarReserva: conflicto persistente para ${tid}/${fecha}`);
 }
 
-async function confirmarVentaOptimista(tid, fecha, seccionCantidades, env) {
+async function confirmarVentaOptimista(tid, fecha, seccionCantidades, reservaId, env) {
+  const config = await getVenueConfig(tid, env);
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
 
     const invRaw  = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
-    const inv     = normalizeInventario(invRaw, { secciones: [] });
+    let inv       = normalizeInventario(invRaw, config);
     const version = inv.version ?? 0;
+    const holds   = { ...(inv.holds || {}) };
+
+    if (reservaId && holds[reservaId]) delete holds[reservaId];
 
     const secciones = { ...inv.secciones };
     for (const [secId, cant] of Object.entries(seccionCantidades)) {
       const sInv = secciones[secId] || { total: CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
       secciones[secId] = {
         ...sInv,
-        vendidos:   (sInv.vendidos   || 0) + cant,
-        reservados: Math.max(0, (sInv.reservados || 0) - cant),
+        vendidos: (sInv.vendidos || 0) + cant,
       };
     }
-    const invNuevo = { ...inv, secciones, version: version + 1 };
-    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(invNuevo));
+    inv = recalcReservadosDesdeHolds({ ...inv, holds, secciones, version: version + 1 }, config);
+    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(inv));
 
     const check    = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
     const checkInv = check ? JSON.parse(check) : {};
     if ((checkInv.version ?? -1) === version + 1) return;
   }
   console.error(`confirmarVenta: conflicto persistente para ${tid}/${fecha}`);
+}
+
+/** Venta inmediata (efectivo / taquilla) — sin hold; solo incrementa vendidos. */
+async function aplicarVentaDirecta(tid, fecha, seccionCantidades, env, ctx) {
+  const config = await getVenueConfig(tid, env);
+  for (let intento = 0; intento < 3; intento++) {
+    if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
+
+    const prep = await prepararInventarioParaVenta(tid, fecha, seccionCantidades, env);
+    if (prep.evictedSessions?.length && ctx) {
+      ctx.waitUntil(expirarSesionesStripe(prep.evictedSessions, env));
+    }
+    if (!hayCupo(prep.inv, config, seccionCantidades)) {
+      const secId    = Object.keys(seccionCantidades)[0] || 'platea';
+      const disp     = cupoSeccion(prep.inv, secId, config);
+      const secLabel = secId.charAt(0).toUpperCase() + secId.slice(1);
+      return { ok: false, status: 409, error: `Solo quedan ${disp} boleto(s) en ${secLabel}.` };
+    }
+
+    const version   = prep.inv.version ?? 0;
+    const secciones = { ...(prep.inv.secciones || {}) };
+    for (const [secId, cant] of Object.entries(seccionCantidades)) {
+      const cfgSec = config.secciones?.find(s => s.id === secId);
+      const sInv   = secciones[secId] || { total: cfgSec?.total ?? CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
+      secciones[secId] = { ...sInv, vendidos: (sInv.vendidos || 0) + cant };
+    }
+    const invNuevo = recalcReservadosDesdeHolds({ ...prep.inv, secciones, version: version + 1 }, config);
+    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(invNuevo));
+
+    const check    = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+    const checkInv = check ? JSON.parse(check) : {};
+    if ((checkInv.version ?? -1) === version + 1) return { ok: true };
+  }
+  return { ok: false, status: 503, error: 'Sistema concurrido. Intenta de nuevo.' };
 }
 
 // ─── ADMIN AUTH ───────────────────────────────────────────────────────────────
@@ -463,24 +660,82 @@ function timingSafeEqual(a, b) {
   return acc === 0;
 }
 
+const ROLES_AUTH = new Set(['admin', 'gerente', 'taquilla', 'validacion', 'reclamos']);
+
 async function requireAdmin(request, env) {
   if (!env.JWT_SECRET) return null;
   const auth  = request.headers.get('Authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (!token) return null;
   const payload = await verifyJWT(token, env.JWT_SECRET);
-  if (!payload || payload.rol !== 'admin') return null;
+  if (!payload || !ROLES_AUTH.has(payload.rol)) return null;
   return payload;
 }
+
+async function requireRolAdmin(request, env) {
+  const p = await requireAdmin(request, env);
+  if (!p || p.rol !== 'admin') return null;
+  return p;
+}
+
+const PUEDE_VENTAS     = new Set(['admin', 'gerente', 'taquilla', 'reclamos']);
+const PUEDE_VENTA_MAN  = new Set(['admin', 'taquilla']);
+const PUEDE_FISCAL_VER = new Set(['admin', 'gerente']);
+const PUEDE_AUDITORIA  = new Set(['admin', 'gerente']);
+const PUEDE_CANJEAR    = new Set(['admin', 'gerente', 'validacion']);
+const PUEDE_CANJEAR_LOTE = new Set(['admin', 'gerente', 'taquilla']);
 
 // ─── HANDLER: FUNCIONES ACTIVAS (público) ────────────────────────────────────
 
 async function handleFunciones(tid, request, env) {
-  const raw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
+  const canonical = resolveTid(tid);
+  const config    = await getVenueConfig(canonical, env);
+  const raw       = await env.INVENTARIO.get(kv(canonical, 'funciones:activas'));
   if (!raw) return json([], 200, request);
   try {
     const funciones = JSON.parse(raw).filter(f => f.activa !== false);
-    return json(funciones, 200, request);
+    const capacidad = (config.secciones || []).reduce((s, x) => s + (x.total || 0), 0);
+
+    const enriched = await Promise.all(funciones.map(async f => {
+      const invRaw = await env.INVENTARIO.get(kv(canonical, `funcion:${f.fecha_iso}`));
+      const inv    = recalcReservadosDesdeHolds(
+        purgarHoldsVencidos(normalizeInventario(invRaw, config)),
+        config,
+      );
+      let vendidos = 0, reservados = 0;
+      const secciones = {};
+      for (const s of config.secciones) {
+        const sInv = inv.secciones[s.id] || { total: s.total, vendidos: 0, reservados: 0 };
+        vendidos   += sInv.vendidos   || 0;
+        reservados += sInv.reservados || 0;
+        secciones[s.id] = {
+          nombre:      s.nombre,
+          total:       sInv.total,
+          vendidos:    sInv.vendidos   || 0,
+          reservados:  sInv.reservados || 0,
+          disponibles: disponiblesSeccion(inv, s.id, config),
+        };
+      }
+      const plateaDisp  = secciones.platea?.disponibles ?? 0;
+      const galeriaDisp = secciones.galeria?.disponibles ?? 0;
+      const galeriaAbierta = !!secciones.galeria && plateaDisp === 0 && galeriaDisp > 0;
+      const disponibles = galeriaAbierta
+        ? galeriaDisp
+        : (plateaDisp || Math.max(0, capacidad - vendidos - reservados));
+
+      return {
+        ...f,
+        teatroId:        canonical,
+        capacidad,
+        vendidos,
+        reservados,
+        disponibles,
+        galeria_abierta: galeriaAbierta,
+        secciones,
+      };
+    }));
+
+    return json(enriched, 200, request);
   } catch { return json([], 200, request); }
 }
 
@@ -494,7 +749,15 @@ async function handleDisponibilidad(tid, request, env) {
 
   const config = await getVenueConfig(tid, env);
   const raw    = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
-  const inv    = normalizeInventario(raw, config);
+  let inv      = normalizeInventario(raw, config);
+  const antes  = JSON.stringify(inv.holds || {});
+  inv          = recalcReservadosDesdeHolds(purgarHoldsVencidos(inv), config);
+  if (JSON.stringify(inv.holds || {}) !== antes) {
+    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify({
+      ...inv,
+      version: (inv.version ?? 0) + 1,
+    }));
+  }
 
   const seccionesDisp = {};
   for (const s of config.secciones) {
@@ -508,12 +771,22 @@ async function handleDisponibilidad(tid, request, env) {
     };
   }
 
-  return json({ fecha, secciones: seccionesDisp, bloqueado: inv.bloqueado || false }, 200, request);
+  const plateaDisp  = seccionesDisp.platea?.disponibles ?? 0;
+  const galeriaDisp = seccionesDisp.galeria?.disponibles ?? 0;
+  const galeriaAbierta = !!seccionesDisp.galeria && plateaDisp === 0 && galeriaDisp > 0;
+
+  return json({
+    fecha,
+    secciones:      seccionesDisp,
+    bloqueado:      inv.bloqueado || false,
+    galeria_abierta: galeriaAbierta,
+    disponibles:    galeriaAbierta ? galeriaDisp : (plateaDisp || Object.values(seccionesDisp).reduce((s, x) => s + x.disponibles, 0)),
+  }, 200, request);
 }
 
 // ─── HANDLER: CHECKOUT ────────────────────────────────────────────────────────
 
-async function handleCheckout(tid, request, env) {
+async function handleCheckout(tid, request, env, ctx) {
   if (!env.STRIPE_SECRET_KEY) return json({ error: 'Pagos no configurados.' }, 503, request);
 
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
@@ -546,7 +819,7 @@ async function handleCheckout(tid, request, env) {
     const tipo     = typeof item.tipo === 'string' ? item.tipo.toLowerCase().trim() : '';
     const cantidad = item.cantidad;
     // Seccion: default a sección única si solo hay una
-    const seccion  = item.seccion || (config.secciones.length === 1 ? config.secciones[0].id : null);
+    const seccion  = item.seccion || (config.secciones.length === 1 ? config.secciones[0].id : 'platea');
 
     if (!TIPOS_BOLETO[tipo]) return json({ error: `Tipo de boleto inválido: "${tipo}".` }, 400, request);
     if (!Number.isInteger(cantidad) || cantidad < 1) return json({ error: 'Cantidad inválida.' }, 400, request);
@@ -587,31 +860,37 @@ async function handleCheckout(tid, request, env) {
     seccionCantidades[item.seccion] = (seccionCantidades[item.seccion] || 0) + item.cantidad;
   }
 
-  // Optimistic lock: reservar antes de llamar a Stripe
-  const reserva = await reservarOptimista(tid, fecha, seccionCantidades, env);
+  if (seccionCantidades.galeria) {
+    const prepG = await prepararInventarioParaVenta(tid, fecha, { platea: 0 }, env);
+    const plateaQ = cupoSeccion(prepG.inv, 'platea', config);
+    if (plateaQ > 0) {
+      return json({
+        error: 'La galería (arriba) se habilita cuando se agote la platea (abajo). Aún hay lugares en platea.',
+      }, 409, request);
+    }
+  }
+
+  const reservaId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+  // Hold corto (15 min) antes de Stripe; si no hay cupo, expira holds viejos sin pago
+  const reserva = await reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, ctx);
   if (!reserva.ok) return json({ error: reserva.error }, reserva.status, request);
 
-  // Promo grupo: 25% desc en general cuando ≥5 general y sin tipos especiales
+  // Promo Manada: 20% desc en general cuando ≥5 general y sin tipos especiales
   const cantidadGeneral = itemsValidados.filter(i => i.tipo === 'general').reduce((s, i) => s + i.cantidad, 0);
   const tieneEspeciales = itemsValidados.some(i => i.tipo !== 'general');
   const promoGrupo      = cantidadGeneral >= 5 && !tieneEspeciales;
 
-  const reservaId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  await env.INVENTARIO.put(
-    kv(tid, `reserva:${reservaId}`),
-    JSON.stringify({ fecha, seccionCantidades }),
-    { expirationTtl: RESERVA_TTL },
-  );
-
-  const baseUrl = tid === 'gorila'
-    ? 'https://elgorilateatro.com.mx'
-    : `https://elgorilateatro.com.mx`;
+  const canonical = resolveTid(tid);
+  const baseUrl   = 'https://elgorilateatro.com.mx';
+  const expiresAt = Math.floor(Date.now() / 1000) + RESERVA_TTL;
 
   const params = new URLSearchParams({
     mode:        'payment',
-    success_url: `${baseUrl}/confirmacion.html?session_id={CHECKOUT_SESSION_ID}&teatro=${tid}`,
-    cancel_url:  `${baseUrl}/boletos.html?cancelado=1&teatro=${tid}`,
-    'metadata[teatroId]':       tid,
+    expires_at:  String(expiresAt),
+    success_url: `${baseUrl}/confirmacion.html?session_id={CHECKOUT_SESSION_ID}&teatro=${canonical}`,
+    cancel_url:  `${baseUrl}/boletos.html?cancelado=1&teatro=${canonical}`,
+    'metadata[teatroId]':       canonical,
     'metadata[fecha]':          fecha,
     'metadata[cantidad]':       String(cantidadTotal),
     'metadata[reservaId]':      reservaId,
@@ -631,11 +910,11 @@ async function handleCheckout(tid, request, env) {
     const seccionConfig  = seccionMap[item.seccion];
     const precioBase     = getPrecio(item.tipo, seccionConfig);
     const unitCentavos   = (promoGrupo && item.tipo === 'general')
-      ? Math.round(precioBase * 0.75 * 100)
+      ? Math.round(precioBase * 0.80 * 100)
       : precioBase * 100;
     const tipoNombre     = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
     const secLabel       = config.secciones.length > 1 ? ` — ${seccionConfig.nombre}` : '';
-    const promoLabel     = promoGrupo && item.tipo === 'general' ? ' (25% desc.)' : '';
+    const promoLabel     = promoGrupo && item.tipo === 'general' ? ' (20% desc.)' : '';
     const productName    = `EL GORILA — ${tipoNombre}${secLabel}${promoLabel}`;
 
     params.set(`line_items[${idx}][price_data][currency]`,                  'mxn');
@@ -656,11 +935,11 @@ async function handleCheckout(tid, request, env) {
     });
     const session = await stripeRes.json();
     if (!stripeRes.ok) throw new Error(session.error?.message || 'Stripe error');
+    await vincularSessionAlHold(tid, fecha, reservaId, session.id, env);
     return json({ url: session.url, sessionId: session.id }, 200, request);
 
   } catch (err) {
-    await liberarReservaOptimista(tid, fecha, seccionCantidades, env);
-    await env.INVENTARIO.delete(kv(tid, `reserva:${reservaId}`));
+    await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
     console.error('Stripe checkout error:', err.message);
     return json({ error: 'Error al crear sesión de pago. Intenta de nuevo.' }, 500, request);
   }
@@ -681,8 +960,7 @@ async function handleWebhook(request, env, ctx) {
   const session = event.data.object;
   const meta    = session.metadata || {};
 
-  // teatroId con fallback para ventas pre-v3
-  const tid = meta.teatroId || 'gorila';
+  const tid = resolveTid(meta.teatroId || 'wilberto');
 
   // seccionCantidades con fallback para ventas pre-v3
   let seccionCantidades = {};
@@ -695,8 +973,7 @@ async function handleWebhook(request, env, ctx) {
   if (event.type === 'checkout.session.expired') {
     const fecha = meta.fecha;
     if (fecha && Object.keys(seccionCantidades).length) {
-      await liberarReservaOptimista(tid, fecha, seccionCantidades, env);
-      if (meta.reservaId) await env.INVENTARIO.delete(kv(tid, `reserva:${meta.reservaId}`));
+      await liberarReservaOptimista(tid, fecha, seccionCantidades, meta.reservaId || null, env);
       ctx.waitUntil(notificarPrimeroListaEspera(tid, fecha, meta.funcionNombre || fecha, env));
     }
     return new Response('ok', { status: 200 });
@@ -762,8 +1039,7 @@ async function handleWebhook(request, env, ctx) {
   await env.VENTAS.put(kv(tid, `ventaIdx:${fecha}:${sessionId}`), sessionId);
 
   // Inventario: reservado → vendido
-  await confirmarVentaOptimista(tid, fecha, seccionCantidades, env);
-  if (reservaId) await env.INVENTARIO.delete(kv(tid, `reserva:${reservaId}`));
+  await confirmarVentaOptimista(tid, fecha, seccionCantidades, reservaId || null, env);
 
   // Reserva fiscal: 8% acumulado por teatro
   ctx.waitUntil((async () => {
@@ -829,14 +1105,25 @@ async function _lookupVenta(tid, id, env) {
       ventaRaw = await env.VENTAS.get(kv(tid, `venta:${sessionId}`));
     }
   }
-  // 2. Fallback legacy gorila (sin prefijo)
-  if (!ventaRaw && tid === 'gorila') {
+  // 2. Fallback legacy (ventas pre-v3 sin prefijo tid)
+  if (!ventaRaw) {
     ventaRaw = await env.VENTAS.get(`venta:${id}`);
     if (!ventaRaw) {
       const certRaw = await env.VENTAS.get(`cert:${id}`);
       if (certRaw) {
         const { sessionId } = JSON.parse(certRaw);
         ventaRaw = await env.VENTAS.get(`venta:${sessionId}`);
+      }
+    }
+  }
+  // 3. Ventas guardadas bajo alias gorila: (pre-alias)
+  if (!ventaRaw) {
+    ventaRaw = await env.VENTAS.get(`gorila:venta:${id}`);
+    if (!ventaRaw) {
+      const certRaw = await env.VENTAS.get(`gorila:cert:${id}`);
+      if (certRaw) {
+        const { sessionId } = JSON.parse(certRaw);
+        ventaRaw = await env.VENTAS.get(`gorila:venta:${sessionId}`);
       }
     }
   }
@@ -885,6 +1172,9 @@ async function handleVenta(tid, id, request, env) {
 async function handleAdminVentaDetail(tid, id, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_VENTAS.has(payload.rol)) {
+    return json({ error: 'Sin permiso.' }, 403, request);
+  }
 
   try {
     const ventaRaw = await _lookupVenta(tid, id, env);
@@ -927,10 +1217,35 @@ async function handleAdminLogin(request, env) {
   const { usuario, password } = body || {};
   if (!usuario || !password) return json({ error: 'Faltan usuario o contraseña.' }, 400, request);
 
-  const u     = usuario.trim();
-  let match   = timingSafeEqual(u, env.ADMIN_USER) && timingSafeEqual(password, env.ADMIN_PASS);
-  if (!match && env.ADMIN_USER_2 && env.ADMIN_PASS_2)
-    match = timingSafeEqual(u, env.ADMIN_USER_2) && timingSafeEqual(password, env.ADMIN_PASS_2);
+  const u       = usuario.trim();
+  let match     = false;
+  let nombre    = 'Admin';
+  let rol       = 'admin';
+
+  if (timingSafeEqual(u, env.ADMIN_USER) && timingSafeEqual(password, env.ADMIN_PASS)) {
+    match = true;
+  } else if (env.ADMIN_USER_2 && env.ADMIN_PASS_2
+      && timingSafeEqual(u, env.ADMIN_USER_2) && timingSafeEqual(password, env.ADMIN_PASS_2)) {
+    match = true;
+  } else if (env.ADMIN_USER_UNIVERSAL && env.ADMIN_PASS_UNIVERSAL
+      && timingSafeEqual(u, env.ADMIN_USER_UNIVERSAL) && timingSafeEqual(password, env.ADMIN_PASS_UNIVERSAL)) {
+    match  = true;
+    nombre = 'Equipo';
+  }
+
+  if (!match) {
+    const kvUser = await findKVUser(u, password, env);
+    if (kvUser) {
+      match  = true;
+      nombre = kvUser.nombre || kvUser.id;
+      rol    = kvUser.rol || 'taquilla';
+      const usuarios = await getUsuariosKV(env);
+      if (usuarios[u]) {
+        usuarios[u].ultimoAcceso = new Date().toISOString();
+        await saveUsuariosKV(env, usuarios);
+      }
+    }
+  }
 
   if (!match) {
     await new Promise(r => setTimeout(r, 300));
@@ -939,8 +1254,8 @@ async function handleAdminLogin(request, env) {
 
   const now     = Math.floor(Date.now() / 1000);
   const TTL_30D = 30 * 24 * 60 * 60;
-  const token   = await signJWT({ usuario: u, nombre: 'Admin', rol: 'admin', iat: now, exp: now + TTL_30D }, env.JWT_SECRET);
-  return json({ token, usuario: u, nombre: 'Admin', rol: 'admin' }, 200, request);
+  const token   = await signJWT({ usuario: u, nombre, rol, iat: now, exp: now + TTL_30D }, env.JWT_SECRET);
+  return json({ token, usuario: u, nombre, rol }, 200, request);
 }
 
 // ─── HANDLER: CANJEAR BOLETO ──────────────────────────────────────────────────
@@ -948,6 +1263,9 @@ async function handleAdminLogin(request, env) {
 async function handleCanjear(tid, codigo, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_CANJEAR.has(payload.rol)) {
+    return json({ error: 'Sin permiso para canjear.' }, 403, request);
+  }
   if (!codigo || !codigo.startsWith('CERT-')) return json({ error: 'Código de folio inválido.' }, 400, request);
 
   // Buscar cert con prefijo
@@ -956,12 +1274,18 @@ async function handleCanjear(tid, codigo, request, env) {
   if (certRaw) {
     const { sessionId } = JSON.parse(certRaw);
     ventaKey = kv(tid, `venta:${sessionId}`);
-  } else if (tid === 'gorila') {
-    // Fallback legacy gorila
+  } else {
     certRaw = await env.VENTAS.get(`cert:${codigo}`);
     if (certRaw) {
       const { sessionId } = JSON.parse(certRaw);
       ventaKey = `venta:${sessionId}`;
+    }
+    if (!certRaw) {
+      certRaw = await env.VENTAS.get(`gorila:cert:${codigo}`);
+      if (certRaw) {
+        const { sessionId } = JSON.parse(certRaw);
+        ventaKey = `gorila:venta:${sessionId}`;
+      }
     }
   }
 
@@ -979,7 +1303,15 @@ async function handleCanjear(tid, codigo, request, env) {
 
   venta.usado   = true;
   venta.usadoEn = new Date().toISOString();
+  venta.canjeadoPor = payload.usuario;
   await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+
+  await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'canjear_boleto', teatroId: tid,
+    detalles: `Folio ${codigo} canjeado en puerta`,
+    meta: { codigo, funcion: venta.funcionNombre || venta.fecha },
+  });
 
   return json({ ok: true, usadoEn: venta.usadoEn }, 200, request);
 }
@@ -988,27 +1320,489 @@ async function handleCanjear(tid, codigo, request, env) {
 
 function _formatVenta(v) {
   return {
-    teatroId:      v.teatroId      || 'gorila',
-    codigo:        v.codigo,
-    fecha:         v.fecha,
-    funcionNombre: v.funcionNombre || v.fecha,
-    cantidad:      v.cantidad,
-    items:         v.items         || [],
-    email:         v.email         || null,
-    nombre:        v.nombre        || null,
-    total:         v.total,
-    fechaCompra:   v.fechaCompra,
-    usado:         v.usado         || false,
-    usadoEn:       v.usadoEn       || null,
+    teatroId:       v.teatroId       || 'gorila',
+    sessionId:      v.sessionId      || null,
+    codigo:         v.codigo,
+    fecha:          v.fecha,
+    funcionNombre:  v.funcionNombre  || v.fecha,
+    cantidad:       v.cantidad,
+    items:          v.items          || [],
+    email:          v.email          || null,
+    nombre:         v.nombre         || null,
+    telefono:       v.telefono       || null,
+    total:          v.total,
+    metodoPago:     v.metodoPago     || 'card',
+    fechaCompra:    v.fechaCompra,
+    usado:          v.usado          || false,
+    usadoEn:        v.usadoEn        || null,
+    reagendado:     v.reagendado     || null,
+    registradoPor:  v.registradoPor  || null,
+    estado:         v.estado         || 'completada',
   };
+}
+
+// ─── HANDLER: VENTA MANUAL (efectivo / taquilla) ─────────────────────────────
+
+async function handleVentaManual(tid, request, env, ctx) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_VENTA_MAN.has(payload.rol)) {
+    return json({ error: 'Solo boletera o administrador pueden registrar ventas.' }, 403, request);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+
+  const email    = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const nombre   = typeof body.nombre === 'string' ? body.nombre.trim() : '';
+  const telefono = typeof body.telefono === 'string' ? body.telefono.replace(/\D/g, '') : '';
+  const notas    = typeof body.notas === 'string' ? body.notas.trim().substring(0, 300) : '';
+  const { items, fecha } = body;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return json({ error: 'Indica al menos un boleto.' }, 400, request);
+  }
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return json({ error: 'Fecha inválida.' }, 400, request);
+  }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json({ error: 'Correo inválido.' }, 400, request);
+  }
+
+  const config         = await getVenueConfig(tid, env);
+  const validSecciones = new Set(config.secciones.map(s => s.id));
+  const seccionMap     = Object.fromEntries(config.secciones.map(s => [s.id, s]));
+
+  let cantidadTotal = 0;
+  const itemsValidados = [];
+  const tiposVistos    = new Set();
+
+  for (const item of items) {
+    const tipo     = typeof item.tipo === 'string' ? item.tipo.toLowerCase().trim() : '';
+    const cantidad = item.cantidad;
+    const seccion  = item.seccion || (config.secciones.length === 1 ? config.secciones[0].id : 'platea');
+
+    if (!TIPOS_BOLETO[tipo]) return json({ error: `Tipo inválido: "${tipo}".` }, 400, request);
+    if (!Number.isInteger(cantidad) || cantidad < 1) return json({ error: 'Cantidad inválida.' }, 400, request);
+    if (!validSecciones.has(seccion)) return json({ error: `Sección inválida: "${seccion}".` }, 400, request);
+
+    const key = `${tipo}:${seccion}`;
+    if (tiposVistos.has(key)) return json({ error: 'Tipo duplicado.' }, 400, request);
+    tiposVistos.add(key);
+
+    cantidadTotal += cantidad;
+    itemsValidados.push({ tipo, cantidad, seccion });
+  }
+
+  if (cantidadTotal > 50) return json({ error: 'Máximo 50 boletos por venta.' }, 400, request);
+
+  const funcionesRaw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
+  if (!funcionesRaw) return json({ error: 'No hay funciones activas.' }, 503, request);
+
+  let funcion;
+  try {
+    funcion = JSON.parse(funcionesRaw).find(f => f.fecha_iso === fecha && f.activa !== false);
+  } catch { return json({ error: 'Error al leer funciones.' }, 500, request); }
+  if (!funcion) return json({ error: 'Fecha no válida.' }, 400, request);
+
+  const seccionCantidades = {};
+  for (const item of itemsValidados) {
+    seccionCantidades[item.seccion] = (seccionCantidades[item.seccion] || 0) + item.cantidad;
+  }
+
+  if (seccionCantidades.galeria) {
+    const prepG     = await prepararInventarioParaVenta(tid, fecha, { platea: 0 }, env);
+    const plateaQ   = cupoSeccion(prepG.inv, 'platea', config);
+    if (plateaQ > 0) {
+      return json({ error: 'La galería solo se abre cuando se agote la platea.' }, 409, request);
+    }
+  }
+
+  const ventaAplicada = await aplicarVentaDirecta(tid, fecha, seccionCantidades, env, ctx);
+  if (!ventaAplicada.ok) return json({ error: ventaAplicada.error }, ventaAplicada.status, request);
+
+  let total = 0;
+  for (const item of itemsValidados) {
+    total += getPrecio(item.tipo, seccionMap[item.seccion]) * item.cantidad;
+  }
+  total = Math.round(total * 100) / 100;
+
+  const codigo    = `CERT-${crypto.randomUUID().replace(/-/g, '').toUpperCase()}`;
+  const sessionId = `manual_${crypto.randomUUID().replace(/-/g, '')}`;
+  const canonical = resolveTid(tid);
+
+  const venta = {
+    teatroId:       canonical,
+    sessionId,
+    codigo,
+    fecha,
+    funcionNombre:  funcion.nombre,
+    cantidad:       cantidadTotal,
+    items:          itemsValidados,
+    seccionCantidades,
+    email:          email || null,
+    nombre:         nombre || null,
+    telefono:       telefono || null,
+    notas:          notas || null,
+    total,
+    fechaCompra:    new Date().toISOString(),
+    estado:         'completada',
+    metodoPago:     'efectivo',
+    registradoPor:  payload.usuario || 'admin',
+    utm:            {},
+  };
+
+  await env.VENTAS.put(kv(canonical, `venta:${sessionId}`), JSON.stringify(venta));
+  await env.VENTAS.put(kv(canonical, `cert:${codigo}`), JSON.stringify({ sessionId }));
+  await env.VENTAS.put(kv(canonical, `ventaIdx:${fecha}:${sessionId}`), sessionId);
+
+  let emailEnviado = false;
+  if (email) {
+    emailEnviado = await enviarEmail(
+      email,
+      `Tu boleto — EL GORILA`,
+      htmlBoleto(venta, funcion.nombre, config),
+      env,
+    );
+  }
+
+  ctx.waitUntil(enviarEmail(
+    'elgorilateatro@gmail.com',
+    `[GORILA] Venta efectivo ${codigo} — ${config.nombre}`,
+    htmlAvisoAdmin(venta, funcion.nombre, config),
+    env,
+  ));
+
+  const verificarUrl = `https://elgorilateatro.com.mx/verificar.html?codigo=${encodeURIComponent(codigo)}`;
+  const waTexto = [
+    `🎭 *EL GORILA* — ${funcion.nombre}`,
+    `📍 ${config.venue}`,
+    `🎟 ${cantidadTotal} boleto(s) · Folio: *${codigo}*`,
+    `Verificar: ${verificarUrl}`,
+  ].join('\n');
+  const waUrl = telefono
+    ? `https://wa.me/${telefono}?text=${encodeURIComponent(waTexto)}`
+    : `https://wa.me/?text=${encodeURIComponent(waTexto)}`;
+
+  await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'venta_manual', teatroId: canonical,
+    detalles: `Venta efectivo ${codigo} — ${cantidadTotal} boleto(s) — ${funcion.nombre}`,
+    meta: { codigo, fecha, total, email: email || null },
+  });
+
+  return json({
+    ok:           true,
+    codigo,
+    verificarUrl,
+    waUrl,
+    waTexto,
+    emailEnviado: !!email,
+    total,
+    funcionNombre: funcion.nombre,
+    venta:         _formatVenta(venta),
+  }, 200, request);
+}
+
+/** Libera cupo vendido (reagendamiento). */
+async function liberarVendidos(tid, fecha, seccionCantidades, env) {
+  const config = await getVenueConfig(tid, env);
+  for (let intento = 0; intento < 3; intento++) {
+    const invRaw  = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+    let inv       = normalizeInventario(invRaw, config);
+    const version = inv.version ?? 0;
+    const secciones = { ...(inv.secciones || {}) };
+    for (const [secId, cant] of Object.entries(seccionCantidades)) {
+      const cfgSec = config.secciones?.find(s => s.id === secId);
+      const sInv   = secciones[secId] || { total: cfgSec?.total ?? CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
+      secciones[secId] = { ...sInv, vendidos: Math.max(0, (sInv.vendidos || 0) - cant) };
+    }
+    inv = recalcReservadosDesdeHolds({ ...inv, secciones, version: version + 1 }, config);
+    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(inv));
+    const check = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+    if ((JSON.parse(check || '{}').version ?? -1) === version + 1) return { ok: true };
+  }
+  return { ok: false };
+}
+
+async function _resolveVentaKey(tid, codigo, env) {
+  let certRaw = await env.VENTAS.get(kv(tid, `cert:${codigo}`));
+  let ventaKey;
+  if (certRaw) {
+    const { sessionId } = JSON.parse(certRaw);
+    ventaKey = kv(tid, `venta:${sessionId}`);
+  } else {
+    certRaw = await env.VENTAS.get(`cert:${codigo}`);
+    if (certRaw) {
+      const { sessionId } = JSON.parse(certRaw);
+      ventaKey = `venta:${sessionId}`;
+    }
+    if (!certRaw) {
+      certRaw = await env.VENTAS.get(`gorila:cert:${codigo}`);
+      if (certRaw) {
+        const { sessionId } = JSON.parse(certRaw);
+        ventaKey = `gorila:venta:${sessionId}`;
+      }
+    }
+  }
+  if (!certRaw || !ventaKey) return null;
+  const ventaRaw = await env.VENTAS.get(ventaKey);
+  if (!ventaRaw) return null;
+  return { ventaKey, venta: JSON.parse(ventaRaw) };
+}
+
+async function handleReagendar(tid, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (payload.rol !== 'admin') {
+    return json({ error: 'Solo el administrador puede reagendar.' }, 403, request);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+  const codigo       = (body.codigo || '').trim().toUpperCase();
+  const fechaDestino = body.fechaDestino || body.fecha;
+  if (!codigo?.startsWith('CERT-')) return json({ error: 'Folio inválido.' }, 400, request);
+  if (!fechaDestino || !/^\d{4}-\d{2}-\d{2}$/.test(fechaDestino)) {
+    return json({ error: 'Fecha destino inválida.' }, 400, request);
+  }
+
+  const resolved = await _resolveVentaKey(tid, codigo, env);
+  if (!resolved) return json({ error: 'Folio no encontrado.' }, 404, request);
+  const { ventaKey, venta } = resolved;
+
+  if (venta.usado) return json({ error: 'No se puede reagendar un boleto ya canjeado.' }, 409, request);
+  if (venta.fecha === fechaDestino) return json({ error: 'Ya está en esa función.' }, 400, request);
+
+  const funcionesRaw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
+  let funcionDest;
+  try {
+    funcionDest = JSON.parse(funcionesRaw || '[]').find(f => f.fecha_iso === fechaDestino && f.activa !== false);
+  } catch { return json({ error: 'Error al leer funciones.' }, 500, request); }
+  if (!funcionDest) return json({ error: 'Función destino no válida.' }, 400, request);
+
+  const seccionCantidades = venta.seccionCantidades || {};
+  if (!Object.keys(seccionCantidades).length && venta.items?.length) {
+    for (const it of venta.items) {
+      const sec = it.seccion || 'platea';
+      seccionCantidades[sec] = (seccionCantidades[sec] || 0) + (it.cantidad || 1);
+    }
+  }
+  if (!Object.keys(seccionCantidades).length) {
+    seccionCantidades.platea = venta.cantidad || 1;
+  }
+
+  const lib = await liberarVendidos(tid, venta.fecha, seccionCantidades, env);
+  if (!lib.ok) return json({ error: 'No se pudo liberar cupo en función origen.' }, 503, request);
+
+  const ventaAplicada = await aplicarVentaDirecta(tid, fechaDestino, seccionCantidades, env, null);
+  if (!ventaAplicada.ok) {
+    await aplicarVentaDirecta(tid, venta.fecha, seccionCantidades, env, null);
+    return json({ error: ventaAplicada.error || 'Sin cupo en función destino.' }, ventaAplicada.status || 409, request);
+  }
+
+  const fechaOrigen = venta.fecha;
+  const canonical   = resolveTid(tid);
+  await env.VENTAS.delete(kv(canonical, `ventaIdx:${fechaOrigen}:${venta.sessionId}`));
+
+  venta.fechaAnterior   = fechaOrigen;
+  venta.funcionAnterior = venta.funcionNombre;
+  venta.fecha           = fechaDestino;
+  venta.funcionNombre   = funcionDest.nombre;
+  venta.reagendado      = {
+    de: fechaOrigen, a: fechaDestino,
+    por: payload.usuario, en: new Date().toISOString(),
+  };
+
+  await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+  await env.VENTAS.put(kv(canonical, `ventaIdx:${fechaDestino}:${venta.sessionId}`), venta.sessionId);
+
+  const audit = await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'reagendar_boleto', teatroId: canonical,
+    detalles: `${codigo}: ${fechaOrigen} → ${fechaDestino} (dinero en compra original)`,
+    meta: { codigo, de: fechaOrigen, a: fechaDestino, total: venta.total },
+  });
+
+  return json({ ok: true, venta: _formatVenta(venta), auditId: audit.id }, 200, request);
+}
+
+async function handleCanjearLote(tid, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_CANJEAR_LOTE.has(payload.rol)) {
+    return json({ error: 'La puerta solo verifica por QR. Búsqueda por nombre: boletera o admin.' }, 403, request);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+  const codigos = Array.isArray(body.codigos) ? body.codigos.map(c => String(c).trim().toUpperCase()) : [];
+  if (!codigos.length) return json({ error: 'Indica al menos un folio.' }, 400, request);
+
+  const resultados = [];
+  for (const codigo of codigos) {
+    const fakeReq = new Request(request.url, {
+      method: 'POST',
+      headers: request.headers,
+    });
+    const resolved = await _resolveVentaKey(tid, codigo, env);
+    if (!resolved) { resultados.push({ codigo, ok: false, error: 'No encontrado' }); continue; }
+    const { ventaKey, venta } = resolved;
+    if (venta.usado) {
+      resultados.push({ codigo, ok: false, error: 'Ya canjeado' });
+      continue;
+    }
+    venta.usado = true;
+    venta.usadoEn = new Date().toISOString();
+    venta.canjeadoPor = payload.usuario;
+    await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+    resultados.push({ codigo, ok: true, usadoEn: venta.usadoEn });
+  }
+
+  const okCount = resultados.filter(r => r.ok).length;
+  const audit = await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'canjear_lote', teatroId: tid,
+    detalles: `${okCount}/${codigos.length} folios canjeados (modo nombre/lote)`,
+    meta: { codigos, resultados },
+  });
+
+  return json({ ok: true, resultados, auditId: audit.id }, 200, request);
+}
+
+async function handleAuditoriaList(request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_AUDITORIA.has(payload.rol)) {
+    return json({ error: 'Sin permiso.' }, 403, request);
+  }
+  const url    = new URL(request.url);
+  const limite = Math.min(200, parseInt(url.searchParams.get('limite') || '100', 10) || 100);
+  const cursor = url.searchParams.get('cursor') || undefined;
+  const { entries, cursor: next } = await listAuditoria(env, { limite, cursor });
+  return json({ entries, cursor: next }, 200, request);
+}
+
+async function handleUsuariosList(request, env) {
+  const payload = await requireRolAdmin(request, env);
+  if (!payload) return json({ error: 'Solo el administrador.' }, 403, request);
+  const usuarios = await getUsuariosKV(env);
+  const lista = Object.values(usuarios).map(u => ({
+    id: u.id, nombre: u.nombre, rol: u.rol, activo: u.activo !== false,
+    fechaCreacion: u.fechaCreacion, ultimoAcceso: u.ultimoAcceso || null,
+  }));
+  return json({ usuarios: lista }, 200, request);
+}
+
+async function handleUsuariosCreate(request, env) {
+  const payload = await requireRolAdmin(request, env);
+  if (!payload) return json({ error: 'Solo el administrador.' }, 403, request);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+  const id       = (body.id || '').trim().toLowerCase();
+  const nombre   = (body.nombre || '').trim();
+  const rol      = body.rol || 'taquilla';
+  const password = body.password || '';
+
+  if (!id || !/^[a-z0-9_-]{2,32}$/.test(id)) return json({ error: 'ID inválido (a-z, 0-9, _, -).' }, 400, request);
+  if (rol === 'admin') return json({ error: 'No se crean cuentas admin desde aquí.' }, 400, request);
+  if (!['gerente', 'taquilla', 'validacion', 'reclamos'].includes(rol)) {
+    return json({ error: 'Rol inválido.' }, 400, request);
+  }
+  if (!password || password.length < 6) return json({ error: 'Contraseña mínimo 6 caracteres.' }, 400, request);
+
+  const usuarios = await getUsuariosKV(env);
+  if (usuarios[id]) return json({ error: 'Usuario ya existe.' }, 409, request);
+
+  const { salt, hash } = await hashPasswordPBKDF2(password);
+  usuarios[id] = {
+    id, nombre: nombre || id, rol, salt, hash,
+    activo: true, fechaCreacion: new Date().toISOString(),
+  };
+  await saveUsuariosKV(env, usuarios);
+
+  const audit = await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'crear_usuario',
+    detalles: `Usuario ${id} (${rol}) creado`,
+    meta: { id, rol },
+  });
+
+  return json({ ok: true, usuario: { id, nombre: usuarios[id].nombre, rol }, auditId: audit.id }, 201, request);
+}
+
+async function handleUsuariosUpdate(userId, request, env) {
+  const payload = await requireRolAdmin(request, env);
+  if (!payload) return json({ error: 'Solo el administrador.' }, 403, request);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+
+  const usuarios = await getUsuariosKV(env);
+  const u = usuarios[userId];
+  if (!u) return json({ error: 'Usuario no encontrado.' }, 404, request);
+
+  if (body.nombre) u.nombre = String(body.nombre).trim().substring(0, 80);
+  if (body.rol && body.rol !== 'admin' && ['gerente', 'taquilla', 'validacion', 'reclamos'].includes(body.rol)) {
+    u.rol = body.rol;
+  }
+  if (typeof body.activo === 'boolean') u.activo = body.activo;
+  if (body.password && body.password.length >= 6) {
+    const { salt, hash } = await hashPasswordPBKDF2(body.password);
+    u.salt = salt;
+    u.hash = hash;
+  }
+  u.fechaModificacion = new Date().toISOString();
+  usuarios[userId] = u;
+  await saveUsuariosKV(env, usuarios);
+
+  const audit = await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'actualizar_usuario',
+    detalles: `Usuario ${userId} actualizado`,
+    meta: { id: userId, rol: u.rol, activo: u.activo },
+  });
+
+  return json({ ok: true, auditId: audit.id }, 200, request);
+}
+
+async function handleSitioGet(request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (payload.rol !== 'admin') return json({ error: 'Sin permiso.' }, 403, request);
+  const config = await getSitioConfig(env);
+  return json({ config }, 200, request);
+}
+
+async function handleSitioPut(request, env) {
+  const payload = await requireRolAdmin(request, env);
+  if (!payload) return json({ error: 'Solo el administrador.' }, 403, request);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+  const config = body.config && typeof body.config === 'object' ? body.config : body;
+  await saveSitioConfig(env, config);
+
+  const audit = await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'actualizar_sitio',
+    detalles: 'Configuración del sitio web guardada en servidor',
+  });
+
+  return json({ ok: true, auditId: audit.id }, 200, request);
 }
 
 async function handleVentas(tid, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_VENTAS.has(payload.rol)) {
+    return json({ error: 'Sin permiso para ver ventas.' }, 403, request);
+  }
 
   const url         = new URL(request.url);
   const fechaFiltro = url.searchParams.get('fecha') || '';
+  const q           = (url.searchParams.get('q') || '').trim().toLowerCase();
   const cursorParam = url.searchParams.get('cursor') || undefined;
   const LIMIT       = 100;
 
@@ -1026,6 +1820,15 @@ async function handleVentas(tid, request, env) {
     if (!listResult.list_complete) nextCursor = listResult.cursor;
     const ventasRaw = await Promise.all(listResult.keys.map(k => env.VENTAS.get(k.name)));
     ventas = ventasRaw.filter(Boolean).map(r => _formatVenta(JSON.parse(r)));
+  }
+
+  if (q) {
+    ventas = ventas.filter(v => {
+      const nombre = (v.nombre || '').toLowerCase();
+      const email  = (v.email || '').toLowerCase();
+      const codigo = (v.codigo || '').toLowerCase();
+      return nombre.includes(q) || email.includes(q) || codigo.includes(q);
+    });
   }
 
   ventas.sort((a, b) => new Date(b.fechaCompra) - new Date(a.fechaCompra));
@@ -1065,6 +1868,9 @@ async function handleListaEspera(tid, request, env) {
 async function handleFiscalReserva(tid, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_FISCAL_VER.has(payload.rol)) {
+    return json({ error: 'Sin permiso.' }, 403, request);
+  }
 
   const raw    = await env.VENTAS.get(kv(tid, 'fiscal:reserva:acumulado'));
   const fiscal = raw ? JSON.parse(raw) : { acumulado: 0 };
@@ -1072,10 +1878,17 @@ async function handleFiscalReserva(tid, request, env) {
 }
 
 async function handleFiscalReset(tid, request, env) {
-  const payload = await requireAdmin(request, env);
-  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  const payload = await requireRolAdmin(request, env);
+  if (!payload) return json({ error: 'Solo el administrador.' }, 403, request);
 
   await env.VENTAS.put(kv(tid, 'fiscal:reserva:acumulado'), JSON.stringify({ acumulado: 0 }));
+
+  await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'fiscal_reset', teatroId: tid,
+    detalles: 'Reserva fiscal reiniciada a $0',
+  });
+
   return json({ ok: true, teatroId: tid, acumulado: 0 }, 200, request);
 }
 
@@ -1302,6 +2115,20 @@ export default {
       return json({ error: 'Not found.' }, 404, request);
     }
 
+    // ── /api/admin/sistema/... ─────────────────────────────────────────────────
+    if (parts[1] === 'admin' && parts[2] === 'sistema') {
+      const subSys = parts.slice(3).join('/');
+      if (method === 'GET'  && subSys === 'auditoria')   return handleAuditoriaList(request, env);
+      if (method === 'GET'  && subSys === 'usuarios')    return handleUsuariosList(request, env);
+      if (method === 'POST' && subSys === 'usuarios')    return handleUsuariosCreate(request, env);
+      if (method === 'GET'  && subSys === 'sitio')       return handleSitioGet(request, env);
+      if (method === 'PUT'  && subSys === 'sitio')       return handleSitioPut(request, env);
+      const userMatch = subSys.match(/^usuarios\/([^/]+)$/);
+      if (method === 'PUT' && userMatch)
+        return handleUsuariosUpdate(decodeURIComponent(userMatch[1]), request, env);
+      return json({ error: 'Not found.' }, 404, request);
+    }
+
     // ── /api/admin/{tid}/... ───────────────────────────────────────────────────
     if (parts[1] === 'admin') {
       const tid = parts[2];
@@ -1311,8 +2138,11 @@ export default {
       const sub = parts.slice(3).join('/');
 
       if (method === 'GET'  && sub === 'ventas')         return handleVentas(tid, request, env);
+      if (method === 'POST' && sub === 'venta-manual')   return handleVentaManual(tid, request, env, ctx);
       if (method === 'GET'  && sub === 'fiscal')         return handleFiscalReserva(tid, request, env);
       if (method === 'POST' && sub === 'fiscal/reset')   return handleFiscalReset(tid, request, env);
+      if (method === 'POST' && sub === 'reagendar')      return handleReagendar(tid, request, env);
+      if (method === 'POST' && sub === 'canjear-lote')   return handleCanjearLote(tid, request, env);
 
       const ventaAdminMatch = sub.match(/^venta\/([^/]+)$/);
       if (method === 'GET' && ventaAdminMatch)
@@ -1334,7 +2164,7 @@ export default {
 
     if (method === 'GET'  && sub === 'funciones')      return handleFunciones(tid, request, env);
     if (method === 'GET'  && sub === 'disponibilidad') return handleDisponibilidad(tid, request, env);
-    if (method === 'POST' && sub === 'checkout')       return handleCheckout(tid, request, env);
+    if (method === 'POST' && sub === 'checkout')       return handleCheckout(tid, request, env, ctx);
     if (method === 'POST' && sub === 'lista-espera')   return handleListaEspera(tid, request, env);
 
     const ventaMatch = sub.match(/^venta\/([^/]+)$/);
