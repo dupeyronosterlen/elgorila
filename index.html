@@ -202,6 +202,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         line-height: 1.5;
       }
     }
+    /* Fechas de temporada en portada: ocultas hasta VENTA_PUBLICA_ABIERTA = true */
+    .portada-info-temporada.temporada-dormida { display: none !important; }
     /* Asegurar que el contenido no quede debajo del header + banner */
     main {
       scroll-margin-top: 4rem;
@@ -2030,17 +2032,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <p class="portada-nombre-actor" style="font-size:clamp(19.2px,4.29vw,35px); color:rgba(242,237,228,0.88); font-style:italic; letter-spacing:0.05em; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">Humberto Dupeyron en</p>
       <h1 class="titulo-el-gorila" style="font-size:clamp(40px, 13.3vw, 85px); color:#B85C38; line-height:0.9; letter-spacing:-0.02em; margin:0; font-weight:700; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">EL GORILA</h1>
       <p style="font-size:clamp(15px,3.6vw,26px); color:rgba(242,237,228,0.82); letter-spacing:0.12em; text-transform:uppercase; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">de Franz Kafka</p>
-      <div style="width:60px; height:1.5px; background:#B85C38; opacity:0.6; margin:6px 0;"></div>
-      <div class="hidden lg:flex" style="flex-direction:column; align-items:center; gap:6px; margin-top:6px;">
-        <span class="texto-portada-horario" style="white-space:nowrap; opacity:0.9; letter-spacing:0.14em; text-transform:uppercase;">Estreno 8 de julio</span>
-        <span class="texto-portada-direccion" style="margin-top:0; max-width:min(320px, 90vw); white-space:normal; line-height:1.45;">Miércoles 20:30 · Jul–Sep 2026 · Teatro Wilberto Cantón</span>
+      <div class="portada-info-temporada temporada-dormida" id="portada-info-desktop">
+        <div style="width:60px; height:1.5px; background:#B85C38; opacity:0.6; margin:6px 0;"></div>
+        <div class="hidden lg:flex" style="flex-direction:column; align-items:center; gap:6px; margin-top:6px;">
+          <span class="texto-portada-horario" style="white-space:nowrap; opacity:0.9; letter-spacing:0.14em; text-transform:uppercase;">Estreno 8 de julio</span>
+          <span class="texto-portada-direccion" style="margin-top:0; max-width:min(320px, 90vw); white-space:normal; line-height:1.45;">Miércoles 20:30 · Jul–Sep 2026 · Teatro Wilberto Cantón</span>
+        </div>
       </div>
     </div>
 </div>
     </div>
 </div>
 </section>
-<section id="portada-venta-boletos" class="portada-info-movil flex flex-col items-center justify-center px-4 lg:hidden" aria-label="Información de función">
+<section id="portada-venta-boletos" class="portada-info-temporada temporada-dormida portada-info-movil flex flex-col items-center justify-center px-4 lg:hidden" aria-label="Información de función">
   <div class="portada-info-movil-inner">
     <p class="portada-info-movil-estreno">Estreno 8 de julio</p>
     <p class="portada-info-movil-detalle">Miércoles 20:30 · Jul–Sep 2026</p>
@@ -2688,6 +2692,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
       }
     }
+    function applyTemporadaPortada() {
+      document.querySelectorAll('.portada-info-temporada').forEach(function(el) {
+        if (VENTA_PUBLICA_ABIERTA) el.classList.remove('temporada-dormida');
+        else el.classList.add('temporada-dormida');
+      });
+    }
     function applyVenta() {
       var links = document.querySelectorAll('.link-venta-boletos');
       var fueraTemporada = !VENTA_PUBLICA_ABIERTA
@@ -2734,6 +2744,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     function run(cfg) {
       applyContacto(cfg);
+      applyTemporadaPortada();
       applyVenta();
     }
     fetch('/api/config').then(function(r) { return r.ok ? r.json() : Promise.reject(); }).then(run).catch(function() { run(getLocalConfig()); });
