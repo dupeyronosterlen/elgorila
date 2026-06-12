@@ -610,7 +610,7 @@ function normalizarCodigoCupon(raw) {
 
 async function validarCuponDescuento(codigoRaw, env) {
   const codigo = normalizarCodigoCupon(codigoRaw);
-  if (!codigo || codigo.length < 8) return { ok: false, error: 'Código inválido.' };
+  if (!codigo || codigo.length < 4) return { ok: false, error: 'Código inválido.' };
 
   const codigos = await getCodigosDescuento(env);
   const entry   = codigos[codigo];
@@ -625,10 +625,154 @@ async function validarCuponDescuento(codigoRaw, env) {
     if (usos >= entry.max_usos) return { ok: false, error: 'Código agotado.' };
   }
 
+  const tipo = entry.tipo || 'porcentaje';
+  const base = {
+    ok:           true,
+    codigo,
+    tipo,
+    nombre:       entry.nombre || codigo,
+    referido:     !!entry.referido,
+    soloGenerales: entry.solo_generales !== false,
+    minGeneral:   entry.min_general != null ? Number(entry.min_general) : null,
+    maxGeneral:   entry.max_general != null ? Number(entry.max_general) : null,
+  };
+
+  if (tipo === 'par_fijo') {
+    const totalMxn = Number(entry.total_mxn);
+    const minGen   = Number(entry.min_general) || 2;
+    if (!totalMxn || totalMxn <= 0) return { ok: false, error: 'Código no válido.' };
+    return { ...base, totalMxn, minGeneral: minGen, porcentaje: 0 };
+  }
+
   const porcentaje = Math.min(100, Math.max(0, Number(entry.porcentaje) || 0));
   if (porcentaje <= 0) return { ok: false, error: 'Código no válido.' };
+  return { ...base, porcentaje };
+}
 
-  return { ok: true, codigo, porcentaje, nombre: entry.nombre || codigo };
+function contarGenerales(itemsValidados) {
+  return itemsValidados
+    .filter(i => i.tipo === 'general')
+    .reduce((s, i) => s + i.cantidad, 0);
+}
+
+function contarTotalBoletos(itemsValidados) {
+  return itemsValidados.reduce((s, i) => s + i.cantidad, 0);
+}
+
+function carritoSoloGenerales(itemsValidados) {
+  return itemsValidados.every(i => i.tipo === 'general');
+}
+
+function validarCarritoParaCupon(cupon, itemsValidados) {
+  const cantGeneral = contarGenerales(itemsValidados);
+  const cantTotal   = contarTotalBoletos(itemsValidados);
+
+  if (cupon.tipo === 'par_fijo') {
+    const req = cupon.minGeneral || 2;
+    if (!carritoSoloGenerales(itemsValidados)) {
+      return {
+        ok:    false,
+        error: `${cupon.nombre} aplica solo a ${req} boletos generales ($${cupon.totalMxn} total).`,
+      };
+    }
+    if (cantGeneral !== req || cantTotal !== req) {
+      return {
+        ok:    false,
+        error: `${cupon.nombre}: selecciona exactamente ${req} boletos generales ($${cupon.totalMxn} total).`,
+      };
+    }
+    return { ok: true };
+  }
+
+  if (cupon.soloGenerales) {
+    if (!cantGeneral) {
+      return {
+        ok:    false,
+        error: 'Los cupones aplican solo a boletos generales. Las entradas con credencial ($245) van en su fila aparte.',
+      };
+    }
+    if (!carritoSoloGenerales(itemsValidados)) {
+      return {
+        ok:    false,
+        error: `${cupon.nombre} aplica solo cuando todos los boletos del carrito son generales.`,
+      };
+    }
+  }
+
+  if (cupon.minGeneral != null && cantGeneral < cupon.minGeneral) {
+    return {
+      ok:    false,
+      error: `${cupon.nombre} requiere al menos ${cupon.minGeneral} boletos generales.`,
+    };
+  }
+
+  if (cupon.maxGeneral != null && cantGeneral > cupon.maxGeneral) {
+    return {
+      ok:    false,
+      error: `${cupon.nombre} aplica hasta ${cupon.maxGeneral} boletos generales por compra.`,
+    };
+  }
+
+  return { ok: true };
+}
+
+function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon }) {
+  const rows           = [];
+  let totalCentavos    = 0;
+  let subtotalCentavos = 0;
+
+  for (const item of itemsValidados) {
+    const seccionConfig = seccionMap[item.seccion];
+    const precioBase    = getPrecio(item.tipo, seccionConfig);
+    const unitBruto     = Math.round(precioBase * 100);
+    subtotalCentavos   += unitBruto * item.cantidad;
+    rows.push({ item, seccionConfig, unitBruto, unitCentavos: unitBruto });
+  }
+
+  if (cupon?.tipo === 'par_fijo') {
+    const target = Math.round(cupon.totalMxn * 100);
+    const nGen   = contarGenerales(itemsValidados);
+    let rest     = target;
+    let idxGen   = 0;
+    for (const row of rows) {
+      if (row.item.tipo !== 'general') continue;
+      idxGen += 1;
+      const isLast = idxGen === nGen;
+      const unit   = isLast ? rest : Math.floor(target / nGen);
+      row.unitCentavos = Math.max(50, unit);
+      if (!isLast) rest -= row.unitCentavos;
+    }
+    totalCentavos = rows.reduce((s, r) => s + r.unitCentavos * r.item.cantidad, 0);
+  } else if (cupon?.tipo === 'porcentaje' && cupon.porcentaje > 0) {
+    for (const row of rows) {
+      let unit = row.unitBruto;
+      if (row.item.tipo === 'general') {
+        unit = Math.round(unit * (1 - cupon.porcentaje / 100));
+      }
+      row.unitCentavos = Math.max(50, unit);
+    }
+    totalCentavos = rows.reduce((s, r) => s + r.unitCentavos * r.item.cantidad, 0);
+  } else {
+    for (const row of rows) row.unitCentavos = row.unitBruto;
+    totalCentavos = subtotalCentavos;
+  }
+
+  if (totalCentavos > 0 && totalCentavos < STRIPE_MIN_TOTAL_CENTAVOS) {
+    const diff = STRIPE_MIN_TOTAL_CENTAVOS - totalCentavos;
+    rows[0].unitCentavos += Math.ceil(diff / rows[0].item.cantidad);
+    totalCentavos = STRIPE_MIN_TOTAL_CENTAVOS;
+  }
+
+  return {
+    rows: rows.map(r => ({
+      item:           r.item,
+      seccionConfig:  r.seccionConfig,
+      unitCentavos:   r.unitCentavos,
+      cuponAplicado:  !!cupon,
+    })),
+    totalCentavos,
+    subtotalCentavos,
+  };
 }
 
 async function incrementarUsoCupon(codigo, env, referidoDe) {
@@ -657,50 +801,6 @@ function enmascararCertificado(cert) {
   return `${c.slice(0, 12)}…${c.slice(-4)}`;
 }
 
-function calcularPromoGrupo(itemsValidados) {
-  const cantidadGeneral = itemsValidados
-    .filter(i => i.tipo === 'general')
-    .reduce((s, i) => s + i.cantidad, 0);
-  const tieneCredencial = itemsValidados.some(i => i.tipo !== 'general');
-  // Manada automática: 5+ generales en la misma compra, sin mezclar credenciales.
-  return cantidadGeneral >= 5 && !tieneCredencial;
-}
-
-function calcularLineItemsPrecio(itemsValidados, seccionMap, { promoGrupo, cuponPorcentaje }) {
-  const aplicarCupon  = cuponPorcentaje > 0;
-  // Cupón y Manada automática no se acumulan; Manada solo si no hay cupón.
-  const aplicarManada = promoGrupo && !aplicarCupon;
-  const rows          = [];
-  let totalCentavos   = 0;
-  let subtotalCentavos = 0;
-
-  for (const item of itemsValidados) {
-    const seccionConfig = seccionMap[item.seccion];
-    const precioBase    = getPrecio(item.tipo, seccionConfig);
-    let unitBruto       = Math.round(precioBase * 100);
-    subtotalCentavos   += unitBruto * item.cantidad;
-
-    let unitCentavos = unitBruto;
-    if (aplicarManada && item.tipo === 'general') {
-      unitCentavos = Math.round(precioBase * 0.80 * 100);
-    }
-    // Cupones aplican solo a boletos generales; credenciales ya tienen tarifa reducida.
-    if (aplicarCupon && item.tipo === 'general') {
-      unitCentavos = Math.round(unitCentavos * (1 - cuponPorcentaje / 100));
-    }
-    unitCentavos = Math.max(50, unitCentavos);
-    totalCentavos += unitCentavos * item.cantidad;
-    rows.push({ item, seccionConfig, unitCentavos, aplicarManada, aplicarCupon });
-  }
-
-  if (totalCentavos > 0 && totalCentavos < STRIPE_MIN_TOTAL_CENTAVOS) {
-    const diff = STRIPE_MIN_TOTAL_CENTAVOS - totalCentavos;
-    rows[0].unitCentavos += Math.ceil(diff / rows[0].item.cantidad);
-    totalCentavos = STRIPE_MIN_TOTAL_CENTAVOS;
-  }
-
-  return { rows, totalCentavos, subtotalCentavos };
-}
 
 // ─── HOLDS (reservas sin pago — no bloquean para siempre) ─────────────────────
 // vendidos = pagados (intocables). holds = carritos en checkout. Al vencer o al
@@ -1039,17 +1139,11 @@ async function handleValidarCupon(tid, request, env) {
   const cupon = await validarCuponDescuento(codigoRaw, env);
   if (!cupon.ok) return json({ error: cupon.error }, 400, request);
 
-  const tieneGeneral = itemsValidados.some(i => i.tipo === 'general');
-  if (!tieneGeneral) {
-    return json({
-      error: 'Los cupones aplican solo a boletos generales. Las entradas con credencial (INAPAM, estudiante, maestro) ya tienen tarifa reducida.',
-    }, 400, request);
-  }
+  const reglas = validarCarritoParaCupon(cupon, itemsValidados);
+  if (!reglas.ok) return json({ error: reglas.error }, 400, request);
 
-  const promoGrupo = calcularPromoGrupo(itemsValidados);
   const { totalCentavos, subtotalCentavos } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
-    promoGrupo,
-    cuponPorcentaje: cupon.porcentaje,
+    cupon,
   });
 
   const subtotal = Math.round(subtotalCentavos) / 100;
@@ -1059,7 +1153,9 @@ async function handleValidarCupon(tid, request, env) {
     ok:             true,
     codigo:         cupon.codigo,
     nombre:         cupon.nombre,
-    porcentaje:     cupon.porcentaje,
+    tipo:           cupon.tipo,
+    porcentaje:     cupon.porcentaje || 0,
+    totalMxn:       cupon.totalMxn || null,
     subtotal,
     descuentoMonto: Math.max(0, Math.round((subtotal - total) * 100) / 100),
     total,
@@ -1260,15 +1356,18 @@ async function handleCheckout(tid, request, env, ctx) {
   const reserva = await reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, ctx);
   if (!reserva.ok) return json({ error: reserva.error }, reserva.status, request);
 
-  // Promo Manada: 20% desc en general cuando ≥5 general y sin tipos especiales
-  const promoGrupo = calcularPromoGrupo(itemsValidados);
-
+  // Cupón (única vía de descuento promocional; credenciales van en su fila a $245)
   let cuponAplicado = null;
   if (codigoCupon) {
     const cupon = await validarCuponDescuento(codigoCupon, env);
     if (!cupon.ok) {
       await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
       return json({ error: cupon.error }, 400, request);
+    }
+    const reglas = validarCarritoParaCupon(cupon, itemsValidados);
+    if (!reglas.ok) {
+      await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
+      return json({ error: reglas.error }, 400, request);
     }
     cuponAplicado = cupon;
   }
@@ -1300,8 +1399,7 @@ async function handleCheckout(tid, request, env, ctx) {
   }
 
   const { rows: lineRows } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
-    promoGrupo,
-    cuponPorcentaje: cuponAplicado?.porcentaje || 0,
+    cupon: cuponAplicado,
   });
 
   const canonical = resolveTid(tid);
@@ -1320,13 +1418,14 @@ async function handleCheckout(tid, request, env, ctx) {
     'metadata[seccionCants]':   JSON.stringify(seccionCantidades),
     'metadata[items]':          JSON.stringify(itemsValidados),
     'metadata[funcionNombre]':  funcion.nombre,
-    'metadata[promoGrupo]':     String(promoGrupo),
   });
 
   if (emailOk) params.set('customer_email', emailOk);
   if (cuponAplicado) {
     params.set('metadata[codigoCupon]', cuponAplicado.codigo);
-    params.set('metadata[cuponPct]', String(cuponAplicado.porcentaje));
+    params.set('metadata[cuponTipo]', cuponAplicado.tipo || 'porcentaje');
+    if (cuponAplicado.porcentaje) params.set('metadata[cuponPct]', String(cuponAplicado.porcentaje));
+    if (cuponAplicado.totalMxn) params.set('metadata[cuponTotalMxn]', String(cuponAplicado.totalMxn));
   }
   if (referidoDe) params.set('metadata[referidoDe]', referidoDe.substring(0, 64));
 
@@ -1336,12 +1435,16 @@ async function handleCheckout(tid, request, env, ctx) {
   }
 
   // Line items con precio dinámico desde config
-  lineRows.forEach(({ item, seccionConfig, unitCentavos, aplicarManada, aplicarCupon }, idx) => {
+  lineRows.forEach(({ item, seccionConfig, unitCentavos, cuponAplicado: cuponEnLinea }, idx) => {
     const tipoNombre  = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
     const secLabel    = config.secciones.length > 1 ? ` — ${seccionConfig.nombre}` : '';
-    const promoLabel  = aplicarManada && item.tipo === 'general' ? ' (20% desc.)' : '';
-    const cuponLabel  = aplicarCupon ? ` (−${cuponAplicado.porcentaje}%)` : '';
-    const productName = `EL GORILA — ${tipoNombre}${secLabel}${promoLabel}${cuponLabel}`;
+    let cuponLabel    = '';
+    if (cuponEnLinea && cuponAplicado) {
+      cuponLabel = cuponAplicado.tipo === 'par_fijo'
+        ? ` (${cuponAplicado.nombre})`
+        : ` (−${cuponAplicado.porcentaje}%)`;
+    }
+    const productName = `EL GORILA — ${tipoNombre}${secLabel}${cuponLabel}`;
 
     params.set(`line_items[${idx}][price_data][currency]`,                  'mxn');
     params.set(`line_items[${idx}][price_data][product_data][name]`,        productName);

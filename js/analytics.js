@@ -67,7 +67,7 @@
       currency: 'MXN',
       value: orden && orden.total != null ? Number(orden.total) : 0,
       items: mapItems(orden),
-      coupon: orden && orden.descuentoMonto > 0 ? 'DESCUENTO_MANADA' : undefined,
+      coupon: orden && orden.codigoCupon ? orden.codigoCupon : undefined,
     };
   }
 

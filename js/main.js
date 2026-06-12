@@ -25,9 +25,7 @@ function seccionVentaConfig() {
 
 function precioUnitario(tipo) {
     const sec = seccionVentaConfig();
-    const base = tipo === 'general' ? sec.precio_general : sec.precio_descuento;
-    if (promoManadaActiva() && tipo === 'general') return base * (1 - DESCUENTO_MANADA_PCT);
-    return base;
+    return tipo === 'general' ? sec.precio_general : sec.precio_descuento;
 }
 
 // --- HELPERS DE CARRITO ---
@@ -36,14 +34,11 @@ function totalCantidad() {
     return Object.values(cantidades).reduce((s, c) => s + c, 0);
 }
 
-// Descuento Manada automático: 5+ generales en la misma compra → 20% solo en generales.
-// No aplica si hay boletos con credencial (INAPAM / estudiante / maestro) en el carrito.
-// Los cupones de código no se acumulan con Manada y solo reducen boletos generales.
-const DESCUENTO_MANADA_MIN  = 5;
-const DESCUENTO_MANADA_PCT  = 0.20;
-const DESCUENTO_ESPECIALES  = 0.30;
+// Credenciales: tarifa fija $245 en su fila (no son cupones).
 const NOMBRE_CREDENCIAL     = 'INAPAM · Estudiante · Maestro';
 const TIPOS_CREDENCIAL      = ['inapam', 'estudiante', 'maestro'];
+const CUPON_ESPEJO_GENERALES = 2;
+const CUPON_ESPEJO_TOTAL     = 600;
 
 function tieneBoletosCredencial() {
     return TIPOS_CREDENCIAL.some(t => (cantidades[t] || 0) > 0);
@@ -53,10 +48,6 @@ function nombreBoletoEnResumen(tipo) {
     if (TIPOS_CREDENCIAL.includes(tipo)) return NOMBRE_CREDENCIAL;
     const t = TIPOS_BOLETO.find(x => x.tipo === tipo);
     return t ? t.nombre : tipo;
-}
-
-function promoManadaActiva() {
-    return cantidades.general >= DESCUENTO_MANADA_MIN && !tieneBoletosCredencial();
 }
 
 function calcularTotal() {
@@ -215,7 +206,9 @@ function refrescarDisponibilidadWorker() {
 
 // --- FUNCIÓN 3: ACTUALIZAR PANTALLA ---
 function actualizarPantalla() {
-    const manada = promoManadaActiva();
+    const espejoListo = cantidades.general === CUPON_ESPEJO_GENERALES
+        && totalCantidad() === CUPON_ESPEJO_GENERALES
+        && !tieneBoletosCredencial();
 
     // Cantidad por tipo
     TIPOS_BOLETO.forEach(t => {
@@ -230,16 +223,7 @@ function actualizarPantalla() {
     const secCfg = seccionVentaConfig();
     const precioGeneralEl = document.getElementById('precio-general-display');
     if (precioGeneralEl) {
-        const base = secCfg.precio_general;
-        if (manada) {
-            const precioDesc = (base * (1 - DESCUENTO_MANADA_PCT)).toFixed(2);
-            precioGeneralEl.innerHTML =
-                `<span style="text-decoration:line-through;opacity:.45;">$${base}</span> ` +
-                `<span style="color:#4ade80;">$${precioDesc} MXN</span> ` +
-                `<span style="opacity:.55;">· −${Math.round(DESCUENTO_MANADA_PCT * 100)}%</span>`;
-        } else {
-            precioGeneralEl.innerHTML = `$${base} MXN`;
-        }
+        precioGeneralEl.innerHTML = `$${secCfg.precio_general} MXN`;
     }
 
     // Resumen de items
@@ -247,31 +231,14 @@ function actualizarPantalla() {
     if (resumenEl) {
         const activos = TIPOS_BOLETO.filter(t => cantidades[t.tipo] > 0);
         let html = activos.map(t => {
-            const esGeneral = t.tipo === 'general';
             const precioUnit = precioUnitario(t.tipo);
-            const subtipo = (manada && esGeneral)
-                ? ` <span style="color:#4ade80;font-size:.8em;">−${Math.round(DESCUENTO_MANADA_PCT*100)}%</span>`
-                : (t.desc ? ` <span style="color:#4ade80;font-size:.8em;">−30%</span>` : '');
+            const subtipo = t.desc ? ` <span style="color:#4ade80;font-size:.8em;">−30%</span>` : '';
             return `<div class="flex justify-between text-text-dark text-sm">
                 <span>${nombreBoletoEnResumen(t.tipo)} × ${cantidades[t.tipo]}${subtipo}</span>
                 <span>$${(precioUnit * cantidades[t.tipo]).toFixed(2)}</span>
             </div>`;
         }).join('');
 
-        // Línea de descuento total (si hay algún descuento activo)
-        const subtotalBruto = TIPOS_BOLETO.reduce((s, t) => {
-            const sec = seccionVentaConfig();
-            const base = t.tipo === 'general' ? sec.precio_general : sec.precio_descuento;
-            return s + base * (cantidades[t.tipo] || 0);
-        }, 0);
-        const totalDesc = calcularTotal();
-        const montoDescuento = subtotalBruto - totalDesc;
-        if (montoDescuento > 0.01 && activos.length > 0) {
-            html += `<div class="flex justify-between text-sm" style="color:#4ade80;border-top:0.5px solid rgba(241,234,217,0.10);padding-top:6px;margin-top:4px;">
-                <span>Descuento aplicado</span>
-                <span>−$${montoDescuento.toFixed(2)}</span>
-            </div>`;
-        }
         resumenEl.innerHTML = html;
     }
 
@@ -280,7 +247,7 @@ function actualizarPantalla() {
     const totalEl = document.getElementById('total-precio');
     if (totalEl) totalEl.textContent = `$${total.toFixed(2)} MXN`;
 
-    // Banner "Descuento Manada"
+    // Banner cupones (solo pistas; el descuento se aplica al ingresar código al pagar)
     let promoBanner = document.getElementById('promo-grupo-banner');
     if (!promoBanner && totalEl && totalEl.parentNode) {
         promoBanner = document.createElement('div');
@@ -288,24 +255,16 @@ function actualizarPantalla() {
         totalEl.parentNode.insertBefore(promoBanner, totalEl);
     }
     if (promoBanner) {
-        if (manada) {
-            const ahorro = (seccionVentaConfig().precio_general * DESCUENTO_MANADA_PCT * cantidades.general).toFixed(2);
-            promoBanner.className = 'text-xs text-green-400 font-semibold my-1';
+        if (espejoListo) {
+            promoBanner.className = 'text-xs my-1';
+            promoBanner.style.color = 'rgba(217,155,58,.85)';
             promoBanner.innerHTML =
-                `✓ Descuento Manada activo — ${Math.round(DESCUENTO_MANADA_PCT*100)}% off · ` +
-                `ahorras $${ahorro} MXN en ${cantidades.general} boletos generales`;
-        } else if (cantidades.general > 0 && cantidades.general < DESCUENTO_MANADA_MIN && !tieneBoletosCredencial()) {
+                `¿Código <strong>ESPEJO</strong>? 2 generales por <strong>$${CUPON_ESPEJO_TOTAL}</strong> — ingrésalo al confirmar y pagar.`;
+        } else if (cantidades.general >= 5 && !tieneBoletosCredencial()) {
             promoBanner.className = 'text-xs my-1';
             promoBanner.style.color = 'rgba(217,155,58,.6)';
             promoBanner.innerHTML =
-                `Agrega ${DESCUENTO_MANADA_MIN - cantidades.general} general(es) más para activar el ` +
-                `<strong>Descuento Manada (${Math.round(DESCUENTO_MANADA_PCT*100)}%)</strong>`;
-        } else if (cantidades.general >= DESCUENTO_MANADA_MIN && tieneBoletosCredencial()) {
-            promoBanner.className = 'text-xs my-1';
-            promoBanner.style.color = 'rgba(217,155,58,.6)';
-            promoBanner.innerHTML =
-                'El Descuento Manada (20%) aplica solo cuando <strong>todos</strong> los boletos son generales. ' +
-                'Las entradas con credencial van en tarifa aparte ($245).';
+                '¿Grupo grande? Código <strong>GRUPO20</strong> (−20% con 5+ generales) al pagar.';
         } else {
             promoBanner.className = 'hidden';
             promoBanner.innerHTML = '';
@@ -391,13 +350,7 @@ function irAConfirmacion() {
         }
     }
 
-    const subtotalSinDescuento = TIPOS_BOLETO.reduce((s, t) => {
-        const sec = seccionVentaConfig();
-        const base = t.tipo === 'general' ? sec.precio_general : sec.precio_descuento;
-        return s + base * (cantidades[t.tipo] || 0);
-    }, 0);
-    const totalConDescuento = calcularTotal();
-    const descuentoMonto = subtotalSinDescuento - totalConDescuento;
+    const subtotalSinDescuento = calcularTotal();
 
     const orden = {
         fecha:          nombreFecha,
@@ -406,9 +359,7 @@ function irAConfirmacion() {
         items,
         cantidadTotal:  cantTotal,
         subtotal:       subtotalSinDescuento,
-        subtotalConManada: totalConDescuento,
-        descuentoMonto: descuentoMonto > 0 ? descuentoMonto : 0,
-        total:          totalConDescuento,
+        total:          subtotalSinDescuento,
         reservaId,
         timestamp:      Date.now(),
     };
@@ -452,7 +403,6 @@ function mostrarCheckoutInline(orden) {
             const secMap = window.SECCIONES_VENTA || {};
             const sec = secMap[prevSec] || secMap.platea || { precio_general: 350, precio_descuento: 245 };
             let precioUnit = item.tipo === 'general' ? sec.precio_general : sec.precio_descuento;
-            if (promoManadaActiva() && item.tipo === 'general') precioUnit *= (1 - DESCUENTO_MANADA_PCT);
             const sub = (precioUnit * item.cantidad).toFixed(0);
             return `<div class="ichk-item-fila">
                 <span class="ichk-etiq">${nombreBoletoEnResumen(item.tipo)} × ${item.cantidad}</span>
@@ -461,18 +411,9 @@ function mostrarCheckoutInline(orden) {
         }).join('');
     }
 
-    // Descuento Manada (si aplica; cupón se muestra aparte en boletos.html)
+    // Descuento automático desactivado — solo cupones al pagar
     const descEl = document.getElementById('ichk-descuento-wrap');
-    const manadaDesc = Math.max(0, (orden.subtotal || 0) - (orden.subtotalConManada ?? orden.total ?? 0));
-    if (descEl) {
-        if (manadaDesc > 0.01) {
-            descEl.style.display = '';
-            const dMonto = document.getElementById('ichk-descuento-monto');
-            if (dMonto) dMonto.textContent = `−$${manadaDesc.toFixed(2)}`;
-        } else {
-            descEl.style.display = 'none';
-        }
-    }
+    if (descEl) descEl.style.display = 'none';
 
     const cuponWrap = document.getElementById('ichk-cupon-wrap');
     if (cuponWrap) {

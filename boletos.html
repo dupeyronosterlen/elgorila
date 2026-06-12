@@ -1031,13 +1031,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- Tipos de boleto -->
     <span class="boletos-sub-label">Boletos</span>
 
-    <!-- General — precio actualizado dinámicamente cuando aplica Descuento Manada -->
+    <!-- General -->
     <div class="ticket-fila">
       <div>
         <div class="ticket-nombre">General</div>
         <div class="ticket-precio" id="precio-general-display">$350 MXN</div>
         <div style="font-family:var(--cuerpo);font-size:16px;color:var(--d-soft);margin-top:5px;line-height:1.4;">
-          5+ boletos → <strong style="color:#4ade80;">−20% Descuento Manada</strong>
+          Código <strong>ESPEJO</strong>: 2 generales por <strong>$600</strong> (al pagar)
         </div>
       </div>
       <div class="ticket-controls">
@@ -1116,7 +1116,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <!-- Ítems llenados por JS -->
       <div id="ichk-items-wrap"></div>
-      <!-- Descuento Manada (visible solo si hay) -->
+      <!-- Cupón aplicado (visible solo si hay) -->
       <div class="ichk-suma-fila" id="ichk-descuento-wrap" style="display:none;">
         <span class="ichk-etiq">Descuento</span>
         <span class="ichk-val ichk-desc-val" id="ichk-descuento-monto">—</span>
@@ -1235,9 +1235,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </summary>
       <p class="faq-resp">Hay dos tipos de descuento distintos:</p>
       <ul class="faq-resp" style="margin-top:8px;padding-left:1.2em;">
-        <li><strong>Con credencial</strong> (INAPAM, estudiante o maestro): tarifa fija de <strong>$245</strong> — elige esa fila en la boletera y presenta credencial al ingresar. No entra en la promo Manada.</li>
-        <li><strong>Descuento Manada</strong>: con <strong>5 o más boletos generales</strong> (sin mezclar credenciales) aplica <strong>20% automático</strong> en esos generales.</li>
-        <li><strong>Cupones e invitaciones</strong>: códigos promocionales o invitación de alguien que ya vio la obra (−25%). No se acumulan con Manada; los cupones solo aplican a boletos generales.</li>
+        <li><strong>Con credencial</strong> (INAPAM, estudiante o maestro): tarifa fija <strong>$245</strong> — elige esa fila; no usa cupón.</li>
+        <li><strong>ESPEJO</strong> (pareja): exactamente <strong>2 generales = $600</strong> — código al pagar. Ideal para ads de pareja.</li>
+        <li><strong>GRUPO20</strong>: <strong>5+ generales</strong>, todos generales → −20% con código al pagar.</li>
+        <li><strong>PRENSA30</strong>: hasta 4 generales → −30% (prensa, influencers).</li>
+        <li><strong>Invitación</strong> (−25%): enlace personal de quien ya vio la obra — no es cupón de campaña.</li>
       </ul>
     </details>
 
@@ -1392,18 +1394,8 @@ function _actualizarResumenCupon(orden) {
   const cuponMonto = document.getElementById('ichk-cupon-monto');
   const cuponEtiq = document.getElementById('ichk-cupon-etiq');
   const descWrap = document.getElementById('ichk-descuento-wrap');
-  const descMonto = document.getElementById('ichk-descuento-monto');
   const totalEl = document.getElementById('ichk-total');
-
-  const manadaDesc = Math.max(0, (orden.subtotal || 0) - (orden.subtotalConManada ?? orden.subtotal ?? 0));
-  if (descWrap) {
-    if (manadaDesc > 0.01) {
-      descWrap.style.display = '';
-      if (descMonto) descMonto.textContent = `−$${manadaDesc.toFixed(2)}`;
-    } else {
-      descWrap.style.display = 'none';
-    }
-  }
+  if (descWrap) descWrap.style.display = 'none';
 
   const cuponDesc = orden.cuponDescuentoMonto || 0;
   if (cuponWrap) {
@@ -1454,13 +1446,13 @@ async function aplicarCuponInline() {
       return;
     }
 
-    const subtotalConManada = orden.subtotalConManada ?? orden.subtotal ?? data.subtotal;
     orden.codigoCupon = data.codigo;
     orden.cuponNombre = data.nombre;
-    orden.cuponPorcentaje = data.porcentaje;
+    orden.cuponTipo = data.tipo || 'porcentaje';
+    orden.cuponPorcentaje = data.porcentaje || 0;
+    orden.cuponTotalMxn = data.totalMxn || null;
     orden.cuponDescuentoMonto = data.descuentoMonto;
     orden.total = data.total;
-    orden.descuentoMonto = Math.max(0, (orden.subtotal || data.subtotal) - data.total);
     if (data.codigo === 'INVITADO25') {
       try {
         const de = sessionStorage.getItem('elgorila_invitacion_de');
@@ -1470,7 +1462,10 @@ async function aplicarCuponInline() {
     localStorage.setItem('orden_compra', JSON.stringify(orden));
 
     if (inputEl) inputEl.value = data.codigo;
-    msg(`✓ ${data.nombre} (−${data.porcentaje}%) aplicado`, true);
+    const okMsg = data.tipo === 'par_fijo'
+      ? `✓ ${data.nombre} — $${data.totalMxn} total aplicado`
+      : `✓ ${data.nombre} (−${data.porcentaje}%) aplicado`;
+    msg(okMsg, true);
     _actualizarResumenCupon(orden);
   } catch (_) {
     msg('Error de conexión. Intenta de nuevo.', false);
