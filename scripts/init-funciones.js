@@ -2,7 +2,8 @@
 /**
  * Genera JSON de funciones activas por teatro para KV (INVENTARIO).
  *
- * Temporada oficial: miércoles 8 jul – 30 sep 2026 (último miércoles), 20:30.
+ * Temporada en venta (por ahora): miércoles 8 jul – 26 ago 2026, 20:30.
+ * Septiembre queda en el JSON con activa: false hasta confirmar extensión.
  * - wilberto: fechas oficiales (gorila en la API es alias → mismo KV)
  * - ccc: sin funciones (canceladas; el teatro se conserva para futuras fechas)
  *
@@ -25,11 +26,11 @@ const FUNCIONES_OFICIALES = [
   { fecha_iso: '2026-08-12', nombre: 'Miércoles 12 Ago — 20:30 hrs', activa: true },
   { fecha_iso: '2026-08-19', nombre: 'Miércoles 19 Ago — 20:30 hrs', activa: true },
   { fecha_iso: '2026-08-26', nombre: 'Miércoles 26 Ago — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-09-02', nombre: 'Miércoles 2 Sep — 20:30 hrs',  activa: true },
-  { fecha_iso: '2026-09-09', nombre: 'Miércoles 9 Sep — 20:30 hrs',  activa: true },
-  { fecha_iso: '2026-09-16', nombre: 'Miércoles 16 Sep — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-09-23', nombre: 'Miércoles 23 Sep — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-09-30', nombre: 'Miércoles 30 Sep — 20:30 hrs', activa: true },
+  { fecha_iso: '2026-09-02', nombre: 'Miércoles 2 Sep — 20:30 hrs',  activa: false },
+  { fecha_iso: '2026-09-09', nombre: 'Miércoles 9 Sep — 20:30 hrs',  activa: false },
+  { fecha_iso: '2026-09-16', nombre: 'Miércoles 16 Sep — 20:30 hrs', activa: false },
+  { fecha_iso: '2026-09-23', nombre: 'Miércoles 23 Sep — 20:30 hrs', activa: false },
+  { fecha_iso: '2026-09-30', nombre: 'Miércoles 30 Sep — 20:30 hrs', activa: false },
 ];
 
 const POR_TEATRO = {
