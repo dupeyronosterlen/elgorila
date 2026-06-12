@@ -18,19 +18,19 @@
 'use strict';
 
 const FUNCIONES_OFICIALES = [
-  { fecha_iso: '2026-07-08', nombre: 'Miércoles 8 Jul — 20:30 hrs',  activa: true, estreno: true },
-  { fecha_iso: '2026-07-15', nombre: 'Miércoles 15 Jul — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-07-22', nombre: 'Miércoles 22 Jul — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-07-29', nombre: 'Miércoles 29 Jul — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-08-05', nombre: 'Miércoles 5 Ago — 20:30 hrs',  activa: true },
-  { fecha_iso: '2026-08-12', nombre: 'Miércoles 12 Ago — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-08-19', nombre: 'Miércoles 19 Ago — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-08-26', nombre: 'Miércoles 26 Ago — 20:30 hrs', activa: true },
-  { fecha_iso: '2026-09-02', nombre: 'Miércoles 2 Sep — 20:30 hrs',  activa: false },
-  { fecha_iso: '2026-09-09', nombre: 'Miércoles 9 Sep — 20:30 hrs',  activa: false },
-  { fecha_iso: '2026-09-16', nombre: 'Miércoles 16 Sep — 20:30 hrs', activa: false },
-  { fecha_iso: '2026-09-23', nombre: 'Miércoles 23 Sep — 20:30 hrs', activa: false },
-  { fecha_iso: '2026-09-30', nombre: 'Miércoles 30 Sep — 20:30 hrs', activa: false },
+  { fecha_iso: '2026-07-08', nombre: 'Miércoles 8 Jul — 20:30 hrs',  activa: true, estreno: true, numero_obra: 1300 },
+  { fecha_iso: '2026-07-15', nombre: 'Miércoles 15 Jul — 20:30 hrs', activa: true, numero_obra: 1300 },
+  { fecha_iso: '2026-07-22', nombre: 'Miércoles 22 Jul — 20:30 hrs', activa: true, numero_obra: 1300 },
+  { fecha_iso: '2026-07-29', nombre: 'Miércoles 29 Jul — 20:30 hrs', activa: true, numero_obra: 1300 },
+  { fecha_iso: '2026-08-05', nombre: 'Miércoles 5 Ago — 20:30 hrs',  activa: true, numero_obra: 1300 },
+  { fecha_iso: '2026-08-12', nombre: 'Miércoles 12 Ago — 20:30 hrs', activa: true, numero_obra: 1300 },
+  { fecha_iso: '2026-08-19', nombre: 'Miércoles 19 Ago — 20:30 hrs', activa: true, numero_obra: 1300 },
+  { fecha_iso: '2026-08-26', nombre: 'Miércoles 26 Ago — 20:30 hrs', activa: true, numero_obra: 1300 },
+  { fecha_iso: '2026-09-02', nombre: 'Miércoles 2 Sep — 20:30 hrs',  activa: false, numero_obra: 1300 },
+  { fecha_iso: '2026-09-09', nombre: 'Miércoles 9 Sep — 20:30 hrs',  activa: false, numero_obra: 1300 },
+  { fecha_iso: '2026-09-16', nombre: 'Miércoles 16 Sep — 20:30 hrs', activa: false, numero_obra: 1300 },
+  { fecha_iso: '2026-09-23', nombre: 'Miércoles 23 Sep — 20:30 hrs', activa: false, numero_obra: 1300 },
+  { fecha_iso: '2026-09-30', nombre: 'Miércoles 30 Sep — 20:30 hrs', activa: false, numero_obra: 1300 },
 ];
 
 const POR_TEATRO = {

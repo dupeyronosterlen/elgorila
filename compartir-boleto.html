@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
+<title>Tu boleto — EL GORILA</title>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --d-bg: #0a0706;
+  --d-fg: #f1ead9;
+  --accent: #D43A1A;
+  --gold: #d99b3a;
+  --wa: #25D366;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--d-bg);
+  color: var(--d-fg);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+.wrap { max-width: 560px; margin: 0 auto; padding: 20px 16px 48px; }
+.page-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 16px;
+  text-align: center;
+}
+#estado-carga, #estado-error { text-align: center; padding: 40px 16px; color: rgba(241,234,217,.6); }
+#estado-error { color: #e88; }
+.hidden { display: none !important; }
+
+.modo-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.modo-tab {
+  flex: 1 1 auto;
+  min-width: 120px;
+  padding: 10px 12px;
+  border: 1px solid rgba(241,234,217,.15);
+  background: transparent;
+  color: rgba(241,234,217,.7);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 15px;
+  cursor: pointer;
+}
+.modo-tab.active {
+  border-color: var(--accent);
+  color: var(--d-fg);
+  background: rgba(212,58,26,.12);
+}
+
+.preview-wrap {
+  background: #111;
+  border: 1px solid rgba(241,234,217,.1);
+  padding: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+#preview-img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,.45);
+}
+
+.actions { display: flex; flex-direction: column; gap: 10px; }
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 18px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+.btn-wa { background: var(--wa); color: #fff; }
+.btn-save { background: var(--accent); color: var(--d-fg); }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(241,234,217,.15);
+  color: rgba(241,234,217,.55);
+  font-size: 15px;
+}
+.btn svg { width: 20px; height: 20px; }
+.btn:disabled { opacity: .45; cursor: wait; }
+.hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: rgba(241,234,217,.4);
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="page-title">Boleto · EL GORILA</p>
+
+  <div id="estado-carga">Cargando boleto…</div>
+  <div id="estado-error" class="hidden"></div>
+
+  <div id="contenido" class="hidden">
+    <div class="modo-tabs" id="modo-tabs" role="tablist"></div>
+
+    <div class="preview-wrap">
+      <img id="preview-img" alt="Vista previa de tu boleto">
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn btn-save" id="btn-guardar">
+        Descargar imagen
+      </button>
+      <button type="button" class="btn btn-wa" id="btn-wa">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.109.549 4.09 1.508 5.814L0 24l6.335-1.496A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.882 9.882 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374A9.858 9.858 0 012.106 12c0-5.455 4.44-9.894 9.894-9.894 5.455 0 9.894 4.439 9.894 9.894 0 5.455-4.439 9.894-9.894 9.894z"/></svg>
+        Enviar por WhatsApp
+      </button>
+      <button type="button" class="btn btn-save" id="btn-invitacion" style="background:#8B4513;">
+        Invitar a alguien (−25%)
+      </button>
+      <button type="button" class="btn btn-ghost" id="btn-copiar-invitacion">
+        Copiar enlace de invitación
+      </button>
+      <a class="btn btn-ghost" href="index.html">Volver al inicio</a>
+    </div>
+    <p class="hint" id="modo-hint"></p>
+    <p class="hint">«Invitar a alguien» comparte un enlace privado ligado a tu certificado — no es un cupón público.</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="js/api-config.js"></script>
+<script src="js/generar-imagen-boleto.js"></script>
+<script src="js/compartir-boleto.js"></script>
+</body>
+</html>

@@ -256,3 +256,64 @@ tbody tr:hover td { color: var(--d-fg); }
 }
 .modal-scanner.open { display: flex; }
 .modal-scanner video { width: 100%; max-width: 360px; }
+
+/* Lista de llamado (puerta) */
+.lista-resumen {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  color: var(--gold);
+  margin-bottom: 14px;
+}
+.lista-grupos { display: flex; flex-direction: column; gap: 10px; max-height: 55vh; overflow-y: auto; }
+.lista-grupo {
+  border: 1px solid var(--d-faint);
+  border-left-width: 4px;
+  padding: 10px 12px;
+  background: rgba(18,13,11,.6);
+}
+.lista-grupo-nombre {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+.lista-grupo-cert {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--d-soft);
+  margin: 0 0 8px;
+  word-break: break-all;
+}
+.lista-boleto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--d-faint);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.lista-boleto:first-of-type { border-top: none; }
+.lista-boleto-folio {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .04em;
+}
+.lista-boleto-meta { font-size: 13px; color: var(--d-soft); }
+.lista-boleto-check {
+  width: 28px; height: 28px;
+  border: 2px solid var(--d-faint);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: transparent;
+  font-size: 18px;
+}
+.lista-boleto.usado { opacity: .45; cursor: default; }
+.lista-boleto.usado .lista-boleto-check {
+  border-color: #4ade80;
+  color: #4ade80;
+  background: rgba(74,222,128,.08);
+}
+.lista-boleto:active:not(.usado) { opacity: .75; }

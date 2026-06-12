@@ -3,8 +3,11 @@
  * Genera el JSON de códigos de descuento para subirlo a KV.
  * Clave en INVENTARIO KV: "codigos:descuento"
  *
- * NOTA: El descuento de grupo (4+ boletos → 30%) es automático en el Worker
- * y NO requiere código — no va aquí.
+ * REGLAS DE DESCUENTO (Worker + boletos.html):
+ * - Manada automática: 5+ boletos GENERALES en la misma compra → 20% solo en generales.
+ *   No aplica si hay INAPAM / estudiante / maestro en el carrito (van aparte a $245).
+ * - Cupones de código: no se acumulan con Manada automática; solo reducen boletos generales.
+ * - INVITADO25: requiere enlace de invitación (referidoDe); uso ilimitado para medir referidos.
  *
  * USO:
  *   node scripts/init-descuentos.js > /tmp/descuentos.json
@@ -38,6 +41,14 @@ const codigos = {
     activo:     true,
     max_usos:   100,
     solo_prueba: true,
+  },
+
+  // Invitados por recomendación — uso ilimitado (contamos cada redención en KV).
+  INVITADO25: {
+    porcentaje: 25,
+    nombre:     'Invitado',
+    activo:     true,
+    referido:   true,
   },
 };
 

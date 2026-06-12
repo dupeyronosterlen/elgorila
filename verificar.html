@@ -37,9 +37,9 @@
   <div class="bol-card">
     <h2 class="bol-card-title">Folio o QR</h2>
     <div class="bol-card-rule"></div>
-    <span class="sec-label">Escanea o escribe el código CERT-</span>
+    <span class="sec-label">Escanea el QR del boleto (CERT-)</span>
 
-    <label class="form-label" for="codigo-qr-input">Código del boleto</label>
+    <label class="form-label" for="codigo-qr-input">Código CERT</label>
     <div class="form-row" style="margin-bottom:14px;">
       <input type="text" id="codigo-qr-input" class="form-input"
              placeholder="CERT-…" autocomplete="off" autocapitalize="characters">
@@ -85,6 +85,19 @@
       </div>
     </div>
 
+  </div>
+
+  <div class="bol-card hidden" id="panel-lista-puerta">
+    <h2 class="bol-card-title">Lista de llamado</h2>
+    <div class="bol-card-rule"></div>
+    <span class="sec-label">Folios internos · agrupados por certificado · toca para marcar entrada</span>
+    <p id="lista-sin-sesion" class="hidden" style="font-size:14px;color:#f87171;margin-bottom:12px;">
+      Inicia sesión en <a href="boletera.html" style="color:var(--gold);">boletera</a> para ver la lista.
+    </p>
+    <label class="form-label" for="lista-funcion">Función</label>
+    <select id="lista-funcion" class="form-input" style="margin-bottom:12px;"></select>
+    <div id="lista-resumen" class="lista-resumen"></div>
+    <div id="lista-grupos" class="lista-grupos"></div>
   </div>
 
   <div class="bol-card" id="panel-nombre">

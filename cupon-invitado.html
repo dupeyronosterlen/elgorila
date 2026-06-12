@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Redirigiendo… — EL GORILA</title>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
+<script>
+(function () {
+  var p = new URLSearchParams(window.location.search);
+  var de = p.get('de') || p.get('c') || p.get('codigo') || '';
+  var dest = 'invitacion.html';
+  if (de) dest += '?de=' + encodeURIComponent(de.trim());
+  window.location.replace(dest);
+})();
+</script>
+</head>
+<body>
+<p style="font-family:sans-serif;text-align:center;padding:40px;">Redirigiendo a tu invitación…</p>
+<p style="text-align:center;"><a href="invitacion.html">Continuar</a></p>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
+<title>Te invitan a EL GORILA</title>
+<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --d-bg: #0a0706;
+  --d-fg: #f1ead9;
+  --red: #D43A1A;
+  --gold: #d99b3a;
+  --display: "Cormorant Garamond", Georgia, serif;
+  --cuerpo: "EB Garamond", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100vh; background: var(--d-bg); color: var(--d-fg); }
+body { font-family: var(--cuerpo); font-size: 19px; line-height: 1.55; }
+
+.wrap { max-width: 640px; margin: 0 auto; padding: 48px 20px 64px; }
+
+.kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-align: center;
+  margin: 0 0 20px;
+}
+
+h1 {
+  font-family: var(--display);
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
+  margin: 0 0 12px;
+}
+h1 em { font-style: italic; color: var(--gold); }
+
+.sub {
+  text-align: center;
+  color: rgba(241,234,217,.82);
+  margin: 0 0 32px;
+  font-size: 1.05rem;
+}
+
+.card {
+  border: 1px solid rgba(217,155,58,.28);
+  background: rgba(217,155,58,.06);
+  padding: 28px 24px;
+  margin-bottom: 28px;
+}
+
+.card p { margin: 0 0 14px; }
+.card p:last-child { margin-bottom: 0; }
+
+.ref {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: var(--gold);
+  word-break: break-all;
+}
+
+.meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(241,234,217,.5);
+  margin-top: 16px;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  background: var(--red);
+  color: var(--d-fg);
+  font-family: var(--display);
+  font-size: 1.25rem;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .5; cursor: wait; }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(241,234,217,.18);
+  color: rgba(241,234,217,.65);
+  font-size: 1rem;
+}
+
+.nota {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: rgba(241,234,217,.4);
+  text-align: center;
+  line-height: 1.6;
+  margin-top: 20px;
+}
+
+#estado-carga, #estado-error { text-align: center; padding: 60px 16px; }
+#estado-error { color: #e88; }
+.hidden { display: none !important; }
+
+.logo {
+  display: block;
+  max-width: 180px;
+  margin: 0 auto 32px;
+  opacity: .92;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <img class="logo" src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA">
+
+  <div id="estado-carga">
+    <p class="kicker">Invitación personal</p>
+    <p>Verificando invitación…</p>
+  </div>
+
+  <div id="estado-error" class="hidden"></div>
+
+  <div id="contenido" class="hidden">
+    <p class="kicker">Invitación personal · enlace privado</p>
+    <h1>Alguien te invita a ver<br><em>EL GORILA</em></h1>
+    <p class="sub" id="subtitulo">Esta invitación no es un cupón público ni aparece en Google.</p>
+
+    <div class="card" id="card-info">
+      <p id="texto-funcion">—</p>
+      <p id="texto-cert">—</p>
+      <p class="meta" id="texto-entradas">—</p>
+    </div>
+
+    <a class="btn" id="btn-boletos" href="boletos.html">Elegir entradas con invitación</a>
+    <a class="btn btn-ghost" href="index.html">Conocer la obra</a>
+
+    <p class="nota">
+      El descuento de invitado (−25%) se activa solo cuando tú lo confirmes en la boletera.
+      Cada invitación queda ligada al certificado que la originó.
+    </p>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script>
+(function () {
+  function params() {
+    return new URLSearchParams(window.location.search);
+  }
+
+  function deParam() {
+    return (params().get('de') || params().get('invita') || params().get('c') || '').trim().toUpperCase();
+  }
+
+  function entradasLabel(n) {
+    const num = parseInt(n, 10) || 1;
+    return num === 1 ? '1 entrada en esa compra' : `${num} entradas en esa compra`;
+  }
+
+  function mostrarError(msg) {
+    document.getElementById('estado-carga').classList.add('hidden');
+    const el = document.getElementById('estado-error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  async function init() {
+    const de = deParam();
+    if (!de) {
+      mostrarError('Falta el enlace de invitación. Pídeselo a quien te invitó.');
+      return;
+    }
+    if (!window.API_BASE || !window.teatroApi) {
+      mostrarError('Servicio no disponible. Intenta más tarde.');
+      return;
+    }
+
+    try {
+      const res = await fetch(window.teatroApi(`invitacion/${encodeURIComponent(de)}`));
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Invitación no válida.');
+
+      const fn = data.funcionNombre || data.fecha || 'EL GORILA';
+      document.getElementById('texto-funcion').textContent =
+        'Te invita alguien que ya asistió a la función del ' + fn + '.';
+      document.getElementById('texto-cert').innerHTML =
+        'Certificado origen: <span class="ref">' + (data.certificadoRef || '—') + '</span>';
+      document.getElementById('texto-entradas').textContent = entradasLabel(data.entradas);
+
+      const boletosUrl = new URL('boletos.html', window.location.href);
+      boletosUrl.searchParams.set('invita', data.referidoDe || de);
+      document.getElementById('btn-boletos').href = boletosUrl.pathname + boletosUrl.search;
+
+      document.getElementById('estado-carga').classList.add('hidden');
+      document.getElementById('contenido').classList.remove('hidden');
+    } catch (e) {
+      mostrarError(e.message || 'No se pudo cargar la invitación.');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>

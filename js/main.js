@@ -36,13 +36,18 @@ function totalCantidad() {
     return Object.values(cantidades).reduce((s, c) => s + c, 0);
 }
 
-// Descuento Manada: 5+ generales → 20% off sobre todos los generales.
-// Se aplica aunque haya boletos especiales (inapam/estudiante/maestro).
+// Descuento Manada automático: 5+ generales en la misma compra → 20% solo en generales.
+// No aplica si hay boletos con credencial (INAPAM / estudiante / maestro) en el carrito.
+// Los cupones de código no se acumulan con Manada y solo reducen boletos generales.
 const DESCUENTO_MANADA_MIN  = 5;
 const DESCUENTO_MANADA_PCT  = 0.20;
 const DESCUENTO_ESPECIALES  = 0.30;
 const NOMBRE_CREDENCIAL     = 'INAPAM · Estudiante · Maestro';
 const TIPOS_CREDENCIAL      = ['inapam', 'estudiante', 'maestro'];
+
+function tieneBoletosCredencial() {
+    return TIPOS_CREDENCIAL.some(t => (cantidades[t] || 0) > 0);
+}
 
 function nombreBoletoEnResumen(tipo) {
     if (TIPOS_CREDENCIAL.includes(tipo)) return NOMBRE_CREDENCIAL;
@@ -51,7 +56,7 @@ function nombreBoletoEnResumen(tipo) {
 }
 
 function promoManadaActiva() {
-    return cantidades.general >= DESCUENTO_MANADA_MIN;
+    return cantidades.general >= DESCUENTO_MANADA_MIN && !tieneBoletosCredencial();
 }
 
 function calcularTotal() {
@@ -289,12 +294,18 @@ function actualizarPantalla() {
             promoBanner.innerHTML =
                 `✓ Descuento Manada activo — ${Math.round(DESCUENTO_MANADA_PCT*100)}% off · ` +
                 `ahorras $${ahorro} MXN en ${cantidades.general} boletos generales`;
-        } else if (cantidades.general > 0 && cantidades.general < DESCUENTO_MANADA_MIN) {
+        } else if (cantidades.general > 0 && cantidades.general < DESCUENTO_MANADA_MIN && !tieneBoletosCredencial()) {
             promoBanner.className = 'text-xs my-1';
             promoBanner.style.color = 'rgba(217,155,58,.6)';
             promoBanner.innerHTML =
                 `Agrega ${DESCUENTO_MANADA_MIN - cantidades.general} general(es) más para activar el ` +
                 `<strong>Descuento Manada (${Math.round(DESCUENTO_MANADA_PCT*100)}%)</strong>`;
+        } else if (cantidades.general >= DESCUENTO_MANADA_MIN && tieneBoletosCredencial()) {
+            promoBanner.className = 'text-xs my-1';
+            promoBanner.style.color = 'rgba(217,155,58,.6)';
+            promoBanner.innerHTML =
+                'El Descuento Manada (20%) aplica solo cuando <strong>todos</strong> los boletos son generales. ' +
+                'Las entradas con credencial van en tarifa aparte ($245).';
         } else {
             promoBanner.className = 'hidden';
             promoBanner.innerHTML = '';

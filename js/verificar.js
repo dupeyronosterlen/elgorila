@@ -44,8 +44,15 @@ function mostrarValido(venta) {
     document.getElementById('resultado-valido').classList.remove('hidden');
     document.getElementById('resultado-invalido').classList.add('hidden');
 
+    const entradaLbl = venta.totalBoletos > 1
+        ? (venta.esCertificado && venta.pendientes != null
+            ? `Certificado · ${venta.pendientes} entrada(s) pendiente(s)`
+            : `Entrada ${venta.boletoNum || 1} de ${venta.totalBoletos}`)
+        : '1 entrada';
+
     document.getElementById('resultado-codigo').textContent  = venta.codigo;
-    document.getElementById('resultado-fecha').textContent   = venta.funcionNombre || venta.fecha || '—';
+    document.getElementById('resultado-fecha').textContent   =
+        `${venta.funcionNombre || venta.fecha || '—'} · ${entradaLbl}`;
     const filaComprador = document.getElementById('fila-comprador');
     const filaEmail     = document.getElementById('fila-email');
     const mostrarPii    = _puedeVerComprador() && (venta.nombre || venta.email);
@@ -127,6 +134,7 @@ async function marcarComoUsado() {
 
         _ventaActual.usado   = true;
         _ventaActual.usadoEn = data.usadoEn;
+        if (_puedeCanjear()) cargarListaPuerta();
     } catch {
         alert('Error de conexión');
         if (btnU) { btnU.disabled = false; }
@@ -201,6 +209,98 @@ function escanearFrame() {
     requestAnimationFrame(escanearFrame);
 }
 
+function _puedeVerListaPuerta() {
+    return _puedeCanjear();
+}
+
+const GRUPO_COLORS = ['#D43A1A', '#2563eb', '#16a34a', '#d97706', '#7c3aed', '#0891b2', '#db2777'];
+
+function _colorGrupo(certificado) {
+    let h = 0;
+    for (let i = 0; i < (certificado || '').length; i++) h = (h + certificado.charCodeAt(i) * (i + 1)) % GRUPO_COLORS.length;
+    return GRUPO_COLORS[h];
+}
+
+async function cargarFuncionesLista() {
+    const sel = document.getElementById('lista-funcion');
+    if (!sel || !window.API_BASE) return;
+    try {
+        const res = await fetch(window.teatroApi('funciones'));
+        const data = await res.json();
+        const list = (Array.isArray(data) ? data : (data.funciones || [])).filter(f => f.activa !== false);
+        sel.innerHTML = list.map(f =>
+            `<option value="${f.fecha_iso}">${f.nombre}${f.numero_obra ? ` · obra ${f.numero_obra}` : ''}</option>`
+        ).join('');
+        await cargarListaPuerta();
+    } catch { sel.innerHTML = '<option value="">—</option>'; }
+}
+
+async function cargarListaPuerta() {
+    const cont   = document.getElementById('lista-grupos');
+    const resumen = document.getElementById('lista-resumen');
+    const fecha  = document.getElementById('lista-funcion')?.value;
+    const token  = obtenerTokenAdmin();
+    if (!cont || !fecha || !token || !_puedeVerListaPuerta()) return;
+
+    cont.innerHTML = '<p style="color:var(--d-soft);font-size:14px;">Cargando lista…</p>';
+    try {
+        const res = await fetch(window.teatroAdminApi(`lista-puerta?fecha=${encodeURIComponent(fecha)}`), {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+
+        if (resumen) {
+            resumen.textContent = `${data.ingresados || 0} / ${data.total || 0} ingresados · ${data.pendientes || 0} pendientes`;
+        }
+
+        if (!data.grupos?.length) {
+            cont.innerHTML = '<p style="color:var(--d-soft);">Sin ventas para esta función.</p>';
+            return;
+        }
+
+        cont.innerHTML = data.grupos.map(g => {
+            const color = _colorGrupo(g.certificado);
+            const boletosHtml = (g.boletos || []).map(b => `
+              <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0">
+                <div>
+                  <div class="lista-boleto-folio">${b.folio || b.cert}</div>
+                  <div class="lista-boleto-meta">${b.tipo || 'entrada'} · #${b.numero || '—'}</div>
+                </div>
+                <div class="lista-boleto-check" aria-hidden="true">✓</div>
+              </div>`).join('');
+            return `
+              <div class="lista-grupo" style="border-left-color:${color}">
+                <p class="lista-grupo-nombre">${g.nombre || '—'}</p>
+                <p class="lista-grupo-cert">${g.certificado}</p>
+                ${boletosHtml}
+              </div>`;
+        }).join('');
+
+        cont.querySelectorAll('.lista-boleto:not(.usado)').forEach(el => {
+            el.addEventListener('click', () => canjearDesdeLista(el.dataset.cert));
+        });
+    } catch (e) {
+        cont.innerHTML = `<p style="color:#f87171;">${e.message}</p>`;
+    }
+}
+
+async function canjearDesdeLista(cert) {
+    if (!cert) return;
+    const token = obtenerTokenAdmin();
+    if (!token) return;
+    try {
+        const res = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(cert)}`), {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'No se pudo marcar'); return; }
+        await cargarListaPuerta();
+        _agregarIngreso(data.folio || cert, 1);
+    } catch { alert('Error de conexión'); }
+}
+
 // ── Modo nombre / lote ─────────────────────────────────────────────────────────
 
 let _ventasNombre = [];
@@ -227,8 +327,11 @@ function _puedeVerComprador() {
 
 function _aplicarUIPermisos() {
     const buscar = _puedeBuscarNombre();
+    const lista  = _puedeVerListaPuerta();
     document.getElementById('panel-nombre')?.classList.toggle('hidden', !buscar);
     document.getElementById('panel-ingresados')?.classList.toggle('hidden', !buscar);
+    document.getElementById('panel-lista-puerta')?.classList.toggle('hidden', !lista);
+    if (!lista) document.getElementById('lista-sin-sesion')?.classList.toggle('hidden', true);
 }
 
 function _cargarIngresados() {
@@ -375,6 +478,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     _aplicarUIPermisos();
+    if (_puedeVerListaPuerta() && obtenerTokenAdmin()) {
+        cargarFuncionesLista();
+    } else if (!obtenerTokenAdmin()) {
+        document.getElementById('lista-sin-sesion')?.classList.remove('hidden');
+    }
     if (_puedeBuscarNombre()) {
         cargarFuncionesNombre();
         _cargarIngresados();
@@ -384,4 +492,5 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('nombre-buscar')?.addEventListener('keypress', e => {
         if (e.key === 'Enter') buscarPorNombre();
     });
+    document.getElementById('lista-funcion')?.addEventListener('change', cargarListaPuerta);
 });

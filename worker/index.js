@@ -121,86 +121,292 @@ async function checkRateLimit(ip, env) {
 
 // ─── EMAIL VÍA RESEND ────────────────────────────────────────────────────────
 
-async function enviarEmail(to, subject, html, env) {
+async function enviarEmail(to, subject, html, env, opts = {}) {
   if (!env.RESEND_API_KEY) { console.error('RESEND_API_KEY no configurada'); return false; }
   try {
+    const payload = {
+      from:     'El Gorila Teatro <boletos@elgorilateatro.com.mx>',
+      to,
+      subject,
+      html,
+      reply_to: opts.replyTo || 'elgorilateatro@gmail.com',
+    };
     const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
+      method:  'POST',
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: 'El Gorila Teatro <boletos@elgorilateatro.com.mx>', to, subject, html }),
+      body:    JSON.stringify(payload),
     });
     if (!res.ok) { console.error('Resend error', res.status, await res.text()); return false; }
     return true;
   } catch (e) { console.error('enviarEmail exception:', e.message); return false; }
 }
 
-// ─── EMAIL: BOLETO PARA EL COMPRADOR ─────────────────────────────────────────
+function urlVerificarBoleto(codigo) {
+  return `https://elgorilateatro.com.mx/verificar.html?codigo=${encodeURIComponent(codigo)}`;
+}
+
+function urlCompartirBoleto(codigo) {
+  return `https://elgorilateatro.com.mx/compartir-boleto.html?c=${encodeURIComponent(codigo)}`;
+}
+
+function urlQrBoleto(codigo, size = 148) {
+  const data = encodeURIComponent(urlVerificarBoleto(codigo));
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=1a1411&bgcolor=f1ead9&margin=8&data=${data}`;
+}
+
+function esCodigoCert(codigo) {
+  if (typeof codigo !== 'string') return false;
+  const c = codigo.trim().toUpperCase();
+  return c.startsWith('CERT-') || c.startsWith('WIL-'); // WIL- = ventas legacy
+}
+
+async function nextContador(env, key) {
+  for (let i = 0; i < 5; i++) {
+    const prev = parseInt((await env.INVENTARIO.get(key)) || '0', 10) || 0;
+    const seq  = prev + 1;
+    await env.INVENTARIO.put(key, String(seq));
+    if (parseInt((await env.INVENTARIO.get(key)) || '0', 10) === seq) return seq;
+  }
+  return Date.now() % 99999;
+}
+
+async function getNumeroObra(tid, fecha, env) {
+  try {
+    const raw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
+    const f   = JSON.parse(raw || '[]').find(x => x.fecha_iso === fecha);
+    if (f?.numero_obra != null) return f.numero_obra;
+  } catch { /* ignore */ }
+  return 1300;
+}
+
+/** Certificado de compra + un CERT por boleto (QR) + folio interno por boleto (puerta). */
+async function generarBoletosVenta(tid, fecha, items, env) {
+  const canonical  = resolveTid(tid);
+  const numeroObra   = await getNumeroObra(canonical, fecha, env);
+  const parts        = (fecha || '').split('-');
+  const yymmdd       = `${(parts[0] || '').slice(2)}${parts[1] || ''}${parts[2] || ''}`;
+  const counterKey   = kv(canonical, 'boleto:folio:counter');
+  const certificado  = `CERT-ORD-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+  const boletos      = [];
+  let numero         = 0;
+
+  for (const item of (items || [])) {
+    const qty = item.cantidad || 1;
+    for (let q = 0; q < qty; q++) {
+      numero += 1;
+      const seq   = await nextContador(env, counterKey);
+      const cert  = `CERT-${crypto.randomUUID().replace(/-/g, '').toUpperCase()}`;
+      const folio = `${numeroObra}-${yymmdd}-${String(seq).padStart(5, '0')}`;
+      boletos.push({
+        cert, folio, tipo: item.tipo, seccion: item.seccion || 'platea',
+        numero, usado: false, usadoEn: null,
+      });
+    }
+  }
+
+  return { certificado, boletos, codigo: certificado, numeroObra };
+}
+
+async function persistirCertificadosKv(tid, sessionId, certificado, boletos, env) {
+  await env.VENTAS.put(kv(tid, `cert:${certificado}`), JSON.stringify({ sessionId }));
+  for (let i = 0; i < boletos.length; i++) {
+    await env.VENTAS.put(
+      kv(tid, `cert:${boletos[i].cert}`),
+      JSON.stringify({ sessionId, boletoIdx: i }),
+    );
+  }
+}
+
+function syncVentaUsadoGlobal(venta) {
+  if (!Array.isArray(venta.boletos) || !venta.boletos.length) return;
+  const pendientes = venta.boletos.filter(b => !b.usado);
+  venta.usado = pendientes.length === 0;
+  if (venta.usado) {
+    const ultimo = [...venta.boletos].reverse().find(b => b.usadoEn);
+    venta.usadoEn = ultimo?.usadoEn || new Date().toISOString();
+  }
+}
+
+function boletoEnVenta(venta, boletoIdx) {
+  if (boletoIdx == null || !Array.isArray(venta.boletos)) return null;
+  return venta.boletos[boletoIdx] ?? null;
+}
+
+function respuestaBoletoPublica(v, tid, boleto, boletoIdx) {
+  const boletosArr   = v.boletos || [];
+  const totalBoletos = boletosArr.length || v.cantidad || 1;
+  const codigo       = boleto?.cert || v.certificado || v.codigo;
+
+  if (!boleto && boletosArr.length) {
+    const pendientes = boletosArr.filter(b => !b.usado);
+    return {
+      teatroId:      v.teatroId || tid,
+      codigo,
+      certificado:   v.certificado || v.codigo,
+      fecha:         v.fecha,
+      funcionNombre: v.funcionNombre || v.fecha,
+      cantidad:      v.cantidad,
+      totalBoletos,
+      boletoNum:     pendientes.length ? (pendientes[0].numero || 1) : totalBoletos,
+      pendientes:    pendientes.length,
+      items:         v.items || [],
+      total:         v.total,
+      fechaCompra:   v.fechaCompra,
+      estado:        v.estado,
+      usado:         pendientes.length === 0,
+      usadoEn:       v.usadoEn || null,
+      esCertificado: true,
+    };
+  }
+
+  return {
+    teatroId:      v.teatroId || tid,
+    codigo,
+    certificado:   v.certificado || v.codigo,
+    fecha:         v.fecha,
+    funcionNombre: v.funcionNombre || v.fecha,
+    cantidad:      v.cantidad,
+    totalBoletos,
+    boletoNum:     boleto?.numero || (boletoIdx != null ? boletoIdx + 1 : 1),
+    items:         v.items || [],
+    total:         v.total,
+    fechaCompra:   v.fechaCompra,
+    estado:        v.estado,
+    usado:         boleto ? !!boleto.usado : !!v.usado,
+    usadoEn:       boleto?.usadoEn || v.usadoEn || null,
+    tipo:          boleto?.tipo || null,
+    seccion:       boleto?.seccion || null,
+  };
+}
+
+// ─── EMAIL: BOLETO PARA EL COMPRADOR (estilo programa v3) ─────────────────────
 
 function htmlBoleto(venta, funcionNombre, config) {
   const multiSeccion = config.secciones && config.secciones.length > 1;
+  const certificado  = venta.certificado || venta.codigo || 'CERT-—';
+  const boletos      = venta.boletos || [];
+  const qrCert       = boletos.length !== 1 ? certificado : (boletos[0]?.cert || certificado);
+  const programaUrl  = 'https://elgorilateatro.com.mx/programa/v3.html';
+  const compartirUrl = urlCompartirBoleto(certificado);
+  const qrUrl        = urlQrBoleto(qrCert);
+  const nEntradas    = venta.cantidad || boletos.length || 1;
+  const entradasLbl  = nEntradas === 1 ? '1 entrada' : `${nEntradas} entradas`;
 
-  const itemsHtml = (venta.items || []).map(item => {
+  const itemsRows = (venta.items || []).map(item => {
     const tipoNombre = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
     const secNombre  = (multiSeccion && item.seccion)
       ? ` · ${config.secciones.find(s => s.id === item.seccion)?.nombre || item.seccion}`
       : '';
     return `<tr>
-      <td style="padding:6px 12px;border-bottom:1px solid #eee;">${tipoNombre}${secNombre}</td>
-      <td style="padding:6px 12px;border-bottom:1px solid #eee;text-align:center;">${item.cantidad}</td>
+      <td style="padding:10px 0;border-bottom:1px solid #d4c4a8;font-family:Georgia,'Times New Roman',serif;font-size:16px;color:#1a1411;">${tipoNombre}${secNombre}</td>
+      <td style="padding:10px 0;border-bottom:1px solid #d4c4a8;text-align:right;font-family:Georgia,serif;font-size:16px;color:#1a1411;">${item.cantidad}</td>
     </tr>`;
   }).join('');
 
-  const waText = encodeURIComponent(
-    `¡Voy a ver EL GORILA — "${funcionNombre}"! 🎭 📍 ${config.venue}. ¿Me acompañas?`
-  );
-  const waUrl = `https://wa.me/?text=${waText}`;
+  const itemsFallback = !itemsRows
+    ? `<tr><td style="padding:10px 0;font-family:Georgia,serif;font-size:16px;color:#1a1411;">Entrada</td>
+       <td style="padding:10px 0;text-align:right;font-family:Georgia,serif;font-size:16px;color:#1a1411;">${nEntradas}</td></tr>`
+    : itemsRows;
 
   return `<!DOCTYPE html>
 <html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tu boleto — EL GORILA</title></head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:Georgia,serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 0;">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tu boleto — EL GORILA</title>
+</head>
+<body style="margin:0;padding:0;background:#0a0706;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0706;padding:28px 12px;">
 <tr><td align="center">
-<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1);">
-  <tr><td style="background:#1a1a1a;padding:32px;text-align:center;">
-    <h1 style="color:#e8c84a;font-size:28px;margin:0;letter-spacing:4px;">EL GORILA</h1>
-    <p style="color:#aaa;font-size:13px;margin:8px 0 0;letter-spacing:2px;">BOLETO OFICIAL</p>
-  </td></tr>
-  <tr><td style="padding:32px;">
-    <h2 style="font-size:20px;margin:0 0 4px;color:#1a1a1a;">${funcionNombre}</h2>
-    <p style="color:#555;font-size:14px;margin:0 0 24px;">
-      📍 ${config.venue}<br>
-      <span style="font-size:12px;color:#888;">${config.direccion}</span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+  <!-- Portada oscura (v3) -->
+  <tr><td style="background:#0a0706;padding:32px 28px 28px;border:1px solid rgba(241,234,217,.12);">
+    <p style="margin:0 0 20px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:#d99b3a;">
+      Boleto confirmado · 2026
     </p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:4px;margin-bottom:24px;">
-      <tr style="background:#f9f9f9;">
-        <th style="padding:8px 12px;text-align:left;font-size:12px;color:#888;font-weight:normal;letter-spacing:1px;">TIPO</th>
-        <th style="padding:8px 12px;text-align:center;font-size:12px;color:#888;font-weight:normal;letter-spacing:1px;">CANT.</th>
-      </tr>
-      ${itemsHtml}
-    </table>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+    <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:42px;line-height:.9;font-weight:500;color:#f1ead9;letter-spacing:-.02em;">
+      EL <span style="font-style:italic;color:#D43A1A;">Gorila</span>
+    </h1>
+    <p style="margin:18px 0 0;padding-left:12px;border-left:2px solid rgba(212,58,26,.55);font-family:Georgia,serif;font-size:20px;line-height:1.3;color:#f1ead9;max-width:320px;">
+      Tus entradas · <span style="font-style:italic;color:#d99b3a;">${entradasLbl}</span>
+    </p>
+  </td></tr>
+
+  <!-- Bloque papel: función -->
+  <tr><td style="background:#f1ead9;padding:28px;color:#1a1411;">
+    <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#D43A1A;">
+      Tu función
+    </p>
+    <h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;font-weight:500;line-height:1.15;color:#1a1411;">
+      ${funcionNombre}
+    </h2>
+    <p style="margin:0;font-family:Georgia,serif;font-size:15px;line-height:1.5;color:#3a2e26;">
+      ${config.venue}<br>
+      <span style="font-size:13px;color:#6b5c4a;">${config.direccion}</span>
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:22px;">
       <tr>
-        <td style="font-size:13px;color:#555;">Folio</td>
-        <td style="font-size:13px;color:#1a1a1a;font-weight:bold;text-align:right;">${venta.codigo}</td>
+        <td style="font-family:'Courier New',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#8a7760;padding-bottom:8px;">Tipo</td>
+        <td style="font-family:'Courier New',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#8a7760;padding-bottom:8px;text-align:right;">Cant.</td>
       </tr>
+      ${itemsFallback}
       <tr>
-        <td style="font-size:13px;color:#555;padding-top:6px;">Total pagado</td>
-        <td style="font-size:16px;color:#1a1a1a;font-weight:bold;text-align:right;padding-top:6px;">$${venta.total?.toFixed(2)} MXN</td>
+        <td style="padding-top:14px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8a7760;">Total pagado</td>
+        <td style="padding-top:14px;text-align:right;font-family:Georgia,serif;font-size:20px;font-weight:600;color:#1a1411;">$${(venta.total ?? 0).toFixed(2)} MXN</td>
       </tr>
     </table>
-    <div style="background:#fffbea;border:1px solid #e8c84a;border-radius:6px;padding:16px;margin-bottom:24px;font-size:13px;color:#555;line-height:1.6;">
-      <strong>¿Cómo ingresar?</strong><br>
-      Presenta este folio en la entrada o muestra este correo. Tu folio es único — no lo compartas en redes.
-    </div>
-    <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:13px;font-family:sans-serif;">
-      📱 Compartir por WhatsApp
+  </td></tr>
+
+  <!-- Folio + QR -->
+  <tr><td style="background:#e8dfc8;padding:24px 28px;border-top:1px solid #c9b896;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="vertical-align:top;width:148px;padding-right:18px;">
+          <img src="${qrUrl}" width="148" height="148" alt="Código QR de tu boleto" style="display:block;border:1px solid #c9b896;background:#f1ead9;">
+        </td>
+        <td style="vertical-align:top;">
+          <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a7760;">Certificado</p>
+          <p style="margin:0 0 14px;font-family:'Courier New',monospace;font-size:13px;letter-spacing:.06em;color:#1a1411;word-break:break-all;">${certificado}</p>
+          <p style="margin:0;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#3a2e26;">
+            En la entrada, muestra este correo o escanea el código. ${nEntradas > 1 ? `Tienes <strong>${nEntradas} entradas</strong> — comparte el boleto para ver cada QR.` : ''} Llega con <strong>30 minutos de anticipación</strong>.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- Compartir boleto (imagen + WhatsApp) -->
+  <tr><td style="background:#120d0b;padding:22px 28px;border-top:1px solid rgba(241,234,217,.08);text-align:center;">
+    <a href="${compartirUrl}" style="display:inline-block;background:#25D366;color:#fff;padding:14px 24px;text-decoration:none;font-family:Georgia,serif;font-size:16px;letter-spacing:.02em;margin-bottom:10px;">
+      Compartir boleto por WhatsApp →
+    </a>
+    <p style="margin:0;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.12em;color:rgba(241,234,217,.45);">
+      Guarda como imagen · QR + ${entradasLbl}
+    </p>
+  </td></tr>
+
+  <!-- Programa de mano v3 -->
+  <tr><td style="background:#0a0706;padding:28px;border-top:1px solid rgba(241,234,217,.1);">
+    <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#d99b3a;">
+      Antes de la función
+    </p>
+    <p style="margin:0 0 16px;font-family:Georgia,serif;font-style:italic;font-size:17px;line-height:1.5;color:rgba(241,234,217,.72);">
+      Kafka escribió un informe. Humberto lleva treinta y siete años interpretándolo.
+    </p>
+    <a href="${programaUrl}" style="display:inline-block;background:#D43A1A;color:#f1ead9;padding:14px 22px;text-decoration:none;font-family:Georgia,serif;font-size:16px;letter-spacing:.02em;">
+      Leer programa de mano →
     </a>
   </td></tr>
-  <tr><td style="background:#f9f9f9;padding:16px;text-align:center;font-size:11px;color:#aaa;">
-    ${config.venue} · ${config.direccion}
+
+  <!-- Pie -->
+  <tr><td style="background:#120d0b;padding:18px 28px;text-align:center;">
+    <p style="margin:0 0 10px;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.45);">
+      ¿Dudas? Responde a este correo o escribe a elgorilateatro@gmail.com
+    </p>
+    <a href="${compartirUrl}" style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:.12em;color:#d99b3a;text-decoration:underline;">Guardar o compartir boleto</a>
   </td></tr>
+
 </table>
 </td></tr>
 </table>
@@ -220,6 +426,8 @@ function htmlAvisoAdmin(venta, funcionNombre, config) {
     return `${tipoNombre}${secLabel}: ${item.cantidad}`;
   }).join(' · ');
 
+  const foliosInternos = (venta.boletos || []).map(b => b.folio).join(', ');
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="utf-8"><title>Nueva venta — EL GORILA</title></head>
@@ -228,12 +436,15 @@ function htmlAvisoAdmin(venta, funcionNombre, config) {
 <table style="border-collapse:collapse;font-size:14px;">
   <tr><td style="padding:4px 12px 4px 0;color:#888;">TeatroId</td><td><strong>${config.id}</strong></td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#888;">Función</td><td><strong>${funcionNombre}</strong></td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#888;">Folio</td><td><strong>${venta.codigo}</strong></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#888;">Certificado</td><td><strong>${venta.certificado || venta.codigo}</strong></td></tr>
+  ${foliosInternos ? `<tr><td style="padding:4px 12px 4px 0;color:#888;">Folios puerta</td><td style="font-family:monospace;font-size:12px;">${foliosInternos}</td></tr>` : ''}
   <tr><td style="padding:4px 12px 4px 0;color:#888;">Boletos</td><td>${itemsStr || venta.cantidad}</td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#888;">Total</td><td><strong>$${venta.total?.toFixed(2)} MXN</strong></td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#888;">Email</td><td>${venta.email || '—'}</td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#888;">Nombre</td><td>${venta.nombre || '—'}</td></tr>
   <tr><td style="padding:4px 12px 4px 0;color:#888;">Compra</td><td>${venta.fechaCompra}</td></tr>
+  ${venta.referidoDe ? `<tr><td style="padding:4px 12px 4px 0;color:#888;">Invitado por</td><td style="font-family:monospace;font-size:12px;">${venta.referidoDe}</td></tr>` : ''}
+  ${venta.codigoCupon ? `<tr><td style="padding:4px 12px 4px 0;color:#888;">Cupón</td><td>${venta.codigoCupon}</td></tr>` : ''}
 </table>
 </body></html>`;
 }
@@ -420,20 +631,44 @@ async function validarCuponDescuento(codigoRaw, env) {
   return { ok: true, codigo, porcentaje, nombre: entry.nombre || codigo };
 }
 
-async function incrementarUsoCupon(codigo, env) {
+async function incrementarUsoCupon(codigo, env, referidoDe) {
   const key  = `cupon:usos:${codigo}`;
   const usos = parseInt((await env.INVENTARIO.get(key)) || '0', 10);
   await env.INVENTARIO.put(key, String(usos + 1));
+
+  const codigos = await getCodigosDescuento(env);
+  if (codigos[codigo]?.referido) {
+    const refKey = `cupon:referidos:total:${codigo}`;
+    const total  = parseInt((await env.INVENTARIO.get(refKey)) || '0', 10);
+    await env.INVENTARIO.put(refKey, String(total + 1));
+  }
+
+  if (referidoDe && esCodigoCert(referidoDe)) {
+    const origenKey = `referido:origen:${referidoDe.trim().toUpperCase()}`;
+    const n = parseInt((await env.INVENTARIO.get(origenKey)) || '0', 10);
+    await env.INVENTARIO.put(origenKey, String(n + 1));
+  }
+}
+
+function enmascararCertificado(cert) {
+  if (!cert || typeof cert !== 'string') return '—';
+  const c = cert.trim().toUpperCase();
+  if (c.length <= 14) return c;
+  return `${c.slice(0, 12)}…${c.slice(-4)}`;
 }
 
 function calcularPromoGrupo(itemsValidados) {
-  const cantidadGeneral = itemsValidados.filter(i => i.tipo === 'general').reduce((s, i) => s + i.cantidad, 0);
-  const tieneEspeciales = itemsValidados.some(i => i.tipo !== 'general');
-  return cantidadGeneral >= 5 && !tieneEspeciales;
+  const cantidadGeneral = itemsValidados
+    .filter(i => i.tipo === 'general')
+    .reduce((s, i) => s + i.cantidad, 0);
+  const tieneCredencial = itemsValidados.some(i => i.tipo !== 'general');
+  // Manada automática: 5+ generales en la misma compra, sin mezclar credenciales.
+  return cantidadGeneral >= 5 && !tieneCredencial;
 }
 
 function calcularLineItemsPrecio(itemsValidados, seccionMap, { promoGrupo, cuponPorcentaje }) {
   const aplicarCupon  = cuponPorcentaje > 0;
+  // Cupón y Manada automática no se acumulan; Manada solo si no hay cupón.
   const aplicarManada = promoGrupo && !aplicarCupon;
   const rows          = [];
   let totalCentavos   = 0;
@@ -449,7 +684,8 @@ function calcularLineItemsPrecio(itemsValidados, seccionMap, { promoGrupo, cupon
     if (aplicarManada && item.tipo === 'general') {
       unitCentavos = Math.round(precioBase * 0.80 * 100);
     }
-    if (aplicarCupon) {
+    // Cupones aplican solo a boletos generales; credenciales ya tienen tarifa reducida.
+    if (aplicarCupon && item.tipo === 'general') {
       unitCentavos = Math.round(unitCentavos * (1 - cuponPorcentaje / 100));
     }
     unitCentavos = Math.max(50, unitCentavos);
@@ -803,6 +1039,13 @@ async function handleValidarCupon(tid, request, env) {
   const cupon = await validarCuponDescuento(codigoRaw, env);
   if (!cupon.ok) return json({ error: cupon.error }, 400, request);
 
+  const tieneGeneral = itemsValidados.some(i => i.tipo === 'general');
+  if (!tieneGeneral) {
+    return json({
+      error: 'Los cupones aplican solo a boletos generales. Las entradas con credencial (INAPAM, estudiante, maestro) ya tienen tarifa reducida.',
+    }, 400, request);
+  }
+
   const promoGrupo = calcularPromoGrupo(itemsValidados);
   const { totalCentavos, subtotalCentavos } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
     promoGrupo,
@@ -935,7 +1178,8 @@ async function handleCheckout(tid, request, env, ctx) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
 
-  const { items, fecha, codigoCupon } = body;
+  const { items, fecha, codigoCupon, referidoDe: referidoDeRaw } = body;
+  const referidoDe = typeof referidoDeRaw === 'string' ? referidoDeRaw.trim().toUpperCase() : '';
   const utmClean = sanitizarUTM(body.utm);
   const emailRaw = typeof body.email === 'string' ? body.email.trim().toLowerCase().substring(0, 254) : '';
   const emailOk  = emailRaw && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw) ? emailRaw : '';
@@ -1029,6 +1273,32 @@ async function handleCheckout(tid, request, env, ctx) {
     cuponAplicado = cupon;
   }
 
+  if (cuponAplicado?.codigo === 'INVITADO25') {
+    if (!referidoDe || !esCodigoCert(referidoDe)) {
+      await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
+      return json({ error: 'El cupón de invitado solo funciona con un enlace de invitación válido.' }, 400, request);
+    }
+    const refVenta = await _resolveVentaKey(tid, referidoDe, env);
+    if (!refVenta) {
+      await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
+      return json({ error: 'La invitación ya no es válida.' }, 400, request);
+    }
+  } else if (referidoDe) {
+    if (!esCodigoCert(referidoDe)) {
+      await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
+      return json({ error: 'Referencia de invitación inválida.' }, 400, request);
+    }
+    const refVenta = await _resolveVentaKey(tid, referidoDe, env);
+    if (!refVenta) {
+      await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
+      return json({ error: 'La invitación ya no es válida.' }, 400, request);
+    }
+    if (!cuponAplicado || cuponAplicado.codigo !== 'INVITADO25') {
+      await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
+      return json({ error: 'El descuento de invitado debe activarse antes de pagar.' }, 400, request);
+    }
+  }
+
   const { rows: lineRows } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
     promoGrupo,
     cuponPorcentaje: cuponAplicado?.porcentaje || 0,
@@ -1058,6 +1328,7 @@ async function handleCheckout(tid, request, env, ctx) {
     params.set('metadata[codigoCupon]', cuponAplicado.codigo);
     params.set('metadata[cuponPct]', String(cuponAplicado.porcentaje));
   }
+  if (referidoDe) params.set('metadata[referidoDe]', referidoDe.substring(0, 64));
 
   // UTM como metadata de Stripe
   for (const k of Object.keys(utmClean)) {
@@ -1158,8 +1429,7 @@ async function handleWebhook(request, env, ctx) {
     return new Response('ok', { status: 200 });
   }
 
-  // Folio criptográficamente aleatorio (impredecible / no enumerable).
-  const codigo = `CERT-${crypto.randomUUID().replace(/-/g, '').toUpperCase()}`;
+  const gen = await generarBoletosVenta(tid, fecha, items, env);
 
   const utm = {};
   for (const k of UTM_KEYS) {
@@ -1174,7 +1444,10 @@ async function handleWebhook(request, env, ctx) {
   const venta = {
     teatroId:     tid,
     sessionId,
-    codigo,
+    codigo:       gen.codigo,
+    certificado:  gen.certificado,
+    boletos:      gen.boletos,
+    numeroObra:   gen.numeroObra,
     fecha,
     funcionNombre,
     cantidad,
@@ -1185,18 +1458,23 @@ async function handleWebhook(request, env, ctx) {
     total:        session.amount_total != null ? session.amount_total / 100 : 0,
     fechaCompra:  new Date().toISOString(),
     estado:       'completada',
+    usado:        false,
     utm,
     metodoPago,
     codigoCupon:  meta.codigoCupon || null,
     cuponPct:     meta.cuponPct ? parseInt(meta.cuponPct, 10) : null,
+    referidoDe:   meta.referidoDe || null,
   };
 
   await env.VENTAS.put(kv(tid, `venta:${sessionId}`),  JSON.stringify(venta));
-  await env.VENTAS.put(kv(tid, `cert:${codigo}`),       JSON.stringify({ sessionId }));
+  await persistirCertificadosKv(tid, sessionId, gen.certificado, gen.boletos, env);
   await env.VENTAS.put(kv(tid, `ventaIdx:${fecha}:${sessionId}`), sessionId);
 
   if (meta.codigoCupon) {
-    ctx.waitUntil(incrementarUsoCupon(meta.codigoCupon, env).catch(e => console.error('cupon uso:', e.message)));
+    ctx.waitUntil(
+      incrementarUsoCupon(meta.codigoCupon, env, meta.referidoDe || null)
+        .catch(e => console.error('cupon uso:', e.message)),
+    );
   }
 
   // Inventario: reservado → vendido
@@ -1215,12 +1493,13 @@ async function handleWebhook(request, env, ctx) {
 
   // Emails
   const config = await getVenueConfig(tid, env);
+  const codigoVenta = gen.certificado;
   const emailPromises = [
-    enviarEmail('elgorilateatro@gmail.com', `[GORILA] Venta ${codigo} — ${config.nombre}`, htmlAvisoAdmin(venta, funcionNombre, config), env),
+    enviarEmail('elgorilateatro@gmail.com', `[GORILA] Venta ${codigoVenta} — ${config.nombre}`, htmlAvisoAdmin(venta, funcionNombre, config), env),
   ];
   if (venta.email) {
     emailPromises.push(
-      enviarEmail(venta.email, `Tu boleto — EL GORILA`, htmlBoleto(venta, funcionNombre, config), env)
+      enviarEmail(venta.email, `Tu lugar — EL GORILA · ${funcionNombre}`, htmlBoleto(venta, funcionNombre, config), env)
     );
   }
   ctx.waitUntil(Promise.all(emailPromises));
@@ -1230,7 +1509,7 @@ async function handleWebhook(request, env, ctx) {
     const payloadMkt = {
       evento:          'venta.completada',
       teatroId:        tid,
-      codigo,
+      codigo:          codigoVenta,
       fecha,
       funcionNombre,
       items,
@@ -1291,6 +1570,44 @@ async function _lookupVenta(tid, id, env) {
   return ventaRaw;
 }
 
+// ─── HANDLER: INVITACIÓN PÚBLICA (info mínima, sin PII) ─────────────────────
+
+async function handleInvitacion(tid, certificado, request, env) {
+  const ip      = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const ventana = Math.floor(Date.now() / 900000);
+  const rlKey   = `rl:inv:${ip}:${ventana}`;
+  const rl      = parseInt((await env.INVENTARIO.get(rlKey)) || '0', 10);
+  if (rl >= 60) return json({ error: 'Demasiados intentos. Espera unos minutos.' }, 429, request);
+
+  const codigo = (certificado || '').trim().toUpperCase();
+  if (!codigo || !esCodigoCert(codigo)) {
+    await env.INVENTARIO.put(rlKey, String(rl + 1), { expirationTtl: 900 });
+    return json({ error: 'Invitación no válida.' }, 400, request);
+  }
+
+  const resolved = await _resolveVentaKey(tid, codigo, env);
+  if (!resolved) {
+    await env.INVENTARIO.put(rlKey, String(rl + 1), { expirationTtl: 900 });
+    return json({ error: 'Invitación no encontrada.' }, 404, request);
+  }
+
+  const { venta } = resolved;
+  if (venta.estado === 'reembolsada') {
+    return json({ error: 'Esta invitación ya no está activa.' }, 410, request);
+  }
+
+  const certOrd = (venta.certificado || venta.codigo || codigo).trim().toUpperCase();
+  return json({
+    valido:        true,
+    certificadoRef: enmascararCertificado(certOrd),
+    referidoDe:    certOrd,
+    funcionNombre: venta.funcionNombre || venta.fecha,
+    fecha:         venta.fecha,
+    entradas:      venta.cantidad || (venta.boletos?.length) || 1,
+    mensaje:       'Alguien que ya vio EL GORILA te invita.',
+  }, 200, request);
+}
+
 // ─── HANDLER: VENTA PÚBLICA (sin email) ───────────────────────────────────────
 
 async function handleVenta(tid, id, request, env) {
@@ -1305,26 +1622,36 @@ async function handleVenta(tid, id, request, env) {
   }
 
   try {
-    const ventaRaw = await _lookupVenta(tid, id, env);
-    if (!ventaRaw) {
-      await env.INVENTARIO.put(rl404Key, String(rl404 + 1), { expirationTtl: 900 });
-      return json({ error: 'Venta no encontrada.' }, 404, request);
+    const codigo = (id || '').trim().toUpperCase();
+    const ref    = await _resolveCertRef(tid, codigo, env);
+    let v;
+    let boletoIdx = null;
+
+    if (ref) {
+      const ventaRaw = await env.VENTAS.get(kv(tid, `venta:${ref.sessionId}`))
+        || await env.VENTAS.get(`venta:${ref.sessionId}`)
+        || await env.VENTAS.get(`gorila:venta:${ref.sessionId}`);
+      if (!ventaRaw) {
+        await env.INVENTARIO.put(rl404Key, String(rl404 + 1), { expirationTtl: 900 });
+        return json({ error: 'Venta no encontrada.' }, 404, request);
+      }
+      v = JSON.parse(ventaRaw);
+      boletoIdx = ref.boletoIdx;
+    } else {
+      const ventaRaw = await _lookupVenta(tid, id, env);
+      if (!ventaRaw) {
+        await env.INVENTARIO.put(rl404Key, String(rl404 + 1), { expirationTtl: 900 });
+        return json({ error: 'Venta no encontrada.' }, 404, request);
+      }
+      v = JSON.parse(ventaRaw);
     }
-    const v = JSON.parse(ventaRaw);
-    // Respuesta pública: sin email, nombre ni sessionId del comprador
-    return json({
-      teatroId:      v.teatroId      || tid,
-      codigo:        v.codigo,
-      fecha:         v.fecha,
-      funcionNombre: v.funcionNombre || v.fecha,
-      cantidad:      v.cantidad,
-      items:         v.items         || [],
-      total:         v.total,
-      fechaCompra:   v.fechaCompra,
-      estado:        v.estado,
-      usado:         v.usado         || false,
-      usadoEn:       v.usadoEn       || null,
-    }, 200, request);
+
+    const boleto = boletoEnVenta(v, boletoIdx);
+    const resp   = respuestaBoletoPublica(v, tid, boleto, boletoIdx);
+    resp.boletos = (v.boletos || []).map(b => ({
+      cert: b.cert, numero: b.numero, tipo: b.tipo, seccion: b.seccion, usado: !!b.usado,
+    }));
+    return json(resp, 200, request);
   } catch { return json({ error: 'Error al obtener la venta.' }, 500, request); }
 }
 
@@ -1427,54 +1754,95 @@ async function handleCanjear(tid, codigo, request, env) {
   if (!PUEDE_CANJEAR.has(payload.rol)) {
     return json({ error: 'Sin permiso para canjear.' }, 403, request);
   }
-  if (!codigo || !codigo.startsWith('CERT-')) return json({ error: 'Código de folio inválido.' }, 400, request);
+  if (!codigo || !esCodigoCert(codigo)) return json({ error: 'Código de folio inválido.' }, 400, request);
 
-  // Buscar cert con prefijo
-  let certRaw = await env.VENTAS.get(kv(tid, `cert:${codigo}`));
-  let ventaKey;
-  if (certRaw) {
-    const { sessionId } = JSON.parse(certRaw);
-    ventaKey = kv(tid, `venta:${sessionId}`);
+  const resolved = await _resolveVentaKey(tid, codigo, env);
+  if (!resolved) return json({ error: 'Folio no encontrado.' }, 404, request);
+  const { ventaKey, venta, boletoIdx } = resolved;
+  const boleto = boletoEnVenta(venta, boletoIdx);
+
+  if (boleto) {
+    if (boleto.usado) {
+      const cuandoMX = new Date(boleto.usadoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+      return json({ error: `Ya fue canjeado el ${cuandoMX}.`, usadoEn: boleto.usadoEn }, 409, request);
+    }
+    boleto.usado = true;
+    boleto.usadoEn = new Date().toISOString();
+    syncVentaUsadoGlobal(venta);
+  } else if (Array.isArray(venta.boletos) && venta.boletos.length) {
+    const pendientes = venta.boletos.filter(b => !b.usado);
+    if (!pendientes.length) {
+      const cuandoMX = new Date(venta.usadoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+      return json({ error: `Ya fue canjeado el ${cuandoMX}.`, usadoEn: venta.usadoEn }, 409, request);
+    }
+    const now = new Date().toISOString();
+    pendientes.forEach(b => { b.usado = true; b.usadoEn = now; });
+    syncVentaUsadoGlobal(venta);
   } else {
-    certRaw = await env.VENTAS.get(`cert:${codigo}`);
-    if (certRaw) {
-      const { sessionId } = JSON.parse(certRaw);
-      ventaKey = `venta:${sessionId}`;
+    if (venta.usado) {
+      const cuandoMX = new Date(venta.usadoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+      return json({ error: `Ya fue canjeado el ${cuandoMX}.`, usadoEn: venta.usadoEn }, 409, request);
     }
-    if (!certRaw) {
-      certRaw = await env.VENTAS.get(`gorila:cert:${codigo}`);
-      if (certRaw) {
-        const { sessionId } = JSON.parse(certRaw);
-        ventaKey = `gorila:venta:${sessionId}`;
-      }
-    }
+    venta.usado = true;
+    venta.usadoEn = new Date().toISOString();
   }
 
-  if (!certRaw) return json({ error: 'Folio no encontrado.' }, 404, request);
-
-  const ventaRaw = await env.VENTAS.get(ventaKey);
-  if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
-
-  const venta = JSON.parse(ventaRaw);
-
-  if (venta.usado) {
-    const cuandoMX = new Date(venta.usadoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
-    return json({ error: `Ya fue canjeado el ${cuandoMX}.`, usadoEn: venta.usadoEn }, 409, request);
-  }
-
-  venta.usado   = true;
-  venta.usadoEn = new Date().toISOString();
   venta.canjeadoPor = payload.usuario;
   await env.VENTAS.put(ventaKey, JSON.stringify(venta));
 
   await registrarAuditoria(env, {
     usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
     rol: payload.rol, accion: 'canjear_boleto', teatroId: tid,
-    detalles: `Folio ${codigo} canjeado en puerta`,
-    meta: { codigo, funcion: venta.funcionNombre || venta.fecha },
+    detalles: `CERT ${codigo} canjeado en puerta${boleto?.folio ? ` · folio ${boleto.folio}` : ''}`,
+    meta: { codigo, folio: boleto?.folio || null, funcion: venta.funcionNombre || venta.fecha },
   });
 
-  return json({ ok: true, usadoEn: venta.usadoEn }, 200, request);
+  return json({ ok: true, usadoEn: boleto?.usadoEn || venta.usadoEn, folio: boleto?.folio || null }, 200, request);
+}
+
+// ─── HANDLER: LISTA PUERTA (admin — folios internos agrupados) ────────────────
+
+async function handleListaPuerta(tid, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_CANJEAR.has(payload.rol) && !PUEDE_CANJEAR_LOTE.has(payload.rol)) {
+    return json({ error: 'Sin permiso.' }, 403, request);
+  }
+
+  const fecha = new URL(request.url).searchParams.get('fecha') || '';
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return json({ error: 'Indica fecha válida (YYYY-MM-DD).' }, 400, request);
+  }
+
+  const idxResult  = await env.VENTAS.list({ prefix: kv(tid, `ventaIdx:${fecha}:`) });
+  const sessionIds = (await Promise.all(idxResult.keys.map(k => env.VENTAS.get(k.name)))).filter(Boolean);
+  const ventasRaw  = await Promise.all(sessionIds.map(sid => env.VENTAS.get(kv(tid, `venta:${sid}`))));
+  const ventas     = ventasRaw.filter(Boolean).map(r => JSON.parse(r));
+
+  const grupos = ventas
+    .filter(v => v.estado !== 'reembolsada')
+    .map(v => ({
+      certificado: v.certificado || v.codigo,
+      nombre:      v.nombre || v.email || '—',
+      email:       v.email || null,
+      cantidad:    v.cantidad,
+      numeroObra:  v.numeroObra || null,
+      boletos: (v.boletos || []).map(b => ({
+        cert:   b.cert,
+        folio:  b.folio,
+        tipo:   b.tipo,
+        numero: b.numero,
+        usado:  !!b.usado,
+        usadoEn: b.usadoEn || null,
+      })),
+      usado: v.usado || false,
+    }))
+    .sort((a, b) => (a.boletos[0]?.folio || '').localeCompare(b.boletos[0]?.folio || ''));
+
+  const ingresados = grupos.reduce((s, g) => s + g.boletos.filter(b => b.usado).length, 0);
+  const total      = grupos.reduce((s, g) => s + g.boletos.length, 0);
+
+  return json({ fecha, grupos, total, ingresados, pendientes: total - ingresados }, 200, request);
 }
 
 // ─── HANDLER: LISTADO DE VENTAS (admin) ───────────────────────────────────────
@@ -1590,14 +1958,17 @@ async function handleVentaManual(tid, request, env, ctx) {
   }
   total = Math.round(total * 100) / 100;
 
-  const codigo    = `CERT-${crypto.randomUUID().replace(/-/g, '').toUpperCase()}`;
+  const gen = await generarBoletosVenta(tid, fecha, itemsValidados, env);
   const sessionId = `manual_${crypto.randomUUID().replace(/-/g, '')}`;
   const canonical = resolveTid(tid);
 
   const venta = {
     teatroId:       canonical,
     sessionId,
-    codigo,
+    codigo:         gen.codigo,
+    certificado:    gen.certificado,
+    boletos:        gen.boletos,
+    numeroObra:     gen.numeroObra,
     fecha,
     funcionNombre:  funcion.nombre,
     cantidad:       cantidadTotal,
@@ -1610,20 +1981,21 @@ async function handleVentaManual(tid, request, env, ctx) {
     total,
     fechaCompra:    new Date().toISOString(),
     estado:         'completada',
+    usado:          false,
     metodoPago:     'efectivo',
     registradoPor:  payload.usuario || 'admin',
     utm:            {},
   };
 
   await env.VENTAS.put(kv(canonical, `venta:${sessionId}`), JSON.stringify(venta));
-  await env.VENTAS.put(kv(canonical, `cert:${codigo}`), JSON.stringify({ sessionId }));
+  await persistirCertificadosKv(canonical, sessionId, gen.certificado, gen.boletos, env);
   await env.VENTAS.put(kv(canonical, `ventaIdx:${fecha}:${sessionId}`), sessionId);
 
   let emailEnviado = false;
   if (email) {
     emailEnviado = await enviarEmail(
       email,
-      `Tu boleto — EL GORILA`,
+      `Tu lugar — EL GORILA · ${funcion.nombre}`,
       htmlBoleto(venta, funcion.nombre, config),
       env,
     );
@@ -1631,17 +2003,17 @@ async function handleVentaManual(tid, request, env, ctx) {
 
   ctx.waitUntil(enviarEmail(
     'elgorilateatro@gmail.com',
-    `[GORILA] Venta efectivo ${codigo} — ${config.nombre}`,
+    `[GORILA] Venta efectivo ${gen.certificado} — ${config.nombre}`,
     htmlAvisoAdmin(venta, funcion.nombre, config),
     env,
   ));
 
-  const verificarUrl = `https://elgorilateatro.com.mx/verificar.html?codigo=${encodeURIComponent(codigo)}`;
+  const compartirUrl = urlCompartirBoleto(gen.certificado);
   const waTexto = [
     `🎭 *EL GORILA* — ${funcion.nombre}`,
     `📍 ${config.venue}`,
-    `🎟 ${cantidadTotal} boleto(s) · Folio: *${codigo}*`,
-    `Verificar: ${verificarUrl}`,
+    `🎟 ${cantidadTotal} boleto(s) · Certificado: *${gen.certificado}*`,
+    `Boleto: ${compartirUrl}`,
   ].join('\n');
   const waUrl = telefono
     ? `https://wa.me/${telefono}?text=${encodeURIComponent(waTexto)}`
@@ -1650,14 +2022,16 @@ async function handleVentaManual(tid, request, env, ctx) {
   await registrarAuditoria(env, {
     usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
     rol: payload.rol, accion: 'venta_manual', teatroId: canonical,
-    detalles: `Venta efectivo ${codigo} — ${cantidadTotal} boleto(s) — ${funcion.nombre}`,
-    meta: { codigo, fecha, total, email: email || null },
+    detalles: `Venta efectivo ${gen.certificado} — ${cantidadTotal} boleto(s) — ${funcion.nombre}`,
+    meta: { codigo: gen.certificado, fecha, total, email: email || null },
   });
 
   return json({
     ok:           true,
-    codigo,
-    verificarUrl,
+    codigo:       gen.certificado,
+    certificado:  gen.certificado,
+    boletos:      gen.boletos.map(b => ({ cert: b.cert, folio: b.folio, numero: b.numero })),
+    compartirUrl,
     waUrl,
     waTexto,
     emailEnviado: !!email,
@@ -1688,30 +2062,44 @@ async function liberarVendidos(tid, fecha, seccionCantidades, env) {
   return { ok: false };
 }
 
-async function _resolveVentaKey(tid, codigo, env) {
-  let certRaw = await env.VENTAS.get(kv(tid, `cert:${codigo}`));
-  let ventaKey;
-  if (certRaw) {
-    const { sessionId } = JSON.parse(certRaw);
-    ventaKey = kv(tid, `venta:${sessionId}`);
-  } else {
-    certRaw = await env.VENTAS.get(`cert:${codigo}`);
-    if (certRaw) {
-      const { sessionId } = JSON.parse(certRaw);
-      ventaKey = `venta:${sessionId}`;
-    }
-    if (!certRaw) {
-      certRaw = await env.VENTAS.get(`gorila:cert:${codigo}`);
-      if (certRaw) {
-        const { sessionId } = JSON.parse(certRaw);
-        ventaKey = `gorila:venta:${sessionId}`;
-      }
-    }
+async function _resolveCertRef(tid, codigo, env) {
+  const keys = [
+    kv(tid, `cert:${codigo}`),
+    `cert:${codigo}`,
+    `gorila:cert:${codigo}`,
+  ];
+  for (const key of keys) {
+    const raw = await env.VENTAS.get(key);
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed?.sessionId) return parsed;
+    } catch { /* ignore */ }
   }
-  if (!certRaw || !ventaKey) return null;
-  const ventaRaw = await env.VENTAS.get(ventaKey);
-  if (!ventaRaw) return null;
-  return { ventaKey, venta: JSON.parse(ventaRaw) };
+  return null;
+}
+
+async function _resolveVentaKey(tid, codigo, env) {
+  const ref = await _resolveCertRef(tid, codigo, env);
+  if (!ref) return null;
+
+  const keys = [
+    kv(tid, `venta:${ref.sessionId}`),
+    `venta:${ref.sessionId}`,
+    `gorila:venta:${ref.sessionId}`,
+  ];
+  let ventaRaw = null;
+  let ventaKey = null;
+  for (const key of keys) {
+    ventaRaw = await env.VENTAS.get(key);
+    if (ventaRaw) { ventaKey = key; break; }
+  }
+  if (!ventaRaw || !ventaKey) return null;
+  return {
+    ventaKey,
+    venta: JSON.parse(ventaRaw),
+    boletoIdx: ref.boletoIdx ?? null,
+  };
 }
 
 async function handleReagendar(tid, request, env) {
@@ -1725,7 +2113,7 @@ async function handleReagendar(tid, request, env) {
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
   const codigo       = (body.codigo || '').trim().toUpperCase();
   const fechaDestino = body.fechaDestino || body.fecha;
-  if (!codigo?.startsWith('CERT-')) return json({ error: 'Folio inválido.' }, 400, request);
+  if (!esCodigoCert(codigo)) return json({ error: 'Folio inválido.' }, 400, request);
   if (!fechaDestino || !/^\d{4}-\d{2}-\d{2}$/.test(fechaDestino)) {
     return json({ error: 'Fecha destino inválida.' }, 400, request);
   }
@@ -1802,7 +2190,7 @@ async function handleReembolso(tid, request, env, ctx) {
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
 
   const codigo = (body.codigo || '').trim().toUpperCase();
-  if (!codigo?.startsWith('CERT-')) return json({ error: 'Folio inválido.' }, 400, request);
+  if (!esCodigoCert(codigo)) return json({ error: 'Folio inválido.' }, 400, request);
 
   const resolved = await _resolveVentaKey(tid, codigo, env);
   if (!resolved) return json({ error: 'Folio no encontrado.' }, 404, request);
@@ -1905,22 +2293,29 @@ async function handleCanjearLote(tid, request, env) {
 
   const resultados = [];
   for (const codigo of codigos) {
-    const fakeReq = new Request(request.url, {
-      method: 'POST',
-      headers: request.headers,
-    });
     const resolved = await _resolveVentaKey(tid, codigo, env);
     if (!resolved) { resultados.push({ codigo, ok: false, error: 'No encontrado' }); continue; }
-    const { ventaKey, venta } = resolved;
-    if (venta.usado) {
-      resultados.push({ codigo, ok: false, error: 'Ya canjeado' });
-      continue;
+    const { ventaKey, venta, boletoIdx } = resolved;
+    const boleto = boletoEnVenta(venta, boletoIdx);
+    if (boleto) {
+      if (boleto.usado) { resultados.push({ codigo, ok: false, error: 'Ya canjeado' }); continue; }
+      boleto.usado = true;
+      boleto.usadoEn = new Date().toISOString();
+      syncVentaUsadoGlobal(venta);
+    } else if (Array.isArray(venta.boletos) && venta.boletos.length) {
+      const pendientes = venta.boletos.filter(b => !b.usado);
+      if (!pendientes.length) { resultados.push({ codigo, ok: false, error: 'Ya canjeado' }); continue; }
+      const now = new Date().toISOString();
+      pendientes.forEach(b => { b.usado = true; b.usadoEn = now; });
+      syncVentaUsadoGlobal(venta);
+    } else {
+      if (venta.usado) { resultados.push({ codigo, ok: false, error: 'Ya canjeado' }); continue; }
+      venta.usado = true;
+      venta.usadoEn = new Date().toISOString();
     }
-    venta.usado = true;
-    venta.usadoEn = new Date().toISOString();
     venta.canjeadoPor = payload.usuario;
     await env.VENTAS.put(ventaKey, JSON.stringify(venta));
-    resultados.push({ codigo, ok: true, usadoEn: venta.usadoEn });
+    resultados.push({ codigo, ok: true, usadoEn: boleto?.usadoEn || venta.usadoEn });
   }
 
   const okCount = resultados.filter(r => r.ok).length;
@@ -2402,6 +2797,7 @@ export default {
       const sub = parts.slice(3).join('/');
 
       if (method === 'GET'  && sub === 'ventas')         return handleVentas(tid, request, env);
+      if (method === 'GET'  && sub === 'lista-puerta') return handleListaPuerta(tid, request, env);
       if (method === 'POST' && sub === 'venta-manual')   return handleVentaManual(tid, request, env, ctx);
       if (method === 'GET'  && sub === 'fiscal')         return handleFiscalReserva(tid, request, env);
       if (method === 'POST' && sub === 'fiscal/reset')   return handleFiscalReset(tid, request, env);
@@ -2432,6 +2828,10 @@ export default {
     if (method === 'POST' && sub === 'checkout')       return handleCheckout(tid, request, env, ctx);
     if (method === 'POST' && sub === 'validar-cupon')  return handleValidarCupon(tid, request, env);
     if (method === 'POST' && sub === 'lista-espera')   return handleListaEspera(tid, request, env);
+
+    const invMatch = sub.match(/^invitacion\/([^/]+)$/);
+    if (method === 'GET' && invMatch)
+      return handleInvitacion(tid, decodeURIComponent(invMatch[1]), request, env);
 
     const ventaMatch = sub.match(/^venta\/([^/]+)$/);
     if (method === 'GET' && ventaMatch)

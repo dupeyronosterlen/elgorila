@@ -730,6 +730,63 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   margin-top: 8px; font-family: var(--cuerpo); font-size: 16px; color: var(--red);
 }
 
+/* ── Banner invitación personal ─────────────────────────── */
+.invitacion-banner {
+  margin-bottom: 28px;
+  border: 1px solid rgba(217,155,58,.32);
+  background: rgba(217,155,58,.07);
+}
+.invitacion-banner.hidden { display: none !important; }
+.invitacion-banner-inner { padding: 22px 24px; }
+.invitacion-banner-inner.activo { border-left: 3px solid var(--gold); }
+.invitacion-banner-inner.error { border-left: 3px solid var(--red); }
+.invitacion-kicker {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 10px;
+}
+.invitacion-titulo {
+  font-family: var(--display);
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  font-weight: 500;
+  margin: 0 0 10px;
+  line-height: 1.2;
+}
+.invitacion-texto {
+  margin: 0 0 16px;
+  color: rgba(241,234,217,.88);
+  font-size: 17px;
+  line-height: 1.5;
+}
+.invitacion-nota {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: rgba(241,234,217,.42);
+  margin: 12px 0 0;
+}
+.invitacion-btn-activar {
+  display: inline-block;
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  background: var(--red);
+  color: var(--d-fg);
+  font-family: var(--display);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+.invitacion-btn-activar:hover { filter: brightness(1.06); }
+.invitacion-btn-activar:disabled { opacity: .55; cursor: wait; }
+.invitacion-link {
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
 /* Botón de pago — protagónico */
 #btn-pagar-inline {
   width: 100%; height: 66px;
@@ -962,6 +1019,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
     <div class="rule"></div>
 
+    <div id="banner-invitacion" class="invitacion-banner hidden" aria-live="polite"></div>
+
     <!-- Fechas -->
     <span class="fecha-sub-label">Selecciona la fecha</span>
     <div id="botones-fecha"><!-- JS --></div>
@@ -1174,7 +1233,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span>¿Hay descuentos disponibles?</span>
         <span class="faq-chevron" aria-hidden="true">+</span>
       </summary>
-      <p class="faq-resp">Ofrecemos descuentos para estudiantes, INAPAM y maestros (presenta credencial vigente al ingresar). Con <strong>5 o más boletos generales</strong> aplica el descuento Manada del <strong>20%</strong>. Los descuentos no son acumulables.</p>
+      <p class="faq-resp">Hay dos tipos de descuento distintos:</p>
+      <ul class="faq-resp" style="margin-top:8px;padding-left:1.2em;">
+        <li><strong>Con credencial</strong> (INAPAM, estudiante o maestro): tarifa fija de <strong>$245</strong> — elige esa fila en la boletera y presenta credencial al ingresar. No entra en la promo Manada.</li>
+        <li><strong>Descuento Manada</strong>: con <strong>5 o más boletos generales</strong> (sin mezclar credenciales) aplica <strong>20% automático</strong> en esos generales.</li>
+        <li><strong>Cupones e invitaciones</strong>: códigos promocionales o invitación de alguien que ya vio la obra (−25%). No se acumulan con Manada; los cupones solo aplican a boletos generales.</li>
+      </ul>
     </details>
 
     <details class="faq-item">
@@ -1397,6 +1461,12 @@ async function aplicarCuponInline() {
     orden.cuponDescuentoMonto = data.descuentoMonto;
     orden.total = data.total;
     orden.descuentoMonto = Math.max(0, (orden.subtotal || data.subtotal) - data.total);
+    if (data.codigo === 'INVITADO25') {
+      try {
+        const de = sessionStorage.getItem('elgorila_invitacion_de');
+        if (de) orden.referidoDe = de.trim().toUpperCase();
+      } catch (_) {}
+    }
     localStorage.setItem('orden_compra', JSON.stringify(orden));
 
     if (inputEl) inputEl.value = data.codigo;
@@ -1462,6 +1532,7 @@ async function procesarPagoInline() {
           fecha:       orden.fechaIso,
           email,
           codigoCupon: orden.codigoCupon || undefined,
+          referidoDe:  orden.referidoDe || undefined,
           utm:         (typeof window.obtenerUTM === 'function' ? window.obtenerUTM() : {}),
         }),
       });
@@ -1509,8 +1580,10 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (_) {}
     }
   }
+
 });
 </script>
+<script src="js/invitacion-boletos.js"></script>
 
 <!-- Fechas: 3 iniciales → resto del mes → siguiente mes (3) → … -->
 <script>
