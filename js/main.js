@@ -144,7 +144,7 @@ function verificarDisponibilidad() {
     disponibilidadInfo = InventarioManager.obtenerDisponibilidad(fechaSeleccionada);
 
     if (total > 0 && total > disponibilidadInfo.disponible) {
-        alert(`Solo hay ${disponibilidadInfo.disponible} boletos disponibles para esta función.`);
+        alert('No hay suficientes lugares para esta función.');
         actualizarIndicadorDisponibilidad();
         return;
     }
@@ -163,37 +163,22 @@ function verificarDisponibilidad() {
     actualizarIndicadorDisponibilidad();
 }
 
-// --- ACTUALIZAR INDICADOR DE DISPONIBILIDAD ---
+// --- ACTUALIZAR INDICADOR DE DISPONIBILIDAD (solo lógica interna; sin textos al público) ---
 function actualizarIndicadorDisponibilidad() {
     const indicador      = document.getElementById('disponibilidad-info');
     const mensajeAgotado = document.getElementById('mensaje-agotado');
     const seccionInfo    = document.getElementById('seccion-venta-info');
 
-    if (indicador) indicador.classList.remove('hidden');
+    if (indicador) {
+        indicador.classList.add('hidden');
+        indicador.innerHTML = '';
+    }
+    if (seccionInfo) seccionInfo.innerHTML = '';
 
-    if (disponibilidadInfo) {
-        if (disponibilidadInfo.disponible > 0) {
-            const zona = _galeriaAbierta ? 'Galería (arriba)' : 'Platea (abajo)';
-            if (indicador) {
-                indicador.innerHTML = `<p class="text-xs text-green-400">✓ ${disponibilidadInfo.disponible} en ${zona}</p>`;
-            }
-            if (seccionInfo) {
-                if (_galeriaAbierta) {
-                    seccionInfo.innerHTML = '<p class="seccion-venta-aviso seccion-venta-aviso--galeria">Platea agotada — abrimos <strong>galería (arriba)</strong> al mismo precio</p>';
-                } else {
-                    seccionInfo.innerHTML = '<p class="seccion-venta-aviso">Venta en <strong>platea (abajo)</strong>. La galería se abre si se llena.</p>';
-                }
-            }
-            if (mensajeAgotado) mensajeAgotado.classList.add('hidden');
-        } else {
-            if (indicador) indicador.innerHTML = `<p class="text-xs text-red-400">✗ Agotado</p>`;
-            if (seccionInfo) seccionInfo.innerHTML = '';
-            if (mensajeAgotado) mensajeAgotado.classList.remove('hidden');
-        }
-    } else {
-        if (indicador) indicador.innerHTML = `<p class="text-xs text-text-muted-dark">Selecciona una fecha para ver disponibilidad</p>`;
-        if (seccionInfo) seccionInfo.innerHTML = '';
-        if (mensajeAgotado) mensajeAgotado.classList.add('hidden');
+    if (disponibilidadInfo && disponibilidadInfo.disponible <= 0) {
+        if (mensajeAgotado) mensajeAgotado.classList.remove('hidden');
+    } else if (mensajeAgotado) {
+        mensajeAgotado.classList.add('hidden');
     }
 }
 

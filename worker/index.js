@@ -380,8 +380,8 @@ function getPrecio(tipo, seccionConfig) {
 }
 
 const CAPACIDAD_DEFAULT = 200;
-/** Tiempo máximo en pantalla de pago (Stripe + hold en inventario). No 24h. */
-const RESERVA_TTL       = 900; // 15 minutos
+/** Tiempo máximo en pantalla de pago (Stripe + hold en inventario). Stripe exige ≥30 min. */
+const RESERVA_TTL       = 1800; // 30 minutos
 const VENTA_404_MAX     = 40;  // máx. folios NO encontrados por IP / 15 min (anti-enumeración)
 const CODIGOS_DESCUENTO_KEY   = 'codigos:descuento';
 const STRIPE_MIN_TOTAL_CENTAVOS = 1000; // MXN 10.00 — mínimo Stripe en México
@@ -597,7 +597,7 @@ async function reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, 
       const secId = Object.keys(seccionCantidades)[0] || 'platea';
       const disp  = cupoSeccion(inv, secId, config);
       const secLabel = secId.charAt(0).toUpperCase() + secId.slice(1);
-      return { ok: false, status: 409, error: `Solo quedan ${disp} boleto(s) en ${secLabel}.` };
+      return { ok: false, status: 409, error: 'No hay suficientes lugares para completar tu compra.' };
     }
 
     const version  = inv.version ?? 0;
@@ -708,7 +708,7 @@ async function aplicarVentaDirecta(tid, fecha, seccionCantidades, env, ctx) {
       const secId    = Object.keys(seccionCantidades)[0] || 'platea';
       const disp     = cupoSeccion(prep.inv, secId, config);
       const secLabel = secId.charAt(0).toUpperCase() + secId.slice(1);
-      return { ok: false, status: 409, error: `Solo quedan ${disp} boleto(s) en ${secLabel}.` };
+      return { ok: false, status: 409, error: 'No hay suficientes lugares para completar tu compra.' };
     }
 
     const version   = prep.inv.version ?? 0;
@@ -1005,7 +1005,7 @@ async function handleCheckout(tid, request, env, ctx) {
     const plateaQ = cupoSeccion(prepG.inv, 'platea', config);
     if (plateaQ > 0) {
       return json({
-        error: 'La galería (arriba) se habilita cuando se agote la platea (abajo). Aún hay lugares en platea.',
+        error: 'No hay lugar disponible en esta función.',
       }, 409, request);
     }
   }
