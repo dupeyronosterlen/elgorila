@@ -149,10 +149,14 @@
     const f = state.funciones.find(x => x.fecha_iso === state.funcion);
     const nombre = f ? f.nombre : state.funcion;
     const rows = state.ventas.map(v => {
-      const estado = v.usado ? '<span class="text-yellow-400">canjeado</span>'
+      const estado = v.estado === 'reembolsada' ? '<span class="text-red-400">reembolsado</span>'
+        : v.usado ? '<span class="text-yellow-400">canjeado</span>'
         : v.reagendado ? '<span class="text-blue-400">reagendado</span>' : '<span class="text-green-400">activo</span>';
-      const reag = (!v.usado && perm('reagendar'))
+      const reag = (!v.usado && v.estado !== 'reembolsada' && perm('reagendar'))
         ? `<button type="button" data-reagendar="${esc(v.codigo)}" class="text-xs text-primary underline ml-2">Reagendar</button>` : '';
+      const esStripe = v.metodoPago && v.metodoPago !== 'efectivo' && !String(v.sessionId || '').startsWith('manual_');
+      const reemb = (perm('reembolsar') && esStripe && v.estado === 'completada' && !v.usado)
+        ? `<button type="button" data-reembolso="${esc(v.codigo)}" class="text-xs text-red-400 underline ml-2">Reembolsar</button>` : '';
       return `<tr class="border-b border-primary/10">
         <td class="py-2 pr-2 font-mono text-xs">${esc(v.codigo)}</td>
         <td class="py-2 pr-2 text-sm">${esc(v.nombre || '—')}</td>
@@ -160,7 +164,7 @@
         <td class="py-2 pr-2 text-sm">${v.cantidad || 0}</td>
         <td class="py-2 pr-2 text-sm">${fmtMXN(v.total)}</td>
         <td class="py-2 pr-2 text-xs">${esc(v.metodoPago || '—')}</td>
-        <td class="py-2 text-xs">${estado}${reag}</td>
+        <td class="py-2 text-xs">${estado}${reag}${reemb}</td>
       </tr>`;
     }).join('');
 
@@ -388,6 +392,21 @@
         alert('Boleto reagendado. Registrado en auditoría.');
         paint();
       } catch (e) { alert(e.message); }
+    });
+
+    document.querySelectorAll('[data-reembolso]').forEach(el => {
+      el.onclick = async () => {
+        const cod = el.dataset.reembolso;
+        if (!cod) return;
+        if (!confirm(`¿Reembolsar ${cod} vía Stripe?\nSe devuelve el cargo y se libera el cupo.`)) return;
+        try {
+          await api(window.teatroAdminApi('reembolso'), {
+            method: 'POST', body: JSON.stringify({ codigo: cod }),
+          });
+          alert('Reembolso procesado. Cupo liberado.');
+          paint();
+        } catch (e) { alert(e.message); }
+      };
     });
 
     document.getElementById('btn-export-funcion')?.addEventListener('click', () => exportCsv(state.ventas, `ventas_${state.funcion}.csv`));

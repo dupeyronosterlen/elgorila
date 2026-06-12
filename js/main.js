@@ -410,6 +410,7 @@ function irAConfirmacion() {
         items,
         cantidadTotal:  cantTotal,
         subtotal:       subtotalSinDescuento,
+        subtotalConManada: totalConDescuento,
         descuentoMonto: descuentoMonto > 0 ? descuentoMonto : 0,
         total:          totalConDescuento,
         reservaId,
@@ -464,17 +465,37 @@ function mostrarCheckoutInline(orden) {
         }).join('');
     }
 
-    // Descuento (si aplica)
+    // Descuento Manada (si aplica; cupón se muestra aparte en boletos.html)
     const descEl = document.getElementById('ichk-descuento-wrap');
+    const manadaDesc = Math.max(0, (orden.subtotal || 0) - (orden.subtotalConManada ?? orden.total ?? 0));
     if (descEl) {
-        if (orden.descuentoMonto > 0) {
+        if (manadaDesc > 0.01) {
             descEl.style.display = '';
             const dMonto = document.getElementById('ichk-descuento-monto');
-            if (dMonto) dMonto.textContent = `−$${orden.descuentoMonto.toFixed(2)}`;
+            if (dMonto) dMonto.textContent = `−$${manadaDesc.toFixed(2)}`;
         } else {
             descEl.style.display = 'none';
         }
     }
+
+    const cuponWrap = document.getElementById('ichk-cupon-wrap');
+    if (cuponWrap) {
+        const cuponDesc = orden.cuponDescuentoMonto || 0;
+        if (orden.codigoCupon && cuponDesc > 0) {
+            cuponWrap.style.display = '';
+            const cm = document.getElementById('ichk-cupon-monto');
+            const ce = document.getElementById('ichk-cupon-etiq');
+            if (cm) cm.textContent = `−$${cuponDesc.toFixed(2)}`;
+            if (ce) ce.textContent = orden.codigoCupon;
+        } else {
+            cuponWrap.style.display = 'none';
+        }
+    }
+
+    const cuponInput = document.getElementById('ichk-cupon-input');
+    const cuponMsg   = document.getElementById('ichk-cupon-msg');
+    if (cuponInput) cuponInput.value = orden.codigoCupon || '';
+    if (cuponMsg) { cuponMsg.textContent = ''; cuponMsg.className = ''; }
 
     // Total
     const totalEl = document.getElementById('ichk-total');

@@ -30,6 +30,15 @@ const codigos = {
   ESTUDIANTE:  { porcentaje: 15, nombre: 'Estudiante',  activo: true },
   MAESTRO:     { porcentaje: 15, nombre: 'Maestro',     activo: true },
   INAPAM:      { porcentaje: 30, nombre: 'INAPAM',      activo: true },
+
+  // QA interno — no publicar. 99% off, máx. 100 usos. Código difícil de adivinar.
+  WILQA7K2M9X4P8N3: {
+    porcentaje: 99,
+    nombre:     'Prueba interna',
+    activo:     true,
+    max_usos:   100,
+    solo_prueba: true,
+  },
 };
 
 process.stdout.write(JSON.stringify(codigos, null, 2) + '\n');

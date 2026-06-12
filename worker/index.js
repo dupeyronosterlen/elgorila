@@ -383,6 +383,88 @@ const CAPACIDAD_DEFAULT = 200;
 /** Tiempo máximo en pantalla de pago (Stripe + hold en inventario). No 24h. */
 const RESERVA_TTL       = 900; // 15 minutos
 const VENTA_404_MAX     = 40;  // máx. folios NO encontrados por IP / 15 min (anti-enumeración)
+const CODIGOS_DESCUENTO_KEY   = 'codigos:descuento';
+const STRIPE_MIN_TOTAL_CENTAVOS = 1000; // MXN 10.00 — mínimo Stripe en México
+
+async function getCodigosDescuento(env) {
+  const raw = await env.INVENTARIO.get(CODIGOS_DESCUENTO_KEY);
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch { return {}; }
+}
+
+function normalizarCodigoCupon(raw) {
+  if (typeof raw !== 'string') return '';
+  return raw.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 32);
+}
+
+async function validarCuponDescuento(codigoRaw, env) {
+  const codigo = normalizarCodigoCupon(codigoRaw);
+  if (!codigo || codigo.length < 8) return { ok: false, error: 'Código inválido.' };
+
+  const codigos = await getCodigosDescuento(env);
+  const entry   = codigos[codigo];
+  if (!entry || entry.activo === false) return { ok: false, error: 'Código no válido o expirado.' };
+
+  if (entry.expira && new Date(entry.expira) < new Date()) {
+    return { ok: false, error: 'Código expirado.' };
+  }
+
+  if (entry.max_usos) {
+    const usos = parseInt((await env.INVENTARIO.get(`cupon:usos:${codigo}`)) || '0', 10);
+    if (usos >= entry.max_usos) return { ok: false, error: 'Código agotado.' };
+  }
+
+  const porcentaje = Math.min(100, Math.max(0, Number(entry.porcentaje) || 0));
+  if (porcentaje <= 0) return { ok: false, error: 'Código no válido.' };
+
+  return { ok: true, codigo, porcentaje, nombre: entry.nombre || codigo };
+}
+
+async function incrementarUsoCupon(codigo, env) {
+  const key  = `cupon:usos:${codigo}`;
+  const usos = parseInt((await env.INVENTARIO.get(key)) || '0', 10);
+  await env.INVENTARIO.put(key, String(usos + 1));
+}
+
+function calcularPromoGrupo(itemsValidados) {
+  const cantidadGeneral = itemsValidados.filter(i => i.tipo === 'general').reduce((s, i) => s + i.cantidad, 0);
+  const tieneEspeciales = itemsValidados.some(i => i.tipo !== 'general');
+  return cantidadGeneral >= 5 && !tieneEspeciales;
+}
+
+function calcularLineItemsPrecio(itemsValidados, seccionMap, { promoGrupo, cuponPorcentaje }) {
+  const aplicarCupon  = cuponPorcentaje > 0;
+  const aplicarManada = promoGrupo && !aplicarCupon;
+  const rows          = [];
+  let totalCentavos   = 0;
+  let subtotalCentavos = 0;
+
+  for (const item of itemsValidados) {
+    const seccionConfig = seccionMap[item.seccion];
+    const precioBase    = getPrecio(item.tipo, seccionConfig);
+    let unitBruto       = Math.round(precioBase * 100);
+    subtotalCentavos   += unitBruto * item.cantidad;
+
+    let unitCentavos = unitBruto;
+    if (aplicarManada && item.tipo === 'general') {
+      unitCentavos = Math.round(precioBase * 0.80 * 100);
+    }
+    if (aplicarCupon) {
+      unitCentavos = Math.round(unitCentavos * (1 - cuponPorcentaje / 100));
+    }
+    unitCentavos = Math.max(50, unitCentavos);
+    totalCentavos += unitCentavos * item.cantidad;
+    rows.push({ item, seccionConfig, unitCentavos, aplicarManada, aplicarCupon });
+  }
+
+  if (totalCentavos > 0 && totalCentavos < STRIPE_MIN_TOTAL_CENTAVOS) {
+    const diff = STRIPE_MIN_TOTAL_CENTAVOS - totalCentavos;
+    rows[0].unitCentavos += Math.ceil(diff / rows[0].item.cantidad);
+    totalCentavos = STRIPE_MIN_TOTAL_CENTAVOS;
+  }
+
+  return { rows, totalCentavos, subtotalCentavos };
+}
 
 // ─── HOLDS (reservas sin pago — no bloquean para siempre) ─────────────────────
 // vendidos = pagados (intocables). holds = carritos en checkout. Al vencer o al
@@ -685,6 +767,62 @@ const PUEDE_AUDITORIA  = new Set(['admin', 'gerente']);
 const PUEDE_CANJEAR    = new Set(['admin', 'gerente', 'validacion']);
 const PUEDE_CANJEAR_LOTE = new Set(['admin', 'gerente', 'taquilla']);
 
+// ─── HANDLER: VALIDAR CUPÓN (público, rate-limited) ───────────────────────────
+
+async function handleValidarCupon(tid, request, env) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!await checkRateLimit(ip, env)) {
+    return json({ error: 'Demasiados intentos. Espera unos minutos.' }, 429, request);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+
+  const codigoRaw = body.codigo;
+  const { items }   = body;
+  if (!codigoRaw) return json({ error: 'Indica un código de descuento.' }, 400, request);
+  if (!Array.isArray(items) || items.length === 0) {
+    return json({ error: 'El carrito está vacío.' }, 400, request);
+  }
+
+  const config         = await getVenueConfig(tid, env);
+  const validSecciones = new Set(config.secciones.map(s => s.id));
+  const seccionMap     = Object.fromEntries(config.secciones.map(s => [s.id, s]));
+  const itemsValidados = [];
+
+  for (const item of items) {
+    const tipo     = typeof item.tipo === 'string' ? item.tipo.toLowerCase().trim() : '';
+    const cantidad = item.cantidad;
+    const seccion  = item.seccion || (config.secciones.length === 1 ? config.secciones[0].id : 'platea');
+    if (!TIPOS_BOLETO[tipo] || !Number.isInteger(cantidad) || cantidad < 1) continue;
+    if (!validSecciones.has(seccion)) continue;
+    itemsValidados.push({ tipo, cantidad, seccion });
+  }
+  if (!itemsValidados.length) return json({ error: 'Carrito inválido.' }, 400, request);
+
+  const cupon = await validarCuponDescuento(codigoRaw, env);
+  if (!cupon.ok) return json({ error: cupon.error }, 400, request);
+
+  const promoGrupo = calcularPromoGrupo(itemsValidados);
+  const { totalCentavos, subtotalCentavos } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
+    promoGrupo,
+    cuponPorcentaje: cupon.porcentaje,
+  });
+
+  const subtotal = Math.round(subtotalCentavos) / 100;
+  const total    = totalCentavos / 100;
+
+  return json({
+    ok:             true,
+    codigo:         cupon.codigo,
+    nombre:         cupon.nombre,
+    porcentaje:     cupon.porcentaje,
+    subtotal,
+    descuentoMonto: Math.max(0, Math.round((subtotal - total) * 100) / 100),
+    total,
+  }, 200, request);
+}
+
 // ─── HANDLER: FUNCIONES ACTIVAS (público) ────────────────────────────────────
 
 async function handleFunciones(tid, request, env) {
@@ -797,8 +935,10 @@ async function handleCheckout(tid, request, env, ctx) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
 
-  const { items, fecha } = body;
+  const { items, fecha, codigoCupon } = body;
   const utmClean = sanitizarUTM(body.utm);
+  const emailRaw = typeof body.email === 'string' ? body.email.trim().toLowerCase().substring(0, 254) : '';
+  const emailOk  = emailRaw && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw) ? emailRaw : '';
 
   if (!Array.isArray(items) || items.length === 0) {
     return json({ error: 'El carrito está vacío.' }, 400, request);
@@ -877,9 +1017,22 @@ async function handleCheckout(tid, request, env, ctx) {
   if (!reserva.ok) return json({ error: reserva.error }, reserva.status, request);
 
   // Promo Manada: 20% desc en general cuando ≥5 general y sin tipos especiales
-  const cantidadGeneral = itemsValidados.filter(i => i.tipo === 'general').reduce((s, i) => s + i.cantidad, 0);
-  const tieneEspeciales = itemsValidados.some(i => i.tipo !== 'general');
-  const promoGrupo      = cantidadGeneral >= 5 && !tieneEspeciales;
+  const promoGrupo = calcularPromoGrupo(itemsValidados);
+
+  let cuponAplicado = null;
+  if (codigoCupon) {
+    const cupon = await validarCuponDescuento(codigoCupon, env);
+    if (!cupon.ok) {
+      await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
+      return json({ error: cupon.error }, 400, request);
+    }
+    cuponAplicado = cupon;
+  }
+
+  const { rows: lineRows } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
+    promoGrupo,
+    cuponPorcentaje: cuponAplicado?.porcentaje || 0,
+  });
 
   const canonical = resolveTid(tid);
   const baseUrl   = 'https://elgorilateatro.com.mx';
@@ -900,22 +1053,24 @@ async function handleCheckout(tid, request, env, ctx) {
     'metadata[promoGrupo]':     String(promoGrupo),
   });
 
+  if (emailOk) params.set('customer_email', emailOk);
+  if (cuponAplicado) {
+    params.set('metadata[codigoCupon]', cuponAplicado.codigo);
+    params.set('metadata[cuponPct]', String(cuponAplicado.porcentaje));
+  }
+
   // UTM como metadata de Stripe
   for (const k of Object.keys(utmClean)) {
     params.set(`metadata[utm_${k}]`, utmClean[k]);
   }
 
   // Line items con precio dinámico desde config
-  itemsValidados.forEach((item, idx) => {
-    const seccionConfig  = seccionMap[item.seccion];
-    const precioBase     = getPrecio(item.tipo, seccionConfig);
-    const unitCentavos   = (promoGrupo && item.tipo === 'general')
-      ? Math.round(precioBase * 0.80 * 100)
-      : precioBase * 100;
-    const tipoNombre     = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
-    const secLabel       = config.secciones.length > 1 ? ` — ${seccionConfig.nombre}` : '';
-    const promoLabel     = promoGrupo && item.tipo === 'general' ? ' (20% desc.)' : '';
-    const productName    = `EL GORILA — ${tipoNombre}${secLabel}${promoLabel}`;
+  lineRows.forEach(({ item, seccionConfig, unitCentavos, aplicarManada, aplicarCupon }, idx) => {
+    const tipoNombre  = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
+    const secLabel    = config.secciones.length > 1 ? ` — ${seccionConfig.nombre}` : '';
+    const promoLabel  = aplicarManada && item.tipo === 'general' ? ' (20% desc.)' : '';
+    const cuponLabel  = aplicarCupon ? ` (−${cuponAplicado.porcentaje}%)` : '';
+    const productName = `EL GORILA — ${tipoNombre}${secLabel}${promoLabel}${cuponLabel}`;
 
     params.set(`line_items[${idx}][price_data][currency]`,                  'mxn');
     params.set(`line_items[${idx}][price_data][product_data][name]`,        productName);
@@ -1032,11 +1187,17 @@ async function handleWebhook(request, env, ctx) {
     estado:       'completada',
     utm,
     metodoPago,
+    codigoCupon:  meta.codigoCupon || null,
+    cuponPct:     meta.cuponPct ? parseInt(meta.cuponPct, 10) : null,
   };
 
   await env.VENTAS.put(kv(tid, `venta:${sessionId}`),  JSON.stringify(venta));
   await env.VENTAS.put(kv(tid, `cert:${codigo}`),       JSON.stringify({ sessionId }));
   await env.VENTAS.put(kv(tid, `ventaIdx:${fecha}:${sessionId}`), sessionId);
+
+  if (meta.codigoCupon) {
+    ctx.waitUntil(incrementarUsoCupon(meta.codigoCupon, env).catch(e => console.error('cupon uso:', e.message)));
+  }
 
   // Inventario: reservado → vendido
   await confirmarVentaOptimista(tid, fecha, seccionCantidades, reservaId || null, env);
@@ -1338,6 +1499,8 @@ function _formatVenta(v) {
     reagendado:     v.reagendado     || null,
     registradoPor:  v.registradoPor  || null,
     estado:         v.estado         || 'completada',
+    codigoCupon:    v.codigoCupon    || null,
+    reembolso:      v.reembolso      || null,
   };
 }
 
@@ -1622,6 +1785,107 @@ async function handleReagendar(tid, request, env) {
     rol: payload.rol, accion: 'reagendar_boleto', teatroId: canonical,
     detalles: `${codigo}: ${fechaOrigen} → ${fechaDestino} (dinero en compra original)`,
     meta: { codigo, de: fechaOrigen, a: fechaDestino, total: venta.total },
+  });
+
+  return json({ ok: true, venta: _formatVenta(venta), auditId: audit.id }, 200, request);
+}
+
+async function handleReembolso(tid, request, env, ctx) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (payload.rol !== 'admin') {
+    return json({ error: 'Solo el administrador puede reembolsar.' }, 403, request);
+  }
+  if (!env.STRIPE_SECRET_KEY) return json({ error: 'Stripe no configurado.' }, 503, request);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+
+  const codigo = (body.codigo || '').trim().toUpperCase();
+  if (!codigo?.startsWith('CERT-')) return json({ error: 'Folio inválido.' }, 400, request);
+
+  const resolved = await _resolveVentaKey(tid, codigo, env);
+  if (!resolved) return json({ error: 'Folio no encontrado.' }, 404, request);
+  const { ventaKey, venta } = resolved;
+
+  if (venta.estado === 'reembolsada') return json({ error: 'Esta venta ya fue reembolsada.' }, 409, request);
+  if (venta.usado) return json({ error: 'No se puede reembolsar un boleto ya canjeado.' }, 409, request);
+
+  const sessionId = venta.sessionId || '';
+  const esManual  = sessionId.startsWith('manual_') || venta.metodoPago === 'efectivo';
+  let stripeRefundId = null;
+
+  if (!esManual) {
+    try {
+      const sessRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+        headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+      });
+      const sess = await sessRes.json();
+      if (!sessRes.ok) throw new Error(sess.error?.message || 'No se pudo leer la sesión Stripe');
+
+      const paymentIntent = typeof sess.payment_intent === 'string'
+        ? sess.payment_intent
+        : sess.payment_intent?.id;
+      if (!paymentIntent) throw new Error('Sin payment_intent en la sesión');
+
+      const refundParams = new URLSearchParams({ payment_intent: paymentIntent });
+      const refundRes = await fetch('https://api.stripe.com/v1/refunds', {
+        method:  'POST',
+        headers: {
+          Authorization:  `Bearer ${env.STRIPE_SECRET_KEY}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: refundParams.toString(),
+      });
+      const refund = await refundRes.json();
+      if (!refundRes.ok) throw new Error(refund.error?.message || 'Stripe refund error');
+      stripeRefundId = refund.id;
+    } catch (err) {
+      console.error('Reembolso Stripe:', err.message);
+      return json({ error: `No se pudo reembolsar en Stripe: ${err.message}` }, 502, request);
+    }
+  }
+
+  let seccionCantidades = venta.seccionCantidades || {};
+  if (!Object.keys(seccionCantidades).length && venta.items?.length) {
+    for (const it of venta.items) {
+      const sec = it.seccion || 'platea';
+      seccionCantidades[sec] = (seccionCantidades[sec] || 0) + (it.cantidad || 1);
+    }
+  }
+  if (!Object.keys(seccionCantidades).length) {
+    seccionCantidades.platea = venta.cantidad || 1;
+  }
+
+  const lib = await liberarVendidos(tid, venta.fecha, seccionCantidades, env);
+  if (!lib.ok) return json({ error: 'Reembolso en Stripe OK pero no se liberó inventario. Revisa manualmente.' }, 503, request);
+
+  venta.estado   = 'reembolsada';
+  venta.reembolso = {
+    por: payload.usuario,
+    en:  new Date().toISOString(),
+    monto: venta.total,
+    stripeRefundId,
+    manual: esManual,
+  };
+  await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+
+  ctx.waitUntil((async () => {
+    try {
+      const monto8 = Math.round(venta.total * 0.08 * 100) / 100;
+      const canonical = resolveTid(tid);
+      const fiscalRaw = await env.VENTAS.get(kv(canonical, 'fiscal:reserva:acumulado'));
+      const fiscal    = fiscalRaw ? JSON.parse(fiscalRaw) : { acumulado: 0 };
+      fiscal.acumulado = Math.max(0, Math.round((fiscal.acumulado - monto8) * 100) / 100);
+      await env.VENTAS.put(kv(canonical, 'fiscal:reserva:acumulado'), JSON.stringify(fiscal));
+    } catch (e) { console.error('fiscal reembolso:', e.message); }
+  })());
+
+  const audit = await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'reembolso_venta', teatroId: resolveTid(tid),
+    detalles: `${codigo} reembolsado · $${venta.total} MXN`,
+    meta: { codigo, total: venta.total, stripeRefundId, manual: esManual },
   });
 
   return json({ ok: true, venta: _formatVenta(venta), auditId: audit.id }, 200, request);
@@ -2142,6 +2406,7 @@ export default {
       if (method === 'GET'  && sub === 'fiscal')         return handleFiscalReserva(tid, request, env);
       if (method === 'POST' && sub === 'fiscal/reset')   return handleFiscalReset(tid, request, env);
       if (method === 'POST' && sub === 'reagendar')      return handleReagendar(tid, request, env);
+      if (method === 'POST' && sub === 'reembolso')    return handleReembolso(tid, request, env, ctx);
       if (method === 'POST' && sub === 'canjear-lote')   return handleCanjearLote(tid, request, env);
 
       const ventaAdminMatch = sub.match(/^venta\/([^/]+)$/);
@@ -2165,6 +2430,7 @@ export default {
     if (method === 'GET'  && sub === 'funciones')      return handleFunciones(tid, request, env);
     if (method === 'GET'  && sub === 'disponibilidad') return handleDisponibilidad(tid, request, env);
     if (method === 'POST' && sub === 'checkout')       return handleCheckout(tid, request, env, ctx);
+    if (method === 'POST' && sub === 'validar-cupon')  return handleValidarCupon(tid, request, env);
     if (method === 'POST' && sub === 'lista-espera')   return handleListaEspera(tid, request, env);
 
     const ventaMatch = sub.match(/^venta\/([^/]+)$/);

@@ -707,6 +707,29 @@ details[open] .faq-chevron { transform: rotate(45deg); }
 .ichk-input::placeholder { color: rgba(26,20,17,.45); }
 .ichk-input-wrap { margin-bottom: 22px; }
 
+/* Cupón de descuento */
+.ichk-cupon-wrap { margin-bottom: 22px; }
+.ichk-cupon-fila {
+  display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;
+}
+.ichk-cupon-fila .ichk-input { flex: 1; min-width: 180px; height: 56px; font-size: 18px; letter-spacing: .08em; text-transform: uppercase; }
+.ichk-btn-cupon {
+  height: 56px; padding: 0 20px;
+  font-family: var(--mono); font-size: 13px; letter-spacing: .18em; text-transform: uppercase;
+  background: var(--p-bg2); color: var(--p-ink);
+  border: 2px solid rgba(168,149,120,.5); cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.ichk-btn-cupon:hover { border-color: var(--red); }
+.ichk-btn-cupon:disabled { opacity: .5; cursor: not-allowed; }
+.ichk-cupon-ok {
+  margin-top: 8px; font-family: var(--mono); font-size: 13px;
+  letter-spacing: .12em; color: #2a7a44;
+}
+.ichk-cupon-err {
+  margin-top: 8px; font-family: var(--cuerpo); font-size: 16px; color: var(--red);
+}
+
 /* Botón de pago — protagónico */
 #btn-pagar-inline {
   width: 100%; height: 66px;
@@ -1036,10 +1059,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <!-- Ítems llenados por JS -->
       <div id="ichk-items-wrap"></div>
-      <!-- Descuento (visible solo si hay) -->
+      <!-- Descuento Manada (visible solo si hay) -->
       <div class="ichk-suma-fila" id="ichk-descuento-wrap" style="display:none;">
         <span class="ichk-etiq">Descuento</span>
         <span class="ichk-val ichk-desc-val" id="ichk-descuento-monto">—</span>
+      </div>
+      <!-- Cupón aplicado -->
+      <div class="ichk-suma-fila" id="ichk-cupon-wrap" style="display:none;">
+        <span class="ichk-etiq">Cupón <span id="ichk-cupon-etiq" style="font-size:11px;opacity:.75;"></span></span>
+        <span class="ichk-val ichk-desc-val" id="ichk-cupon-monto">—</span>
       </div>
       <!-- Total -->
       <div class="ichk-total-fila">
@@ -1052,6 +1080,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <button type="button" class="ichk-btn-editar" onclick="editarPedido()">
       ← Cambiar mis entradas
     </button>
+
+    <!-- Cupón de descuento (opcional) -->
+    <div class="ichk-cupon-wrap">
+      <label class="ichk-label" for="ichk-cupon-input">
+        ¿Tienes un cupón?
+        <span class="ichk-hint">Opcional — ingresa el código y pulsa Aplicar</span>
+      </label>
+      <div class="ichk-cupon-fila">
+        <input
+          type="text"
+          id="ichk-cupon-input"
+          class="ichk-input"
+          placeholder="Código"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="32"
+        >
+        <button type="button" id="btn-aplicar-cupon" class="ichk-btn-cupon" onclick="aplicarCuponInline()">Aplicar</button>
+      </div>
+      <div id="ichk-cupon-msg" aria-live="polite"></div>
+    </div>
 
     <!-- Campo de correo electrónico -->
     <div class="ichk-input-wrap">
@@ -1276,6 +1325,92 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 function _validarEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
+function _actualizarResumenCupon(orden) {
+  const cuponWrap = document.getElementById('ichk-cupon-wrap');
+  const cuponMonto = document.getElementById('ichk-cupon-monto');
+  const cuponEtiq = document.getElementById('ichk-cupon-etiq');
+  const descWrap = document.getElementById('ichk-descuento-wrap');
+  const descMonto = document.getElementById('ichk-descuento-monto');
+  const totalEl = document.getElementById('ichk-total');
+
+  const manadaDesc = Math.max(0, (orden.subtotal || 0) - (orden.subtotalConManada ?? orden.subtotal ?? 0));
+  if (descWrap) {
+    if (manadaDesc > 0.01) {
+      descWrap.style.display = '';
+      if (descMonto) descMonto.textContent = `−$${manadaDesc.toFixed(2)}`;
+    } else {
+      descWrap.style.display = 'none';
+    }
+  }
+
+  const cuponDesc = orden.cuponDescuentoMonto || 0;
+  if (cuponWrap) {
+    if (orden.codigoCupon && cuponDesc > 0) {
+      cuponWrap.style.display = '';
+      if (cuponMonto) cuponMonto.textContent = `−$${cuponDesc.toFixed(2)}`;
+      if (cuponEtiq) cuponEtiq.textContent = orden.codigoCupon;
+    } else {
+      cuponWrap.style.display = 'none';
+    }
+  }
+
+  if (totalEl) totalEl.textContent = `$${(orden.total || 0).toFixed(2)} MXN`;
+}
+
+async function aplicarCuponInline() {
+  const inputEl = document.getElementById('ichk-cupon-input');
+  const btnEl   = document.getElementById('btn-aplicar-cupon');
+  const msgEl   = document.getElementById('ichk-cupon-msg');
+  const codigo  = inputEl ? inputEl.value.trim() : '';
+
+  function msg(text, ok) {
+    if (!msgEl) return;
+    msgEl.textContent = text;
+    msgEl.className = ok ? 'ichk-cupon-ok' : 'ichk-cupon-err';
+  }
+
+  if (!codigo) { msg('Escribe un código de cupón.', false); return; }
+
+  const ordenRaw = localStorage.getItem('orden_compra');
+  if (!ordenRaw) { msg('Vuelve a seleccionar tus boletos.', false); return; }
+  const orden = JSON.parse(ordenRaw);
+
+  if (!window.API_BASE) { msg('Cupones solo disponibles con pago en línea.', false); return; }
+
+  if (btnEl) btnEl.disabled = true;
+  msg('Verificando…', true);
+
+  try {
+    const res = await fetch(window.teatroApi('validar-cupon'), {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ codigo, items: orden.items }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      msg(data.error || 'Código no válido.', false);
+      return;
+    }
+
+    const subtotalConManada = orden.subtotalConManada ?? orden.subtotal ?? data.subtotal;
+    orden.codigoCupon = data.codigo;
+    orden.cuponNombre = data.nombre;
+    orden.cuponPorcentaje = data.porcentaje;
+    orden.cuponDescuentoMonto = data.descuentoMonto;
+    orden.total = data.total;
+    orden.descuentoMonto = Math.max(0, (orden.subtotal || data.subtotal) - data.total);
+    localStorage.setItem('orden_compra', JSON.stringify(orden));
+
+    if (inputEl) inputEl.value = data.codigo;
+    msg(`✓ ${data.nombre} (−${data.porcentaje}%) aplicado`, true);
+    _actualizarResumenCupon(orden);
+  } catch (_) {
+    msg('Error de conexión. Intenta de nuevo.', false);
+  } finally {
+    if (btnEl) btnEl.disabled = false;
+  }
+}
+
 async function procesarPagoInline() {
   const emailEl  = document.getElementById('ichk-email-input');
   const errorEl  = document.getElementById('ichk-error');
@@ -1325,10 +1460,11 @@ async function procesarPagoInline() {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
-          items:  orden.items,
-          fecha:  orden.fechaIso,
+          items:       orden.items,
+          fecha:       orden.fechaIso,
           email,
-          utm:    (typeof window.obtenerUTM === 'function' ? window.obtenerUTM() : {}),
+          codigoCupon: orden.codigoCupon || undefined,
+          utm:         (typeof window.obtenerUTM === 'function' ? window.obtenerUTM() : {}),
         }),
       });
       const data = await res.json();
