@@ -1096,8 +1096,10 @@ async function requireRolAdmin(request, env) {
   return p;
 }
 
-const PUEDE_VENTAS     = new Set(['admin', 'gerente', 'taquilla', 'reclamos']);
-const PUEDE_VENTA_MAN  = new Set(['admin', 'taquilla']);
+const PUEDE_VENTAS       = new Set(['admin', 'gerente', 'taquilla', 'reclamos']);
+const PUEDE_VENTA_MAN    = new Set(['admin', 'taquilla']);
+const PUEDE_REENVIAR     = new Set(['admin', 'gerente', 'reclamos']);
+const PUEDE_CORREGIR_EMAIL = new Set(['admin', 'reclamos']);
 const PUEDE_FISCAL_VER = new Set(['admin', 'gerente']);
 const PUEDE_AUDITORIA  = new Set(['admin', 'gerente']);
 const PUEDE_CANJEAR    = new Set(['admin', 'gerente', 'validacion']);
@@ -1768,26 +1770,104 @@ async function handleAdminVentaDetail(tid, id, request, env) {
   }
 
   try {
+    const resolved = await _resolveVentaKey(tid, id, env);
+    if (!resolved) {
+      const ventaRaw = await _lookupVenta(tid, id, env);
+      if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
+      return json(_formatVenta(JSON.parse(ventaRaw)), 200, request);
+    }
+    return json(_formatVenta(resolved.venta), 200, request);
+  } catch { return json({ error: 'Error al obtener la venta.' }, 500, request); }
+}
+
+async function handleReenviarEmail(tid, id, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_REENVIAR.has(payload.rol)) {
+    return json({ error: 'Sin permiso para reenviar boletos.' }, 403, request);
+  }
+
+  let body = {};
+  try { body = await request.json(); } catch { /* vacío = reenvío al mismo correo */ }
+
+  let resolved = await _resolveVentaKey(tid, id, env);
+  if (!resolved) {
     const ventaRaw = await _lookupVenta(tid, id, env);
     if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
-    const v = JSON.parse(ventaRaw);
-    return json({
-      teatroId:      v.teatroId      || tid,
-      sessionId:     v.sessionId,
-      codigo:        v.codigo,
-      fecha:         v.fecha,
-      funcionNombre: v.funcionNombre || v.fecha,
-      cantidad:      v.cantidad,
-      items:         v.items         || [],
-      email:         v.email         || null,
-      nombre:        v.nombre        || null,
-      total:         v.total,
-      fechaCompra:   v.fechaCompra,
-      estado:        v.estado,
-      usado:         v.usado         || false,
-      usadoEn:       v.usadoEn       || null,
-    }, 200, request);
-  } catch { return json({ error: 'Error al obtener la venta.' }, 500, request); }
+    const ventaParsed = JSON.parse(ventaRaw);
+    const sid = ventaParsed.sessionId || id;
+    const keys = [
+      kv(tid, `venta:${sid}`),
+      `venta:${sid}`,
+      `gorila:venta:${sid}`,
+    ];
+    let ventaKey = null;
+    for (const key of keys) {
+      if (await env.VENTAS.get(key)) { ventaKey = key; break; }
+    }
+    if (!ventaKey) return json({ error: 'Venta no encontrada.' }, 404, request);
+    resolved = { ventaKey, venta: ventaParsed };
+  }
+
+  const { ventaKey, venta } = resolved;
+  if (venta.estado === 'reembolsada') {
+    return json({ error: 'No se puede reenviar un boleto reembolsado.' }, 409, request);
+  }
+
+  const emailAnterior = (venta.email || '').trim().toLowerCase();
+  const emailNuevo    = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  let emailDestino    = emailAnterior;
+
+  if (emailNuevo && emailNuevo !== emailAnterior) {
+    if (!PUEDE_CORREGIR_EMAIL.has(payload.rol)) {
+      return json({ error: 'Sin permiso para corregir el correo.' }, 403, request);
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNuevo)) {
+      return json({ error: 'Correo inválido.' }, 400, request);
+    }
+    venta.email            = emailNuevo;
+    venta.emailAnterior    = emailAnterior || venta.emailAnterior || null;
+    venta.emailCorregidoEn = new Date().toISOString();
+    emailDestino           = emailNuevo;
+  }
+
+  if (!emailDestino) {
+    return json({ error: 'Indica un correo para enviar el boleto.' }, 400, request);
+  }
+
+  const config        = await getVenueConfig(tid, env);
+  const funcionNombre = venta.funcionNombre || venta.fecha;
+  const enviado       = await enviarEmail(
+    emailDestino,
+    `Tu lugar — EL GORILA · ${funcionNombre}`,
+    htmlBoleto(venta, funcionNombre, config),
+    env,
+  );
+
+  if (!enviado) {
+    return json({ error: 'No se pudo enviar el correo. Revisa Resend o intenta más tarde.' }, 502, request);
+  }
+
+  if (emailNuevo && emailNuevo !== emailAnterior) {
+    await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+  }
+
+  await registrarAuditoria(env, {
+    usuarioId: payload.usuario,
+    usuario:   payload.usuario,
+    rol:       payload.rol,
+    accion:    emailNuevo && emailNuevo !== emailAnterior ? 'email.corregido' : 'email.reenviado',
+    detalles:  `${_certificadoVenta(venta)} → ${emailDestino}${emailAnterior && emailNuevo !== emailAnterior ? ` (antes: ${emailAnterior})` : ''}`,
+    teatroId:  tid,
+    meta:      { certificado: _certificadoVenta(venta), email: emailDestino },
+  });
+
+  return json({
+    ok:             true,
+    emailEnviado:   emailDestino,
+    emailCorregido: !!(emailNuevo && emailNuevo !== emailAnterior),
+    venta:          _formatVenta(venta),
+  }, 200, request);
 }
 
 // ─── HANDLER: ADMIN LOGIN ─────────────────────────────────────────────────────
@@ -1950,28 +2030,46 @@ async function handleListaPuerta(tid, request, env) {
 
 // ─── HANDLER: LISTADO DE VENTAS (admin) ───────────────────────────────────────
 
+function _certificadoVenta(v) {
+  return (v?.certificado || v?.codigo || '').trim().toUpperCase();
+}
+
 function _formatVenta(v) {
+  const certificado = _certificadoVenta(v);
   return {
-    teatroId:       v.teatroId       || 'gorila',
-    sessionId:      v.sessionId      || null,
-    codigo:         v.codigo,
-    fecha:          v.fecha,
-    funcionNombre:  v.funcionNombre  || v.fecha,
-    cantidad:       v.cantidad,
-    items:          v.items          || [],
-    email:          v.email          || null,
-    nombre:         v.nombre         || null,
-    telefono:       v.telefono       || null,
-    total:          v.total,
-    metodoPago:     v.metodoPago     || 'card',
-    fechaCompra:    v.fechaCompra,
-    usado:          v.usado          || false,
-    usadoEn:        v.usadoEn        || null,
-    reagendado:     v.reagendado     || null,
-    registradoPor:  v.registradoPor  || null,
-    estado:         v.estado         || 'completada',
-    codigoCupon:    v.codigoCupon    || null,
-    reembolso:      v.reembolso      || null,
+    teatroId:         v.teatroId       || 'wilberto',
+    sessionId:        v.sessionId      || null,
+    codigo:           certificado || v.codigo,
+    certificado,
+    fecha:            v.fecha,
+    funcionNombre:    v.funcionNombre  || v.fecha,
+    cantidad:         v.cantidad,
+    items:            v.items          || [],
+    boletos:          (v.boletos || []).map(b => ({
+      cert:   b.cert,
+      folio:  b.folio,
+      numero: b.numero,
+      tipo:   b.tipo,
+      usado:  !!b.usado,
+    })),
+    email:            v.email          || null,
+    emailAnterior:    v.emailAnterior  || null,
+    emailCorregidoEn: v.emailCorregidoEn || null,
+    nombre:           v.nombre         || null,
+    telefono:         v.telefono       || null,
+    total:            v.total,
+    metodoPago:       v.metodoPago     || 'card',
+    fechaCompra:      v.fechaCompra,
+    usado:            v.usado          || false,
+    usadoEn:          v.usadoEn        || null,
+    reagendado:       v.reagendado     || null,
+    registradoPor:    v.registradoPor  || null,
+    estado:           v.estado         || 'completada',
+    codigoCupon:      v.codigoCupon    || null,
+    cuponPct:         v.cuponPct       ?? null,
+    referidoDe:       v.referidoDe     || null,
+    utm:              v.utm            || null,
+    reembolso:        v.reembolso      || null,
   };
 }
 
@@ -2588,8 +2686,11 @@ async function handleVentas(tid, request, env) {
     ventas = ventas.filter(v => {
       const nombre = (v.nombre || '').toLowerCase();
       const email  = (v.email || '').toLowerCase();
-      const codigo = (v.codigo || '').toLowerCase();
-      return nombre.includes(q) || email.includes(q) || codigo.includes(q);
+      const codigo = (v.codigo || v.certificado || '').toLowerCase();
+      const cupon  = (v.codigoCupon || '').toLowerCase();
+      const ref    = (v.referidoDe || '').toLowerCase();
+      return nombre.includes(q) || email.includes(q) || codigo.includes(q)
+        || cupon.includes(q) || ref.includes(q);
     });
   }
 
@@ -2911,6 +3012,10 @@ export default {
       const ventaAdminMatch = sub.match(/^venta\/([^/]+)$/);
       if (method === 'GET' && ventaAdminMatch)
         return handleAdminVentaDetail(tid, decodeURIComponent(ventaAdminMatch[1]), request, env);
+
+      const reenviarMatch = sub.match(/^venta\/([^/]+)\/reenviar-email$/);
+      if (method === 'POST' && reenviarMatch)
+        return handleReenviarEmail(tid, decodeURIComponent(reenviarMatch[1]), request, env);
 
       const canjearMatch = sub.match(/^canjear\/([^/]+)$/);
       if (method === 'POST' && canjearMatch)

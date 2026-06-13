@@ -14,6 +14,7 @@
     fiscal: 0,
     sitio: {},
     inv: {},
+    ventaDetalle: null,
   };
 
   function token() { return AuthManager.obtenerAdminToken(); }
@@ -145,28 +146,207 @@
       <div class="grid gap-3 sm:grid-cols-2">${cards || '<p class="text-text-dark/50">Sin funciones en KV.</p>'}</div>`;
   }
 
+  function certVenta(v) {
+    return (v.certificado || v.codigo || '').trim();
+  }
+
+  function utmResumen(utm) {
+    if (!utm || typeof utm !== 'object') return '—';
+    const parts = ['source', 'medium', 'campaign', 'content'].map(k => utm[k]).filter(Boolean);
+    return parts.length ? parts.join(' / ') : '—';
+  }
+
+  function estadoVentaHtml(v) {
+    if (v.estado === 'reembolsada') return '<span class="text-red-400">reembolsado</span>';
+    if (v.usado) return '<span class="text-yellow-400">canjeado</span>';
+    if (v.reagendado) return '<span class="text-blue-400">reagendado</span>';
+    return '<span class="text-green-400">activo</span>';
+  }
+
+  function renderVentaRow(v) {
+    const cert = certVenta(v);
+    const reag = (!v.usado && v.estado !== 'reembolsada' && perm('reagendar'))
+      ? `<button type="button" data-reagendar="${esc(cert)}" class="text-xs text-primary underline ml-1">Reagendar</button>` : '';
+    const esStripe = v.metodoPago && v.metodoPago !== 'efectivo' && !String(v.sessionId || '').startsWith('manual_');
+    const reemb = (perm('reembolsar') && esStripe && v.estado === 'completada' && !v.usado)
+      ? `<button type="button" data-reembolso="${esc(cert)}" class="text-xs text-red-400 underline ml-1">Reembolsar</button>` : '';
+    return `<tr class="border-b border-primary/10 hover:bg-primary/5 cursor-pointer" data-venta="${esc(cert)}">
+      <td class="py-2 pr-2 font-mono text-xs text-primary/90">${esc(cert)}</td>
+      <td class="py-2 pr-2 text-sm">${esc(v.nombre || '—')}</td>
+      <td class="py-2 pr-2 text-sm max-w-[140px] truncate" title="${esc(v.email || '')}">${esc(v.email || '—')}</td>
+      <td class="py-2 pr-2 text-xs font-mono">${esc(v.codigoCupon || '—')}</td>
+      <td class="py-2 pr-2 text-xs font-mono">${esc(v.referidoDe || '—')}</td>
+      <td class="py-2 pr-2 text-xs">${esc(utmResumen(v.utm))}</td>
+      <td class="py-2 pr-2 text-sm">${v.cantidad || 0}</td>
+      <td class="py-2 pr-2 text-sm">${fmtMXN(v.total)}</td>
+      <td class="py-2 pr-2 text-xs whitespace-nowrap">${fmtFecha(v.fechaCompra)}</td>
+      <td class="py-2 text-xs">${estadoVentaHtml(v)}${reag}${reemb}</td>
+    </tr>`;
+  }
+
+  function renderModalVenta() {
+    return `<div id="modal-venta" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto">
+      <div class="bg-surface-dark border border-primary/30 p-6 max-w-2xl w-full my-8">
+        <div class="flex justify-between items-start gap-4 mb-4">
+          <h3 class="text-xl font-display text-primary">Detalle de venta</h3>
+          <button type="button" id="mv-cerrar" class="text-text-dark/60 hover:text-primary text-2xl leading-none">&times;</button>
+        </div>
+        <div id="mv-contenido" class="text-sm space-y-3"></div>
+        <div id="mv-acciones" class="mt-6 pt-4 border-t border-primary/20 flex flex-wrap gap-2"></div>
+        <p id="mv-msg" class="text-sm mt-3 hidden"></p>
+      </div>
+    </div>`;
+  }
+
+  function renderDetalleVenta(v) {
+    const cert = certVenta(v);
+    const boletos = (v.boletos || []).map(b => `<tr class="border-b border-primary/10">
+      <td class="py-1 font-mono text-xs">${esc(b.cert)}</td>
+      <td class="py-1 font-mono text-xs">${esc(b.folio || '—')}</td>
+      <td class="py-1 text-xs">${esc(b.tipo || '—')}</td>
+      <td class="py-1 text-xs">${b.usado ? '<span class="text-yellow-400">canjeado</span>' : 'pendiente'}</td>
+    </tr>`).join('') || '<tr><td colspan="4" class="py-2 text-text-dark/50">Sin desglose por boleto</td></tr>';
+
+    const items = (v.items || []).map(it => `${it.cantidad || 1}× ${it.nombre || it.seccion || 'entrada'}`).join(', ') || '—';
+
+    return `<dl class="grid sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+      <div><dt class="text-xs font-mono text-text-dark/50">Certificado</dt><dd class="font-mono text-primary">${esc(cert)}</dd></div>
+      <div><dt class="text-xs font-mono text-text-dark/50">Estado</dt><dd>${estadoVentaHtml(v)}</dd></div>
+      <div><dt class="text-xs font-mono text-text-dark/50">Nombre</dt><dd>${esc(v.nombre || '—')}</dd></div>
+      <div><dt class="text-xs font-mono text-text-dark/50">Correo</dt><dd id="mv-email-actual">${esc(v.email || '—')}</dd></div>
+      <div><dt class="text-xs font-mono text-text-dark/50">Teléfono</dt><dd>${esc(v.telefono || '—')}</dd></div>
+      <div><dt class="text-xs font-mono text-text-dark/50">Compra</dt><dd>${fmtFecha(v.fechaCompra)}</dd></div>
+      <div><dt class="text-xs font-mono text-text-dark/50">Total</dt><dd>${fmtMXN(v.total)} · ${esc(v.metodoPago || '—')}</dd></div>
+      <div><dt class="text-xs font-mono text-text-dark/50">Cupón</dt><dd>${esc(v.codigoCupon || '—')}${v.cuponPct != null ? ` (−${v.cuponPct}%)` : ''}</dd></div>
+      <div><dt class="text-xs font-mono text-text-dark/50">Referido de</dt><dd class="font-mono text-xs">${esc(v.referidoDe || '—')}</dd></div>
+      <div><dt class="text-xs font-mono text-text-dark/50">UTM</dt><dd class="text-xs">${esc(utmResumen(v.utm))}</dd></div>
+      <div class="sm:col-span-2"><dt class="text-xs font-mono text-text-dark/50">Entradas</dt><dd>${esc(items)}</dd></div>
+      ${v.emailAnterior ? `<div class="sm:col-span-2"><dt class="text-xs font-mono text-text-dark/50">Correo anterior</dt><dd class="text-xs text-text-dark/70">${esc(v.emailAnterior)} · corregido ${fmtFecha(v.emailCorregidoEn)}</dd></div>` : ''}
+    </dl>
+    <h4 class="text-xs font-mono text-text-dark/50 mt-4 mb-2">Boletos (certificados / folios puerta)</h4>
+    <div class="overflow-x-auto border border-primary/20">
+      <table class="w-full text-left"><thead><tr class="border-b border-primary/20 font-mono text-xs text-text-dark/60">
+        <th class="p-2">Cert</th><th class="p-2">Folio puerta</th><th class="p-2">Tipo</th><th class="p-2">Estado</th>
+      </tr></thead><tbody>${boletos}</tbody></table>
+    </div>
+    <p class="text-xs text-text-dark/50 mt-2">
+      <a href="compartir-boleto.html?c=${encodeURIComponent(cert)}" target="_blank" rel="noopener" class="text-primary underline">Abrir enlace compartir</a>
+    </p>`;
+  }
+
+  function renderAccionesVenta(v) {
+    const cert = certVenta(v);
+    const puedeReenviar = perm('reenviarBoleto') && v.estado !== 'reembolsada';
+    const puedeCorregir = perm('corregirEmail') && v.estado !== 'reembolsada';
+    let html = '';
+    if (puedeReenviar && v.email) {
+      html += `<button type="button" id="mv-reenviar" data-cert="${esc(cert)}" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Reenviar boleto</button>`;
+    }
+    if (puedeCorregir) {
+      html += `<div class="flex flex-wrap gap-2 items-center w-full sm:w-auto">
+        <input type="email" id="mv-email-nuevo" placeholder="Correo corregido" class="px-3 py-2 bg-background-dark border border-primary/30 text-sm flex-1 min-w-[200px]" value="${esc(v.email || '')}">
+        <button type="button" id="mv-corregir" data-cert="${esc(cert)}" class="px-4 py-2 bg-primary text-background-dark font-semibold text-sm">Corregir y reenviar</button>
+      </div>`;
+    } else if (puedeReenviar && !v.email) {
+      html += `<p class="text-xs text-yellow-400">Sin correo registrado — solo admin/reclamos puede corregir.</p>`;
+    }
+    return html || '<p class="text-xs text-text-dark/50">Sin acciones de correo con tu rol.</p>';
+  }
+
+  async function abrirVentaDetalle(cert) {
+    const modal = document.getElementById('modal-venta');
+    const contenido = document.getElementById('mv-contenido');
+    const acciones = document.getElementById('mv-acciones');
+    const msg = document.getElementById('mv-msg');
+    if (!modal || !contenido) return;
+    msg?.classList.add('hidden');
+    contenido.innerHTML = '<p class="text-text-dark/50">Cargando…</p>';
+    acciones.innerHTML = '';
+    modal.classList.remove('hidden');
+    try {
+      const v = await api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}`));
+      state.ventaDetalle = v;
+      contenido.innerHTML = renderDetalleVenta(v);
+      acciones.innerHTML = renderAccionesVenta(v);
+      bindModalVentaEvents();
+    } catch (e) {
+      contenido.innerHTML = `<p class="text-red-300">${esc(e.message)}</p>`;
+    }
+  }
+
+  async function reenviarEmailVenta(cert, emailNuevo) {
+    const body = emailNuevo ? { email: emailNuevo } : {};
+    return api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}/reenviar-email`), {
+      method: 'POST', body: JSON.stringify(body),
+    });
+  }
+
+  function bindModalVentaEvents() {
+    document.getElementById('mv-reenviar')?.addEventListener('click', async () => {
+      const cert = document.getElementById('mv-reenviar')?.dataset.cert;
+      const msg = document.getElementById('mv-msg');
+      if (!cert) return;
+      try {
+        await reenviarEmailVenta(cert);
+        if (msg) { msg.textContent = 'Boleto reenviado al correo registrado.'; msg.className = 'text-sm mt-3 text-green-400'; msg.classList.remove('hidden'); }
+      } catch (e) {
+        if (msg) { msg.textContent = e.message; msg.className = 'text-sm mt-3 text-red-300'; msg.classList.remove('hidden'); }
+      }
+    });
+    document.getElementById('mv-corregir')?.addEventListener('click', async () => {
+      const cert = document.getElementById('mv-corregir')?.dataset.cert;
+      const email = document.getElementById('mv-email-nuevo')?.value?.trim();
+      const msg = document.getElementById('mv-msg');
+      if (!cert || !email) { if (msg) { msg.textContent = 'Indica un correo válido.'; msg.className = 'text-sm mt-3 text-red-300'; msg.classList.remove('hidden'); } return; }
+      try {
+        const r = await reenviarEmailVenta(cert, email);
+        if (msg) { msg.textContent = r.emailCorregido ? `Correo actualizado y boleto enviado a ${r.emailEnviado}.` : `Boleto enviado a ${r.emailEnviado}.`; msg.className = 'text-sm mt-3 text-green-400'; msg.classList.remove('hidden'); }
+        const el = document.getElementById('mv-email-actual');
+        if (el) el.textContent = r.emailEnviado;
+        await cargarVentas(state.funcion, document.getElementById('buscar-ventas')?.value?.trim());
+        const tbody = document.querySelector('#admin-app tbody');
+        if (tbody) tbody.innerHTML = state.ventas.map(renderVentaRow).join('') || '<tr><td colspan="10" class="p-6 text-center text-text-dark/50">Sin ventas</td></tr>';
+        bindVentaRowEvents();
+      } catch (e) {
+        if (msg) { msg.textContent = e.message; msg.className = 'text-sm mt-3 text-red-300'; msg.classList.remove('hidden'); }
+      }
+    });
+  }
+
+  function bindVentaRowEvents() {
+    document.querySelectorAll('[data-venta]').forEach(el => {
+      el.onclick = (e) => {
+        if (e.target.closest('[data-reagendar], [data-reembolso]')) return;
+        abrirVentaDetalle(el.dataset.venta);
+      };
+    });
+    document.querySelectorAll('[data-reagendar]').forEach(el => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        reagendarCodigo = el.dataset.reagendar;
+        document.getElementById('reag-codigo').textContent = reagendarCodigo;
+        document.getElementById('reagendar-panel')?.classList.remove('hidden');
+      };
+    });
+    document.querySelectorAll('[data-reembolso]').forEach(el => {
+      el.onclick = async (e) => {
+        e.stopPropagation();
+        const cod = el.dataset.reembolso;
+        if (!cod) return;
+        if (!confirm(`¿Reembolsar ${cod} vía Stripe?\nSe devuelve el cargo y se libera el cupo.`)) return;
+        try {
+          await api(window.teatroAdminApi('reembolso'), { method: 'POST', body: JSON.stringify({ codigo: cod }) });
+          alert('Reembolso procesado. Cupo liberado.');
+          paint();
+        } catch (err) { alert(err.message); }
+      };
+    });
+  }
+
   function renderFuncion() {
     const f = state.funciones.find(x => x.fecha_iso === state.funcion);
     const nombre = f ? f.nombre : state.funcion;
-    const rows = state.ventas.map(v => {
-      const estado = v.estado === 'reembolsada' ? '<span class="text-red-400">reembolsado</span>'
-        : v.usado ? '<span class="text-yellow-400">canjeado</span>'
-        : v.reagendado ? '<span class="text-blue-400">reagendado</span>' : '<span class="text-green-400">activo</span>';
-      const reag = (!v.usado && v.estado !== 'reembolsada' && perm('reagendar'))
-        ? `<button type="button" data-reagendar="${esc(v.codigo)}" class="text-xs text-primary underline ml-2">Reagendar</button>` : '';
-      const esStripe = v.metodoPago && v.metodoPago !== 'efectivo' && !String(v.sessionId || '').startsWith('manual_');
-      const reemb = (perm('reembolsar') && esStripe && v.estado === 'completada' && !v.usado)
-        ? `<button type="button" data-reembolso="${esc(v.codigo)}" class="text-xs text-red-400 underline ml-2">Reembolsar</button>` : '';
-      return `<tr class="border-b border-primary/10">
-        <td class="py-2 pr-2 font-mono text-xs">${esc(v.codigo)}</td>
-        <td class="py-2 pr-2 text-sm">${esc(v.nombre || '—')}</td>
-        <td class="py-2 pr-2 text-sm">${esc(v.email || '—')}</td>
-        <td class="py-2 pr-2 text-sm">${v.cantidad || 0}</td>
-        <td class="py-2 pr-2 text-sm">${fmtMXN(v.total)}</td>
-        <td class="py-2 pr-2 text-xs">${esc(v.metodoPago || '—')}</td>
-        <td class="py-2 text-xs">${estado}${reag}${reemb}</td>
-      </tr>`;
-    }).join('');
+    const rows = state.ventas.map(renderVentaRow).join('');
 
     const opts = state.funciones.filter(x => x.fecha_iso !== state.funcion)
       .map(x => `<option value="${esc(x.fecha_iso)}">${esc(x.nombre)}</option>`).join('');
@@ -177,18 +357,19 @@
         <h2 class="text-2xl font-display text-primary">${esc(nombre)}</h2>
       </div>
       <div class="flex flex-wrap gap-2 mb-4">
-        <input type="search" id="buscar-ventas" placeholder="Buscar nombre, email, folio…" class="px-3 py-2 bg-background-dark border border-primary/30 text-sm flex-1 min-w-[200px]">
+        <input type="search" id="buscar-ventas" placeholder="Nombre, email, certificado, cupón, referido…" class="px-3 py-2 bg-background-dark border border-primary/30 text-sm flex-1 min-w-[200px]">
         <button type="button" id="btn-buscar-ventas" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Buscar</button>
         ${perm('exportarDatos') ? '<button type="button" id="btn-export-funcion" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Exportar CSV</button>' : ''}
         ${perm('verificarBoletos') ? '<a href="verificar.html" class="px-4 py-2 border border-primary/30 text-primary text-sm">Verificar</a>' : ''}
       </div>
       <div class="overflow-x-auto border border-primary/20">
-        <table class="w-full text-left text-sm">
+        <table class="w-full text-left text-sm min-w-[900px]">
           <thead><tr class="border-b border-primary/20 font-mono text-xs text-text-dark/60">
-            <th class="p-2">Folio</th><th class="p-2">Nombre</th><th class="p-2">Email</th>
-            <th class="p-2">Cant.</th><th class="p-2">Total</th><th class="p-2">Pago</th><th class="p-2">Estado</th>
+            <th class="p-2">Certificado</th><th class="p-2">Nombre</th><th class="p-2">Email</th>
+            <th class="p-2">Cupón</th><th class="p-2">Referido</th><th class="p-2">UTM</th>
+            <th class="p-2">Cant.</th><th class="p-2">Total</th><th class="p-2">Fecha</th><th class="p-2">Estado</th>
           </tr></thead>
-          <tbody>${rows || '<tr><td colspan="7" class="p-6 text-center text-text-dark/50">Sin ventas</td></tr>'}</tbody>
+          <tbody>${rows || '<tr><td colspan="10" class="p-6 text-center text-text-dark/50">Sin ventas</td></tr>'}</tbody>
         </table>
       </div>
       ${perm('reagendar') ? `<div id="reagendar-panel" class="hidden mt-6 p-4 border border-primary/30 bg-surface-dark/80">
@@ -196,7 +377,8 @@
         <select id="reag-destino" class="px-3 py-2 bg-background-dark border border-primary/30 mr-2">${opts}</select>
         <button type="button" id="btn-reagendar-ok" class="px-4 py-2 bg-primary text-background-dark font-semibold">Confirmar cambio</button>
         <button type="button" id="btn-reagendar-cancel" class="px-4 py-2 ml-2 border border-primary/30">Cancelar</button>
-      </div>` : ''}`;
+      </div>` : ''}
+      ${renderModalVenta()}`;
   }
 
   function renderEquipo() {
@@ -364,20 +546,21 @@
         await cargarVentas(state.funcion, q);
         const tbody = document.querySelector('#admin-app tbody');
         if (!tbody) return;
-        tbody.innerHTML = state.ventas.map(v => {
-          const estado = v.usado ? 'canjeado' : v.reagendado ? 'reagendado' : 'activo';
-          return `<tr class="border-b border-primary/10"><td class="py-2 font-mono text-xs">${esc(v.codigo)}</td><td class="py-2">${esc(v.nombre)}</td><td class="py-2">${esc(v.email)}</td><td class="py-2">${v.cantidad}</td><td class="py-2">${fmtMXN(v.total)}</td><td class="py-2">${esc(v.metodoPago)}</td><td class="py-2">${estado}</td></tr>`;
-        }).join('') || '<tr><td colspan="7" class="p-6 text-center">Sin resultados</td></tr>';
+        tbody.innerHTML = state.ventas.map(renderVentaRow).join('')
+          || '<tr><td colspan="10" class="p-6 text-center">Sin resultados</td></tr>';
+        bindVentaRowEvents();
       };
     }
 
-    document.querySelectorAll('[data-reagendar]').forEach(el => {
-      el.onclick = () => {
-        reagendarCodigo = el.dataset.reagendar;
-        document.getElementById('reag-codigo').textContent = reagendarCodigo;
-        document.getElementById('reagendar-panel')?.classList.remove('hidden');
-      };
+    bindVentaRowEvents();
+
+    document.getElementById('mv-cerrar')?.addEventListener('click', () => {
+      document.getElementById('modal-venta')?.classList.add('hidden');
     });
+    document.getElementById('modal-venta')?.addEventListener('click', (e) => {
+      if (e.target.id === 'modal-venta') document.getElementById('modal-venta')?.classList.add('hidden');
+    });
+
     document.getElementById('btn-reagendar-cancel')?.addEventListener('click', () => {
       document.getElementById('reagendar-panel')?.classList.add('hidden');
       reagendarCodigo = null;
@@ -392,21 +575,6 @@
         alert('Boleto reagendado. Registrado en auditoría.');
         paint();
       } catch (e) { alert(e.message); }
-    });
-
-    document.querySelectorAll('[data-reembolso]').forEach(el => {
-      el.onclick = async () => {
-        const cod = el.dataset.reembolso;
-        if (!cod) return;
-        if (!confirm(`¿Reembolsar ${cod} vía Stripe?\nSe devuelve el cargo y se libera el cupo.`)) return;
-        try {
-          await api(window.teatroAdminApi('reembolso'), {
-            method: 'POST', body: JSON.stringify({ codigo: cod }),
-          });
-          alert('Reembolso procesado. Cupo liberado.');
-          paint();
-        } catch (e) { alert(e.message); }
-      };
     });
 
     document.getElementById('btn-export-funcion')?.addEventListener('click', () => exportCsv(state.ventas, `ventas_${state.funcion}.csv`));
@@ -450,10 +618,28 @@
   }
 
   function exportCsv(ventas, name) {
-    const head = ['codigo', 'nombre', 'email', 'cantidad', 'total', 'metodoPago', 'fechaCompra', 'usado'];
-    const lines = [head.join(',')].concat(ventas.map(v =>
-      head.map(k => `"${String(v[k] ?? '').replace(/"/g, '""')}"`).join(',')
-    ));
+    const head = ['certificado', 'nombre', 'email', 'telefono', 'cantidad', 'total', 'metodoPago', 'codigoCupon', 'cuponPct', 'referidoDe', 'utm_source', 'utm_medium', 'utm_campaign', 'fechaCompra', 'estado', 'usado'];
+    const lines = [head.join(',')].concat(ventas.map(v => {
+      const row = {
+        certificado: certVenta(v),
+        nombre: v.nombre,
+        email: v.email,
+        telefono: v.telefono,
+        cantidad: v.cantidad,
+        total: v.total,
+        metodoPago: v.metodoPago,
+        codigoCupon: v.codigoCupon,
+        cuponPct: v.cuponPct,
+        referidoDe: v.referidoDe,
+        utm_source: v.utm?.source,
+        utm_medium: v.utm?.medium,
+        utm_campaign: v.utm?.campaign,
+        fechaCompra: v.fechaCompra,
+        estado: v.estado,
+        usado: v.usado,
+      };
+      return head.map(k => `"${String(row[k] ?? '').replace(/"/g, '""')}"`).join(',');
+    }));
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
     a.download = name;
@@ -511,6 +697,7 @@
     iniciar(usuario) {
       if (usuario.rol === 'taquilla') { window.location.href = 'boletera.html'; return; }
       if (usuario.rol === 'validacion') { window.location.href = 'verificar.html'; return; }
+      // reclamos y gerente entran al panel (ventas / reenvíos según rol)
 
       const elU = document.getElementById('usuario-actual');
       const elR = document.getElementById('rol-actual');
