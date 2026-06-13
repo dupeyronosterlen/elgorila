@@ -1,32 +1,17 @@
 #!/usr/bin/env node
 /**
- * Inicializa el usuario administrador raíz en KV (INVENTARIO → "sistema:usuarios").
- * Crea únicamente el usuario "osterlen" con rol "admin".
+ * Inicializa un usuario administrador en KV (INVENTARIO → "sistema:usuarios").
  *
- * Los demás usuarios (gerente, taquilla, acomodador, etc.) se crean desde
- * el panel de administración en runtime, una vez que osterlen haya iniciado sesión.
- *
- * Roles soportados por el sistema: admin, gerente, taquilla, acomodador
+ * Los demás usuarios se crean desde el panel admin en runtime.
  *
  * IMPORTANTE:
  *  - La contraseña se pide de forma interactiva. NUNCA se guarda en código ni en git.
- *  - El JSON de salida contiene únicamente salt + hash PBKDF2. Sin texto plano.
- *  - Ejecutar UNA sola vez (o para resetear la contraseña de osterlen).
- *
- * Parámetros PBKDF2 — deben coincidir exactamente con worker/index.js:
- *   algoritmo  : SHA-256
- *   iteraciones: 100 000
- *   longitud   : 32 bytes (256 bits)
- *   salt       : 16 bytes aleatorios
+ *  - El JSON de salida contiene únicamente salt + hash PBKDF2.
  *
  * USO:
- *   1. node scripts/init-usuarios.js > /tmp/usuarios.json
- *   2. Revisar el JSON (sin contraseñas en texto plano).
- *   3. npx wrangler kv key put "sistema:usuarios" \
- *        --binding INVENTARIO \
- *        --path /tmp/usuarios.json
- *      (Agregar --preview para el namespace de desarrollo.)
- *   4. Borrar /tmp/usuarios.json.
+ *   node scripts/init-usuarios.js > /tmp/usuarios.json
+ *   npx wrangler kv key put "sistema:usuarios" --binding INVENTARIO --path /tmp/usuarios.json --preview false --remote
+ *   rm /tmp/usuarios.json
  */
 
 'use strict';
@@ -37,14 +22,9 @@ const { promisify } = require('util');
 
 const pbkdf2 = promisify(crypto.pbkdf2);
 
-// ─── Parámetros PBKDF2 ────────────────────────────────────────────────────────
-// MANTENER SINCRONIZADOS con worker/index.js → PBKDF2_ITERATIONS / PBKDF2_KEYLEN_BITS
-
 const ITERATIONS = 100_000;
-const KEYLEN     = 32;  // bytes (256 bits)
-const SALTLEN    = 16;  // bytes
-
-// ─── Utilidades ───────────────────────────────────────────────────────────────
+const KEYLEN     = 32;
+const SALTLEN    = 16;
 
 async function hashPassword(password) {
   const saltBytes = crypto.randomBytes(SALTLEN);
@@ -55,7 +35,6 @@ async function hashPassword(password) {
   };
 }
 
-// Prompt escribe en stderr → no contamina el JSON que va a stdout.
 function createPrompter() {
   const rl = readline.createInterface({
     input:    process.stdin,
@@ -67,30 +46,41 @@ function createPrompter() {
   return { ask, close };
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+function normalizarId(raw) {
+  return String(raw || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '')
+    .slice(0, 32);
+}
 
 async function main() {
   const { ask, close } = createPrompter();
 
-  process.stderr.write('\n╔══════════════════════════════════════════════════╗\n');
-  process.stderr.write('║  INICIALIZACIÓN — USUARIO ADMINISTRADOR          ║\n');
-  process.stderr.write('╚══════════════════════════════════════════════════╝\n');
-  process.stderr.write('\nSe creará únicamente el usuario "osterlen" (admin).\n');
-  process.stderr.write('Los demás usuarios se gestionan desde el panel admin en runtime.\n\n');
-  process.stderr.write('La contraseña se deriva con PBKDF2 (SHA-256, 100k iter, salt aleatorio).\n');
-  process.stderr.write('El texto plano NUNCA se almacena en ningún lugar.\n\n');
+  process.stderr.write('\nInicialización de usuario admin (PBKDF2, sin texto plano en disco).\n\n');
 
-  const password = await ask('Contraseña para "osterlen" [rol: admin]: ');
+  const idRaw = await ask('ID de usuario (ej. admin): ');
+  const id = normalizarId(idRaw);
+  if (!id || id.length < 3) {
+    close();
+    throw new Error('ID de usuario inválido (mínimo 3 caracteres alfanuméricos).');
+  }
+
+  const nombre = (await ask(`Nombre visible [${id}]: `)).trim() || id;
+  const password = await ask(`Contraseña para "${id}" [rol: admin]: `);
+  if (!password || password.length < 8) {
+    close();
+    throw new Error('Contraseña demasiado corta (mínimo 8 caracteres).');
+  }
+
   process.stderr.write('  Calculando hash...\n');
-
   const { salt, hash } = await hashPassword(password);
-
   close();
 
   const resultado = {
-    osterlen: {
-      id:            'osterlen',
-      nombre:        'osterlen',
+    [id]: {
+      id,
+      nombre,
       rol:           'admin',
       salt,
       hash,
@@ -99,18 +89,9 @@ async function main() {
     },
   };
 
-  // JSON limpio a stdout — redirigir a archivo.
   process.stdout.write(JSON.stringify(resultado, null, 2) + '\n');
-
-  process.stderr.write('\n  ✓ osterlen (admin)\n');
-  process.stderr.write('\n╔══════════════════════════════════════════════════╗\n');
-  process.stderr.write('║  JSON generado. Siguiente paso:                  ║\n');
-  process.stderr.write('╚══════════════════════════════════════════════════╝\n\n');
-  process.stderr.write('  npx wrangler kv key put "sistema:usuarios" \\\n');
-  process.stderr.write('    --binding INVENTARIO \\\n');
-  process.stderr.write('    --path /tmp/usuarios.json\n\n');
-  process.stderr.write('  (Agrega --preview para el namespace de desarrollo.)\n');
-  process.stderr.write('  Después borra /tmp/usuarios.json.\n\n');
+  process.stderr.write(`\n  ✓ ${id} (admin)\n`);
+  process.stderr.write('\nSube el JSON a KV con wrangler kv key put "sistema:usuarios" …\n\n');
 }
 
 main().catch((err) => {

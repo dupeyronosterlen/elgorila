@@ -1,10 +1,18 @@
 node_modules/
 .DS_Store
 *.log
+
+# Secretos y credenciales (nunca subir)
+.env
+.env.*
+.dev.vars
 server/.env
 server/data/
-.dev.vars
 usuarios.json
-CREDENCIALES-ELGORILA.txt
-CREDENCIALES*.txt
-!CREDENCIALES*.template.txt
+CREDENCIALES*
+!CUPONES-AGENCIA.template.txt
+PROMPT-CLAUDE*.md
+.wrangler/
+
+# Previews / artefactos locales
+preview/

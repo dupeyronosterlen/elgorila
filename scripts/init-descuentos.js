@@ -58,16 +58,8 @@ const codigos = {
     agencia:        'NO ads · enlace personal post-función (invitacion.html)',
   },
 
-  // ── QA interno ────────────────────────────────────────────────────────────
-  WILQA7K2M9X4P8N3: {
-    tipo:           'porcentaje',
-    porcentaje:     99,
-    nombre:         'Prueba interna',
-    activo:         true,
-    max_usos:       100,
-    solo_prueba:    true,
-    agencia:        'Solo equipo técnico — no publicar',
-  },
+  // QA interno — NO incluir en KV de producción desde este repo. Crear manualmente en Cloudflare si hace falta.
+  // WILQA7K2M9X4P8N3: { porcentaje: 99, nombre: 'Prueba interna', activo: false, max_usos: 100, solo_prueba: true },
 
   // ── Legacy desactivados (conservar clave por historial de usos en KV) ─────
   MANADA:      { porcentaje: 15, nombre: 'Manada (legacy)',      activo: false },
@@ -77,6 +69,7 @@ const codigos = {
   ESTUDIANTE:  { porcentaje: 15, nombre: 'Estudiante (legacy)',  activo: false },
   MAESTRO:     { porcentaje: 15, nombre: 'Maestro (legacy)',     activo: false },
   INAPAM:      { porcentaje: 30, nombre: 'INAPAM (legacy)',      activo: false },
+  WILQA7K2M9X4P8N3: { porcentaje: 99, nombre: 'QA (legacy)',   activo: false, solo_prueba: true },
 };
 
 process.stdout.write(JSON.stringify(codigos, null, 2) + '\n');
