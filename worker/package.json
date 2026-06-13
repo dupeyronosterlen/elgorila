@@ -8,7 +8,10 @@
     "tail": "wrangler tail"
   },
   "devDependencies": {
-    "wrangler": "^3.95.0",
-    "@cloudflare/workers-types": "^4.20250525.0"
+    "@cloudflare/workers-types": "^4.20250525.0",
+    "wrangler": "^3.95.0"
+  },
+  "dependencies": {
+    "jose": "^5.10.0"
   }
 }

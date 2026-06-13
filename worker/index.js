@@ -24,6 +24,7 @@ import {
   findKVUser, getUsuariosKV, saveUsuariosKV, hashPasswordPBKDF2,
   registrarAuditoria, listAuditoria, getSitioConfig, saveSitioConfig,
 } from './admin-extra.js';
+import { googleWalletSaveUrl, appleWalletPkpass, walletStatus } from './wallet.js';
 
 // ─── CORS + HELPERS ──────────────────────────────────────────────────────────
 
@@ -121,6 +122,33 @@ async function checkRateLimit(ip, env) {
 
 // ─── EMAIL VÍA RESEND ────────────────────────────────────────────────────────
 
+/** Correo operativo del teatro (avisos admin, reply-to). */
+const EMAIL_OPERATIVO = 'elgorilateatro@gmail.com';
+const EMAIL_FROM_DEFAULT = 'El Gorila Teatro <boletos@elgorilateatro.com.mx>';
+
+function adminNotifyEmail(env) {
+  const v = env.ADMIN_NOTIFY_EMAIL;
+  return (typeof v === 'string' && v.trim()) ? v.trim() : EMAIL_OPERATIVO;
+}
+
+function formatMetodoPago(venta) {
+  const m = (venta.metodoPago || '').toLowerCase();
+  if (m === 'efectivo' || venta.sessionId?.startsWith('manual_')) return 'Efectivo / taquilla';
+  if (m.includes('card') || m.includes('link')) return 'Stripe (tarjeta en línea)';
+  return m || '—';
+}
+
+function formatFechaCompra(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('es-MX', {
+      timeZone: 'America/Mexico_City',
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  } catch { return iso; }
+}
+
 async function _enviarEmailResend(to, subject, html, env, from, opts = {}) {
   try {
     const payload = {
@@ -128,7 +156,7 @@ async function _enviarEmailResend(to, subject, html, env, from, opts = {}) {
       to,
       subject,
       html,
-      reply_to: opts.replyTo || 'elgorilateatro@gmail.com',
+      reply_to: opts.replyTo || EMAIL_OPERATIVO,
     };
     const res = await fetch('https://api.resend.com/emails', {
       method:  'POST',
@@ -146,19 +174,13 @@ async function _enviarEmailResend(to, subject, html, env, from, opts = {}) {
 
 async function enviarEmail(to, subject, html, env, opts = {}) {
   if (!env.RESEND_API_KEY) { console.error('RESEND_API_KEY no configurada'); return false; }
-  // Sin EMAIL_FROM verificado en Resend → sandbox (solo destinos permitidos por la cuenta).
-  // Tras verificar elgorilateatro.com.mx en resend.com/domains, define secret EMAIL_FROM:
-  //   El Gorila Teatro <boletos@elgorilateatro.com.mx>
-  const verifiedFrom = 'El Gorila Teatro <boletos@elgorilateatro.com.mx>';
+  // Remitente: boletos@elgorilateatro.com.mx (requiere dominio Verified en resend.com/domains).
+  // Destinos operativos: comprador + aviso admin → elgorilateatro@gmail.com (nunca otro correo).
+  const verifiedFrom = EMAIL_FROM_DEFAULT;
   const primaryFrom  = env.EMAIL_FROM || verifiedFrom;
   if (await _enviarEmailResend(to, subject, html, env, primaryFrom, opts)) return true;
   if (primaryFrom !== verifiedFrom) {
     return _enviarEmailResend(to, subject, html, env, verifiedFrom, opts);
-  }
-  // Dominio aún no verificado en Resend → sandbox (solo destinos permitidos en resend.com).
-  const sandboxFrom = 'El Gorila Teatro <onboarding@resend.dev>';
-  if (primaryFrom !== sandboxFrom) {
-    return _enviarEmailResend(to, subject, html, env, sandboxFrom, opts);
   }
   return false;
 }
@@ -168,8 +190,8 @@ async function enviarEmailsVenta(venta, tid, env) {
   const funcionNombre = venta.funcionNombre || venta.fecha;
   const codigoVenta   = venta.certificado || venta.codigo;
   const adminOk       = await enviarEmail(
-    'elgorilateatro@gmail.com',
-    `[GORILA] Venta ${codigoVenta} — ${config.nombre}`,
+    adminNotifyEmail(env),
+    `${codigoVenta} : Nueva orden — EL GORILA`,
     htmlAvisoAdmin(venta, funcionNombre, config),
     env,
   );
@@ -185,6 +207,17 @@ async function enviarEmailsVenta(venta, tid, env) {
   return { adminOk, compradorOk };
 }
 
+function codigoQrPayload(codigo) {
+  return (codigo || '').trim().toUpperCase();
+}
+
+function codigoQrOficialVenta(venta) {
+  const boletos = venta.boletos || [];
+  const cert      = venta.certificado || venta.codigo || '';
+  if (boletos.length === 1 && boletos[0]?.cert) return boletos[0].cert;
+  return cert;
+}
+
 function urlVerificarBoleto(codigo) {
   return `https://elgorilateatro.com.mx/verificar.html?codigo=${encodeURIComponent(codigo)}`;
 }
@@ -194,7 +227,7 @@ function urlCompartirBoleto(codigo) {
 }
 
 function urlQrBoleto(codigo, size = 148) {
-  const data = encodeURIComponent(urlVerificarBoleto(codigo));
+  const data = encodeURIComponent(codigoQrPayload(codigo));
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=1a1411&bgcolor=f1ead9&margin=8&data=${data}`;
 }
 
@@ -329,10 +362,10 @@ function htmlBoleto(venta, funcionNombre, config) {
   const multiSeccion = config.secciones && config.secciones.length > 1;
   const certificado  = venta.certificado || venta.codigo || 'CERT-—';
   const boletos      = venta.boletos || [];
-  const qrCert       = boletos.length !== 1 ? certificado : (boletos[0]?.cert || certificado);
-  const programaUrl  = 'https://elgorilateatro.com.mx/programa/v3.html';
-  const compartirUrl = urlCompartirBoleto(certificado);
+  const qrCert       = codigoQrOficialVenta(venta);
+  const folioTaquilla = boletos.map(b => b.folio).filter(Boolean).join(' · ') || null;
   const qrUrl        = urlQrBoleto(qrCert);
+  const graciasUrl   = 'https://elgorilateatro.com.mx/gracias.html';
   const nEntradas    = venta.cantidad || boletos.length || 1;
   const entradasLbl  = nEntradas === 1 ? '1 entrada' : `${nEntradas} entradas`;
 
@@ -407,48 +440,30 @@ function htmlBoleto(venta, funcionNombre, config) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td style="vertical-align:top;width:148px;padding-right:18px;">
-          <img src="${qrUrl}" width="148" height="148" alt="Código QR de tu boleto" style="display:block;border:1px solid #c9b896;background:#f1ead9;">
+          <img src="${qrUrl}" width="148" height="148" alt="Código QR — presentar en puerta" style="display:block;border:1px solid #c9b896;background:#f1ead9;">
         </td>
         <td style="vertical-align:top;">
-          <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a7760;">Certificado</p>
-          <p style="margin:0 0 14px;font-family:'Courier New',monospace;font-size:13px;letter-spacing:.06em;color:#1a1411;word-break:break-all;">${certificado}</p>
+          ${folioTaquilla ? `<p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a7760;">Folio taquilla</p>
+          <p style="margin:0 0 14px;font-family:'Courier New',monospace;font-size:15px;font-weight:600;color:#1a1411;">${folioTaquilla}</p>` : ''}
+          <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a7760;">Referencia</p>
+          <p style="margin:0 0 14px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.06em;color:#1a1411;word-break:break-all;">${certificado}</p>
           <p style="margin:0;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#3a2e26;">
-            En la entrada, muestra este correo o escanea el código. ${nEntradas > 1 ? `Tienes <strong>${nEntradas} entradas</strong> — comparte el boleto para ver cada QR.` : ''} Llega con <strong>30 minutos de anticipación</strong>.
+            <strong>Presenta este correo o el QR en la entrada del teatro.</strong> ${nEntradas > 1 ? `Tienes <strong>${nEntradas} entradas</strong>.` : ''} Llega con <strong>30 minutos de anticipación</strong>. No necesitas hacer nada más en línea.
           </p>
         </td>
       </tr>
     </table>
   </td></tr>
 
-  <!-- Compartir boleto (imagen + WhatsApp) -->
-  <tr><td style="background:#120d0b;padding:22px 28px;border-top:1px solid rgba(241,234,217,.08);text-align:center;">
-    <a href="${compartirUrl}" style="display:inline-block;background:#25D366;color:#fff;padding:14px 24px;text-decoration:none;font-family:Georgia,serif;font-size:16px;letter-spacing:.02em;margin-bottom:10px;">
-      Compartir boleto por WhatsApp →
-    </a>
-    <p style="margin:0;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.12em;color:rgba(241,234,217,.45);">
-      Guarda como imagen · QR + ${entradasLbl}
-    </p>
-  </td></tr>
-
-  <!-- Programa de mano v3 -->
-  <tr><td style="background:#0a0706;padding:28px;border-top:1px solid rgba(241,234,217,.1);">
-    <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#d99b3a;">
-      Antes de la función
-    </p>
-    <p style="margin:0 0 16px;font-family:Georgia,serif;font-style:italic;font-size:17px;line-height:1.5;color:rgba(241,234,217,.72);">
-      Kafka escribió un informe. Humberto lleva treinta y siete años interpretándolo.
-    </p>
-    <a href="${programaUrl}" style="display:inline-block;background:#D43A1A;color:#f1ead9;padding:14px 22px;text-decoration:none;font-family:Georgia,serif;font-size:16px;letter-spacing:.02em;">
-      Leer programa de mano →
-    </a>
-  </td></tr>
-
   <!-- Pie -->
-  <tr><td style="background:#120d0b;padding:18px 28px;text-align:center;">
-    <p style="margin:0 0 10px;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.45);">
-      ¿Dudas? Responde a este correo o escribe a elgorilateatro@gmail.com
+  <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
+    <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.55);">
+      ¿Dudas? Responde a este correo o escribe a
+      <a href="mailto:${EMAIL_OPERATIVO}" style="color:#d99b3a;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
     </p>
-    <a href="${compartirUrl}" style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:.12em;color:#d99b3a;text-decoration:underline;">Guardar o compartir boleto</a>
+    <a href="${graciasUrl}" style="display:inline-block;border:1px solid rgba(217,155,58,.45);color:#d99b3a;padding:12px 20px;text-decoration:none;font-family:Georgia,serif;font-size:15px;margin:0 6px 10px;">
+      Indicaciones para el día de la función →
+    </a>
   </td></tr>
 
 </table>
@@ -461,34 +476,96 @@ function htmlBoleto(venta, funcionNombre, config) {
 
 function htmlAvisoAdmin(venta, funcionNombre, config) {
   const multiSeccion = config.secciones && config.secciones.length > 1;
+  const cert         = venta.certificado || venta.codigo || '—';
+  const adminUrl     = 'https://elgorilateatro.com.mx/admin.html';
+  const items        = venta.items || [];
+  const listSubtotal = items.reduce((s, item) => {
+    const sec = config.secciones?.find(x => x.id === item.seccion) || config.secciones?.[0] || {};
+    return s + getPrecio(item.tipo, sec) * (item.cantidad || 1);
+  }, 0);
+  const totalPagado  = venta.total ?? 0;
+  const factor       = listSubtotal > 0 && totalPagado > 0 && totalPagado < listSubtotal
+    ? totalPagado / listSubtotal : 1;
 
-  const itemsStr = (venta.items || []).map(item => {
+  const itemRows = items.map(item => {
+    const sec        = config.secciones?.find(x => x.id === item.seccion) || config.secciones?.[0] || {};
+    const unit       = getPrecio(item.tipo, sec);
+    const cant       = item.cantidad || 1;
+    const sub        = Math.round(unit * cant * factor * 100) / 100;
     const tipoNombre = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
     const secLabel   = (multiSeccion && item.seccion)
-      ? ` [${config.secciones.find(s => s.id === item.seccion)?.nombre || item.seccion}]`
+      ? ` · ${config.secciones.find(s => s.id === item.seccion)?.nombre || item.seccion}`
       : '';
-    return `${tipoNombre}${secLabel}: ${item.cantidad}`;
-  }).join(' · ');
+    return `<tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #e8e8e8;">${tipoNombre}${secLabel}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #e8e8e8;text-align:right;">$${unit.toFixed(2)}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #e8e8e8;text-align:center;">${cant}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #e8e8e8;text-align:right;">$${sub.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
 
-  const foliosInternos = (venta.boletos || []).map(b => b.folio).join(', ');
+  const foliosInternos = (venta.boletos || []).map(b => b.folio).filter(Boolean).join(', ');
+  const stripeRef      = venta.sessionId?.startsWith('cs_')
+    ? `<a href="https://dashboard.stripe.com/checkout/sessions/${venta.sessionId}" style="color:#1a56db;font-family:monospace;font-size:12px;">${venta.sessionId}</a>`
+    : (venta.sessionId || '—');
 
   return `<!DOCTYPE html>
 <html lang="es">
-<head><meta charset="utf-8"><title>Nueva venta — EL GORILA</title></head>
-<body style="font-family:sans-serif;padding:24px;color:#222;">
-<h2 style="color:#1a1a1a;">🎟 Nueva venta — ${config.nombre}</h2>
-<table style="border-collapse:collapse;font-size:14px;">
-  <tr><td style="padding:4px 12px 4px 0;color:#888;">TeatroId</td><td><strong>${config.id}</strong></td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#888;">Función</td><td><strong>${funcionNombre}</strong></td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#888;">Certificado</td><td><strong>${venta.certificado || venta.codigo}</strong></td></tr>
-  ${foliosInternos ? `<tr><td style="padding:4px 12px 4px 0;color:#888;">Folios puerta</td><td style="font-family:monospace;font-size:12px;">${foliosInternos}</td></tr>` : ''}
-  <tr><td style="padding:4px 12px 4px 0;color:#888;">Boletos</td><td>${itemsStr || venta.cantidad}</td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#888;">Total</td><td><strong>$${venta.total?.toFixed(2)} MXN</strong></td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#888;">Email</td><td>${venta.email || '—'}</td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#888;">Nombre</td><td>${venta.nombre || '—'}</td></tr>
-  <tr><td style="padding:4px 12px 4px 0;color:#888;">Compra</td><td>${venta.fechaCompra}</td></tr>
-  ${venta.referidoDe ? `<tr><td style="padding:4px 12px 4px 0;color:#888;">Invitado por</td><td style="font-family:monospace;font-size:12px;">${venta.referidoDe}</td></tr>` : ''}
-  ${venta.codigoCupon ? `<tr><td style="padding:4px 12px 4px 0;color:#888;">Cupón</td><td>${venta.codigoCupon}</td></tr>` : ''}
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nueva orden — EL GORILA</title></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Georgia,'Times New Roman',serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #ddd;">
+
+  <tr><td style="background:#1a1411;padding:24px 28px;">
+    <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#d99b3a;">Nueva orden</p>
+    <h1 style="margin:0;font-size:26px;font-weight:500;color:#f1ead9;line-height:1.1;">EL GORILA</h1>
+    <p style="margin:12px 0 0;font-size:16px;color:rgba(241,234,217,.75);">${funcionNombre}</p>
+  </td></tr>
+
+  <tr><td style="padding:24px 28px;">
+    <p style="margin:0 0 16px;font-size:15px;color:#333;line-height:1.5;">
+      Nueva orden para: <strong>${funcionNombre}</strong>
+    </p>
+    <a href="${adminUrl}" style="display:inline-block;background:#D43A1A;color:#fff;padding:12px 22px;text-decoration:none;font-size:15px;margin-bottom:22px;">
+      Ver en admin →
+    </a>
+
+    <p style="margin:0 0 10px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#888;">Detalle de orden</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;color:#222;margin-bottom:18px;">
+      <tr><td style="padding:6px 0;color:#888;width:38%;">Certificado</td><td style="padding:6px 0;font-family:monospace;font-size:13px;"><strong>${cert}</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#888;">Fecha compra</td><td style="padding:6px 0;">${formatFechaCompra(venta.fechaCompra)}</td></tr>
+      <tr><td style="padding:6px 0;color:#888;">Nombre</td><td style="padding:6px 0;">${venta.nombre || '—'}</td></tr>
+      <tr><td style="padding:6px 0;color:#888;">Email</td><td style="padding:6px 0;">${venta.email || '—'}</td></tr>
+      <tr><td style="padding:6px 0;color:#888;">Método de pago</td><td style="padding:6px 0;">${formatMetodoPago(venta)}</td></tr>
+      <tr><td style="padding:6px 0;color:#888;">Transacción</td><td style="padding:6px 0;">${stripeRef}</td></tr>
+      ${foliosInternos ? `<tr><td style="padding:6px 0;color:#888;">Folios puerta</td><td style="padding:6px 0;font-family:monospace;font-size:12px;">${foliosInternos}</td></tr>` : ''}
+      ${venta.codigoCupon ? `<tr><td style="padding:6px 0;color:#888;">Cupón</td><td style="padding:6px 0;">${venta.codigoCupon}</td></tr>` : ''}
+      ${venta.referidoDe ? `<tr><td style="padding:6px 0;color:#888;">Invitado por</td><td style="padding:6px 0;font-family:monospace;font-size:12px;">${venta.referidoDe}</td></tr>` : ''}
+      ${venta.registradoPor ? `<tr><td style="padding:6px 0;color:#888;">Registrado por</td><td style="padding:6px 0;">${venta.registradoPor}</td></tr>` : ''}
+    </table>
+
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:8px;">
+      <tr style="background:#f8f8f8;">
+        <th style="padding:10px 12px;text-align:left;font-weight:600;color:#555;">Tipo</th>
+        <th style="padding:10px 12px;text-align:right;font-weight:600;color:#555;">Precio</th>
+        <th style="padding:10px 12px;text-align:center;font-weight:600;color:#555;">Cant.</th>
+        <th style="padding:10px 12px;text-align:right;font-weight:600;color:#555;">Subtotal</th>
+      </tr>
+      ${itemRows || `<tr><td colspan="4" style="padding:12px;color:#888;">${venta.cantidad || 1} boleto(s)</td></tr>`}
+      <tr>
+        <td colspan="3" style="padding:14px 12px 6px;text-align:right;font-weight:600;">Total pagado</td>
+        <td style="padding:14px 12px 6px;text-align:right;font-size:18px;font-weight:600;">$${totalPagado.toFixed(2)} MXN</td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="background:#fafafa;padding:14px 28px;border-top:1px solid #eee;font-size:12px;color:#888;">
+    ${config.nombre} · ${config.id} · ${EMAIL_OPERATIVO}
+  </td></tr>
+
+</table>
+</td></tr>
 </table>
 </body></html>`;
 }
@@ -1860,10 +1937,33 @@ async function handleVenta(tid, id, request, env) {
     const boleto = boletoEnVenta(v, boletoIdx);
     const resp   = respuestaBoletoPublica(v, tid, boleto, boletoIdx);
     resp.boletos = (v.boletos || []).map(b => ({
-      cert: b.cert, numero: b.numero, tipo: b.tipo, seccion: b.seccion, usado: !!b.usado,
+      cert: b.cert, folio: b.folio || null, numero: b.numero, tipo: b.tipo, seccion: b.seccion, usado: !!b.usado,
     }));
     return json(resp, 200, request);
   } catch { return json({ error: 'Error al obtener la venta.' }, 500, request); }
+}
+
+// ─── HANDLER: WALLET (Google / Apple) ─────────────────────────────────────────
+
+async function handleWallet(tid, id, request, env) {
+  const ventaRaw = await _lookupVenta(tid, id, env);
+  if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
+
+  let venta;
+  try { venta = JSON.parse(ventaRaw); } catch { return json({ error: 'Venta corrupta.' }, 500, request); }
+  if (venta.estado === 'reembolsada') return json({ error: 'Boleto no disponible.' }, 410, request);
+
+  const config    = await getVenueConfig(tid, env);
+  const url       = new URL(request.url);
+  const boletoRaw = url.searchParams.get('boleto');
+  const boletoIdx = boletoRaw != null && boletoRaw !== '' ? parseInt(boletoRaw, 10) : null;
+
+  const [google, apple] = await Promise.all([
+    googleWalletSaveUrl(venta, config, env, Number.isInteger(boletoIdx) ? boletoIdx : null),
+    appleWalletPkpass(venta, config, env, Number.isInteger(boletoIdx) ? boletoIdx : null),
+  ]);
+
+  return json({ ok: true, configured: walletStatus(env), google, apple }, 200, request);
 }
 
 // ─── HANDLER: VENTA DETALLE ADMIN (con email) ─────────────────────────────────
@@ -1937,12 +2037,27 @@ async function handleReenviarEmail(tid, id, request, env) {
     emailDestino           = emailNuevo;
   }
 
-  if (!emailDestino) {
+  if (!emailDestino && !body.soloAvisoAdmin) {
     return json({ error: 'Indica un correo para enviar el boleto.' }, 400, request);
   }
 
   const config        = await getVenueConfig(tid, env);
   const funcionNombre = venta.funcionNombre || venta.fecha;
+  const codigoVenta   = venta.certificado || venta.codigo;
+
+  if (body.soloAvisoAdmin) {
+    const adminOk = await enviarEmail(
+      adminNotifyEmail(env),
+      `${codigoVenta} : Nueva orden — EL GORILA`,
+      htmlAvisoAdmin(venta, funcionNombre, config),
+      env,
+    );
+    if (!adminOk) {
+      return json({ error: 'No se pudo enviar el aviso admin.' }, 502, request);
+    }
+    return json({ ok: true, avisoAdmin: true, emailEnviado: adminNotifyEmail(env) }, 200, request);
+  }
+
   const enviado       = await enviarEmail(
     emailDestino,
     `Tu lugar — EL GORILA · ${funcionNombre}`,
@@ -2311,28 +2426,31 @@ async function handleVentaManual(tid, request, env, ctx) {
   await env.VENTAS.put(kv(canonical, `ventaIdxContable:${fecha}:${sessionId}`), sessionId);
 
   let emailEnviado = false;
+  let adminOk      = false;
   if (email) {
-    emailEnviado = await enviarEmail(
-      email,
-      `Tu lugar — EL GORILA · ${funcion.nombre}`,
-      htmlBoleto(venta, funcion.nombre, config),
+    const emailResult = await enviarEmailsVenta(venta, canonical, env);
+    emailEnviado = emailResult.compradorOk;
+    adminOk      = emailResult.adminOk;
+    venta.emailsEnviados = {
+      admin: adminOk, comprador: emailEnviado, en: new Date().toISOString(),
+    };
+    await env.VENTAS.put(kv(canonical, `venta:${sessionId}`), JSON.stringify(venta));
+  } else {
+    adminOk = await enviarEmail(
+      adminNotifyEmail(env),
+      `${gen.certificado} : Nueva orden — EL GORILA`,
+      htmlAvisoAdmin(venta, funcion.nombre, config),
       env,
     );
   }
 
-  ctx.waitUntil(enviarEmail(
-    'elgorilateatro@gmail.com',
-    `[GORILA] Venta efectivo ${gen.certificado} — ${config.nombre}`,
-    htmlAvisoAdmin(venta, funcion.nombre, config),
-    env,
-  ));
-
   const compartirUrl = urlCompartirBoleto(gen.certificado);
+  const folioPuerta = gen.boletos.map(b => b.folio).filter(Boolean).join(' · ') || null;
   const waTexto = [
     `🎭 *EL GORILA* — ${funcion.nombre}`,
     `📍 ${config.venue}`,
-    `🎟 ${cantidadTotal} boleto(s) · Certificado: *${gen.certificado}*`,
-    `Boleto: ${compartirUrl}`,
+    `🎟 ${cantidadTotal} boleto(s)${folioPuerta ? ` · Folio ${folioPuerta}` : ''}`,
+    `Presenta el QR en la entrada. El boleto también llegó por correo.`,
   ].join('\n');
   const waUrl = telefono
     ? `https://wa.me/${telefono}?text=${encodeURIComponent(waTexto)}`
@@ -3274,6 +3392,11 @@ export default {
     const enviarMatch = sub.match(/^venta\/([^/]+)\/enviar-boleto$/);
     if (method === 'POST' && enviarMatch) {
       return handleEnviarBoletoCompra(tid, decodeURIComponent(enviarMatch[1]), request, env);
+    }
+
+    const walletMatch = sub.match(/^venta\/([^/]+)\/wallet$/);
+    if (method === 'GET' && walletMatch) {
+      return handleWallet(tid, decodeURIComponent(walletMatch[1]), request, env);
     }
 
     return json({ error: 'Not found.' }, 404, request);

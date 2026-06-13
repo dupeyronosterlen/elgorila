@@ -1,0 +1,90 @@
+/** Compartir boleto por WhatsApp sin subpágina — genera imagen y abre WA / share sheet. */
+(function (global) {
+  const VENUE = 'Teatro Wilberto Cantón, San José Insurgentes, CDMX';
+
+  function qrPayload(codigo) {
+    if (global.ElGorilaQr) return global.ElGorilaQr.codigoQrPayload(codigo);
+    return (codigo || '').trim().toUpperCase();
+  }
+
+  function qrCodigoOficial(orden) {
+    if (global.ElGorilaQr) return global.ElGorilaQr.codigoQrOficial(orden);
+    const boletos = orden.boletos || [];
+    const cert = orden.certificado || orden.numeroOrden || orden.codigo || '';
+    if (boletos.length === 1 && boletos[0].cert) return boletos[0].cert;
+    return cert;
+  }
+
+  function folioTaquilla(orden) {
+    const boletos = orden.boletos || [];
+    if (boletos.length === 1 && boletos[0].folio) return boletos[0].folio;
+    return boletos.map(b => b.folio).filter(Boolean).join(' · ') || null;
+  }
+
+  function entradasLabel(orden) {
+    const n = orden.cantidadTotal || orden.cantidad || (orden.boletos && orden.boletos.length) || 1;
+    return n === 1 ? '1 entrada' : `${n} entradas`;
+  }
+
+  function textoWhatsApp(orden) {
+    const fn = orden.fecha || orden.funcionNombre || 'EL GORILA';
+    const entradas = entradasLabel(orden);
+    const folio = folioTaquilla(orden);
+    let t = `Voy a ver EL GORILA — ${fn}. ${entradas}.\n${VENUE}`;
+    if (folio) t += `\nFolio taquilla: ${folio}`;
+    t += '\n\nPresenta el QR adjunto en la entrada del teatro.';
+    return t;
+  }
+
+  async function generarCanvas(orden) {
+    if (!global.GenerarImagenBoleto) throw new Error('Generador de boleto no disponible.');
+    const boletos = orden.boletos || [];
+    const cert = orden.certificado || orden.numeroOrden || orden.codigo || '';
+    const n = orden.cantidadTotal || orden.cantidad || boletos.length || 1;
+    const qrCodigo = qrCodigoOficial(orden);
+    const folio = folioTaquilla(orden);
+    const individual = n === 1 && boletos[0];
+    return GenerarImagenBoleto.generar({
+      funcion: orden.fecha || orden.funcionNombre || 'EL GORILA',
+      entradas: entradasLabel(orden),
+      modo: individual ? 'individual' : 'certificado',
+      codigoLabel: individual ? 'Entrada' : 'Certificado',
+      codigo: individual ? (boletos[0].cert || cert) : cert,
+      folio,
+      tipo: boletos[0] && boletos[0].tipo,
+      seccion: boletos[0] && boletos[0].seccion,
+      qrUrl: qrPayload(qrCodigo),
+      logoUrl: 'img/LOGO/1.jpg',
+      arteUrl: 'img/programa/portada-v4.jpg',
+    });
+  }
+
+  function waMeUrl(texto) {
+    return `https://wa.me/?text=${encodeURIComponent(texto)}`;
+  }
+
+  async function compartirPorWhatsApp(orden) {
+    const texto = textoWhatsApp(orden);
+    try {
+      const canvas = await generarCanvas(orden);
+      const blob = await GenerarImagenBoleto.canvasToBlob(canvas);
+      const file = new File([blob], 'el-gorila-boleto.png', { type: 'image/png' });
+      if (navigator.share) {
+        const payload = { title: 'Mi boleto — EL GORILA', text: texto };
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ ...payload, files: [file] });
+          return;
+        }
+        await navigator.share(payload);
+        return;
+      }
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+    }
+    window.open(waMeUrl(texto), '_blank', 'noopener');
+  }
+
+  global.ElGorilaCompartirWa = {
+    textoWhatsApp, compartirPorWhatsApp, generarCanvas, waMeUrl,
+  };
+})(window);

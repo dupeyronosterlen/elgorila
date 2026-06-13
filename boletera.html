@@ -569,9 +569,12 @@ async function generarCodigoEfectivo() {
       inf.innerHTML = `${data.funcionNombre}<br>${cantidad} × ${tipo} (${seccion}) · $${data.total} MXN${mailNote}`;
     }
     if (wa && data.waUrl) wa.href = data.waUrl;
-    if (qr && typeof QRCode !== 'undefined' && data.verificarUrl) {
+    if (qr && typeof QRCode !== 'undefined') {
       qr.innerHTML = '';
-      QRCode.toCanvas(qr, data.verificarUrl, { width: 180, margin: 1 });
+      const qrCodigo = (data.boletos?.length === 1 && data.boletos[0]?.cert)
+        ? data.boletos[0].cert
+        : (data.codigo || data.certificado || '');
+      if (qrCodigo) QRCode.toCanvas(qr, qrCodigo.trim().toUpperCase(), { width: 180, margin: 1 });
     }
 
     document.getElementById('form-efectivo')?.reset();

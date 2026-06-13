@@ -10,8 +10,15 @@ function baseUrlSitio() {
 
 function codigoQrBoleto(orden) {
     const boletos = orden.boletos || [];
+    if (window.ElGorilaQr) return window.ElGorilaQr.codigoQrOficial(orden);
     if (boletos.length === 1 && boletos[0].cert) return boletos[0].cert;
     return orden.numeroOrden || orden.certificado || '';
+}
+
+function folioTaquillaOrden(orden) {
+    const boletos = orden.boletos || [];
+    if (boletos.length === 1 && boletos[0].folio) return boletos[0].folio;
+    return boletos.map(b => b.folio).filter(Boolean).join(' · ') || null;
 }
 
 function pintarQR(container, url, size) {
@@ -256,40 +263,74 @@ function mostrarExito() {
         cantidadFinal.textContent = `${cantTotal} ${cantTotal === 1 ? 'boleto' : 'boletos'}`;
     }
 
-    // Compartir boleto (WhatsApp + imagen)
+    // Compartir boleto directo por WhatsApp (imagen + texto, sin subpágina)
     const waContainer = document.getElementById('btn-whatsapp-container');
     if (waContainer) {
-        const folio = ordenCompra.numeroOrden || ordenCompra.certificado || '';
         const cantTotal = ordenCompra.cantidadTotal || ordenCompra.cantidad || 0;
         const entradas = cantTotal === 1 ? '1 entrada' : `${cantTotal} entradas`;
-        const compartirUrl = folio
-            ? `${baseUrlSitio()}compartir-boleto.html?c=${encodeURIComponent(folio)}`
-            : 'boletos.html';
-        const fn = ordenCompra.fecha || 'EL GORILA';
-        const waTexto =
-            `Voy a ver EL GORILA — ${fn}. ${entradas}.\n` +
-            `Teatro Wilberto Cantón, CDMX\n${compartirUrl}`;
-        const waHref = `https://wa.me/?text=${encodeURIComponent(waTexto)}`;
         waContainer.innerHTML = `
-            <a href="${waHref}" target="_blank" rel="noopener"
+            <button type="button" id="btn-compartir-wa"
                class="flex items-center justify-center gap-2 w-full border border-green-600/50 bg-green-900/30 hover:bg-green-800/40 text-green-400 font-semibold py-3 rounded-xl transition-colors text-sm">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z M12 0C5.373 0 0 5.373 0 12c0 2.109.549 4.09 1.508 5.814L0 24l6.335-1.496A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.882 9.882 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374A9.858 9.858 0 012.106 12c0-5.455 4.44-9.894 9.894-9.894 5.455 0 9.894 4.439 9.894 9.894 0 5.455-4.439 9.894-9.894 9.894z"/></svg>
                 Compartir por WhatsApp · ${entradas}
-            </a>
-            <a href="${compartirUrl}"
-               class="flex items-center justify-center gap-2 w-full mt-2 border border-accent-gold/40 text-accent-gold font-semibold py-3 rounded-xl transition-colors text-sm">
-                Guardar imagen del boleto →
-            </a>`;
+            </button>
+            <p class="text-xs text-center text-text-dark/50 mt-2">Se abre WhatsApp con la imagen de tu boleto. También la recibirás por correo.</p>`;
         waContainer.classList.remove('hidden');
+        const btnWa = document.getElementById('btn-compartir-wa');
+        if (btnWa) {
+            btnWa.addEventListener('click', async function () {
+                btnWa.disabled = true;
+                const label = btnWa.innerHTML;
+                btnWa.textContent = 'Preparando boleto…';
+                try {
+                    if (window.ElGorilaCompartirWa) {
+                        await ElGorilaCompartirWa.compartirPorWhatsApp(ordenCompra);
+                    } else {
+                        throw new Error('Compartir no disponible');
+                    }
+                } catch (e) {
+                    if (e.name !== 'AbortError') {
+                        alert('No se pudo compartir. Revisa tu correo: ahí viene el boleto con QR.');
+                    }
+                } finally {
+                    btnWa.disabled = false;
+                    btnWa.innerHTML = label;
+                }
+            });
+        }
     }
+
+    void initGoogleWalletBtn();
 
     // QR único por folio (compra en línea)
     mostrarBoletoFolio();
 }
 
+async function initGoogleWalletBtn() {
+    const container = document.getElementById('btn-whatsapp-container');
+    const cert = ordenCompra && (ordenCompra.numeroOrden || ordenCompra.certificado);
+    if (!container || !cert || !/^CERT-/i.test(cert) || !window.API_BASE) return;
+
+    try {
+        const tid = typeof window.teatroIdFromUrl === 'function'
+            ? window.teatroIdFromUrl()
+            : (window.TEATRO_ID || 'wilberto');
+        const res = await fetch(`${window.API_BASE}/api/${tid}/venta/${encodeURIComponent(cert)}/wallet`);
+        const data = await res.json().catch(() => ({}));
+        if (!data.google?.ok || !data.google.saveUrl) return;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'flex items-center justify-center gap-2 w-full mt-2 border border-white/20 bg-black/40 hover:bg-black/60 text-white font-semibold py-3 rounded-xl transition-colors text-sm';
+        btn.innerHTML = '<span aria-hidden="true">📲</span> Agregar a Google Wallet';
+        btn.addEventListener('click', () => window.open(data.google.saveUrl, '_blank', 'noopener'));
+        container.appendChild(btn);
+    } catch { /* wallet opcional */ }
+}
+
 function mostrarBoletoFolio() {
-    const folio = ordenCompra && ordenCompra.numeroOrden;
-    if (!folio || !/^CERT-/i.test(folio)) {
+    const certOrden = ordenCompra && ordenCompra.numeroOrden;
+    if (!certOrden || !/^CERT-/i.test(certOrden)) {
         mostrarInfoCertificados();
         return;
     }
@@ -299,20 +340,22 @@ function mostrarBoletoFolio() {
     if (!certificadoInfo || !certificadosLista) return;
 
     const cantTotal = ordenCompra.cantidadTotal || ordenCompra.cantidad || 1;
+    const folioTaquilla = folioTaquillaOrden(ordenCompra);
     certificadoInfo.classList.remove('hidden');
     certificadosLista.innerHTML = `
         <div class="bg-black/30 border border-accent-gold/20 rounded-lg p-4 flex items-start gap-4">
             <div class="flex-shrink-0"><div id="qr-folio" class="w-24 h-24 bg-white p-2 rounded flex items-center justify-center"></div></div>
             <div class="flex-grow">
                 <p class="text-sm font-semibold text-white mb-1">${cantTotal === 1 ? '1 entrada' : cantTotal + ' entradas'}</p>
-                <p class="text-xs text-text-dark/80 font-mono mb-2">${folio}</p>
-                <a href="${baseUrlSitio()}compartir-boleto.html?c=${encodeURIComponent(folio)}" class="text-xs text-accent-gold hover:underline">Guardar o compartir →</a>
+                ${folioTaquilla ? `<p class="text-xs text-accent-gold font-mono mb-1">Folio taquilla: ${folioTaquilla}</p>` : ''}
+                <p class="text-xs text-text-dark/80 font-mono mb-2">${ordenCompra.numeroOrden}</p>
+                <p class="text-xs text-text-dark/80 mb-2">Presenta el QR en la entrada. También lo tienes en tu correo.</p>
             </div>
         </div>`;
 
     const qrCodigo = codigoQrBoleto(ordenCompra);
-    const url = `${baseUrlSitio()}verificar.html?codigo=${encodeURIComponent(qrCodigo)}`;
-    pintarQR(document.getElementById('qr-folio'), url, 88);
+    const qrData = window.ElGorilaQr ? window.ElGorilaQr.codigoQrPayload(qrCodigo) : qrCodigo;
+    pintarQR(document.getElementById('qr-folio'), qrData, 88);
 }
 
 // Mostrar información de certificados (modo simulado / legacy)
@@ -368,19 +411,17 @@ function mostrarInfoCertificados() {
                     <p class="text-sm font-semibold text-white">Boleto #${numeroBoleto}</p>
                 </div>
                 <p class="text-xs text-text-dark/80 font-mono mb-1">${codigoQR}</p>
-                <p class="text-xs text-text-dark/80">Certificado digital único</p>
-                <a href="verificar.html?codigo=${encodeURIComponent(codigoQR)}" 
-                   class="text-xs text-accent-gold hover:underline mt-2 inline-block">
-                    Verificar boleto →
-                </a>
+                <p class="text-xs text-text-dark/80">Presenta el QR en la entrada del teatro</p>
             </div>
         `;
         certificadosLista.appendChild(certificadoDiv);
 
         const qrContainer = document.getElementById(`qr-${index}`);
         if (qrContainer) {
-            const urlVerificacion = `${baseUrlSitio()}verificar.html?codigo=${encodeURIComponent(codigoQR)}`;
-            pintarQR(qrContainer, urlVerificacion, 80);
+            const payload = window.ElGorilaQr
+                ? window.ElGorilaQr.codigoQrPayload(codigoQR)
+                : codigoQR;
+            pintarQR(qrContainer, payload, 80);
         }
     });
 }

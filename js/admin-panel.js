@@ -356,7 +356,7 @@
       </tr></thead><tbody>${boletos}</tbody></table>
     </div>
     <p class="text-xs text-text-dark/50 mt-2">
-      <a href="compartir-boleto.html?c=${encodeURIComponent(cert)}" target="_blank" rel="noopener" class="text-primary underline">Abrir enlace compartir</a>
+      <a href="compartir-boleto.html?c=${encodeURIComponent(cert)}" target="_blank" rel="noopener" class="text-primary underline">Vista previa boleto (staff)</a>
     </p>`;
   }
 

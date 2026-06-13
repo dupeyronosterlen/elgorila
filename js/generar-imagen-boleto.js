@@ -1,16 +1,19 @@
 /**
- * Genera PNG del boleto en canvas — estilo programa v2 (540px ancho).
+ * Boleto vertical (9:16) — PNG / PDF para compartir, WhatsApp y taquilla.
+ * Folio interno visible para ubicar la venta en lista de puerta.
  */
 (function (global) {
   const W = 540;
-  const H = 780;
+  const H = 960;
+  const VENUE = 'Teatro Wilberto Cantón';
+  const DIRECCION = 'San José Insurgentes, CDMX';
 
   function loadImage(src) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('No se pudo cargar el logo.'));
+      img.onerror = () => reject(new Error('No se pudo cargar imagen: ' + src));
       img.src = src;
     });
   }
@@ -25,33 +28,57 @@
     return c;
   }
 
-  function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
     const words = (text || '').split(/\s+/);
     let line = '';
     let cy = y;
+    let lines = 0;
     for (let i = 0; i < words.length; i++) {
       const test = line + words[i] + ' ';
       if (ctx.measureText(test).width > maxWidth && line) {
         ctx.fillText(line.trim(), x, cy);
         line = words[i] + ' ';
         cy += lineHeight;
+        lines += 1;
+        if (maxLines && lines >= maxLines) return cy;
       } else {
         line = test;
       }
     }
-    if (line.trim()) ctx.fillText(line.trim(), x, cy);
+    if (line.trim()) {
+      ctx.fillText(line.trim(), x, cy);
+      cy += lineHeight;
+    }
     return cy;
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
   }
 
   /**
    * @param {object} opts
    * @param {string} opts.funcion
-   * @param {string} opts.entradas — "2 entradas" | "Entrada 1 de 3"
+   * @param {string} opts.entradas
    * @param {string} opts.modo — "certificado" | "individual"
-   * @param {string} opts.codigoLabel — "Certificado" | "Entrada"
+   * @param {string} opts.codigoLabel
    * @param {string} opts.codigo
-   * @param {string} opts.qrUrl — URL codificada en el QR (verificar)
+   * @param {string} [opts.folio] — folio taquilla (1300-260819-00001)
+   * @param {string} [opts.tipo]
+   * @param {string} [opts.seccion]
+   * @param {string} opts.qrUrl
    * @param {string} [opts.logoUrl]
+   * @param {string} [opts.arteUrl]
    */
   async function generar(opts) {
     if (typeof QRCode === 'undefined') throw new Error('QRCode no disponible.');
@@ -62,98 +89,160 @@
     const ctx = canvas.getContext('2d');
     ctx.scale(2, 2);
 
-    // Fondo v2
+    // ── Fondo base
     ctx.fillStyle = '#0a0706';
     ctx.fillRect(0, 0, W, H);
 
-    // Bloque papel inferior
-    ctx.fillStyle = '#f1ead9';
-    ctx.fillRect(0, H - 280, W, 280);
+    // ── Arte de fondo (portada / obra, sutil)
+    const arteUrl = opts.arteUrl || 'img/programa/portada-v4.jpg';
+    try {
+      const arte = await loadImage(arteUrl);
+      ctx.save();
+      ctx.globalAlpha = 0.22;
+      const ar = arte.width / arte.height;
+      const drawH = 420;
+      const drawW = drawH * ar;
+      const ax = (W - drawW) / 2;
+      ctx.drawImage(arte, ax, 0, drawW, drawH);
+      ctx.restore();
+      const grad = ctx.createLinearGradient(0, 0, 0, 480);
+      grad.addColorStop(0, 'rgba(10,7,6,0.15)');
+      grad.addColorStop(1, '#0a0706');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, 480);
+    } catch { /* sin arte */ }
 
-    // Logo
+    // ── Borde decorativo
+    ctx.strokeStyle = 'rgba(217,155,58,0.35)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(12, 12, W - 24, H - 24);
+    ctx.fillStyle = '#D43A1A';
+    ctx.fillRect(12, 12, W - 24, 3);
+
+    // ── Logo
     const logoUrl = opts.logoUrl || 'img/LOGO/1.jpg';
     try {
       const logo = await loadImage(logoUrl);
-      const lw = 72;
+      const lw = 56;
       const lh = (logo.height / logo.width) * lw;
       ctx.save();
-      ctx.beginPath();
-      ctx.rect(28, 28, lw, lh);
+      roundRect(ctx, 28, 36, lw, lh, 4);
       ctx.clip();
-      ctx.drawImage(logo, 28, 28, lw, lh);
+      ctx.drawImage(logo, 28, 36, lw, lh);
       ctx.restore();
-      ctx.strokeStyle = 'rgba(241,234,217,.15)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(28, 28, lw, lh);
-    } catch {
-      /* sin logo */
-    }
+    } catch { /* sin logo */ }
 
-    // Kicker
-    ctx.font = '500 10px "JetBrains Mono", monospace';
+    // ── Encabezado
+    ctx.font = '500 9px "JetBrains Mono", monospace';
     ctx.fillStyle = '#d99b3a';
-    ctx.fillText('BOLETO · EL GORILA · 2026', 28, 118);
+    ctx.fillText('EL GORILA · TEATRO 2026', 96, 52);
 
-    // Título
-    ctx.font = '500 44px Georgia, "Cormorant Garamond", serif';
+    ctx.font = '500 38px Georgia, "Cormorant Garamond", serif';
     ctx.fillStyle = '#f1ead9';
-    ctx.fillText('EL ', 28, 168);
+    ctx.fillText('EL ', 96, 92);
     const elW = ctx.measureText('EL ').width;
     ctx.fillStyle = '#D43A1A';
-    ctx.font = 'italic 500 44px Georgia, serif';
-    ctx.fillText('Gorila', 28 + elW, 168);
+    ctx.font = 'italic 500 38px Georgia, serif';
+    ctx.fillText('Gorila', 96 + elW, 92);
 
-    // Entradas
-    ctx.font = '400 22px Georgia, serif';
-    ctx.fillStyle = '#f1ead9';
-    ctx.fillRect(28, 182, 2, 36);
+    ctx.font = 'italic 400 18px Georgia, serif';
     ctx.fillStyle = '#d99b3a';
-    ctx.font = 'italic 400 22px Georgia, serif';
-    ctx.fillText(opts.entradas || '1 entrada', 40, 208);
+    ctx.fillText(opts.entradas || '1 entrada', 96, 118);
 
-    // Función (zona oscura)
-    ctx.fillStyle = 'rgba(241,234,217,.55)';
-    ctx.font = '500 9px "JetBrains Mono", monospace';
-    ctx.fillText('TU FUNCIÓN', 28, 248);
+    // ── Función
+    ctx.fillStyle = 'rgba(241,234,217,.5)';
+    ctx.font = '500 8px "JetBrains Mono", monospace';
+    ctx.fillText('FUNCIÓN', 28, 158);
     ctx.fillStyle = '#f1ead9';
-    ctx.font = '500 24px Georgia, serif';
-    wrapText(ctx, opts.funcion || '', 28, 272, W - 56, 28);
+    ctx.font = '500 22px Georgia, serif';
+    wrapText(ctx, opts.funcion || '', 28, 182, W - 56, 26, 3);
 
-    // QR en bloque papel
-    const qr = await qrCanvas(opts.qrUrl, 200);
-    const qrX = 28;
-    const qrY = H - 252;
+    ctx.fillStyle = 'rgba(241,234,217,.65)';
+    ctx.font = '400 14px Georgia, serif';
+    ctx.fillText(VENUE, 28, 268);
+    ctx.font = '400 12px Georgia, serif';
+    ctx.fillStyle = 'rgba(241,234,217,.45)';
+    ctx.fillText(DIRECCION, 28, 286);
+
+    if (opts.tipo || opts.seccion) {
+      ctx.font = '500 8px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#d99b3a';
+      const zona = [opts.tipo, opts.seccion].filter(Boolean).join(' · ').toUpperCase();
+      ctx.fillText(zona, 28, 308);
+    }
+
+    // ── Folio taquilla (destacado)
+    const folio = (opts.folio || '').trim();
+    if (folio) {
+      ctx.fillStyle = 'rgba(217,155,58,0.12)';
+      roundRect(ctx, 28, 322, W - 56, 52, 6);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(217,155,58,0.45)';
+      ctx.lineWidth = 1;
+      roundRect(ctx, 28, 322, W - 56, 52, 6);
+      ctx.stroke();
+      ctx.font = '500 8px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#d99b3a';
+      ctx.fillText('FOLIO TAQUILLA', 40, 342);
+      ctx.font = '600 20px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#f1ead9';
+      ctx.fillText(folio, 40, 366);
+    }
+
+    // ── Bloque papel + QR
+    const paperY = folio ? 392 : 320;
+    const paperH = H - paperY - 20;
     ctx.fillStyle = '#f1ead9';
-    ctx.fillRect(qrX - 4, qrY - 4, 208, 208);
+    ctx.fillRect(0, paperY, W, paperH);
+    ctx.fillStyle = '#e8dfc8';
+    ctx.fillRect(0, paperY, W, 2);
+
+    const qrSize = folio ? 220 : 240;
+    const qrY = paperY + 28;
+    const qrX = (W - qrSize) / 2;
+    const qr = await qrCanvas(opts.qrUrl, qrSize);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(qrX - 6, qrY - 6, qrSize + 12, qrSize + 12);
     ctx.strokeStyle = '#c9b896';
-    ctx.strokeRect(qrX - 4, qrY - 4, 208, 208);
-    ctx.drawImage(qr, qrX, qrY, 200, 200);
+    ctx.lineWidth = 1;
+    ctx.strokeRect(qrX - 6, qrY - 6, qrSize + 12, qrSize + 12);
+    ctx.drawImage(qr, qrX, qrY, qrSize, qrSize);
 
-    const tx = 250;
-    let ty = H - 240;
+    let ty = qrY + qrSize + 28;
+    ctx.textAlign = 'center';
+    ctx.font = '500 8px "JetBrains Mono", monospace';
     ctx.fillStyle = '#D43A1A';
-    ctx.font = '500 9px "JetBrains Mono", monospace';
-    ctx.fillText((opts.codigoLabel || 'CERTIFICADO').toUpperCase(), tx, ty);
-    ty += 22;
+    ctx.fillText((opts.codigoLabel || 'CERTIFICADO').toUpperCase(), W / 2, ty);
+    ty += 18;
     ctx.fillStyle = '#1a1411';
-    ctx.font = '500 11px "JetBrains Mono", monospace';
-    const codigoLines = (opts.codigo || '').match(/.{1,22}/g) || [''];
-    codigoLines.slice(0, 3).forEach(line => {
-      ctx.fillText(line, tx, ty);
-      ty += 16;
+    ctx.font = '500 10px "JetBrains Mono", monospace';
+    const codigoLines = (opts.codigo || '').match(/.{1,24}/g) || [''];
+    codigoLines.slice(0, 2).forEach(line => {
+      ctx.fillText(line, W / 2, ty);
+      ty += 14;
     });
-    ty += 8;
-    ctx.font = '400 15px Georgia, serif';
+    ty += 6;
+    ctx.font = '400 13px Georgia, serif';
     ctx.fillStyle = '#3a2e26';
     const hint = opts.modo === 'certificado'
-      ? 'Acceso a todas las entradas de esta compra.'
-      : 'Entrada individual · escanea en puerta.';
-    wrapText(ctx, hint, tx, ty, W - tx - 28, 20);
+      ? 'Presenta este QR en la entrada del teatro · válido para todas las entradas.'
+      : 'Presenta este QR en puerta · una persona por pase.';
+    wrapText(ctx, hint, W / 2 - (W - 80) / 2, ty, W - 80, 18, 2);
 
-    // Pie
+    ctx.textAlign = 'left';
+    ctx.font = '400 11px Georgia, serif';
     ctx.fillStyle = '#6b5c4a';
-    ctx.font = '400 13px Georgia, serif';
-    ctx.fillText('Teatro Wilberto Cantón · CDMX', 28, H - 24);
+    ctx.fillText('Llega 30 min antes · elgorilateatro.com.mx', 28, H - 28);
+
+    // Marca de agua sutil
+    ctx.save();
+    ctx.globalAlpha = 0.06;
+    ctx.font = 'italic 80px Georgia, serif';
+    ctx.fillStyle = '#D43A1A';
+    ctx.translate(W - 40, H - 120);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('K', 0, 0);
+    ctx.restore();
 
     return canvas;
   }
@@ -175,5 +264,41 @@
     });
   }
 
-  global.GenerarImagenBoleto = { generar, descargar, canvasToBlob };
+  function descargarPdf(canvas, filename) {
+    if (!global.jspdf?.jsPDF) {
+      return Promise.reject(new Error('Generador PDF no cargado.'));
+    }
+    const { jsPDF } = global.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'px',
+      format: [W, H],
+      compress: true,
+    });
+    const img = canvas.toDataURL('image/png', 1.0);
+    pdf.addImage(img, 'PNG', 0, 0, W, H, undefined, 'FAST');
+    pdf.save((filename || 'boleto').replace(/\.png$/i, '.pdf'));
+    return Promise.resolve();
+  }
+
+  /** Compartir / guardar en dispositivo (equivalente práctico a Wallet en móvil). */
+  async function guardarEnDispositivo(canvas, filename, titulo) {
+    const blob = await canvasToBlob(canvas);
+    const file = new File([blob], filename, { type: 'image/png' });
+    const texto = `${titulo || 'Mi boleto — EL GORILA'}\n${VENUE}`;
+    if (navigator.share) {
+      const payload = { title: titulo || 'EL GORILA', text: texto };
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ ...payload, files: [file] });
+        return;
+      }
+      await navigator.share(payload);
+      return;
+    }
+    await descargar(canvas, filename);
+  }
+
+  global.GenerarImagenBoleto = {
+    generar, descargar, descargarPdf, canvasToBlob, guardarEnDispositivo,
+  };
 })(window);

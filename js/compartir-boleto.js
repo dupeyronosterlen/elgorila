@@ -22,6 +22,11 @@
     return `${baseUrl()}verificar.html?codigo=${encodeURIComponent(codigo)}`;
   }
 
+  function qrPayload(codigo) {
+    if (window.ElGorilaQr) return window.ElGorilaQr.codigoQrPayload(codigo);
+    return (codigo || '').trim().toUpperCase();
+  }
+
   function urlCompartir(codigo) {
     return `${baseUrl()}compartir-boleto.html?c=${encodeURIComponent(codigo)}`;
   }
@@ -59,7 +64,8 @@
       codigoLabel: 'Certificado',
       modo: 'certificado',
       entradas: entradasLabel(n),
-      qrCodigo: certificado,
+      qrCodigo: n === 1 && boletos[0]?.cert ? boletos[0].cert : certificado,
+      folio: boletos.map(b => b.folio).filter(Boolean).join(' · ') || null,
     });
 
     boletos.forEach((b, i) => {
@@ -73,7 +79,9 @@
           ? `Entrada ${b.numero || i + 1} de ${boletos.length}`
           : '1 entrada',
         qrCodigo: b.cert,
+        folio: b.folio || null,
         tipo: b.tipo,
+        seccion: b.seccion,
       });
     });
 
@@ -84,6 +92,50 @@
     return lista;
   }
 
+  function walletCodigo(modo) {
+    return modo.modo === 'certificado'
+      ? (ventaState.certificado || ventaState.codigo)
+      : modo.codigo;
+  }
+
+  function walletBoletoIdx(modo) {
+    if (modo.modo !== 'individual') return null;
+    const i = modos.indexOf(modo);
+    return i > 0 ? i - 1 : 0;
+  }
+
+  async function actualizarWallet(modo) {
+    const btnG = document.getElementById('btn-google-wallet');
+    const btnA = document.getElementById('btn-apple-wallet');
+    if (!btnG || !btnA || !window.API_BASE) return;
+
+    btnG.disabled = true;
+    btnA.disabled = true;
+    btnG.removeAttribute('data-url');
+    btnA.removeAttribute('data-url');
+
+    try {
+      const tid = window.teatroIdActivo ? window.teatroIdActivo() : 'wilberto';
+      const codigo = walletCodigo(modo);
+      const idx = walletBoletoIdx(modo);
+      const q = idx != null ? `?boleto=${idx}` : '';
+      const res = await fetch(`${window.API_BASE}/api/${tid}/venta/${encodeURIComponent(codigo)}/wallet${q}`);
+      const data = await res.json().catch(() => ({}));
+
+      if (data.google?.ok && data.google.saveUrl) {
+        btnG.disabled = false;
+        btnG.dataset.url = data.google.saveUrl;
+      }
+      if (data.apple?.ok && data.apple.saveUrl) {
+        btnA.disabled = false;
+        btnA.dataset.url = data.apple.saveUrl;
+      } else if (data.configured?.apple) {
+        btnA.disabled = false;
+        btnA.title = data.apple?.error || 'Apple Wallet';
+      }
+    } catch { /* wallet opcional */ }
+  }
+
   async function renderImagen(modo) {
     if (!window.GenerarImagenBoleto) throw new Error('Generador de imagen no cargado.');
     const canvas = await GenerarImagenBoleto.generar({
@@ -92,14 +144,20 @@
       modo: modo.modo,
       codigoLabel: modo.codigoLabel,
       codigo: modo.codigo,
-      qrUrl: urlVerificar(modo.qrCodigo),
+      folio: modo.folio,
+      tipo: modo.tipo,
+      seccion: modo.seccion,
+      qrUrl: qrPayload(modo.qrCodigo),
       logoUrl: 'img/LOGO/1.jpg',
+      arteUrl: 'img/programa/portada-v4.jpg',
     });
     canvasActual = canvas;
     document.getElementById('preview-img').src = canvas.toDataURL('image/png');
-    document.getElementById('modo-hint').textContent = modo.modo === 'certificado'
-      ? 'El QR del certificado valida todas las entradas de esta compra en puerta.'
-      : 'QR de entrada individual — una persona por imagen.';
+    const folioHint = modo.folio ? ` Folio taquilla: ${modo.folio}.` : '';
+    document.getElementById('modo-hint').textContent = (modo.modo === 'certificado'
+      ? 'Presenta el QR en la entrada del teatro — válido para todas las entradas.'
+      : 'Presenta este QR en puerta — una persona por pase.') + folioHint;
+    await actualizarWallet(modo);
     return canvas;
   }
 
@@ -188,13 +246,14 @@
   async function init(venta) {
     ventaState = venta;
     modos = construirModos(venta);
-    modoActivo = 0;
+    // 1 boleto → pestaña individual (folio taquilla + QR de entrada)
+    modoActivo = modos.length > 1 ? 1 : 0;
 
     document.getElementById('estado-carga').classList.add('hidden');
     document.getElementById('contenido').classList.remove('hidden');
 
     renderTabs();
-    await renderImagen(modos[0]);
+    await renderImagen(modos[modoActivo]);
 
     document.getElementById('btn-guardar').addEventListener('click', async function () {
       const btn = this;
@@ -202,12 +261,56 @@
       try {
         const modo = modos[modoActivo];
         if (!canvasActual) await renderImagen(modo);
-        await GenerarImagenBoleto.descargar(canvasActual, nombreArchivo(modo));
+        await GenerarImagenBoleto.guardarEnDispositivo(
+          canvasActual,
+          nombreArchivo(modo),
+          `EL GORILA — ${modo.entradas}`,
+        );
       } catch (e) {
-        alert(e.message || 'No se pudo guardar.');
+        if (e.name !== 'AbortError') alert(e.message || 'No se pudo guardar.');
       } finally {
         btn.disabled = false;
       }
+    });
+
+    document.getElementById('btn-pdf').addEventListener('click', async function () {
+      const btn = this;
+      btn.disabled = true;
+      try {
+        const modo = modos[modoActivo];
+        if (!canvasActual) await renderImagen(modo);
+        await GenerarImagenBoleto.descargarPdf(canvasActual, nombreArchivo(modo));
+      } catch (e) {
+        alert(e.message || 'No se pudo crear el PDF.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('btn-png').addEventListener('click', async function () {
+      const btn = this;
+      btn.disabled = true;
+      try {
+        const modo = modos[modoActivo];
+        if (!canvasActual) await renderImagen(modo);
+        await GenerarImagenBoleto.descargar(canvasActual, nombreArchivo(modo));
+      } catch (e) {
+        alert(e.message || 'No se pudo descargar.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('btn-google-wallet')?.addEventListener('click', function () {
+      const url = this.dataset.url;
+      if (url) window.open(url, '_blank', 'noopener');
+      else alert('Google Wallet aún no está configurado en el servidor.');
+    });
+
+    document.getElementById('btn-apple-wallet')?.addEventListener('click', function () {
+      const url = this.dataset.url;
+      if (url) window.location.href = url;
+      else alert('Apple Wallet: configura los certificados Pass Type ID en Cloudflare (APPLE_PASS_*).');
     });
 
     document.getElementById('btn-wa').addEventListener('click', async function () {

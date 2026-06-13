@@ -95,3 +95,38 @@ SEPTIEMBRE 2026
   1. Activar en scripts/init-funciones.js
   2. Subir wilberto:funciones:activas a KV
   3. Cada fecha nueva arranca con 325 disponibles automáticamente
+
+
+BOLETO PARA EL PÚBLICO (sin «verificar en línea»)
+──────────────────────────────────────────────────
+  · El QR del correo / confirmación / imagen = solo el código CERT (ej. CERT-6787…).
+  · Puerta escanea ese QR con verificar.html (solo staff).
+  · El público NO debe abrir verificar.html — mensaje: «Presenta el QR en la entrada».
+  · Compartir: botón WhatsApp en confirmación (imagen + texto, sin subpágina).
+  · compartir-boleto.html solo para staff/admin (vista previa).
+
+
+WALLET (Google + Apple) — secrets en Cloudflare Worker
+──────────────────────────────────────────────────────
+  Endpoint: GET /api/wilberto/venta/{CERT}/wallet?boleto=N
+  Botones en compartir-boleto.html (se activan al configurar secrets).
+
+  GOOGLE WALLET (recomendado primero)
+    1. Google Pay & Wallet Console → crear emisor → anotar Issuer ID
+    2. Crear clase genérica: {issuerId}.elgorila_boleto
+    3. Service Account con rol «Wallet Object Issuer» → descargar JSON
+    4. wrangler secret put GOOGLE_WALLET_ISSUER_ID   → 3388000000023157310 (ya en Worker)
+    5. wrangler secret put GOOGLE_WALLET_SA_JSON   (JSON service account)
+       O: ./scripts/setup-google-wallet-secrets.sh /ruta/al.json
+    6. wrangler deploy
+
+  APPLE WALLET (cuenta developer Apple)
+    1. Certificates → Pass Type ID (ej. pass.com.elgorilateatro.boleto)
+    2. Generar certificado .p12 + descargar WWDR G4
+    3. Secrets:
+         APPLE_PASS_TYPE_ID
+         APPLE_TEAM_ID
+         APPLE_PASS_P12_BASE64   (base64 del .p12)
+         APPLE_PASS_P12_PASSWORD
+         APPLE_WWDR_PEM          (contenido del certificado WWDR)
+    4. Falta implementar firma .pkpass en worker (Apple aún en stub)
