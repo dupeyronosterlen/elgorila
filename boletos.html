@@ -1365,6 +1365,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script src="js/utm.js"></script>
 <script src="js/config.js"></script>
+<script>
+(function() {
+  if (window.VENTA_PUBLICA_ABIERTA !== false) return;
+  var q = new URLSearchParams(window.location.search);
+  if (q.get('preview') === '1' || q.get('dev') === '1') return;
+  window.location.replace(window.INSTAGRAM_BOLETOS_URL || 'https://www.instagram.com/elgorilateatro');
+})();
+</script>
 <script src="js/inventario.js"></script>
 <script src="js/fechas.js"></script>
 <script src="js/imagenes.js"></script>

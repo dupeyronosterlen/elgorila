@@ -1,0 +1,97 @@
+═══════════════════════════════════════════════════════════════════════════════
+  EL GORILA — Capacidad y límites de venta
+  Teatro Wilberto Cantón · Temporada 2026
+  Actualizado: junio 2026
+═══════════════════════════════════════════════════════════════════════════════
+
+NÚMEROS OFICIALES (SOGEM / recinto)
+───────────────────────────────────
+  Total por función .............. 325 butacas
+  Platea (abajo) ................. 250  ← venta principal
+  Galería (arriba) ...............  75  ← solo cuando platea = 0
+
+  Precio general ................. $350 MXN
+  INAPAM / Estudiante / Maestro .. $245 MXN (credencial en puerta)
+
+
+CÓMO FUNCIONA LA VENTA (para todo el equipo)
+────────────────────────────────────────────
+  1. Cada MIÉRCOLES tiene su propio cupo de 325 (inventario independiente).
+  2. El sitio y la boletera NO pueden vender más allá del cupo: el Worker rechaza
+     la compra con «No hay suficientes lugares».
+  3. La galería NO se vende en línea mientras quede platea.
+  4. Tras pagar (Stripe o efectivo en boletera), el sistema emite:
+       · CERT-ORD-…  (orden / compartir / invitaciones)
+       · CERT-…      (cada boleto individual)
+       · Folio puerta (solo staff, en admin o verificar)
+  5. No hay «certificados infinitos»: 1 certificado = 1 boleto pagado y contado
+     en el inventario de esa fecha.
+
+
+DÓNDE VER DISPONIBILIDAD
+────────────────────────
+  · Público: boletos.html (solo muestra si hay lugares, no el número exacto)
+  · Boletera: boletera.html → elige fecha → platea / galería / vendidos
+  · Admin: admin.html → Teatros → Wilberto → función → tabla ventas + CSV
+  · Script técnico: node scripts/verify-capacidad.js
+
+
+QUIÉN DEBE SABER QUÉ
+────────────────────
+  Producción / teatro .......... 325 total · platea primero · galería al final
+  Taquilla ..................... boletera.html · no vender si dice sin cupo
+  Reclamos ..................... admin → reenviar boleto (no crea cupo extra)
+  Marketing / agencia .......... no prometer más de 325 por función
+  Técnico ...................... KV Cloudflare + Worker (ver abajo)
+
+
+CLOUDFLARE — QUÉ REVISAR (checklist operativo)
+──────────────────────────────────────────────
+  A) PAGES (sitio elgorilateatro.com.mx)
+     Dashboard → Workers & Pages → proyecto del sitio → Deployments
+     · Debe haber deploy reciente tras push a GitHub (main)
+     · Si no hay CI: Deploy manual o conectar repo dupeyronosterlen/elgorila
+
+  B) WORKER (API elgorila-api)
+     Workers & Pages → elgorila-api → Deployments
+     · Versión activa reciente (panel reclamos, cupones, etc.)
+     · Deploy local: npx wrangler deploy
+
+  C) KV — INVENTARIO (namespace 5c1712aba9…)
+     Claves importantes:
+       wilberto:config ............... platea 250 + galeria 75 (325)
+       wilberto:funciones:activas .... fechas jul–ago (y sep inactivas)
+       wilberto:funcion:2026-07-08 ... inventario de ESA fecha (vendidos/reservados)
+
+     Actualizar config si cambian butacas:
+       node scripts/init-config.js wilberto > /tmp/wilberto-config.json
+       npx wrangler kv key put "wilberto:config" --binding INVENTARIO \
+         --path /tmp/wilberto-config.json --remote
+
+  D) KV — VENTAS (namespace 1a9c033a4…)
+     · ventas, certificados, índices — no tocar manualmente salvo emergencia
+
+  E) SECRETS (Worker → Settings → Variables and Secrets)
+     Obligatorios: JWT_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
+                   RESEND_API_KEY, ADMIN_* (usuarios)
+     Opcionales: REPORTE_TOKEN, MAKE_WEBHOOK_URL
+
+  F) STRIPE
+     Webhook → checkout.session.completed + expired → URL del Worker /api/webhook
+
+
+VERIFICACIÓN RÁPIDA (técnico)
+─────────────────────────────
+  node scripts/verify-sistema.js
+  node scripts/verify-capacidad.js
+
+  curl https://elgorila-api.dupeyronosterlen.workers.dev/api/health
+  → {"status":"ok","version":"3.0"}
+
+
+SEPTIEMBRE 2026
+───────────────
+  Hay 5 fechas en KV con activa: false. Cuando producción confirme:
+  1. Activar en scripts/init-funciones.js
+  2. Subir wilberto:funciones:activas a KV
+  3. Cada fecha nueva arranca con 325 disponibles automáticamente

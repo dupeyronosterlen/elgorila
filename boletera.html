@@ -103,17 +103,7 @@
 
   <main class="bol-main">
 
-    <!-- 1. DISPONIBILIDAD -->
-    <div class="bol-card">
-      <h2 class="bol-card-title">Disponibilidad</h2>
-      <div class="bol-card-rule"></div>
-      <span class="sec-label">Funciones activas</span>
-      <div id="disponibilidad-fechas">
-        <p style="font-family:var(--mono,monospace);font-size:11px;color:var(--d-soft);letter-spacing:.1em;">Cargando…</p>
-      </div>
-    </div>
-
-    <!-- 2. VENTA MANUAL (EFECTIVO) -->
+    <!-- 1. VENTA MANUAL (EFECTIVO) -->
     <div class="bol-card">
       <h2 class="bol-card-title">Venta manual — efectivo</h2>
       <div class="bol-card-rule"></div>
@@ -201,6 +191,32 @@
       </div>
     </div>
 
+    <!-- 2. LISTA VISITANTES — check-in manual -->
+    <div class="bol-card">
+      <h2 class="bol-card-title">Lista de visitantes — check-in</h2>
+      <div class="bol-card-rule"></div>
+      <span class="sec-label">Por función · valida por nombre o folio · entrada individual si no llegan juntos</span>
+
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div>
+          <label class="form-label" for="lista-funcion">Función</label>
+          <select id="lista-funcion" class="form-select">
+            <option value="">Cargando…</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label" for="lista-buscar">Buscar nombre o folio</label>
+          <input type="search" id="lista-buscar" class="form-input"
+                 placeholder="Nombre, CERT o folio interno…">
+        </div>
+      </div>
+
+      <p id="lista-resumen" class="sec-label" style="margin-bottom:10px;">—</p>
+      <div id="lista-grupos" class="lista-grupos">
+        <p style="font-family:var(--mono,monospace);font-size:11px;color:var(--d-soft);">Selecciona una función…</p>
+      </div>
+    </div>
+
     <!-- 3. VENTAS MANUALES HOY -->
     <div class="bol-card">
       <h2 class="bol-card-title">Ventas manuales hoy</h2>
@@ -220,6 +236,16 @@
             <tr><td colspan="5" style="text-align:center;color:var(--d-faint);font-family:var(--mono);font-size:10px;letter-spacing:.18em;">Sin registros hoy</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- 4. DISPONIBILIDAD (325 butacas) -->
+    <div class="bol-card">
+      <h2 class="bol-card-title">Disponibilidad — 325 butacas</h2>
+      <div class="bol-card-rule"></div>
+      <span class="sec-label">250 platea + 75 galería · todas las funciones activas</span>
+      <div id="disponibilidad-fechas">
+        <p style="font-family:var(--mono,monospace);font-size:11px;color:var(--d-soft);letter-spacing:.1em;">Cargando…</p>
       </div>
     </div>
 
@@ -286,7 +312,125 @@ async function _boletaIniciar() {
     _boletaCargarDisponibilidad(),
     _boletaCargarTablaDia(),
     _boletaLlenarSelectFunciones(),
+    _boletaCargarListaFunciones(),
   ]);
+  document.getElementById('lista-funcion')?.addEventListener('change', () => _boletaCargarListaPuerta());
+  document.getElementById('lista-buscar')?.addEventListener('input', () => _boletaFiltrarLista());
+}
+
+/* ── Lista visitantes / check-in ─────────────────────────── */
+const _GRUPO_COLORS = ['#D43A1A', '#2563eb', '#16a34a', '#d97706', '#7c3aed', '#0891b2', '#db2777'];
+let _listaGruposRaw = [];
+
+function _colorGrupo(cert) {
+  let h = 0;
+  for (let i = 0; i < (cert || '').length; i++) h = (h + cert.charCodeAt(i) * (i + 1)) % _GRUPO_COLORS.length;
+  return _GRUPO_COLORS[h];
+}
+
+function _boletaToken() {
+  return typeof AuthManager !== 'undefined' ? AuthManager.obtenerAdminToken() : null;
+}
+
+async function _boletaCargarListaFunciones() {
+  const sel = document.getElementById('lista-funcion');
+  if (!sel) return;
+  try {
+    const res = await fetch(window.teatroApi('funciones'));
+    if (!res.ok) return;
+    const fns = await res.json();
+    sel.innerHTML = fns.map(f =>
+      `<option value="${f.fecha_iso}">${f.nombre || f.fecha_iso}</option>`
+    ).join('');
+    if (fns.length) await _boletaCargarListaPuerta();
+  } catch { sel.innerHTML = '<option value="">—</option>'; }
+}
+
+function _boletaRenderGrupos(grupos) {
+  const cont = document.getElementById('lista-grupos');
+  if (!cont) return;
+  if (!grupos.length) {
+    cont.innerHTML = '<p style="color:var(--d-soft);font-size:14px;">Sin ventas para esta función.</p>';
+    return;
+  }
+  cont.innerHTML = grupos.map(g => {
+    const color = _colorGrupo(g.certificado);
+    const pend = (g.boletos || []).filter(b => !b.usado).length;
+    const total = (g.boletos || []).length;
+    const boletosHtml = (g.boletos || []).map(b => `
+      <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0" title="Toca para marcar ingreso">
+        <div>
+          <div class="lista-boleto-folio">${b.folio || b.cert}</div>
+          <div class="lista-boleto-meta">${b.tipo || 'entrada'} · #${b.numero || '—'}</div>
+        </div>
+        <div class="lista-boleto-check" aria-hidden="true">${b.usado ? '✓' : ''}</div>
+      </div>`).join('');
+    return `
+      <div class="lista-grupo" style="border-left-color:${color}">
+        <p class="lista-grupo-nombre">${g.nombre || '—'} <span style="font-size:12px;color:var(--d-soft);">(${pend}/${total} pendientes)</span></p>
+        <p class="lista-grupo-cert">${g.certificado}</p>
+        ${boletosHtml}
+      </div>`;
+  }).join('');
+  cont.querySelectorAll('.lista-boleto:not(.usado)').forEach(el => {
+    el.onclick = () => _boletaCanjear(el.dataset.cert);
+  });
+}
+
+function _boletaFiltrarLista() {
+  const q = (document.getElementById('lista-buscar')?.value || '').trim().toLowerCase();
+  if (!q) { _boletaRenderGrupos(_listaGruposRaw); return; }
+  const filtrados = _listaGruposRaw.filter(g => {
+    const nombre = (g.nombre || '').toLowerCase();
+    const cert = (g.certificado || '').toLowerCase();
+    const email = (g.email || '').toLowerCase();
+    if (nombre.includes(q) || cert.includes(q) || email.includes(q)) return true;
+    return (g.boletos || []).some(b =>
+      (b.folio || '').toLowerCase().includes(q) ||
+      (b.cert || '').toLowerCase().includes(q)
+    );
+  });
+  _boletaRenderGrupos(filtrados);
+}
+
+async function _boletaCargarListaPuerta() {
+  const cont = document.getElementById('lista-grupos');
+  const resumen = document.getElementById('lista-resumen');
+  const fecha = document.getElementById('lista-funcion')?.value;
+  const token = _boletaToken();
+  if (!cont || !fecha || !token) return;
+
+  cont.innerHTML = '<p style="color:var(--d-soft);font-size:14px;">Cargando lista…</p>';
+  try {
+    const res = await fetch(window.teatroAdminApi(`lista-puerta?fecha=${encodeURIComponent(fecha)}`), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error');
+
+    _listaGruposRaw = data.grupos || [];
+    if (resumen) {
+      resumen.textContent = `${data.ingresados || 0} / ${data.total || 0} ingresados · ${data.pendientes || 0} pendientes`;
+    }
+    _boletaFiltrarLista();
+  } catch (e) {
+    cont.innerHTML = `<p style="color:#f87171;">${e.message}</p>`;
+  }
+}
+
+async function _boletaCanjear(cert) {
+  if (!cert || !confirm(`¿Marcar ingreso de ${cert}?`)) return;
+  const token = _boletaToken();
+  if (!token) return;
+  try {
+    const res = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(cert)}`), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'No se pudo marcar'); return; }
+    await _boletaCargarListaPuerta();
+  } catch { alert('Error de conexión'); }
 }
 
 /* Disponibilidad */
@@ -302,12 +446,14 @@ async function _boletaCargarDisponibilidad() {
       return;
     }
     cont.innerHTML = fns.map(f => {
-      const disp = typeof f.disponibles === 'number'
-        ? f.disponibles
-        : Math.max(0, (f.capacidad || 0) - (f.vendidos || 0));
-      const cls  = disp > 0 ? 'fecha-card-disponible' : 'fecha-card-agotada';
-      const zona = f.galeria_abierta ? ' · galería abierta' : '';
-      const txt  = disp > 0 ? disp + ' disponibles' + zona : 'Agotada';
+      const dispFn = typeof window.disponiblesAforoTotal === 'function'
+        ? window.disponiblesAforoTotal(f)
+        : (typeof f.disponibles === 'number'
+          ? f.disponibles
+          : Math.max(0, (f.capacidad || 325) - (f.vendidos || 0)));
+      const cls  = dispFn > 0 ? 'fecha-card-disponible' : 'fecha-card-agotada';
+      const zona = f.galeria_abierta ? ' · venta galería' : '';
+      const txt  = dispFn > 0 ? dispFn + ' disponibles (total)' + zona : 'Agotada';
       const secs = f.secciones || {};
       let desglose = '';
       if (secs.platea) {
@@ -318,10 +464,11 @@ async function _boletaCargarDisponibilidad() {
           `Galería: ${secs.galeria.disponibles ?? '—'} disp. · ${secs.galeria.vendidos || 0} vend.`;
       }
       if (f.reservados) desglose += (desglose ? '<br>' : '') + `${f.reservados} en carrito web`;
+      const cap = f.capacidad || (typeof window.AFORO_TOTAL_WILBERTO === 'number' ? window.AFORO_TOTAL_WILBERTO : 325);
       return `<div class="fecha-card">
         <div class="fecha-card-nombre">${f.nombre || f.fecha_iso}</div>
         <div class="fecha-card-dato ${cls}">${txt}</div>
-        <div class="fecha-card-dato">${f.vendidos || 0} vendidos · cap. ${f.capacidad || '—'}</div>
+        <div class="fecha-card-dato">${f.vendidos || 0} vendidos · cap. ${cap}</div>
         ${desglose ? `<div class="fecha-card-dato" style="font-size:13px;margin-top:4px;">${desglose}</div>` : ''}
       </div>`;
     }).join('');
@@ -428,7 +575,7 @@ async function generarCodigoEfectivo() {
     }
 
     document.getElementById('form-efectivo')?.reset();
-    await Promise.all([_boletaCargarDisponibilidad(), _boletaCargarTablaDia()]);
+    await Promise.all([_boletaCargarDisponibilidad(), _boletaCargarTablaDia(), _boletaCargarListaPuerta()]);
   } catch (_) {
     if (errEl) { errEl.textContent = 'Error de conexión.'; errEl.style.display = 'block'; }
   } finally {

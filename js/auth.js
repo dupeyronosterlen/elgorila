@@ -78,7 +78,7 @@ const AuthManager = {
         },
         taquilla: {
             verInventario: true, verVentas: true, verFiscal: false, fiscalReset: false,
-            venderEfectivo: true, verificarBoletos: false, verificarPorNombre: false,
+            venderEfectivo: true, verificarBoletos: true, verificarPorNombre: true,
             reagendar: false, reembolsar: false, exportarDatos: false, verAuditoria: false,
             reenviarBoleto: false, corregirEmail: false,
             gestionarEquipo: false, editarSitio: false, accesoAdmin: false,

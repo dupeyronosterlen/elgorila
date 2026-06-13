@@ -58,6 +58,20 @@ const codigos = {
     agencia:        'NO ads · enlace personal post-función (invitacion.html)',
   },
 
+  // ── QA Stripe (1 boleto general = $10 MXN — mínimo Stripe) ─────────────────
+  PRUEBA99: {
+    tipo:           'par_fijo',
+    nombre:         'Prueba QA ($10)',
+    total_mxn:      10,
+    min_general:    1,
+    solo_generales: true,
+    activo:         true,
+    max_usos:       100,
+    expira:         '2026-07-31',
+    solo_prueba:    true,
+    agencia:        'Solo pruebas internas · 1 general = $10 · expira 31 jul 2026 · NO ads',
+  },
+
   // QA interno — NO incluir en KV de producción desde este repo. Crear manualmente en Cloudflare si hace falta.
   // WILQA7K2M9X4P8N3: { porcentaje: 99, nombre: 'Prueba interna', activo: false, max_usos: 100, solo_prueba: true },
 

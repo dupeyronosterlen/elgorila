@@ -121,11 +121,10 @@ async function checkRateLimit(ip, env) {
 
 // ─── EMAIL VÍA RESEND ────────────────────────────────────────────────────────
 
-async function enviarEmail(to, subject, html, env, opts = {}) {
-  if (!env.RESEND_API_KEY) { console.error('RESEND_API_KEY no configurada'); return false; }
+async function _enviarEmailResend(to, subject, html, env, from, opts = {}) {
   try {
     const payload = {
-      from:     'El Gorila Teatro <boletos@elgorilateatro.com.mx>',
+      from,
       to,
       subject,
       html,
@@ -136,9 +135,54 @@ async function enviarEmail(to, subject, html, env, opts = {}) {
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload),
     });
-    if (!res.ok) { console.error('Resend error', res.status, await res.text()); return false; }
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error('Resend error', res.status, to, from, errBody);
+      return false;
+    }
     return true;
-  } catch (e) { console.error('enviarEmail exception:', e.message); return false; }
+  } catch (e) { console.error('enviarEmail exception:', to, e.message); return false; }
+}
+
+async function enviarEmail(to, subject, html, env, opts = {}) {
+  if (!env.RESEND_API_KEY) { console.error('RESEND_API_KEY no configurada'); return false; }
+  // Sin EMAIL_FROM verificado en Resend → sandbox (solo destinos permitidos por la cuenta).
+  // Tras verificar elgorilateatro.com.mx en resend.com/domains, define secret EMAIL_FROM:
+  //   El Gorila Teatro <boletos@elgorilateatro.com.mx>
+  const verifiedFrom = 'El Gorila Teatro <boletos@elgorilateatro.com.mx>';
+  const primaryFrom  = env.EMAIL_FROM || verifiedFrom;
+  if (await _enviarEmailResend(to, subject, html, env, primaryFrom, opts)) return true;
+  if (primaryFrom !== verifiedFrom) {
+    return _enviarEmailResend(to, subject, html, env, verifiedFrom, opts);
+  }
+  // Dominio aún no verificado en Resend → sandbox (solo destinos permitidos en resend.com).
+  const sandboxFrom = 'El Gorila Teatro <onboarding@resend.dev>';
+  if (primaryFrom !== sandboxFrom) {
+    return _enviarEmailResend(to, subject, html, env, sandboxFrom, opts);
+  }
+  return false;
+}
+
+async function enviarEmailsVenta(venta, tid, env) {
+  const config        = await getVenueConfig(tid, env);
+  const funcionNombre = venta.funcionNombre || venta.fecha;
+  const codigoVenta   = venta.certificado || venta.codigo;
+  const adminOk       = await enviarEmail(
+    'elgorilateatro@gmail.com',
+    `[GORILA] Venta ${codigoVenta} — ${config.nombre}`,
+    htmlAvisoAdmin(venta, funcionNombre, config),
+    env,
+  );
+  let compradorOk = false;
+  if (venta.email) {
+    compradorOk = await enviarEmail(
+      venta.email,
+      `Tu lugar — EL GORILA · ${funcionNombre}`,
+      htmlBoleto(venta, funcionNombre, config),
+      env,
+    );
+  }
+  return { adminOk, compradorOk };
 }
 
 function urlVerificarBoleto(codigo) {
@@ -555,6 +599,14 @@ function normalizeInventario(raw, config) {
       inv.secciones.platea = inv.secciones.general;
       delete inv.secciones.general;
     }
+    // Sincronizar totales desde config (325 = 250 platea + 75 galería) sin tocar vendidos/reservados
+    for (const s of cfgSecs) {
+      if (!inv.secciones[s.id]) {
+        inv.secciones[s.id] = { total: s.total, vendidos: 0, reservados: 0 };
+      } else {
+        inv.secciones[s.id].total = s.total;
+      }
+    }
     if (!inv.holds) inv.holds = {};
     return inv;
   }
@@ -916,6 +968,12 @@ function disponiblesSeccion(inv, secId, config) {
   return Math.max(0, sInv.total - (sInv.vendidos || 0) - (sInv.reservados || 0));
 }
 
+/** Cupo restante en todo el teatro (platea + galería). Uso interno / taquilla. */
+function sumDisponiblesSecciones(seccionesMap) {
+  if (!seccionesMap || typeof seccionesMap !== 'object') return 0;
+  return Object.values(seccionesMap).reduce((s, x) => s + (x.disponibles ?? 0), 0);
+}
+
 async function reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, ctx) {
   const config = await getVenueConfig(tid, env);
   for (let intento = 0; intento < 3; intento++) {
@@ -1102,7 +1160,7 @@ const PUEDE_REENVIAR     = new Set(['admin', 'gerente', 'reclamos']);
 const PUEDE_CORREGIR_EMAIL = new Set(['admin', 'reclamos']);
 const PUEDE_FISCAL_VER = new Set(['admin', 'gerente']);
 const PUEDE_AUDITORIA  = new Set(['admin', 'gerente']);
-const PUEDE_CANJEAR    = new Set(['admin', 'gerente', 'validacion']);
+const PUEDE_CANJEAR    = new Set(['admin', 'gerente', 'taquilla', 'validacion']);
 const PUEDE_CANJEAR_LOTE = new Set(['admin', 'gerente', 'taquilla']);
 
 // ─── HANDLER: VALIDAR CUPÓN (público, rate-limited) ───────────────────────────
@@ -1198,6 +1256,8 @@ async function handleFunciones(tid, request, env) {
       const plateaDisp  = secciones.platea?.disponibles ?? 0;
       const galeriaDisp = secciones.galeria?.disponibles ?? 0;
       const galeriaAbierta = !!secciones.galeria && plateaDisp === 0 && galeriaDisp > 0;
+      const disponibles_total = sumDisponiblesSecciones(secciones);
+      // comprables_ahora: solo la zona en venta (platea hasta agotar, luego galería)
       const disponibles = galeriaAbierta
         ? galeriaDisp
         : (plateaDisp || Math.max(0, capacidad - vendidos - reservados));
@@ -1209,6 +1269,7 @@ async function handleFunciones(tid, request, env) {
         vendidos,
         reservados,
         disponibles,
+        disponibles_total,
         galeria_abierta: galeriaAbierta,
         secciones,
       };
@@ -1253,6 +1314,7 @@ async function handleDisponibilidad(tid, request, env) {
   const plateaDisp  = seccionesDisp.platea?.disponibles ?? 0;
   const galeriaDisp = seccionesDisp.galeria?.disponibles ?? 0;
   const galeriaAbierta = !!seccionesDisp.galeria && plateaDisp === 0 && galeriaDisp > 0;
+  const disponibles_total = sumDisponiblesSecciones(seccionesDisp);
 
   return json({
     fecha,
@@ -1260,6 +1322,7 @@ async function handleDisponibilidad(tid, request, env) {
     bloqueado:      inv.bloqueado || false,
     galeria_abierta: galeriaAbierta,
     disponibles:    galeriaAbierta ? galeriaDisp : (plateaDisp || Object.values(seccionesDisp).reduce((s, x) => s + x.disponibles, 0)),
+    disponibles_total,
   }, 200, request);
 }
 
@@ -1554,7 +1617,9 @@ async function handleWebhook(request, env, ctx) {
     boletos:      gen.boletos,
     numeroObra:   gen.numeroObra,
     fecha,
+    fechaContable:  fecha,
     funcionNombre,
+    funcionContable: funcionNombre,
     cantidad,
     items,
     seccionCantidades,
@@ -1574,6 +1639,7 @@ async function handleWebhook(request, env, ctx) {
   await env.VENTAS.put(kv(tid, `venta:${sessionId}`),  JSON.stringify(venta));
   await persistirCertificadosKv(tid, sessionId, gen.certificado, gen.boletos, env);
   await env.VENTAS.put(kv(tid, `ventaIdx:${fecha}:${sessionId}`), sessionId);
+  await env.VENTAS.put(kv(tid, `ventaIdxContable:${fecha}:${sessionId}`), sessionId);
 
   if (meta.codigoCupon) {
     ctx.waitUntil(
@@ -1596,18 +1662,14 @@ async function handleWebhook(request, env, ctx) {
     } catch (e) { console.error('fiscal acumulado error:', e.message); }
   })());
 
-  // Emails
-  const config = await getVenueConfig(tid, env);
-  const codigoVenta = gen.certificado;
-  const emailPromises = [
-    enviarEmail('elgorilateatro@gmail.com', `[GORILA] Venta ${codigoVenta} — ${config.nombre}`, htmlAvisoAdmin(venta, funcionNombre, config), env),
-  ];
-  if (venta.email) {
-    emailPromises.push(
-      enviarEmail(venta.email, `Tu lugar — EL GORILA · ${funcionNombre}`, htmlBoleto(venta, funcionNombre, config), env)
-    );
-  }
-  ctx.waitUntil(Promise.all(emailPromises));
+  // Emails (comprador + aviso admin)
+  const emailResult = await enviarEmailsVenta(venta, tid, env);
+  venta.emailsEnviados = {
+    admin:     emailResult.adminOk,
+    comprador: emailResult.compradorOk,
+    en:        new Date().toISOString(),
+  };
+  await env.VENTAS.put(kv(tid, `venta:${sessionId}`), JSON.stringify(venta));
 
   // Webhook de marketing (Make/CAPI) — sin PII
   if (env.MAKE_WEBHOOK_URL) {
@@ -1714,6 +1776,50 @@ async function handleInvitacion(tid, certificado, request, env) {
 }
 
 // ─── HANDLER: VENTA PÚBLICA (sin email) ───────────────────────────────────────
+
+async function handleEnviarBoletoCompra(tid, id, request, env) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  if (!await checkRateLimit(ip, env)) {
+    return json({ error: 'Demasiadas solicitudes. Intenta en unos minutos.' }, 429, request);
+  }
+
+  const ventaRaw = await _lookupVenta(tid, id, env);
+  if (!ventaRaw) return json({ error: 'Venta no encontrada.' }, 404, request);
+
+  let venta;
+  try { venta = JSON.parse(ventaRaw); } catch { return json({ error: 'Venta corrupta.' }, 500, request); }
+
+  const sessionId = venta.sessionId || id;
+  const rlKey     = kv(tid, `emailRetry:${sessionId}`);
+  const retries   = parseInt((await env.INVENTARIO.get(rlKey)) || '0', 10);
+  if (retries >= 5) {
+    return json({ error: 'Límite de reenvíos alcanzado. Escribe a elgorilateatro@gmail.com' }, 429, request);
+  }
+
+  const emailResult = await enviarEmailsVenta(venta, tid, env);
+  venta.emailsEnviados = {
+    admin:     emailResult.adminOk,
+    comprador: emailResult.compradorOk,
+    en:        new Date().toISOString(),
+  };
+  await env.VENTAS.put(kv(tid, `venta:${sessionId}`), JSON.stringify(venta));
+  await env.INVENTARIO.put(rlKey, String(retries + 1), { expirationTtl: 86400 });
+
+  if (!emailResult.compradorOk && venta.email) {
+    return json({
+      ok: false,
+      error: 'No se pudo enviar el correo al comprador. Revisa spam o escribe a elgorilateatro@gmail.com',
+      adminOk: emailResult.adminOk,
+    }, 502, request);
+  }
+
+  return json({
+    ok: true,
+    emailEnviado: venta.email || null,
+    adminOk:      emailResult.adminOk,
+    compradorOk:  emailResult.compradorOk,
+  }, 200, request);
+}
 
 async function handleVenta(tid, id, request, env) {
   // Rate-limit anti-enumeración: solo cuenta folios NO encontrados, así el escáner
@@ -2034,15 +2140,24 @@ function _certificadoVenta(v) {
   return (v?.certificado || v?.codigo || '').trim().toUpperCase();
 }
 
+function _fechaContableVenta(v) {
+  if (v?.fechaContable) return v.fechaContable;
+  if (v?.reagendado?.de) return v.reagendado.de;
+  return v?.fecha || null;
+}
+
 function _formatVenta(v) {
   const certificado = _certificadoVenta(v);
+  const fc = _fechaContableVenta(v);
   return {
     teatroId:         v.teatroId       || 'wilberto',
     sessionId:        v.sessionId      || null,
     codigo:           certificado || v.codigo,
     certificado,
     fecha:            v.fecha,
+    fechaContable:    fc,
     funcionNombre:    v.funcionNombre  || v.fecha,
+    funcionContable:  v.funcionContable || v.funcionAnterior || null,
     cantidad:         v.cantidad,
     items:            v.items          || [],
     boletos:          (v.boletos || []).map(b => ({
@@ -2171,7 +2286,9 @@ async function handleVentaManual(tid, request, env, ctx) {
     boletos:        gen.boletos,
     numeroObra:     gen.numeroObra,
     fecha,
+    fechaContable:  fecha,
     funcionNombre:  funcion.nombre,
+    funcionContable: funcion.nombre,
     cantidad:       cantidadTotal,
     items:          itemsValidados,
     seccionCantidades,
@@ -2191,6 +2308,7 @@ async function handleVentaManual(tid, request, env, ctx) {
   await env.VENTAS.put(kv(canonical, `venta:${sessionId}`), JSON.stringify(venta));
   await persistirCertificadosKv(canonical, sessionId, gen.certificado, gen.boletos, env);
   await env.VENTAS.put(kv(canonical, `ventaIdx:${fecha}:${sessionId}`), sessionId);
+  await env.VENTAS.put(kv(canonical, `ventaIdxContable:${fecha}:${sessionId}`), sessionId);
 
   let emailEnviado = false;
   if (email) {
@@ -2355,6 +2473,10 @@ async function handleReagendar(tid, request, env) {
 
   const fechaOrigen = venta.fecha;
   const canonical   = resolveTid(tid);
+  if (!venta.fechaContable) {
+    venta.fechaContable    = fechaOrigen;
+    venta.funcionContable  = venta.funcionNombre || fechaOrigen;
+  }
   await env.VENTAS.delete(kv(canonical, `ventaIdx:${fechaOrigen}:${venta.sessionId}`));
 
   venta.fechaAnterior   = fechaOrigen;
@@ -2364,6 +2486,8 @@ async function handleReagendar(tid, request, env) {
   venta.reagendado      = {
     de: fechaOrigen, a: fechaDestino,
     por: payload.usuario, en: new Date().toISOString(),
+    cancelacionOrigen: true,
+    montoEnFuncion: venta.fechaContable,
   };
 
   await env.VENTAS.put(ventaKey, JSON.stringify(venta));
@@ -2371,9 +2495,14 @@ async function handleReagendar(tid, request, env) {
 
   const audit = await registrarAuditoria(env, {
     usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
-    rol: payload.rol, accion: 'reagendar_boleto', teatroId: canonical,
-    detalles: `${codigo}: ${fechaOrigen} → ${fechaDestino} (dinero en compra original)`,
-    meta: { codigo, de: fechaOrigen, a: fechaDestino, total: venta.total },
+    rol: payload.rol, accion: 'reagenda', teatroId: canonical,
+    detalles: `${codigo}: cancelado en ${fechaOrigen} → activo en ${fechaDestino}. Monto contable en ${venta.fechaContable}.`,
+    meta: {
+      tipo: 'reagenda', codigo,
+      de: fechaOrigen, a: fechaDestino,
+      fechaContable: venta.fechaContable,
+      total: venta.total, cancelacionOrigen: true,
+    },
   });
 
   return json({ ok: true, venta: _formatVenta(venta), auditId: audit.id }, 200, request);
@@ -2472,9 +2601,12 @@ async function handleReembolso(tid, request, env, ctx) {
 
   const audit = await registrarAuditoria(env, {
     usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
-    rol: payload.rol, accion: 'reembolso_venta', teatroId: resolveTid(tid),
-    detalles: `${codigo} reembolsado · $${venta.total} MXN`,
-    meta: { codigo, total: venta.total, stripeRefundId, manual: esManual },
+    rol: payload.rol, accion: 'reembolso', teatroId: resolveTid(tid),
+    detalles: `${codigo} reembolsado · $${venta.total} MXN · cupo liberado`,
+    meta: {
+      tipo: 'reembolso', codigo, total: venta.total, stripeRefundId, manual: esManual,
+      fecha: venta.fecha, fechaContable: _fechaContableVenta(venta),
+    },
   });
 
   return json({ ok: true, venta: _formatVenta(venta), auditId: audit.id }, 200, request);
@@ -2696,6 +2828,99 @@ async function handleVentas(tid, request, env) {
 
   ventas.sort((a, b) => new Date(b.fechaCompra) - new Date(a.fechaCompra));
   return json({ ventas, cursor: nextCursor || null }, 200, request);
+}
+
+async function listAllVentasRaw(tid, env) {
+  const canonical = resolveTid(tid);
+  const ventas = [];
+  let cursor;
+  do {
+    const list = await env.VENTAS.list({
+      prefix: kv(canonical, 'venta:'),
+      limit:  100,
+      cursor: cursor || undefined,
+    });
+    const parsed = (await Promise.all(list.keys.map(k => env.VENTAS.get(k.name))))
+      .filter(Boolean)
+      .map(r => { try { return JSON.parse(r); } catch { return null; } })
+      .filter(Boolean);
+    ventas.push(...parsed);
+    cursor = list.list_complete ? null : list.cursor;
+  } while (cursor);
+  return ventas;
+}
+
+async function handleInformeFunciones(tid, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_VENTAS.has(payload.rol) && payload.rol !== 'gerente') {
+    return json({ error: 'Sin permiso.' }, 403, request);
+  }
+
+  const canonical = resolveTid(tid);
+  let funciones = [];
+  try {
+    const raw = await env.INVENTARIO.get(kv(canonical, 'funciones:activas'));
+    funciones = JSON.parse(raw || '[]');
+  } catch { /* */ }
+  const nombreMap = Object.fromEntries(funciones.map(f => [f.fecha_iso, f.nombre]));
+
+  const ventas = await listAllVentasRaw(tid, env);
+  const stats  = {};
+
+  for (const v of ventas) {
+    const fc = _fechaContableVenta(v);
+    if (!fc) continue;
+
+    if (!stats[fc]) {
+      stats[fc] = {
+        entradasVendidas: 0, ventasCount: 0, revenue: 0,
+        reembolsos: 0, reembolsoMonto: 0,
+      };
+    }
+    const row = stats[fc];
+
+    if (v.estado === 'reembolsada') {
+      row.reembolsos    += 1;
+      row.reembolsoMonto += Number(v.total) || 0;
+      continue;
+    }
+
+    row.entradasVendidas += v.cantidad || 0;
+    row.ventasCount      += 1;
+    row.revenue          += Number(v.total) || 0;
+  }
+
+  const asistenPorFecha = {};
+  for (const v of ventas) {
+    if (v.estado === 'reembolsada') continue;
+    const fa = v.fecha;
+    if (!fa) continue;
+    asistenPorFecha[fa] = (asistenPorFecha[fa] || 0) + (v.cantidad || 0);
+  }
+
+  const funcionesInforme = Object.entries(stats)
+    .filter(([, d]) => d.ventasCount > 0)
+    .map(([fecha_iso, d]) => ({
+      fecha_iso,
+      nombre:           nombreMap[fecha_iso] || fecha_iso,
+      entradasVendidas: d.entradasVendidas,
+      ventas:           d.ventasCount,
+      revenue:          Math.round(d.revenue * 100) / 100,
+      asisten:          asistenPorFecha[fecha_iso] || 0,
+      reembolsos:       d.reembolsos,
+      reembolsoMonto:   Math.round(d.reembolsoMonto * 100) / 100,
+      revenueNeto:      Math.round((d.revenue - d.reembolsoMonto) * 100) / 100,
+    }))
+    .sort((a, b) => a.fecha_iso.localeCompare(b.fecha_iso));
+
+  const totales = funcionesInforme.reduce((acc, f) => ({
+    entradas: acc.entradas + f.entradasVendidas,
+    revenue:  Math.round((acc.revenue + f.revenue) * 100) / 100,
+    ventas:   acc.ventas + f.ventas,
+  }), { entradas: 0, revenue: 0, ventas: 0 });
+
+  return json({ funciones: funcionesInforme, totales }, 200, request);
 }
 
 // ─── HANDLER: LISTA DE ESPERA ─────────────────────────────────────────────────
@@ -3001,6 +3226,7 @@ export default {
       const sub = parts.slice(3).join('/');
 
       if (method === 'GET'  && sub === 'ventas')         return handleVentas(tid, request, env);
+      if (method === 'GET'  && sub === 'informe-funciones') return handleInformeFunciones(tid, request, env);
       if (method === 'GET'  && sub === 'lista-puerta') return handleListaPuerta(tid, request, env);
       if (method === 'POST' && sub === 'venta-manual')   return handleVentaManual(tid, request, env, ctx);
       if (method === 'GET'  && sub === 'fiscal')         return handleFiscalReserva(tid, request, env);
@@ -3044,6 +3270,11 @@ export default {
     const ventaMatch = sub.match(/^venta\/([^/]+)$/);
     if (method === 'GET' && ventaMatch)
       return handleVenta(tid, decodeURIComponent(ventaMatch[1]), request, env);
+
+    const enviarMatch = sub.match(/^venta\/([^/]+)\/enviar-boleto$/);
+    if (method === 'POST' && enviarMatch) {
+      return handleEnviarBoletoCompra(tid, decodeURIComponent(enviarMatch[1]), request, env);
+    }
 
     return json({ error: 'Not found.' }, 404, request);
   },

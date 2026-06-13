@@ -14,7 +14,13 @@
     fiscal: 0,
     sitio: {},
     inv: {},
-    ventaDetalle: null,
+    informeFunciones: [],
+    informeTotales: {},
+    informeError: null,
+    informeFuncionSel: null,
+    informeVentas: [],
+    opsVenta: null,
+    auditFilter: '',
   };
 
   function token() { return AuthManager.obtenerAdminToken(); }
@@ -35,6 +41,123 @@
   }
 
   function fmtMXN(n) { return `$${(Number(n) || 0).toFixed(2)}`; }
+
+  const ACCION_TIPOS = {
+    reagenda:          { label: 'Reagenda',     cls: 'text-blue-400 border-blue-400/40 bg-blue-400/10' },
+    reagendar_boleto:  { label: 'Reagenda',     cls: 'text-blue-400 border-blue-400/40 bg-blue-400/10' },
+    reembolso:         { label: 'Reembolso',    cls: 'text-red-400 border-red-400/40 bg-red-400/10' },
+    reembolso_venta:   { label: 'Reembolso',    cls: 'text-red-400 border-red-400/40 bg-red-400/10' },
+    cancelacion:       { label: 'Cancelación',  cls: 'text-orange-400 border-orange-400/40 bg-orange-400/10' },
+    'email.corregido': { label: 'Correo',       cls: 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10' },
+    'email.reenviado': { label: 'Reenvío',      cls: 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10' },
+    canjear_boleto:    { label: 'Canje',        cls: 'text-green-400 border-green-400/40 bg-green-400/10' },
+    canjear_lote:      { label: 'Canje lote',   cls: 'text-green-400 border-green-400/40 bg-green-400/10' },
+    venta_manual:      { label: 'Venta taquilla', cls: 'text-primary border-primary/40 bg-primary/10' },
+    fiscal_reset:      { label: 'Fiscal',       cls: 'text-yellow-300 border-yellow-300/40 bg-yellow-300/10' },
+    crear_usuario:     { label: 'Equipo',       cls: 'text-text-dark/70 border-primary/20 bg-primary/5' },
+    actualizar_usuario:{ label: 'Equipo',       cls: 'text-text-dark/70 border-primary/20 bg-primary/5' },
+    actualizar_sitio:  { label: 'Sitio',        cls: 'text-text-dark/70 border-primary/20 bg-primary/5' },
+  };
+
+  const FILTROS_AUDITORIA = [
+    ['', 'Todas las acciones'],
+    ['reagenda', 'Reagenda'],
+    ['reembolso', 'Reembolso'],
+    ['cancelacion', 'Cancelación'],
+    ['email', 'Correo / reenvío'],
+    ['canje', 'Canje en puerta'],
+    ['venta_manual', 'Venta taquilla'],
+    ['fiscal', 'Fiscal'],
+    ['equipo', 'Equipo / sitio'],
+  ];
+
+  function accionTipo(a) {
+    const key = (a.accion || '').toLowerCase();
+    if (ACCION_TIPOS[key]) return ACCION_TIPOS[key];
+    if (key.includes('reagend')) return ACCION_TIPOS.reagenda;
+    if (key.includes('reembolso')) return ACCION_TIPOS.reembolso;
+    if (key.includes('email')) return ACCION_TIPOS['email.reenviado'];
+    if (key.includes('canjear')) return ACCION_TIPOS.canjear_boleto;
+    return { label: a.accion || '—', cls: 'text-text-dark/60 border-primary/20 bg-primary/5' };
+  }
+
+  function accionCoincideFiltro(a, filtro) {
+    if (!filtro) return true;
+    const key = (a.accion || '').toLowerCase();
+    const metaTipo = (a.meta?.tipo || '').toLowerCase();
+    if (filtro === 'reagenda') return key.includes('reagend') || metaTipo === 'reagenda';
+    if (filtro === 'reembolso') return key.includes('reembolso');
+    if (filtro === 'cancelacion') return metaTipo === 'cancelacion' || (a.detalles || '').toLowerCase().includes('cancelado');
+    if (filtro === 'email') return key.includes('email');
+    if (filtro === 'canje') return key.includes('canjear');
+    if (filtro === 'venta_manual') return key === 'venta_manual';
+    if (filtro === 'fiscal') return key.includes('fiscal');
+    if (filtro === 'equipo') return key.includes('usuario') || key.includes('sitio');
+    return true;
+  }
+
+  function badgeAccion(a) {
+    const t = accionTipo(a);
+    return `<span class="inline-block px-2 py-0.5 text-xs font-mono border rounded ${t.cls}">${esc(t.label)}</span>`;
+  }
+
+  async function cargarInformeFunciones() {
+    state.informeFunciones = [];
+    state.informeTotales = {};
+    state.informeError = null;
+    try {
+      const d = await api(window.teatroAdminApi('informe-funciones'));
+      state.informeFunciones = d.funciones || [];
+      state.informeTotales = d.totales || {};
+      return;
+    } catch (e) {
+      const msg = e.message || '';
+      const es404 = /not found|404/i.test(msg);
+      try {
+        const d = await api(window.teatroAdminApi('ventas'));
+        const ventas = d.ventas || [];
+        const stats = {};
+        const asisten = {};
+        for (const v of ventas) {
+          if (v.estado === 'reembolsada') continue;
+          const fc = v.fechaContable || (v.reagendado && v.reagendado.de) || v.fecha;
+          if (!fc) continue;
+          if (!stats[fc]) stats[fc] = { entradasVendidas: 0, ventas: 0, revenue: 0, reembolsos: 0 };
+          stats[fc].entradasVendidas += v.cantidad || 0;
+          stats[fc].ventas += 1;
+          stats[fc].revenue += Number(v.total) || 0;
+          const fa = v.fecha;
+          if (fa) asisten[fa] = (asisten[fa] || 0) + (v.cantidad || 0);
+        }
+        state.informeFunciones = Object.entries(stats)
+          .filter(([, s]) => s.ventas > 0)
+          .map(([fecha_iso, s]) => ({
+            fecha_iso,
+            nombre: fecha_iso,
+            entradasVendidas: s.entradasVendidas,
+            ventas: s.ventas,
+            revenue: Math.round(s.revenue * 100) / 100,
+            asisten: asisten[fecha_iso] || 0,
+            reembolsos: 0,
+          }))
+          .sort((a, b) => a.fecha_iso.localeCompare(b.fecha_iso));
+        state.informeTotales = state.informeFunciones.reduce((acc, f) => ({
+          entradas: acc.entradas + f.entradasVendidas,
+          revenue: Math.round((acc.revenue + f.revenue) * 100) / 100,
+          ventas: acc.ventas + f.ventas,
+        }), { entradas: 0, revenue: 0, ventas: 0 });
+        if (es404) {
+          state.informeError = 'Worker sin actualizar — mostrando vista parcial. Ejecuta: npx wrangler deploy';
+        } else if (msg) {
+          state.informeError = msg;
+        }
+      } catch {
+        state.informeError = es404
+          ? 'Informe por función no disponible. Despliega el Worker: npx wrangler deploy'
+          : (msg || 'Error al cargar informe');
+      }
+    }
+  }
 
   function fmtFecha(iso) {
     if (!iso) return '—';
@@ -57,7 +180,7 @@
       ['hub', 'Teatros', true],
       ['equipo', 'Equipo', perm('gestionarEquipo')],
       ['sitio', 'Sitio web', perm('editarSitio')],
-      ['informes', 'Informes', perm('verAuditoria') || perm('verFiscal') || perm('exportarDatos')],
+      ['informes', 'Informes', perm('verAuditoria') || perm('verFiscal') || perm('exportarDatos') || perm('verVentas')],
     ].filter(([, , ok]) => ok);
     return `<nav class="flex gap-2 flex-wrap mb-6 border-b border-primary/20 pb-3">
       ${items.map(([id, label]) =>
@@ -121,7 +244,9 @@
   function renderTeatro() {
     const cards = state.funciones.map(f => {
       const inv = state.inv[f.fecha_iso] || {};
-      const disp = inv.disponibles ?? '—';
+      const disp = typeof window.disponiblesAforoTotal === 'function'
+        ? window.disponiblesAforoTotal(inv)
+        : (inv.disponibles ?? '—');
       return `<button type="button" data-funcion="${esc(f.fecha_iso)}" class="text-left p-4 bg-background-dark/50 border border-primary/20 hover:border-primary/40">
         <div class="font-display text-lg text-text-dark">${esc(f.nombre)}</div>
         <div class="font-mono text-xs text-text-dark/50 mt-1">${esc(f.fecha_iso)} · ~${disp} disp.</div>
@@ -221,6 +346,7 @@
       <div><dt class="text-xs font-mono text-text-dark/50">Referido de</dt><dd class="font-mono text-xs">${esc(v.referidoDe || '—')}</dd></div>
       <div><dt class="text-xs font-mono text-text-dark/50">UTM</dt><dd class="text-xs">${esc(utmResumen(v.utm))}</dd></div>
       <div class="sm:col-span-2"><dt class="text-xs font-mono text-text-dark/50">Entradas</dt><dd>${esc(items)}</dd></div>
+      ${v.reagendado ? `<div class="sm:col-span-2"><dt class="text-xs font-mono text-text-dark/50">Contable</dt><dd class="text-xs">${esc(v.fechaContable || '—')} · asiste ${esc(v.fecha)}</dd></div>` : ''}
       ${v.emailAnterior ? `<div class="sm:col-span-2"><dt class="text-xs font-mono text-text-dark/50">Correo anterior</dt><dd class="text-xs text-text-dark/70">${esc(v.emailAnterior)} · corregido ${fmtFecha(v.emailCorregidoEn)}</dd></div>` : ''}
     </dl>
     <h4 class="text-xs font-mono text-text-dark/50 mt-4 mb-2">Boletos (certificados / folios puerta)</h4>
@@ -373,7 +499,8 @@
         </table>
       </div>
       ${perm('reagendar') ? `<div id="reagendar-panel" class="hidden mt-6 p-4 border border-primary/30 bg-surface-dark/80">
-        <p class="text-sm mb-2">Reagendar <strong id="reag-codigo"></strong> — el dinero queda en la compra original.</p>
+        <p class="text-sm mb-2">Reagendar <strong id="reag-codigo"></strong></p>
+        <p class="text-xs text-text-dark/60 mb-3">El boleto se <strong>cancela en la función actual</strong> (libera cupo) y queda <strong>activo en la nueva</strong>. El monto contable permanece en la función original — no se mueve el dinero.</p>
         <select id="reag-destino" class="px-3 py-2 bg-background-dark border border-primary/30 mr-2">${opts}</select>
         <button type="button" id="btn-reagendar-ok" class="px-4 py-2 bg-primary text-background-dark font-semibold">Confirmar cambio</button>
         <button type="button" id="btn-reagendar-cancel" class="px-4 py-2 ml-2 border border-primary/30">Cancelar</button>
@@ -446,14 +573,118 @@
       </div>`;
   }
 
+  async function cargarVentasFuncion(fecha) {
+    if (!fecha) { state.informeVentas = []; return; }
+    const d = await api(window.teatroAdminApi(`ventas?fecha=${encodeURIComponent(fecha)}`));
+    state.informeVentas = d.ventas || [];
+    state.informeFuncionSel = fecha;
+  }
+
+  async function refrescarInformes() {
+    const jobs = [];
+    if (perm('verFiscal')) jobs.push(cargarFiscal().catch(() => { state.fiscal = 0; }));
+    if (perm('verVentas')) jobs.push(cargarInformeFunciones());
+    if (perm('verAuditoria')) jobs.push(cargarAuditoria().catch(() => { state.auditoria = []; }));
+    if (state.informeFuncionSel && perm('verVentas')) {
+      jobs.push(cargarVentasFuncion(state.informeFuncionSel).catch(() => { state.informeVentas = []; }));
+    }
+    await Promise.allSettled(jobs);
+  }
+
+  function renderOpsVentaCard() {
+    const v = state.opsVenta;
+    if (!v) {
+      return `<p class="text-xs text-text-dark/50">Busca un certificado CERT-ORD-… para reagendar, reembolsar o reenviar.</p>`;
+    }
+    const cert = certVenta(v);
+    const esStripe = v.metodoPago && v.metodoPago !== 'efectivo' && !String(v.sessionId || '').startsWith('manual_');
+    const optsReag = state.funciones.filter(x => x.fecha_iso !== v.fecha)
+      .map(x => `<option value="${esc(x.fecha_iso)}">${esc(x.nombre)}</option>`).join('');
+    return `<div class="p-4 border border-primary/30 bg-background-dark/50 text-sm space-y-2">
+      <div class="flex flex-wrap gap-x-4 gap-y-1">
+        <span class="font-mono text-primary">${esc(cert)}</span>
+        <span>${esc(v.nombre || '—')}</span>
+        <span class="text-text-dark/60">${esc(v.email || '—')}</span>
+        <span>${v.cantidad || 0} boleto(s) · ${fmtMXN(v.total)}</span>
+        <span class="text-xs">${esc(v.funcionNombre || v.fecha)}</span>
+        ${v.fechaContable && v.fechaContable !== v.fecha ? `<span class="text-xs text-blue-400">contable: ${esc(v.fechaContable)}</span>` : ''}
+      </div>
+      <div class="flex flex-wrap gap-2 pt-2">
+        ${perm('reagendar') && !v.usado && v.estado !== 'reembolsada' ? `
+          <select id="ops-reag-dest" class="px-2 py-1 bg-background-dark border border-primary/30 text-xs">${optsReag}</select>
+          <button type="button" id="ops-reagendar" data-cert="${esc(cert)}" class="px-3 py-1 text-xs border border-blue-400/40 text-blue-400">Reagendar</button>` : ''}
+        ${perm('reembolsar') && esStripe && v.estado === 'completada' && !v.usado ? `
+          <button type="button" id="ops-reembolso" data-cert="${esc(cert)}" class="px-3 py-1 text-xs border border-red-400/40 text-red-400">Reembolsar</button>` : ''}
+        ${perm('reenviarBoleto') && v.estado !== 'reembolsada' && v.email ? `
+          <button type="button" id="ops-reenviar" data-cert="${esc(cert)}" class="px-3 py-1 text-xs border border-primary/40 text-primary">Reenviar boleto</button>` : ''}
+        ${perm('corregirEmail') && v.estado !== 'reembolsada' ? `
+          <input type="email" id="ops-email-nuevo" placeholder="Corregir email" class="px-2 py-1 bg-background-dark border border-primary/30 text-xs" value="${esc(v.email || '')}">
+          <button type="button" id="ops-corregir" data-cert="${esc(cert)}" class="px-3 py-1 text-xs bg-primary text-background-dark font-semibold">Corregir y reenviar</button>` : ''}
+      </div>
+      <p id="ops-msg" class="text-xs hidden"></p>
+    </div>`;
+  }
+
+  function renderInformeVentasRows() {
+    if (!state.informeFuncionSel) return '';
+    const fn = state.funciones.find(x => x.fecha_iso === state.informeFuncionSel);
+    const nombre = fn ? fn.nombre : state.informeFuncionSel;
+    const rows = (state.informeVentas || []).map(v => {
+      const cert = certVenta(v);
+      return `<tr class="border-b border-primary/10 text-sm">
+        <td class="py-2 font-mono text-xs"><button type="button" class="text-primary underline ops-pick-venta" data-cert="${esc(cert)}">${esc(cert)}</button></td>
+        <td class="py-2">${esc(v.nombre || '—')}</td>
+        <td class="py-2 text-xs">${esc(v.email || '—')}</td>
+        <td class="py-2">${v.cantidad || 0}</td>
+        <td class="py-2">${fmtMXN(v.total)}</td>
+        <td class="py-2 text-xs">${v.estado === 'reembolsada' ? '<span class="text-red-400">reemb.</span>' : v.usado ? '<span class="text-yellow-400">canj.</span>' : '<span class="text-green-400">activo</span>'}</td>
+      </tr>`;
+    }).join('');
+    return `<div class="mb-8">
+      <h3 class="text-lg font-display text-primary mb-2">Ventas — ${esc(nombre)}</h3>
+      <p class="text-xs text-text-dark/50 mb-2">Clic en certificado para operar abajo. Tras reagendar/reembolso aparece en registro de acciones.</p>
+      <div class="overflow-x-auto border border-primary/20 max-h-[280px]">
+        <table class="w-full text-left text-sm">
+          <thead><tr class="border-b border-primary/20 font-mono text-xs text-text-dark/60 sticky top-0 bg-background-dark">
+            <th class="p-2">Certificado</th><th class="p-2">Nombre</th><th class="p-2">Email</th>
+            <th class="p-2">Cant.</th><th class="p-2">Total</th><th class="p-2">Estado</th>
+          </tr></thead>
+          <tbody>${rows || '<tr><td colspan="6" class="p-4 text-center text-text-dark/50">Sin ventas</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
   function renderInformes() {
-    const rows = state.auditoria.map(a => `<tr class="border-b border-primary/10 text-sm">
+    const filtro = state.auditFilter || '';
+    const auditoriaFiltrada = state.auditoria.filter(a => accionCoincideFiltro(a, filtro));
+
+    const filtroOpts = FILTROS_AUDITORIA.map(([val, label]) =>
+      `<option value="${esc(val)}" ${filtro === val ? 'selected' : ''}>${esc(label)}</option>`
+    ).join('');
+
+    const fnRows = (state.informeFunciones || []).map(f => {
+      const sel = state.informeFuncionSel === f.fecha_iso ? ' bg-primary/10' : '';
+      return `<tr class="border-b border-primary/10 text-sm cursor-pointer hover:bg-primary/5 informe-fn-row${sel}" data-informe-fn="${esc(f.fecha_iso)}">
+      <td class="py-2 font-mono text-xs">${esc(f.fecha_iso)}</td>
+      <td class="py-2">${esc(f.nombre)}</td>
+      <td class="py-2 text-right">${f.entradasVendidas}</td>
+      <td class="py-2 text-right">${f.asisten}</td>
+      <td class="py-2 text-right font-mono">${fmtMXN(f.revenue)}</td>
+      <td class="py-2 text-right text-xs text-text-dark/50">${f.reembolsos ? `${f.reembolsos} reemb.` : '—'}</td>
+    </tr>`;
+    }).join('');
+
+    const tot = state.informeTotales || {};
+
+    const rows = auditoriaFiltrada.map(a => `<tr class="border-b border-primary/10 text-sm">
       <td class="py-2 font-mono text-xs text-primary/80">${esc(a.id)}</td>
-      <td class="py-2 text-xs">${fmtFecha(a.ts)}</td>
+      <td class="py-2 text-xs whitespace-nowrap">${fmtFecha(a.ts)}</td>
       <td class="py-2">${esc(a.usuario)} <span class="text-text-dark/50 text-xs">(${esc(a.rol)})</span></td>
-      <td class="py-2 font-mono text-xs">${esc(a.accion)}</td>
+      <td class="py-2">${badgeAccion(a)}</td>
       <td class="py-2 text-text-dark/80">${esc(a.detalles)}</td>
     </tr>`).join('');
+
+    const puedeOps = perm('reagendar') || perm('reembolsar') || perm('reenviarBoleto') || perm('corregirEmail');
 
     return `${navHtml('informes')}
       <h2 class="text-2xl font-display text-primary mb-4">Informes y auditoría</h2>
@@ -463,17 +694,171 @@
           <div class="text-2xl text-yellow-400">${fmtMXN(state.fiscal)}</div>
           ${perm('fiscalReset') ? '<button type="button" id="btn-fiscal-reset" class="mt-2 text-xs text-yellow-400 underline">Resetear tras pago impuesto</button>' : ''}
         </div>` : ''}
-        ${perm('exportarDatos') ? `<div class="p-4 border border-primary/20">
-          <button type="button" id="btn-export-todo" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Exportar ventas JSON</button>
-        </div>` : ''}
+        <div class="p-4 border border-primary/20 flex flex-wrap gap-2 items-end">
+          ${perm('exportarDatos') ? '<button type="button" id="btn-export-todo" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Exportar ventas JSON</button>' : ''}
+          <button type="button" id="btn-refrescar-informes" class="px-4 py-2 border border-primary/30 text-primary text-sm">Actualizar movimientos</button>
+        </div>
       </div>
-      ${perm('verAuditoria') ? `<h3 class="text-lg font-display text-primary mb-2">Registro de acciones</h3>
-      <p class="text-xs text-text-dark/50 mb-3">Cada acción tiene ID único (AUD-…). Reagendos, canjes, ventas, equipo.</p>
+      ${puedeOps ? `<div class="mb-8 p-4 border border-primary/30 bg-surface-dark/60">
+        <h3 class="text-lg font-display text-primary mb-2">Operaciones — reagenda · reembolso · correo</h3>
+        <p class="text-xs text-text-dark/50 mb-3">Cada acción queda registrada abajo en tiempo real para agencia.</p>
+        <div class="flex flex-wrap gap-2 mb-3">
+          <input type="search" id="ops-buscar-cert" placeholder="CERT-ORD-… o folio" class="px-3 py-2 bg-background-dark border border-primary/30 text-sm flex-1 min-w-[200px]">
+          <button type="button" id="ops-buscar-btn" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Buscar venta</button>
+        </div>
+        <div id="ops-venta-card">${renderOpsVentaCard()}</div>
+      </div>` : ''}
+      ${perm('verVentas') ? `<h3 class="text-lg font-display text-primary mb-2">Registro por función</h3>
+      ${state.informeError ? `<p class="text-xs text-yellow-400 mb-2">${esc(state.informeError)}</p>` : ''}
+      <p class="text-xs text-text-dark/50 mb-3">Clic en una fila para ver ventas y operar. Solo funciones con al menos una venta.</p>
+      <div class="overflow-x-auto border border-primary/20 mb-4">
+        <table class="w-full text-left text-sm">
+          <thead><tr class="border-b border-primary/20 font-mono text-xs text-text-dark/60">
+            <th class="p-2">Fecha</th><th class="p-2">Función</th>
+            <th class="p-2 text-right">Vendidas</th><th class="p-2 text-right">Asisten</th>
+            <th class="p-2 text-right">Ingresos</th><th class="p-2 text-right">Reemb.</th>
+          </tr></thead>
+          <tbody id="informe-fn-tbody">${fnRows || '<tr><td colspan="6" class="p-6 text-center text-text-dark/50">Sin ventas registradas aún</td></tr>'}</tbody>
+          ${fnRows ? `<tfoot><tr class="border-t border-primary/30 font-mono text-xs">
+            <td class="p-2" colspan="2">Total</td>
+            <td class="p-2 text-right">${tot.entradas || 0}</td>
+            <td class="p-2 text-right">—</td>
+            <td class="p-2 text-right text-primary">${fmtMXN(tot.revenue)}</td>
+            <td class="p-2"></td>
+          </tr></tfoot>` : ''}
+        </table>
+      </div>
+      <div id="informe-ventas-wrap">${renderInformeVentasRows()}</div>` : ''}
+      ${perm('verAuditoria') ? `<div class="flex flex-wrap items-center gap-3 mb-3">
+        <h3 class="text-lg font-display text-primary">Registro de acciones</h3>
+        <label class="text-xs font-mono text-text-dark/50 ml-auto">Filtrar:
+          <select id="audit-filtro" class="ml-2 px-2 py-1 bg-background-dark border border-primary/30 text-sm">${filtroOpts}</select>
+        </label>
+      </div>
+      <p class="text-xs text-text-dark/50 mb-3">Reagenda = cancelación en origen + activación en destino · monto en función original.</p>
       <div class="overflow-x-auto max-h-[480px] border border-primary/20">
         <table class="w-full text-left"><thead><tr class="border-b border-primary/20 font-mono text-xs sticky top-0 bg-background-dark">
-          <th class="p-2">ID</th><th class="p-2">Fecha</th><th class="p-2">Usuario</th><th class="p-2">Acción</th><th class="p-2">Detalle</th>
-        </tr></thead><tbody>${rows || '<tr><td colspan="5" class="p-6 text-center text-text-dark/50">Sin registros</td></tr>'}</tbody></table>
+          <th class="p-2">ID</th><th class="p-2">Fecha</th><th class="p-2">Usuario</th><th class="p-2">Tipo</th><th class="p-2">Detalle</th>
+        </tr></thead><tbody id="audit-tbody">${rows || '<tr><td colspan="5" class="p-6 text-center text-text-dark/50">Sin registros</td></tr>'}</tbody></table>
       </div>` : '<p class="text-text-dark/50 text-sm">Sin acceso a auditoría con tu rol.</p>'}`;
+  }
+
+  async function opsBuscarVenta(cert) {
+    const c = (cert || document.getElementById('ops-buscar-cert')?.value || '').trim();
+    if (!c) return;
+    state.opsVenta = await api(window.teatroAdminApi(`venta/${encodeURIComponent(c)}`));
+    const card = document.getElementById('ops-venta-card');
+    if (card) card.innerHTML = renderOpsVentaCard();
+    bindInformesOps();
+  }
+
+  async function opsAfterAction(msg) {
+    await refrescarInformes();
+    const fnBody = document.getElementById('informe-fn-tbody');
+    if (fnBody && state.informeFunciones?.length) {
+      fnBody.innerHTML = state.informeFunciones.map(f => {
+        const sel = state.informeFuncionSel === f.fecha_iso ? ' bg-primary/10' : '';
+        return `<tr class="border-b border-primary/10 text-sm cursor-pointer hover:bg-primary/5 informe-fn-row${sel}" data-informe-fn="${esc(f.fecha_iso)}">
+          <td class="py-2 font-mono text-xs">${esc(f.fecha_iso)}</td>
+          <td class="py-2">${esc(f.nombre)}</td>
+          <td class="py-2 text-right">${f.entradasVendidas}</td>
+          <td class="py-2 text-right">${f.asisten}</td>
+          <td class="py-2 text-right font-mono">${fmtMXN(f.revenue)}</td>
+          <td class="py-2 text-right text-xs text-text-dark/50">${f.reembolsos ? `${f.reembolsos} reemb.` : '—'}</td>
+        </tr>`;
+      }).join('');
+    }
+    const auditBody = document.getElementById('audit-tbody');
+    if (auditBody && state.auditoria.length) {
+      const filtro = state.auditFilter || '';
+      auditBody.innerHTML = state.auditoria
+        .filter(a => accionCoincideFiltro(a, filtro))
+        .map(a => `<tr class="border-b border-primary/10 text-sm">
+          <td class="py-2 font-mono text-xs text-primary/80">${esc(a.id)}</td>
+          <td class="py-2 text-xs whitespace-nowrap">${fmtFecha(a.ts)}</td>
+          <td class="py-2">${esc(a.usuario)} <span class="text-text-dark/50 text-xs">(${esc(a.rol)})</span></td>
+          <td class="py-2">${badgeAccion(a)}</td>
+          <td class="py-2 text-text-dark/80">${esc(a.detalles)}</td>
+        </tr>`).join('');
+    }
+    const wrap = document.getElementById('informe-ventas-wrap');
+    if (wrap) wrap.innerHTML = renderInformeVentasRows();
+    if (state.opsVenta) {
+      const cert = certVenta(state.opsVenta);
+      try {
+        state.opsVenta = await api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}`));
+      } catch { /* */ }
+      const card = document.getElementById('ops-venta-card');
+      if (card) card.innerHTML = renderOpsVentaCard();
+    }
+    bindInformesOps();
+    const m = document.getElementById('ops-msg');
+    if (m && msg) { m.textContent = msg; m.className = 'text-xs text-green-400'; m.classList.remove('hidden'); }
+  }
+
+  function bindInformesOps() {
+    const btnBuscar = document.getElementById('ops-buscar-btn');
+    if (btnBuscar) btnBuscar.onclick = () => opsBuscarVenta();
+    const inpCert = document.getElementById('ops-buscar-cert');
+    if (inpCert) inpCert.onkeydown = (e) => { if (e.key === 'Enter') opsBuscarVenta(); };
+    const btnRef = document.getElementById('btn-refrescar-informes');
+    if (btnRef) btnRef.onclick = async () => {
+      await refrescarInformes();
+      document.getElementById('admin-app').innerHTML = renderInformes();
+      bindEvents();
+    };
+    document.querySelectorAll('.informe-fn-row').forEach(el => {
+      el.onclick = async () => {
+        state.informeFuncionSel = el.dataset.informeFn;
+        await cargarVentasFuncion(state.informeFuncionSel);
+        document.querySelectorAll('.informe-fn-row').forEach(r => r.classList.remove('bg-primary/10'));
+        el.classList.add('bg-primary/10');
+        const wrap = document.getElementById('informe-ventas-wrap');
+        if (wrap) wrap.innerHTML = renderInformeVentasRows();
+        bindInformesOps();
+      };
+    });
+    document.querySelectorAll('.ops-pick-venta').forEach(el => {
+      el.onclick = (e) => { e.preventDefault(); opsBuscarVenta(el.dataset.cert); };
+    });
+    const btnReag = document.getElementById('ops-reagendar');
+    if (btnReag) btnReag.onclick = async () => {
+      const cert = btnReag.dataset.cert;
+      const dest = document.getElementById('ops-reag-dest')?.value;
+      if (!cert || !dest || !confirm(`¿Reagendar ${cert} a otra función?`)) return;
+      try {
+        await api(window.teatroAdminApi('reagendar'), { method: 'POST', body: JSON.stringify({ codigo: cert, fechaDestino: dest }) });
+        await opsAfterAction('Reagendado — registrado en acciones.');
+      } catch (e) { alert(e.message); }
+    };
+    const btnReemb = document.getElementById('ops-reembolso');
+    if (btnReemb) btnReemb.onclick = async () => {
+      const cert = btnReemb.dataset.cert;
+      if (!cert || !confirm(`¿Reembolsar ${cert} vía Stripe?`)) return;
+      try {
+        await api(window.teatroAdminApi('reembolso'), { method: 'POST', body: JSON.stringify({ codigo: cert }) });
+        await opsAfterAction('Reembolso procesado — registrado en acciones.');
+      } catch (e) { alert(e.message); }
+    };
+    const btnReenv = document.getElementById('ops-reenviar');
+    if (btnReenv) btnReenv.onclick = async () => {
+      const cert = btnReenv.dataset.cert;
+      if (!cert) return;
+      try {
+        await api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}/reenviar-email`), { method: 'POST', body: JSON.stringify({}) });
+        await opsAfterAction('Boleto reenviado.');
+      } catch (e) { alert(e.message); }
+    };
+    const btnCorr = document.getElementById('ops-corregir');
+    if (btnCorr) btnCorr.onclick = async () => {
+      const cert = btnCorr.dataset.cert;
+      const email = document.getElementById('ops-email-nuevo')?.value?.trim();
+      if (!cert || !email) return;
+      try {
+        await api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}/reenviar-email`), { method: 'POST', body: JSON.stringify({ email }) });
+        await opsAfterAction('Correo corregido y boleto enviado.');
+      } catch (e) { alert(e.message); }
+    };
   }
 
   let reagendarCodigo = null;
@@ -508,11 +893,17 @@
         await cargarSitio();
         app.innerHTML = renderSitio();
       } else if (state.view === 'informes') {
-        if (!perm('verAuditoria') && !perm('verFiscal') && !perm('exportarDatos')) { state.view = 'hub'; return paint(); }
+        if (!perm('verAuditoria') && !perm('verFiscal') && !perm('exportarDatos') && !perm('verVentas')) {
+          state.view = 'hub'; return paint();
+        }
         const jobs = [];
-        if (perm('verFiscal')) jobs.push(cargarFiscal());
-        if (perm('verAuditoria')) jobs.push(cargarAuditoria());
-        await Promise.all(jobs);
+        if (perm('verFiscal')) jobs.push(cargarFiscal().catch(() => { state.fiscal = 0; }));
+        if (perm('verVentas')) jobs.push(cargarFunciones(), cargarInformeFunciones());
+        if (perm('verAuditoria')) jobs.push(cargarAuditoria().catch(() => { state.auditoria = []; }));
+        if (state.informeFuncionSel && perm('verVentas')) {
+          jobs.push(cargarVentasFuncion(state.informeFuncionSel).catch(() => { state.informeVentas = []; }));
+        }
+        await Promise.allSettled(jobs);
         app.innerHTML = renderInformes();
       }
       bindEvents();
@@ -595,6 +986,22 @@
       } catch (e) { alert(e.message); }
     });
 
+    document.getElementById('audit-filtro')?.addEventListener('change', (e) => {
+      state.auditFilter = e.target.value;
+      const tbody = document.getElementById('audit-tbody');
+      if (!tbody) return;
+      const html = state.auditoria
+        .filter(a => accionCoincideFiltro(a, state.auditFilter))
+        .map(a => `<tr class="border-b border-primary/10 text-sm">
+          <td class="py-2 font-mono text-xs text-primary/80">${esc(a.id)}</td>
+          <td class="py-2 text-xs whitespace-nowrap">${fmtFecha(a.ts)}</td>
+          <td class="py-2">${esc(a.usuario)} <span class="text-text-dark/50 text-xs">(${esc(a.rol)})</span></td>
+          <td class="py-2">${badgeAccion(a)}</td>
+          <td class="py-2 text-text-dark/80">${esc(a.detalles)}</td>
+        </tr>`).join('');
+      tbody.innerHTML = html || '<tr><td colspan="5" class="p-6 text-center text-text-dark/50">Sin registros</td></tr>';
+    });
+
     document.getElementById('btn-nuevo-usuario')?.addEventListener('click', () => openUserModal());
     document.querySelectorAll('[data-edit-user]').forEach(el => {
       el.onclick = () => openUserModal(el.dataset.editUser);
@@ -615,6 +1022,8 @@
         alert('Sitio guardado en servidor.');
       } catch (e) { alert(e.message); }
     });
+
+    if (state.view === 'informes') bindInformesOps();
   }
 
   function exportCsv(ventas, name) {

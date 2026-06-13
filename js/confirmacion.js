@@ -3,6 +3,47 @@
 
 let ordenCompra = null;
 
+function baseUrlSitio() {
+    const p = window.location.pathname.replace(/[^/]+$/, '');
+    return window.location.origin + p;
+}
+
+function codigoQrBoleto(orden) {
+    const boletos = orden.boletos || [];
+    if (boletos.length === 1 && boletos[0].cert) return boletos[0].cert;
+    return orden.numeroOrden || orden.certificado || '';
+}
+
+function pintarQR(container, url, size) {
+    if (!container || typeof QRCode === 'undefined') return;
+    container.innerHTML = '';
+    const canvas = document.createElement('canvas');
+    container.appendChild(canvas);
+    QRCode.toCanvas(canvas, url, {
+        width: size,
+        margin: 1,
+        color: { dark: '#000000', light: '#FFFFFF' },
+    }, (err) => {
+        if (err) {
+            QRCode.toDataURL(url, { width: size, margin: 1 }, (e2, dataUrl) => {
+                if (!e2) {
+                    container.innerHTML = `<img src="${dataUrl}" width="${size}" height="${size}" alt="QR boleto" style="display:block;">`;
+                }
+            });
+        }
+    });
+}
+
+async function solicitarEmailBoleto(sessionId) {
+    if (!sessionId || !window.API_BASE) return;
+    const tid = typeof window.teatroIdFromUrl === 'function' ? window.teatroIdFromUrl() : (window.TEATRO_ID || 'wilberto');
+    try {
+        await fetch(`${window.API_BASE}/api/${tid}/venta/${encodeURIComponent(sessionId)}/enviar-boleto`, {
+            method: 'POST',
+        });
+    } catch (_) { /* reintento silencioso; el usuario puede pedir reenvío en admin */ }
+}
+
 // Cargar datos de la orden
 async function cargarConfirmacion() {
     const params = new URLSearchParams(window.location.search);
@@ -22,6 +63,8 @@ async function cargarConfirmacion() {
                         estado: 'completada',
                         email: (local && local.email) || venta.email || '',
                         numeroOrden: venta.certificado || venta.codigo || (local && local.numeroOrden) || sessionId,
+                        certificado: venta.certificado || venta.codigo,
+                        boletos: venta.boletos || [],
                         sessionId,
                         cantidad: venta.cantidad,
                         cantidadTotal: venta.cantidad,
@@ -33,6 +76,7 @@ async function cargarConfirmacion() {
                     try {
                         localStorage.setItem('orden_compra', JSON.stringify(ordenCompra));
                     } catch (_) {}
+                    solicitarEmailBoleto(sessionId);
                     mostrarExito();
                     return;
                 }
@@ -212,20 +256,29 @@ function mostrarExito() {
         cantidadFinal.textContent = `${cantTotal} ${cantTotal === 1 ? 'boleto' : 'boletos'}`;
     }
 
-    // Compartir boleto (imagen + WhatsApp)
+    // Compartir boleto (WhatsApp + imagen)
     const waContainer = document.getElementById('btn-whatsapp-container');
     if (waContainer) {
-        const folio = ordenCompra.numeroOrden || '';
+        const folio = ordenCompra.numeroOrden || ordenCompra.certificado || '';
         const cantTotal = ordenCompra.cantidadTotal || ordenCompra.cantidad || 0;
         const entradas = cantTotal === 1 ? '1 entrada' : `${cantTotal} entradas`;
         const compartirUrl = folio
-            ? `compartir-boleto.html?c=${encodeURIComponent(folio)}`
+            ? `${baseUrlSitio()}compartir-boleto.html?c=${encodeURIComponent(folio)}`
             : 'boletos.html';
+        const fn = ordenCompra.fecha || 'EL GORILA';
+        const waTexto =
+            `Voy a ver EL GORILA — ${fn}. ${entradas}.\n` +
+            `Teatro Wilberto Cantón, CDMX\n${compartirUrl}`;
+        const waHref = `https://wa.me/?text=${encodeURIComponent(waTexto)}`;
         waContainer.innerHTML = `
-            <a href="${compartirUrl}"
+            <a href="${waHref}" target="_blank" rel="noopener"
                class="flex items-center justify-center gap-2 w-full border border-green-600/50 bg-green-900/30 hover:bg-green-800/40 text-green-400 font-semibold py-3 rounded-xl transition-colors text-sm">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z M12 0C5.373 0 0 5.373 0 12c0 2.109.549 4.09 1.508 5.814L0 24l6.335-1.496A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.882 9.882 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374A9.858 9.858 0 012.106 12c0-5.455 4.44-9.894 9.894-9.894 5.455 0 9.894 4.439 9.894 9.894 0 5.455-4.439 9.894-9.894 9.894z"/></svg>
-                Compartir boleto · ${entradas}
+                Compartir por WhatsApp · ${entradas}
+            </a>
+            <a href="${compartirUrl}"
+               class="flex items-center justify-center gap-2 w-full mt-2 border border-accent-gold/40 text-accent-gold font-semibold py-3 rounded-xl transition-colors text-sm">
+                Guardar imagen del boleto →
             </a>`;
         waContainer.classList.remove('hidden');
     }
@@ -249,18 +302,17 @@ function mostrarBoletoFolio() {
     certificadoInfo.classList.remove('hidden');
     certificadosLista.innerHTML = `
         <div class="bg-black/30 border border-accent-gold/20 rounded-lg p-4 flex items-start gap-4">
-            <div class="flex-shrink-0"><div id="qr-folio" class="w-24 h-24 bg-white p-2 rounded"></div></div>
+            <div class="flex-shrink-0"><div id="qr-folio" class="w-24 h-24 bg-white p-2 rounded flex items-center justify-center"></div></div>
             <div class="flex-grow">
                 <p class="text-sm font-semibold text-white mb-1">${cantTotal === 1 ? '1 entrada' : cantTotal + ' entradas'}</p>
                 <p class="text-xs text-text-dark/80 font-mono mb-2">${folio}</p>
-                <a href="compartir-boleto.html?c=${encodeURIComponent(folio)}" class="text-xs text-accent-gold hover:underline">Guardar o compartir →</a>
+                <a href="${baseUrlSitio()}compartir-boleto.html?c=${encodeURIComponent(folio)}" class="text-xs text-accent-gold hover:underline">Guardar o compartir →</a>
             </div>
         </div>`;
 
-    if (typeof QRCode !== 'undefined') {
-        const url = `${window.location.origin}${window.location.pathname.replace('confirmacion.html', '')}verificar.html?codigo=${encodeURIComponent(folio)}`;
-        QRCode.toCanvas(document.getElementById('qr-folio'), url, { width: 88, margin: 1 }, () => {});
-    }
+    const qrCodigo = codigoQrBoleto(ordenCompra);
+    const url = `${baseUrlSitio()}verificar.html?codigo=${encodeURIComponent(qrCodigo)}`;
+    pintarQR(document.getElementById('qr-folio'), url, 88);
 }
 
 // Mostrar información de certificados (modo simulado / legacy)
@@ -308,7 +360,7 @@ function mostrarInfoCertificados() {
         
         certificadoDiv.innerHTML = `
             <div class="flex-shrink-0">
-                <div id="qr-${index}" class="w-20 h-20 bg-white p-2 rounded"></div>
+                <div id="qr-${index}" class="w-20 h-20 bg-white p-2 rounded flex items-center justify-center"></div>
             </div>
             <div class="flex-grow">
                 <div class="flex items-center gap-2 mb-2">
@@ -324,26 +376,11 @@ function mostrarInfoCertificados() {
             </div>
         `;
         certificadosLista.appendChild(certificadoDiv);
-        
-        // Generar QR code visual
-        if (typeof QRCode !== 'undefined') {
-            const qrContainer = document.getElementById(`qr-${index}`);
-            if (qrContainer) {
-                const urlVerificacion = `${window.location.origin}${window.location.pathname.replace('confirmacion.html', '')}verificar.html?codigo=${encodeURIComponent(codigoQR)}`;
-                QRCode.toCanvas(qrContainer, urlVerificacion, {
-                    width: 80,
-                    margin: 1,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
-                }, function (error) {
-                    if (error) {
-                        console.error('Error al generar QR:', error);
-                        qrContainer.innerHTML = `<div class="text-xs text-text-dark/80 text-center">QR</div>`;
-                    }
-                });
-            }
+
+        const qrContainer = document.getElementById(`qr-${index}`);
+        if (qrContainer) {
+            const urlVerificacion = `${baseUrlSitio()}verificar.html?codigo=${encodeURIComponent(codigoQR)}`;
+            pintarQR(qrContainer, urlVerificacion, 80);
         }
     });
 }

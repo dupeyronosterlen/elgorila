@@ -1,120 +1,164 @@
 # PENDIENTES — El Gorila Boletaje
 
-Archivo de tareas pendientes para el equipo técnico / IA.
-Actualizar con fecha al resolver cada ítem.
+Actualizado: **2026-06-10** (venta pausada · plan boletera → QR → emails)
 
 ---
 
-## ⛔ ALERTA CRÍTICA — CONFLICTO DE ARQUITECTURA SIN COMMITEAR (2026-06-10)
+## 🛑 Estado actual (10 jun 2026)
 
-**Hay DOS líneas de trabajo divergentes en el working tree, ninguna commiteada.** El último
-commit (`cb71cd4`) es single-venue, pero el working tree tiene cambios mayores encima.
-
-1. **Worker reescrito a MULTI-VENUE (v3.0)** con `teatroId`, secciones y rutas
-   `/api/{teatro}/...`. Esto **contradice** la decisión previa ("NO multi-tenant; una copia
-   por obra"). 
-2. **El frontend NO usa las rutas nuevas** → si se despliega el Worker, el flujo de compra
-   se ROMPE (404):
-   - `main.js` → `/api/disponibilidad` ❌ (Worker espera `/api/gorila/disponibilidad`)
-   - `checkout.js` → `/api/checkout` ❌ (`/api/gorila/checkout`)
-   - `confirmacion.js` / `verificar.js` → `/api/venta/{id}` ❌ (`/api/gorila/venta/{id}`)
-   - `admin.js` → ventas/fiscal/canjear ahora bajo `/api/admin/gorila/...`
-   - Globales OK: `/api/health`, `/api/admin/login`, `/api/webhook`, `/api/reporte`
-   ➡️ **NO DESPLEGAR el Worker hasta decidir dirección y alinear frontend↔rutas.**
-3. ⚠️ **NO correr `git checkout` / `reset` / `stash`** sin guardar antes el working tree en
-   una rama, o se pierde TODO el trabajo no commiteado (multi-venue + flujo inline + UI).
-
-**DECISIÓN PENDIENTE (del dueño):**
-- (A) Revertir a single-venue (lo acordado) — descarta el trabajo multi-venue.
-- (B) Adoptar multi-venue — conservar Worker nuevo y actualizar TODO el frontend a
-  `/api/{teatro}/...`.
-
-**Seguridad ya aplicada al Worker actual (portable a cualquier dirección):** folio cripto
-(`crypto.randomUUID`), `/api/venta` sin `sessionId`, rate-limit anti-enumeración sobre folios
-no encontrados (`VENTA_404_MAX`). Pendiente (depende de dirección): mostrar boleto real en
-`confirmacion.js`.
-
-> Nota: el checklist de despliegue Cloudflare/Stripe (login, deploy, secrets REPORTE_TOKEN /
-> MAKE_WEBHOOK_URL, Stripe live + webhook prod) sigue vigente — estaba en una versión previa
-> de este archivo que fue reemplazada.
+**Venta pública CERRADA** hasta resolver post-compra:
+- `index.html`: botón fijo **«Próximamente»** → Instagram `@elgorilateatro`
+- `boletos.html`: redirige a Instagram (bypass: `?preview=1` para pruebas internas)
+- `js/config.js`: `VENTA_PUBLICA_ABIERTA = false`
+- **boletera.html / admin.html** siguen operativos para taquilla y operaciones
 
 ---
 
-## 🔴 Alta prioridad
+## 📐 Plan acordado (orden de trabajo)
 
-### P-01 — Guardar email en localStorage antes del redirect a Stripe
-**Contexto:** En el nuevo flujo inline (boletos.html → panel de confirmación → Stripe), el email
-se envía al Worker pero **no se guarda en `localStorage`** antes de redirigir.
-Si `confirmacion.html` muestra el correo del comprador, lo encontrará vacío.
+> Referencia visual: emails Ticket Tailor (aviso admin con detalle de orden + tabla de ítems).  
+> **Admin** = aviso completo tipo «Nueva orden». **Comprador** = solo boleto aprobado con QR que funcione.
 
-**Archivo:** `boletos.html` → función `procesarPagoInline()`
-**Fix:** Agregar antes del `fetch` al Worker:
-```js
-orden.email = email;
-localStorage.setItem('orden_compra', JSON.stringify(orden));
+### Fase 1 — Boletera como fuente de verdad (P-25)
+1. Venta en **boletera.html** (efectivo) → Worker `generarBoletosVenta` + `persistirCertificadosKv`
+2. Verificar en KV: `wilberto:cert:CERT-ORD-…` → `{ sessionId }` y cada `cert:CERT-…` → `{ sessionId, boletoIdx }`
+3. **verificar.html** escanea QR → VÁLIDO → **canjear** en puerta (boletera lista visitantes)
+4. Solo cuando esto sea 100% estable, replicar el mismo flujo en Stripe online
+
+### Fase 2 — QR único desde el certificado (P-26)
+**Regla:** el QR siempre se **calca** del código registrado en KV — nunca se inventa en el frontend.
+
+| Contexto | Código QR | URL codificada |
+|----------|-----------|----------------|
+| 1 boleto | `boletos[0].cert` | `verificar.html?codigo=CERT-…` |
+| 2+ boletos | `certificado` (CERT-ORD-…) | misma URL |
+
+**Unificar** la lógica hoy duplicada en:
+- `worker/index.js` → `urlQrBoleto(codigo)` (email)
+- `js/confirmacion.js` → `codigoQrBoleto()`
+- `js/compartir-boleto.js` → `qrCodigo`
+- → nuevo **`js/qr-boleto.js`** + helper Worker `codigoQrOficial(venta)`
+
+QR = imagen de `verificar.html?codigo={codigoKv}` (api.qrserver.com en email; canvas en web).
+
+### Fase 3 — Dos emails distintos (P-27)
+
+**A) Comprador — boleto aprobado (simple)**
+- Función, venue, tipo × cantidad, total
+- Certificado + QR (del certificado KV)
+- Sin bloques extra (programa v3, WA embebido, etc.) — enlace opcional «Compartir boleto»
+- Archivo: `htmlBoleto()` en `worker/index.js` — **simplificar**
+
+**B) Admin — nueva orden (estilo Ticket Tailor, sin TT)**
+- Asunto: `{CERT-ORD-…} : Nueva orden — EL GORILA`
+- «Nueva orden para:» + función + fecha/hora
+- Botón **Ver esta orden** → `admin.html` (detalle venta / informes)
+- Tabla **Detalle de orden:**
+  - Certificado / ID orden
+  - Fecha y hora de compra
+  - Nombre, email
+  - Método de pago (STRIPE / efectivo)
+  - Transaction ID Stripe (`payment_intent` o `session_id`) + enlace Stripe Dashboard si aplica
+  - Tabla ítems: Tipo · Precio unit. · Cant. · Subtotal
+  - **Total** MXN
+  - Folios puerta (interno)
+  - Cupón / referido si aplica
+- Archivo: `htmlAvisoAdmin()` — **rediseñar**
+
+### Fase 4 — Resend + confirmación web (P-20–P-23)
+Tras Fase 1–2 funcionando en boletera, arreglar envío y confirmacion.html.
+
+---
+
+## 🔴 URGENTE — Post-compra roto (bloquea reapertura)
+
+### P-25 — E2E boletera (efectivo) primero
+**Checklist:**
+1. `boletera.html` → venta 1 general efectivo
+2. Copiar CERT-ORD-… impreso / pantalla
+3. `verificar.html?codigo=CERT-ORD-…` → VÁLIDO
+4. Canjear en boletera → YA CANJEADO en segundo intento
+5. Admin informes → venta visible con folios
+
+### P-26 — QR unificado desde certificado KV
+Ver Fase 2 arriba. Bloquea emails y confirmación confiables.
+
+### P-27 — Emails: admin detallado + comprador simple
+Ver Fase 3 arriba. Referencia: screenshots Ticket Tailor (jun 2026).
+
+### P-20 — Emails no llegan (comprador ni admin)
+**Síntoma:** Tras pago Stripe OK, no llega boleto al comprador ni aviso admin.  
+**Venta de prueba:** `CERT-ORD-15F11890F6FC` ($10, cupón prueba99).  
+**Causa probable:** Resend — dominio `elgorilateatro.com.mx` pendiente de **Verified**.  
+**Acciones:**
+1. Resend → Domains → **Verified**
+2. `curl -X POST "…/api/wilberto/venta/CERT-ORD-15F11890F6FC/enviar-boleto"`
+3. Probar venta boletera → email admin nuevo formato
+4. `wrangler tail` si falla tras Verified
+
+### P-21 — QR no se muestra en confirmación
+**Fix parcial:** `js/confirmacion.js` → `pintarQR()`. Falta deploy Pages + alinear con P-26.
+
+### P-22 — Botón WhatsApp roto
+**Archivos:** `confirmacion.js`, `compartir-boleto.html`. Probar tras P-26 (URL con certificado real).
+
+### P-23 — Deploy frontend desincronizado
+Push Pages; verificar `confirmacion.js` y `qr-boleto.js` en prod.
+
+---
+
+## 🟠 Reapertura venta (después de P-25–P-27 + P-20)
+
+### P-24 — Reabrir venta pública
+1. E2E boletera OK → E2E Stripe OK → emails OK
+2. `VENTA_PUBLICA_ABIERTA = true` en `config.js` e `index.html`
+3. Restaurar botón «Adquiere tus boletos»
+
+---
+
+## 🟡 Funnel / ops (después de reapertura)
+
+| ID | Descripción |
+|----|-------------|
+| P-07 | Email post-función con invitación referida |
+| P-08 | Autoreservicio «No recibí mi boleto» |
+| P-09 | Rol reclamos en KV — flujo real |
+| P-10 | Septiembre 2026 — 5 funciones `activa: false` |
+| P-11 | Rotar contraseñas admin/boletera |
+| P-12 | Secrets: `REPORTE_TOKEN`, webhook Stripe prod |
+| P-13 | Admin Sitio → KV a index.html |
+
+---
+
+## ✅ Hecho (sesión anterior)
+
+| Ítem | Detalle |
+|------|---------|
+| Venta pausada | Portada «Próximamente» → IG; boletos.html redirect |
+| Panel reclamos | Detalle venta, reenviar/corregir email, CSV |
+| Worker prod | Emails, `disponibles_total`, venta manual |
+| Cupón prueba | `prueba99` — 1 general $10 MXN |
+| Aforo 325 | `disponiblesAforoTotal()` frontend + Worker |
+| Boletera | Reorganizada; permisos taquilla |
+| Admin informes | Operaciones integradas |
+
+---
+
+## Referencia rápida
+
+| Recurso | URL / valor |
+|---------|-------------|
+| API | `https://elgorila-api.dupeyronosterlen.workers.dev` |
+| Sitio | `https://elgorilateatro.com.mx` |
+| Admin | `admin.html` — usuario `gorila` |
+| Boletera | `boletera.html` |
+| Instagram | `https://www.instagram.com/elgorilateatro` |
+| Resend | Dominio `elgorilateatro.com.mx` — solo **Sending** |
+
+**Modelo KV certificado:**
 ```
-**Impacto si no se resuelve:** Confirmación de compra puede mostrar correo en blanco.
+wilberto:cert:CERT-ORD-XXXXXXXXXXXX  → { sessionId }
+wilberto:cert:CERT-{uuid}            → { sessionId, boletoIdx }
+wilberto:venta:{sessionId}           → venta JSON completa
+```
 
----
-
-### P-02 — Verificar que `window.API_BASE` esté disponible en boletos.html
-**Contexto:** `procesarPagoInline()` usa `window.API_BASE` para llamar al Worker.
-`boletos.html` carga `js/config.js`, pero no está confirmado que este archivo
-lea el `<meta name="api-base">` y asigne `window.API_BASE`.
-
-**Archivo:** `js/config.js` (o `js/api-config.js`)
-**Verificación:** Abrir boletos.html en el navegador, abrir consola, escribir `window.API_BASE`.
-Debe devolver `'https://elgorila-api.dupeyronosterlen.workers.dev'`.
-Si devuelve `undefined`, agregar `<script src="js/api-config.js"></script>` al script list
-de `boletos.html`.
-**Impacto si no se resuelve:** Pago siempre cae en modo simulado (sin Stripe real).
-
----
-
-## 🟡 Media prioridad
-
-### P-03 — Reutilizar checkout.html como "Taquilla de Enlace Directo"
-**Contexto:** Con el nuevo flujo inline, `checkout.html` es una página huérfana.
-En vez de eliminarla, puede convertirse en una **taquilla especializada de links directos**:
-links prearmados para grupos, escuelas, empresas, medios, influencers, etc.
-
-**Concepto:**
-- Un link como `checkout.html?tipo=grupo&cantidad=10&descuento=15` llegaría ya
-  pre-configurado con fecha, tipo y cantidad de boletos y un descuento especial.
-- Útil para: ventas a grupos corporativos, escuelas, medios de comunicación,
-  colaboraciones con influencers, boletos de prensa, funciones privadas.
-- La IA puede generar estos links personalizados bajo demanda.
-
-**Trabajo estimado:** 1–2 sesiones. Requiere:
-1. Rediseñar checkout.html para leer query params y pre-poblar el carrito
-2. Ajustar el Worker para aceptar descuentos especiales por parámetro (o código)
-3. Definir los tipos de promo y sus reglas de negocio
-
----
-
-### P-06 — Prueba extremo a extremo con Stripe real
-**Contexto:** El flujo `boletos → panel inline → Stripe → confirmacion.html` fue
-implementado pero no probado con el API real de producción.
-
-**Verificar:**
-1. El Worker acepta el campo `email` en el body de `/api/checkout` y lo pasa a Stripe
-   como `customer_email` (mejora: Stripe pre-llena el correo en su formulario)
-2. Stripe redirige correctamente a `confirmacion.html?session_id=...`
-3. `confirmacion.html` procesa el `session_id` y muestra la info correcta
-4. El caso de cancelación (`boletos.html?cancelado=1`) abre el panel inline como se espera
-
-**Ambiente de prueba:** Usar claves Stripe en modo `test` antes de validar en producción.
-
----
-
-## ✅ Resueltos
-
-| ID | Descripción | Fecha |
-|----|-------------|-------|
-| — | Panel inline de confirmación/pago en boletos.html | Jun 9 2026 |
-| — | Descuento Manada 29% + condición correcta | Jun 9 2026 |
-| — | Fila unificada INAPAM/Estudiante/Maestro | Jun 9 2026 |
-| — | Tipografía v4 en index.html (Cormorant + EB Garamond) | Jun 9 2026 |
-| — | Cartel rotatorio móvil: fix min-width + umbrales de zoom | Jun 9 2026 |
-| — | GA4 begin_checkout inline | Jun 9 2026 |
-| — | URL limpia tras cancelación Stripe (?cancelado=1) | Jun 9 2026 |
