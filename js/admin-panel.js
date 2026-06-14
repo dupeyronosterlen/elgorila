@@ -293,8 +293,8 @@
     const reag = (!v.usado && v.estado !== 'reembolsada' && perm('reagendar'))
       ? `<button type="button" data-reagendar="${esc(cert)}" class="text-xs text-primary underline ml-1">Reagendar</button>` : '';
     const esStripe = v.metodoPago && v.metodoPago !== 'efectivo' && !String(v.sessionId || '').startsWith('manual_');
-    const reemb = (perm('reembolsar') && esStripe && v.estado === 'completada' && !v.usado)
-      ? `<button type="button" data-reembolso="${esc(cert)}" class="text-xs text-red-400 underline ml-1">Reembolsar</button>` : '';
+    const reemb = (perm('reembolsar') && v.estado === 'completada' && !v.usado)
+      ? `<button type="button" data-reembolso="${esc(cert)}" class="text-xs text-red-400 underline ml-1">${esStripe ? 'Reembolsar' : 'Anular venta'}</button>` : '';
     return `<tr class="border-b border-primary/10 hover:bg-primary/5 cursor-pointer" data-venta="${esc(cert)}">
       <td class="py-2 pr-2 font-mono text-xs text-primary/90">${esc(cert)}</td>
       <td class="py-2 pr-2 text-sm">${esc(v.nombre || '—')}</td>
@@ -486,6 +486,7 @@
         <input type="search" id="buscar-ventas" placeholder="Nombre, email, certificado, cupón, referido…" class="px-3 py-2 bg-background-dark border border-primary/30 text-sm flex-1 min-w-[200px]">
         <button type="button" id="btn-buscar-ventas" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Buscar</button>
         ${perm('exportarDatos') ? '<button type="button" id="btn-export-funcion" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Exportar CSV</button>' : ''}
+        ${perm('reenviarBoleto') ? '<button type="button" id="btn-email-post-funcion" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Email post-función (22h)</button>' : ''}
         ${perm('verificarBoletos') ? '<a href="verificar.html" class="px-4 py-2 border border-primary/30 text-primary text-sm">Verificar</a>' : ''}
       </div>
       <div class="overflow-x-auto border border-primary/20">
@@ -613,8 +614,8 @@
         ${perm('reagendar') && !v.usado && v.estado !== 'reembolsada' ? `
           <select id="ops-reag-dest" class="px-2 py-1 bg-background-dark border border-primary/30 text-xs">${optsReag}</select>
           <button type="button" id="ops-reagendar" data-cert="${esc(cert)}" class="px-3 py-1 text-xs border border-blue-400/40 text-blue-400">Reagendar</button>` : ''}
-        ${perm('reembolsar') && esStripe && v.estado === 'completada' && !v.usado ? `
-          <button type="button" id="ops-reembolso" data-cert="${esc(cert)}" class="px-3 py-1 text-xs border border-red-400/40 text-red-400">Reembolsar</button>` : ''}
+        ${perm('reembolsar') && v.estado === 'completada' && !v.usado ? `
+          <button type="button" id="ops-reembolso" data-cert="${esc(cert)}" class="px-3 py-1 text-xs border border-red-400/40 text-red-400">${esStripe ? 'Reembolsar' : 'Anular venta'}</button>` : ''}
         ${perm('reenviarBoleto') && v.estado !== 'reembolsada' && v.email ? `
           <button type="button" id="ops-reenviar" data-cert="${esc(cert)}" class="px-3 py-1 text-xs border border-primary/40 text-primary">Reenviar boleto</button>` : ''}
         ${perm('corregirEmail') && v.estado !== 'reembolsada' ? `
@@ -969,6 +970,28 @@
     });
 
     document.getElementById('btn-export-funcion')?.addEventListener('click', () => exportCsv(state.ventas, `ventas_${state.funcion}.csv`));
+
+    document.getElementById('btn-email-post-funcion')?.addEventListener('click', async () => {
+      if (!state.funcion) return;
+      const conEmail = state.ventas.filter(v => v.email && v.estado !== 'reembolsada').length;
+      if (!confirm(
+        `¿Enviar «Te dejamos un sobre» a ${conEmail} asistente(s) de ${state.funcion}?\n\n` +
+        'Solo compradores con email de ESA función (mismo día en CDMX). Cada uno recibe folio + enlace privado.',
+      )) return;
+      try {
+        const r = await api(window.teatroAdminApi('email-post-funcion'), {
+          method: 'POST',
+          body: JSON.stringify({ fecha: state.funcion }),
+        });
+        alert(
+          `Post-función: ${r.enviados} enviados` +
+          (r.fallidos ? `, ${r.fallidos} fallidos` : '') +
+          (r.omitidos ? `, ${r.omitidos} ya enviados antes` : '') +
+          `.`,
+        );
+      } catch (e) { alert(e.message); }
+    });
+
     document.getElementById('btn-export-todo')?.addEventListener('click', async () => {
       await cargarVentas();
       const blob = new Blob([JSON.stringify(state.ventas, null, 2)], { type: 'application/json' });

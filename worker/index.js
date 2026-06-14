@@ -222,13 +222,144 @@ function urlVerificarBoleto(codigo) {
   return `https://elgorilateatro.com.mx/verificar.html?codigo=${encodeURIComponent(codigo)}`;
 }
 
+const SITIO_BASE = 'https://elgorilateatro.com.mx';
+const CUPONES_REFERIDO = new Set(['INVITADO25', 'REGALO25', 'OTRA50', 'MANADA15']);
+const ENCUESTA_TTL_SEC = 7776000; // 90 días
+
 function urlCompartirBoleto(codigo) {
-  return `https://elgorilateatro.com.mx/compartir-boleto.html?c=${encodeURIComponent(codigo)}`;
+  return `${SITIO_BASE}/compartir-boleto.html?c=${encodeURIComponent(codigo)}`;
+}
+
+function urlEnviarBoletoWa(codigo) {
+  return `${SITIO_BASE}/enviar-boleto.html?c=${encodeURIComponent(codigo)}`;
+}
+
+function urlInvitacionRegalo(certificado, cupon = 'REGALO25') {
+  const p = new URLSearchParams({ de: certificado, cupon });
+  return `${SITIO_BASE}/boletos.html?${p.toString()}`;
+}
+
+function textoWhatsAppBoleto(venta, funcionNombre, config) {
+  const cert    = venta.certificado || venta.codigo || '';
+  const boletos = venta.boletos || [];
+  const folio   = boletos.map(b => b.folio).filter(Boolean).join(' · ') || null;
+  const n       = venta.cantidad || boletos.length || 1;
+  const entradas = n === 1 ? '1 entrada' : `${n} entradas`;
+  let t = `EL GORILA — ${funcionNombre}. ${entradas}.\n${config.venue || 'Teatro Wilberto Cantón'}`;
+  if (folio) t += `\nFolio taquilla: ${folio}`;
+  if (cert) t += `\nCertificado: ${cert}`;
+  t += '\n\nPresenta el QR en la entrada del teatro.';
+  return t;
+}
+
+function waMeUrlTexto(texto) {
+  return `https://wa.me/?text=${encodeURIComponent(texto)}`;
+}
+
+function normalizarTokenEncuesta(raw) {
+  if (typeof raw !== 'string') return '';
+  return raw.trim().toLowerCase().replace(/[^a-f0-9]/g, '').substring(0, 80);
+}
+
+function urlEncuesta(token) {
+  return `${SITIO_BASE}/acta.html?t=${encodeURIComponent(token)}`;
+}
+
+function regaloEncuestaCard(certificado, cupon, titulo, subtitulo, porcentaje) {
+  const url = urlInvitacionRegalo(certificado, cupon);
+  return { cupon, titulo, subtitulo, porcentaje, url, qrUrl: urlQrData(url, 140) };
+}
+
+function regalosParaEncuesta(certificado, respuestas) {
+  const regalos = [
+    regaloEncuestaCard(
+      certificado, 'REGALO25', 'Invita a alguien',
+      'Precertificado personal — −25% en boletos generales para quien tú elijas',
+      25,
+    ),
+  ];
+  const vol = respuestas?.volveria;
+  if (vol === 'si' || vol === 'talvez') {
+    regalos.push(regaloEncuestaCard(
+      certificado, 'OTRA50', 'Vuelve otra noche',
+      'El Gorila nunca es igual dos veces — −50% en tu próxima visita',
+      50,
+    ));
+  }
+  const comp = respuestas?.acompanamiento;
+  if (comp === 'amigos' || comp === 'familia') {
+    regalos.push(regaloEncuestaCard(
+      certificado, 'MANADA15', 'La manada',
+      'La próxima, llévate a tu gente — −15% con 3+ boletos generales',
+      15,
+    ));
+  }
+  return regalos;
+}
+
+async function obtenerEncuestaPorToken(tid, token, env) {
+  const t = normalizarTokenEncuesta(token);
+  if (t.length < 32) return null;
+  const raw = await env.VENTAS.get(kv(tid, `encuesta:${t}`));
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw);
+    return { token: t, data };
+  } catch { return null; }
+}
+
+async function generarFolioSobre(tid, venta, env) {
+  const canonical  = resolveTid(tid);
+  const fecha      = venta.fecha || new Date().toISOString().slice(0, 10);
+  const numeroObra = venta.numeroObra || await getNumeroObra(canonical, fecha, env);
+  const parts      = fecha.split('-');
+  const yymmdd     = `${(parts[0] || '').slice(2)}${parts[1] || ''}${parts[2] || ''}`;
+  const seq        = await nextContador(env, kv(canonical, `sobre:folio:${fecha}`));
+  return `SOBRE-${numeroObra}-${yymmdd}-${String(seq).padStart(4, '0')}`;
+}
+
+async function crearTokenEncuesta(tid, venta, env) {
+  const token = crypto.randomUUID().replace(/-/g, '')
+    + crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+  const canonical = resolveTid(tid);
+  const cert      = _certificadoVenta(venta);
+  const folioSobre = await generarFolioSobre(tid, venta, env);
+  const payload   = {
+    sessionId:     venta.sessionId,
+    certificado:   cert,
+    folioSobre,
+    email:         venta.email || null,
+    nombre:        venta.nombre || null,
+    funcionNombre: venta.funcionNombre || venta.fecha,
+    fecha:         venta.fecha,
+    teatroId:      canonical,
+    creadoEn:      new Date().toISOString(),
+    completadaEn:  null,
+    respuestas:    null,
+  };
+  await env.VENTAS.put(
+    kv(canonical, `encuesta:${token}`),
+    JSON.stringify(payload),
+    { expirationTtl: ENCUESTA_TTL_SEC },
+  );
+  venta.sobreFolio = folioSobre;
+  return token;
+}
+
+async function asegurarTokenEncuesta(tid, venta, env) {
+  if (venta.encuestaToken) {
+    const prev = await obtenerEncuestaPorToken(tid, venta.encuestaToken, env);
+    if (prev) return venta.encuestaToken;
+  }
+  return crearTokenEncuesta(tid, venta, env);
 }
 
 function urlQrBoleto(codigo, size = 148) {
-  const data = encodeURIComponent(codigoQrPayload(codigo));
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=1a1411&bgcolor=f1ead9&margin=8&data=${data}`;
+  return urlQrData(codigoQrPayload(codigo), size);
+}
+
+function urlQrData(data, size = 148) {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=1a1411&bgcolor=f1ead9&margin=8&data=${encodeURIComponent(data)}`;
 }
 
 function esCodigoCert(codigo) {
@@ -365,9 +496,11 @@ function htmlBoleto(venta, funcionNombre, config) {
   const qrCert       = codigoQrOficialVenta(venta);
   const folioTaquilla = boletos.map(b => b.folio).filter(Boolean).join(' · ') || null;
   const qrUrl        = urlQrBoleto(qrCert);
-  const graciasUrl   = 'https://elgorilateatro.com.mx/gracias.html';
+  const waPaginaUrl  = urlEnviarBoletoWa(certificado);
+  const waTextoUrl   = waMeUrlTexto(textoWhatsAppBoleto(venta, funcionNombre, config));
   const nEntradas    = venta.cantidad || boletos.length || 1;
   const entradasLbl  = nEntradas === 1 ? '1 entrada' : `${nEntradas} entradas`;
+  const direccion    = config.direccion || 'José María Velasco 59, San José Insurgentes, CDMX';
 
   const itemsRows = (venta.items || []).map(item => {
     const tipoNombre = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
@@ -448,22 +581,98 @@ function htmlBoleto(venta, funcionNombre, config) {
           <p style="margin:0 0 6px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a7760;">Referencia</p>
           <p style="margin:0 0 14px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.06em;color:#1a1411;word-break:break-all;">${certificado}</p>
           <p style="margin:0;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#3a2e26;">
-            <strong>Presenta este correo o el QR en la entrada del teatro.</strong> ${nEntradas > 1 ? `Tienes <strong>${nEntradas} entradas</strong>.` : ''} Llega con <strong>30 minutos de anticipación</strong>. No necesitas hacer nada más en línea.
+            <strong>Presenta este QR en la entrada del teatro</strong> (pantalla o impreso). ${nEntradas > 1 ? `Tienes <strong>${nEntradas} entradas</strong> en este certificado.` : ''}
           </p>
         </td>
       </tr>
     </table>
   </td></tr>
 
+  <!-- Indicaciones día D (sin enlaces promocionales) -->
+  <tr><td style="background:#f1ead9;padding:22px 28px;border-top:1px solid #c9b896;">
+    <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#D43A1A;">
+      El día de la función
+    </p>
+    <ul style="margin:0;padding:0 0 0 18px;font-family:Georgia,serif;font-size:15px;line-height:1.65;color:#3a2e26;">
+      <li style="margin-bottom:8px;">Llega con <strong>al menos 30 minutos de anticipación</strong>. El acceso puede cerrarse al iniciar la función (20:30 hrs).</li>
+      <li style="margin-bottom:8px;">Presenta el <strong>QR de arriba</strong> en la entrada — no necesitas hacer nada más en línea.</li>
+      <li style="margin-bottom:8px;">Si compraste tarifa de <strong>estudiante, INAPAM o maestro</strong>, lleva credencial vigente al acceso.</li>
+      <li style="margin-bottom:0;"><strong>${config.venue || 'Teatro Wilberto Cantón'}</strong><br><span style="font-size:13px;color:#6b5c4a;">${direccion}</span></li>
+    </ul>
+  </td></tr>
+
+  <!-- WhatsApp: guardar boleto en el teléfono -->
+  <tr><td style="background:#e8dfc8;padding:22px 28px;border-top:1px solid #c9b896;text-align:center;">
+    <p style="margin:0 0 14px;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#3a2e26;">
+      ¿Quieres tenerlo a la mano? Guárdalo en WhatsApp para el día de la función.
+    </p>
+    <a href="${waPaginaUrl}" style="display:inline-block;background:#128C7E;color:#fff;padding:14px 22px;text-decoration:none;font-family:Georgia,serif;font-size:16px;margin:0 6px 10px;border-radius:2px;">
+      Guardar boleto en WhatsApp →
+    </a>
+    <p style="margin:12px 0 0;font-family:Georgia,serif;font-size:13px;line-height:1.5;color:#6b5c4a;">
+      También puedes <a href="${waTextoUrl}" style="color:#128C7E;text-decoration:underline;">enviarte el folio por WhatsApp</a> si prefieres solo el texto.
+    </p>
+  </td></tr>
+
   <!-- Pie -->
   <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
-    <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.55);">
+    <p style="margin:0;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.55);">
       ¿Dudas? Responde a este correo o escribe a
       <a href="mailto:${EMAIL_OPERATIVO}" style="color:#d99b3a;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
     </p>
-    <a href="${graciasUrl}" style="display:inline-block;border:1px solid rgba(217,155,58,.45);color:#d99b3a;padding:12px 20px;text-decoration:none;font-family:Georgia,serif;font-size:15px;margin:0 6px 10px;">
-      Indicaciones para el día de la función →
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+// ─── EMAIL: POST-FUNCIÓN (sobre privado → encuesta con token) ─────────────────
+
+function htmlEmailPostFuncion(venta, funcionNombre, config, opts = {}) {
+  const token       = opts.encuestaToken || '';
+  const encuestaUrl = token ? urlEncuesta(token) : null;
+
+  if (!encuestaUrl) {
+    return `<!DOCTYPE html><html lang="es"><body style="font-family:Georgia,serif;padding:24px;">
+      <p>Error interno: falta enlace de acta para ${venta.email || '—'}.</p></body></html>`;
+  }
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tu acta — EL GORILA</title>
+</head>
+<body style="margin:0;padding:0;background:#0a0706;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0706;padding:28px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+  <tr><td style="background:#0a0706;padding:36px 28px 28px;border:1px solid rgba(241,234,217,.12);text-align:center;">
+    <p style="margin:0 0 20px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.36em;text-transform:uppercase;color:#d99b3a;">
+      Esta noche · ${funcionNombre}
+    </p>
+    <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.15;font-weight:500;color:#f1ead9;">
+      Gracias por acompañarnos.
+    </h1>
+    <p style="margin:18px auto 0;font-family:Georgia,serif;font-size:20px;line-height:1.5;color:rgba(241,234,217,.82);max-width:360px;">
+      El Gorila te deja una sorpresa.
+    </p>
+  </td></tr>
+
+  <tr><td style="background:#f1ead9;padding:36px 28px;text-align:center;">
+    <a href="${encuestaUrl}" style="display:inline-block;background:#D43A1A;color:#fff;padding:16px 32px;text-decoration:none;font-family:Georgia,serif;font-size:18px;">
+      Abrir →
     </a>
+  </td></tr>
+
+  <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
+    <p style="margin:0;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.5);">
+      <a href="mailto:${EMAIL_OPERATIVO}" style="color:#d99b3a;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
+    </p>
   </td></tr>
 
 </table>
@@ -839,6 +1048,13 @@ function validarCarritoParaCupon(cupon, itemsValidados) {
     return {
       ok:    false,
       error: `${cupon.nombre} aplica hasta ${cupon.maxGeneral} boletos generales por compra.`,
+    };
+  }
+
+  if (cupon.tipo === 'porcentaje' && !cupon.soloGenerales && cantGeneral === 0) {
+    return {
+      ok:    false,
+      error: `${cupon.nombre} aplica a boletos generales del carrito. Las tarifas INAPAM/estudiante/maestro van en su fila aparte.`,
     };
   }
 
@@ -1514,10 +1730,10 @@ async function handleCheckout(tid, request, env, ctx) {
     cuponAplicado = cupon;
   }
 
-  if (cuponAplicado?.codigo === 'INVITADO25') {
+  if (cuponAplicado && CUPONES_REFERIDO.has(cuponAplicado.codigo)) {
     if (!referidoDe || !esCodigoCert(referidoDe)) {
       await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
-      return json({ error: 'El cupón de invitado solo funciona con un enlace de invitación válido.' }, 400, request);
+      return json({ error: 'El cupón de invitado/regalo solo funciona con un enlace de invitación válido.' }, 400, request);
     }
     const refVenta = await _resolveVentaKey(tid, referidoDe, env);
     if (!refVenta) {
@@ -1534,9 +1750,9 @@ async function handleCheckout(tid, request, env, ctx) {
       await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
       return json({ error: 'La invitación ya no es válida.' }, 400, request);
     }
-    if (!cuponAplicado || cuponAplicado.codigo !== 'INVITADO25') {
+    if (!cuponAplicado || !CUPONES_REFERIDO.has(cuponAplicado.codigo)) {
       await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
-      return json({ error: 'El descuento de invitado debe activarse antes de pagar.' }, 400, request);
+      return json({ error: 'El descuento de invitado/regalo debe activarse antes de pagar.' }, 400, request);
     }
   }
 
@@ -1852,6 +2068,158 @@ async function handleInvitacion(tid, certificado, request, env) {
   }, 200, request);
 }
 
+// ─── HANDLER: ENCUESTA POST-FUNCIÓN (solo token del correo) ───────────────────
+
+const ENCUESTA_VOLVERIA  = new Set(['si', 'talvez', 'no']);
+const ENCUESTA_COMPANIA  = new Set(['solo', 'pareja', 'amigos', 'familia', 'trabajo', 'otro']);
+const ENCUESTA_ORIGEN    = new Set([
+  'instagram', 'boca', 'google', 'prensa', 'repeat', 'otro',
+]);
+
+function respuestaEncuestaPublica(data, certificado) {
+  const nombre = (data.respuestas?.nombrePortador || data.nombre || '').trim();
+  const primer = nombre ? nombre.split(/\s+/)[0] : null;
+  const out = {
+    valido:        true,
+    completada:    !!data.completadaEn,
+    funcionNombre: data.funcionNombre || data.fecha,
+    fecha:         data.fecha || null,
+    saludo:        primer,
+    nombre:        nombre || null,
+  };
+  if (data.completadaEn && data.respuestas) {
+    out.regalos = regalosParaEncuesta(certificado, data.respuestas);
+    out.acta = data.respuestas.acta || null;
+  }
+  return out;
+}
+
+function parseActaEncuesta(body) {
+  const raw = body.acta && typeof body.acta === 'object' ? body.acta : body;
+  const clip = (v, max) => (typeof v === 'string' ? v.trim().substring(0, max) : '');
+  return {
+    libertad: clip(raw.libertad, 1200),
+    jaulas:   clip(raw.jaulas, 1200),
+    salidas:  clip(raw.salidas, 1200),
+    actitud:  clip(raw.actitud, 1200),
+  };
+}
+
+async function handleEncuestaGet(tid, token, request, env) {
+  const ip      = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const ventana = Math.floor(Date.now() / 900000);
+  const rlKey   = `rl:enc:g:${ip}:${ventana}`;
+  const rl      = parseInt((await env.INVENTARIO.get(rlKey)) || '0', 10);
+  if (rl >= 120) return json({ error: 'Demasiados intentos. Espera unos minutos.' }, 429, request);
+
+  const found = await obtenerEncuestaPorToken(tid, token, env);
+  if (!found) {
+    await env.INVENTARIO.put(rlKey, String(rl + 1), { expirationTtl: 900 });
+    return json({
+      error: 'Este sobre no existe o ya expiró. Ábrelo desde el correo que te enviamos esta noche.',
+    }, 404, request);
+  }
+
+  const { data } = found;
+  if (data.teatroId && data.teatroId !== resolveTid(tid)) {
+    return json({ error: 'Enlace no válido para este teatro.' }, 404, request);
+  }
+
+  return json(respuestaEncuestaPublica(data, data.certificado), 200, request);
+}
+
+async function handleEncuestaPost(tid, token, request, env) {
+  const ip      = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const ventana = Math.floor(Date.now() / 900000);
+  const rlKey   = `rl:enc:p:${ip}:${ventana}`;
+  const rl      = parseInt((await env.INVENTARIO.get(rlKey)) || '0', 10);
+  if (rl >= 40) return json({ error: 'Demasiados intentos.' }, 429, request);
+
+  const found = await obtenerEncuestaPorToken(tid, token, env);
+  if (!found) {
+    await env.INVENTARIO.put(rlKey, String(rl + 1), { expirationTtl: 900 });
+    return json({ error: 'Sobre no válido.' }, 404, request);
+  }
+
+  const { token: t, data } = found;
+
+  if (data.completadaEn) {
+    return json({
+      ok: true,
+      completada: true,
+      regalos: regalosParaEncuesta(data.certificado, data.respuestas || {}),
+    }, 200, request);
+  }
+
+  let body;
+  try { body = await request.json(); } catch {
+    return json({ error: 'Cuerpo inválido.' }, 400, request);
+  }
+
+  const acta = parseActaEncuesta(body);
+  if (!acta.libertad) {
+    return json({ error: 'Responde: ¿qué es la libertad?' }, 400, request);
+  }
+
+  const nombrePortador = typeof body.nombrePortador === 'string'
+    ? body.nombrePortador.trim().substring(0, 120) : '';
+  if (!nombrePortador) {
+    return json({ error: 'Indica tu nombre para el acta.' }, 400, request);
+  }
+
+  const nombreRegalo = typeof body.nombreRegalo === 'string'
+    ? body.nombreRegalo.trim().substring(0, 120) : '';
+
+  const npsRaw = parseInt(body.nps, 10);
+  const nps = Number.isInteger(npsRaw) && npsRaw >= 1 && npsRaw <= 5 ? npsRaw : null;
+  const volveria = typeof body.volveria === 'string' ? body.volveria.trim().toLowerCase() : '';
+  const acompanamiento = typeof body.acompanamiento === 'string'
+    ? body.acompanamiento.trim().toLowerCase() : '';
+  const origen = typeof body.origen === 'string' ? body.origen.trim().toLowerCase() : '';
+  const comentario = typeof body.comentario === 'string'
+    ? body.comentario.trim().substring(0, 800) : '';
+
+  const respuestas = {
+    acta,
+    nombrePortador,
+    nombreRegalo: nombreRegalo || null,
+    nps,
+    volveria: ENCUESTA_VOLVERIA.has(volveria) ? volveria : null,
+    acompanamiento: ENCUESTA_COMPANIA.has(acompanamiento) ? acompanamiento : null,
+    origen: ENCUESTA_ORIGEN.has(origen) ? origen : null,
+    comentario: comentario || null,
+    enviadoEn: new Date().toISOString(),
+  };
+
+  data.respuestas   = respuestas;
+  data.completadaEn = respuestas.enviadoEn;
+
+  const canonical = resolveTid(tid);
+  await env.VENTAS.put(
+    kv(canonical, `encuesta:${t}`),
+    JSON.stringify(data),
+    { expirationTtl: ENCUESTA_TTL_SEC },
+  );
+
+  if (data.sessionId) {
+    const ventaRaw = await env.VENTAS.get(kv(canonical, `venta:${data.sessionId}`));
+    if (ventaRaw) {
+      try {
+        const venta = JSON.parse(ventaRaw);
+        venta.encuestaCompletadaEn = data.completadaEn;
+        venta.encuestaRespuestas   = respuestas;
+        await env.VENTAS.put(kv(canonical, `venta:${data.sessionId}`), JSON.stringify(venta));
+      } catch { /* ignore */ }
+    }
+  }
+
+  const regalos = regalosParaEncuesta(data.certificado, respuestas);
+
+  return json({
+    ok: true, completada: true, regalos,
+  }, 200, request);
+}
+
 // ─── HANDLER: VENTA PÚBLICA (sin email) ───────────────────────────────────────
 
 async function handleEnviarBoletoCompra(tid, id, request, env) {
@@ -1984,6 +2352,132 @@ async function handleAdminVentaDetail(tid, id, request, env) {
     }
     return json(_formatVenta(resolved.venta), 200, request);
   } catch { return json({ error: 'Error al obtener la venta.' }, 500, request); }
+}
+
+async function handleEmailPostFuncion(tid, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_REENVIAR.has(payload.rol)) {
+    return json({ error: 'Sin permiso para enviar correos post-función.' }, 403, request);
+  }
+
+  let body = {};
+  try { body = await request.json(); } catch {
+    return json({ error: 'Indica fecha (YYYY-MM-DD) en el cuerpo JSON.' }, 400, request);
+  }
+
+  const fecha = typeof body.fecha === 'string' ? body.fecha.trim() : '';
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return json({ error: 'Indica fecha válida (YYYY-MM-DD).' }, 400, request);
+  }
+
+  const dryRun = !!body.dryRun;
+  const forzar = !!body.forzar;
+  const config = await getVenueConfig(tid, env);
+
+  const hoyMx = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+  if (!dryRun && !forzar && fecha !== hoyMx) {
+    return json({
+      error: `Este envío es para asistentes del día de la función. Hoy (CDMX): ${hoyMx}. Seleccionaste: ${fecha}. Usa forzar:true solo si es intencional.`,
+    }, 400, request);
+  }
+
+  const idxResult  = await env.VENTAS.list({ prefix: kv(tid, `ventaIdx:${fecha}:`) });
+  const sessionIds = (await Promise.all(idxResult.keys.map(k => env.VENTAS.get(k.name)))).filter(Boolean);
+  const ventasRaw  = await Promise.all(sessionIds.map(sid => env.VENTAS.get(kv(tid, `venta:${sid}`))));
+  const ventas     = ventasRaw
+    .filter(Boolean)
+    .map(r => { try { return JSON.parse(r); } catch { return null; } })
+    .filter(v => v && v.estado !== 'reembolsada' && v.email && (v.fecha === fecha || !v.fecha));
+
+  const resultados = [];
+  let enviados = 0;
+  let fallidos = 0;
+
+  for (const venta of ventas) {
+    const funcionNombre = venta.funcionNombre || venta.fecha || fecha;
+    const cert          = _certificadoVenta(venta);
+    const entry         = {
+      certificado: cert,
+      email:       venta.email,
+      folioSobre:  venta.sobreFolio || null,
+      ok:          false,
+    };
+
+    if (dryRun) {
+      entry.ok = true;
+      entry.dryRun = true;
+      enviados += 1;
+      resultados.push(entry);
+      continue;
+    }
+
+    if (venta.emailPostFuncionEnviado && venta.encuestaToken) {
+      entry.ok = true;
+      entry.omitido = true;
+      entry.motivo = 'Ya enviado';
+      resultados.push(entry);
+      continue;
+    }
+
+    let encuestaToken = venta.encuestaToken || null;
+    if (!dryRun) {
+      encuestaToken = await asegurarTokenEncuesta(tid, venta, env);
+      venta.encuestaToken = encuestaToken;
+      const sidPre = venta.sessionId;
+      if (sidPre) {
+        await env.VENTAS.put(kv(tid, `venta:${sidPre}`), JSON.stringify(venta));
+      }
+    } else {
+      encuestaToken = encuestaToken || 'dryrun000000000000000000000000000000000000000000';
+    }
+
+    const html = htmlEmailPostFuncion(venta, funcionNombre, config, {
+      encuestaToken,
+      folioSobre: venta.sobreFolio,
+    });
+    const ok   = await enviarEmail(
+      venta.email,
+      `Gracias por acompañarnos · EL GORILA · ${funcionNombre}`,
+      html,
+      env,
+    );
+
+    entry.ok = ok;
+    if (ok) {
+      enviados += 1;
+      venta.emailPostFuncionEnviado = new Date().toISOString();
+      const sid = venta.sessionId;
+      if (sid) {
+        await env.VENTAS.put(kv(tid, `venta:${sid}`), JSON.stringify(venta));
+      }
+    } else {
+      fallidos += 1;
+      entry.error = 'No se pudo enviar';
+    }
+    resultados.push(entry);
+  }
+
+  await registrarAuditoria(env, {
+    usuarioId: payload.usuario,
+    usuario:   payload.nombre || payload.usuario,
+    rol:       payload.rol,
+    accion:    dryRun ? 'email.post_funcion.dry_run' : 'email.post_funcion',
+    teatroId:  resolveTid(tid),
+    detalles:  `Post-función ${fecha}: ${enviados} enviados, ${fallidos} fallidos, ${ventas.length} con email`,
+    meta:      { fecha, enviados, fallidos, total: ventas.length, dryRun },
+  });
+
+  return json({
+    ok:       true,
+    fecha,
+    dryRun,
+    total:    ventas.length,
+    enviados,
+    fallidos,
+    omitidos: resultados.filter(r => r.omitido).length,
+    resultados,
+  }, 200, request);
 }
 
 async function handleReenviarEmail(tid, id, request, env) {
@@ -2444,7 +2938,7 @@ async function handleVentaManual(tid, request, env, ctx) {
     );
   }
 
-  const compartirUrl = urlCompartirBoleto(gen.certificado);
+  const compartirUrl = urlEnviarBoletoWa(gen.certificado);
   const folioPuerta = gen.boletos.map(b => b.folio).filter(Boolean).join(' · ') || null;
   const waTexto = [
     `🎭 *EL GORILA* — ${funcion.nombre}`,
@@ -3357,6 +3851,9 @@ export default {
       if (method === 'GET' && ventaAdminMatch)
         return handleAdminVentaDetail(tid, decodeURIComponent(ventaAdminMatch[1]), request, env);
 
+      if (method === 'POST' && sub === 'email-post-funcion')
+        return handleEmailPostFuncion(tid, request, env);
+
       const reenviarMatch = sub.match(/^venta\/([^/]+)\/reenviar-email$/);
       if (method === 'POST' && reenviarMatch)
         return handleReenviarEmail(tid, decodeURIComponent(reenviarMatch[1]), request, env);
@@ -3384,6 +3881,13 @@ export default {
     const invMatch = sub.match(/^invitacion\/([^/]+)$/);
     if (method === 'GET' && invMatch)
       return handleInvitacion(tid, decodeURIComponent(invMatch[1]), request, env);
+
+    const encuestaMatch = sub.match(/^encuesta\/([^/]+)$/);
+    if (encuestaMatch) {
+      const encToken = decodeURIComponent(encuestaMatch[1]);
+      if (method === 'GET')  return handleEncuestaGet(tid, encToken, request, env);
+      if (method === 'POST') return handleEncuestaPost(tid, encToken, request, env);
+    }
 
     const ventaMatch = sub.match(/^venta\/([^/]+)$/);
     if (method === 'GET' && ventaMatch)

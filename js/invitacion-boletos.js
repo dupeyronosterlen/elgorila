@@ -3,12 +3,34 @@
  * Rastrea certificado origen (referidoDe) para conectar ventas referidas.
  */
 (function () {
-  const CUPON       = 'INVITADO25';
-  const STORAGE_DE  = 'elgorila_invitacion_de';
-  const STORAGE_OK  = 'elgorila_invitacion_cupon_activo';
+  const STORAGE_DE     = 'elgorila_invitacion_de';
+  const STORAGE_OK     = 'elgorila_invitacion_cupon_activo';
+  const STORAGE_CUPON  = 'elgorila_invitacion_cupon_codigo';
 
   function params() {
     return new URLSearchParams(window.location.search);
+  }
+
+  function cuponInvitacion() {
+    const fromUrl = params().get('cupon');
+    if (fromUrl) return fromUrl.trim().toUpperCase();
+    try {
+      return sessionStorage.getItem(STORAGE_CUPON) || 'INVITADO25';
+    } catch (_) {
+      return 'INVITADO25';
+    }
+  }
+
+  function guardarCupon(codigo) {
+    if (!codigo) return;
+    try { sessionStorage.setItem(STORAGE_CUPON, codigo.trim().toUpperCase()); } catch (_) {}
+  }
+
+  function etiquetaCupon(codigo) {
+    if (codigo === 'REGALO25') return 'regalo';
+    if (codigo === 'OTRA50') return 'vuelta';
+    if (codigo === 'MANADA15') return 'manada';
+    return 'invitado';
   }
 
   function entradasLabel(n) {
@@ -35,8 +57,9 @@
 
   function limpiarUrlInvita() {
     const p = params();
-    if (!p.has('invita')) return;
+    if (!p.has('invita') && !p.has('de') && !p.has('cupon')) return;
     p.delete('invita');
+    p.delete('de');
     p.delete('cupon');
     const q = p.toString();
     history.replaceState(null, '', 'boletos.html' + (q ? '?' + q : ''));
@@ -70,15 +93,17 @@
     const ref = info.certificadoRef || '—';
     const fn  = info.funcionNombre || info.fecha || 'EL GORILA';
     const ent = entradasLabel(info.entradas);
+    const cupon = cuponInvitacion();
+    const tipo = etiquetaCupon(cupon);
 
     if (estado === 'activo') {
       return `
         <div class="invitacion-banner-inner activo">
           <p class="invitacion-kicker">Invitación personal</p>
-          <h3 class="invitacion-titulo">Descuento de invitado activado</h3>
+          <h3 class="invitacion-titulo">Descuento de ${tipo} activado</h3>
           <p class="invitacion-texto">
             Te invitaron desde el certificado <strong>${ref}</strong>
-            (${fn}, ${ent}). Al pagar se aplicará <strong>−25%</strong>.
+            (${fn}, ${ent}). Al pagar se aplicará <strong>−25%</strong> en boletos generales.
           </p>
         </div>`;
     }
@@ -92,15 +117,15 @@
           (${fn}, ${ent}). No aparece en buscadores ni se activa sola.
         </p>
         <button type="button" class="invitacion-btn-activar" id="btn-activar-invitacion">
-          Activar descuento de invitado (−25%)
+          Activar descuento de ${tipo} (−25%)
         </button>
-        <p class="invitacion-nota">Solo al pulsar este botón. Luego elige fecha y boletos como siempre.</p>
+        <p class="invitacion-nota">Solo al pulsar este botón. INAPAM, estudiantes y maestros conservan su tarifa ($245).</p>
       </div>`;
   }
 
   async function aplicarCuponInvitado() {
     const input = document.getElementById('ichk-cupon-input');
-    if (input) input.value = CUPON;
+    if (input) input.value = cuponInvitacion();
 
     const ordenRaw = localStorage.getItem('orden_compra');
     if (!ordenRaw) return false;
@@ -160,6 +185,8 @@
     engancharCheckout();
 
     let de = params().get('invita') || params().get('de') || '';
+    const cuponParam = params().get('cupon');
+    if (cuponParam) guardarCupon(cuponParam);
     if (de) {
       guardarReferido(de);
       limpiarUrlInvita();
@@ -192,7 +219,7 @@
           } catch (e) {
             alert(e.message || 'No se pudo activar el descuento.');
             btn.disabled = false;
-            btn.textContent = 'Activar descuento de invitado (−25%)';
+            btn.textContent = `Activar descuento de ${etiquetaCupon(cuponInvitacion())} (−25%)`;
           }
         });
       }

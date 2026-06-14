@@ -58,6 +58,38 @@ const codigos = {
     agencia:        'NO ads · enlace personal post-función (invitacion.html)',
   },
 
+  // ── Regalo post-función (email 22:00) ─────────────────────────────────────
+  REGALO25: {
+    tipo:           'porcentaje',
+    porcentaje:     25,
+    nombre:         'Regalo post-función',
+    solo_generales: false,
+    activo:         true,
+    referido:       true,
+    agencia:        'Encuesta post-función · −25% generales · regalo a terceros',
+  },
+
+  OTRA50: {
+    tipo:           'porcentaje',
+    porcentaje:     50,
+    nombre:         'Vuelve otra noche',
+    solo_generales: false,
+    activo:         true,
+    referido:       true,
+    agencia:        'Encuesta post-función · −50% generales · solo quien volvería',
+  },
+
+  MANADA15: {
+    tipo:           'porcentaje',
+    porcentaje:     15,
+    nombre:         'La manada',
+    min_general:    3,
+    solo_generales: false,
+    activo:         true,
+    referido:       true,
+    agencia:        'Encuesta post-función · −15% con 3+ generales · vino en grupo',
+  },
+
   // ── QA Stripe (1 boleto general = $10 MXN — mínimo Stripe) ─────────────────
   PRUEBA99: {
     tipo:           'par_fijo',

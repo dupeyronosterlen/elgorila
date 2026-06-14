@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Acta El Gorila</title>
+<meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
+<title>Acta de nacimiento — EL GORILA</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="fonts/courier-prime-latin.woff2" crossorigin>
@@ -304,10 +305,137 @@
 
   @media print {
     body { background:white; padding:0; }
-    .label, .dl-bar { display:none; }
+    .label, .dl-bar, .flujo-panel, .estado, .kicker-funcion { display:none; }
     .page-wrapper { width:8.5in; height:11in; }
     .page { transform:none !important; position:static; box-shadow:none; }
     .page-wrapper + .label + .page-wrapper { page-break-before:always; }
+  }
+
+  .hidden { display: none !important; }
+
+  .estado {
+    min-height: 40vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(241,234,217,.75);
+    font-family: 'IM Fell English', Georgia, serif;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .estado-msg { font-size: 20px; margin-top: 12px; }
+
+  .kicker-funcion {
+    color: rgba(217,155,58,.55);
+    font-family: 'Courier Prime', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+    text-align: center;
+  }
+
+  .revcampo {
+    width: 100%;
+    border: none;
+    background: transparent;
+    resize: vertical;
+    font-family: 'IM Fell English', Georgia, serif;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #1a2a1a;
+    padding: 4px 2px;
+    min-height: 52px;
+    outline: none;
+  }
+  .revcampo::placeholder { color: rgba(74,90,74,.45); font-style: italic; }
+  .revcampo-wrap {
+    width: 100%;
+    border-bottom: 1px solid rgba(74,122,74,.45);
+    margin-bottom: 6px;
+  }
+  .revcampo-wrap--final {
+    border-bottom: 2px solid #1a5c2a;
+    margin-top: 4px;
+  }
+
+  .flujo-panel {
+    width: min(90vw, 680px);
+    margin: 28px auto 0;
+    padding: 24px 20px 32px;
+    border: 1px solid rgba(241,234,217,.12);
+    background: rgba(255,255,255,.03);
+  }
+  .flujo-titulo {
+    font-family: 'IM Fell English', Georgia, serif;
+    font-size: 22px;
+    color: #f1ead9;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .flujo-sub {
+    font-family: 'IM Fell English', Georgia, serif;
+    font-style: italic;
+    font-size: 14px;
+    color: rgba(241,234,217,.6);
+    text-align: center;
+    margin-bottom: 22px;
+    line-height: 1.55;
+  }
+  .flujo-campo { margin-bottom: 18px; }
+  .flujo-label {
+    display: block;
+    font-family: 'Courier Prime', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(217,155,58,.75);
+    margin-bottom: 8px;
+  }
+  .flujo-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid rgba(241,234,217,.2);
+    background: rgba(0,0,0,.25);
+    color: #f1ead9;
+    font-family: 'IM Fell English', Georgia, serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
+  .flujo-input:focus { outline: 1px solid rgba(217,155,58,.5); }
+  .flujo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .flujo-hint {
+    font-family: 'Courier Prime', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(241,234,217,.45);
+    text-align: center;
+    margin: 18px 0 8px;
+    text-transform: uppercase;
+  }
+  .flujo-link {
+    display: block;
+    text-align: center;
+    color: #d99b3a;
+    font-family: 'IM Fell English', Georgia, serif;
+    font-size: 16px;
+  }
+  .dl-btn.prim {
+    background: #D43A1A;
+    color: #fff;
+    border-color: #D43A1A;
+  }
+  .dl-btn.prim:hover {
+    background: #b83216;
+    color: #fff;
+    border-color: #b83216;
   }
 </style>
 <script>
@@ -324,6 +452,20 @@
 </script>
 </head>
 <body>
+
+<div id="estado-carga" class="estado">
+  <p class="kicker-funcion">EL GORILA</p>
+  <p class="estado-msg">Preparando tu acta…</p>
+</div>
+
+<div id="estado-error" class="estado hidden">
+  <p class="kicker-funcion">Acta no disponible</p>
+  <p class="estado-msg" id="error-text"></p>
+</div>
+
+<div id="contenido-acta" class="hidden">
+
+<p class="kicker-funcion" id="kicker-funcion"></p>
 
 <div class="label">— FRENTE —</div>
 
@@ -362,6 +504,7 @@
 
     <div class="campo">
       <div class="campo-etiqueta">NOMBRE</div>
+      <div class="campo-valor" id="campo-nombre-valor"></div>
       <div class="campo-linea"></div>
     </div>
 
@@ -389,8 +532,8 @@
 </div>
 </div>
 
-<div class="dl-bar">
-  <button class="dl-btn" onclick="descargar(this,'page-frente','acta-gorila-frente')">
+<div class="dl-bar dl-bar--static">
+  <button class="dl-btn" data-label="Descargar frente · PNG" onclick="descargarEstatico(this,'page-frente','acta-gorila-frente')">
     <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     Descargar frente · PNG
   </button>
@@ -408,10 +551,8 @@
     <div class="pregunta">¿QUÉ ES LA LIBERTAD?</div>
     <div class="instruccion">Responda con la honestidad que no le fue solicitada afuera.</div>
 
-    <div class="lineas">
-      <div class="linea"></div>
-      <div class="linea"></div>
-      <div class="linea"></div>
+    <div class="revcampo-wrap">
+      <textarea class="revcampo" id="rev-libertad" rows="3" maxlength="1200" placeholder="Su respuesta…"></textarea>
     </div>
 
     <div class="seccion">
@@ -421,9 +562,9 @@
         Nadie me dijo que los hombres también viven enjaulados."
         <span class="cita-attr">— EL GORILA · INFORME PARA LA ACADEMIA</span>
       </div>
-      <div class="linea-sm"></div>
-      <div class="linea-sm"></div>
-      <div class="linea-sm"></div>
+      <div class="revcampo-wrap">
+        <textarea class="revcampo" id="rev-jaulas" rows="3" maxlength="1200" placeholder="¿Cuáles son las suyas?"></textarea>
+      </div>
     </div>
 
     <div class="seccion">
@@ -431,9 +572,9 @@
       <div style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a6a5a;margin-bottom:8px;padding-left:10px;">
         Toda jaula tiene una puerta. ¿Cuáles son las suyas?
       </div>
-      <div class="linea-sm"></div>
-      <div class="linea-sm"></div>
-      <div class="linea-sm"></div>
+      <div class="revcampo-wrap">
+        <textarea class="revcampo" id="rev-salidas" rows="3" maxlength="1200" placeholder="Sus puertas…"></textarea>
+      </div>
     </div>
 
     <div class="sec-libertad">
@@ -442,7 +583,9 @@
         No es un lugar. No es la ausencia de rejas.<br>
         Es una decisión que se toma desde adentro.
       </div>
-      <div class="linea-final"></div>
+      <div class="revcampo-wrap revcampo-wrap--final">
+        <textarea class="revcampo" id="rev-actitud" rows="2" maxlength="1200" placeholder="Su decisión…"></textarea>
+      </div>
     </div>
 
     <div class="rev-footer">
@@ -453,66 +596,56 @@
 </div>
 </div>
 
-<div class="dl-bar">
-  <button class="dl-btn" onclick="descargar(this,'page-reverso','acta-gorila-reverso')">
+<div class="dl-bar dl-bar--static">
+  <button class="dl-btn" data-label="Descargar reverso · PNG" onclick="descargarEstatico(this,'page-reverso','acta-gorila-reverso')">
     <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     Descargar reverso · PNG
   </button>
 </div>
 
+<section class="flujo-panel" id="panel-flujo">
+  <h2 class="flujo-titulo">Tu acta de nacimiento</h2>
+  <p class="flujo-sub">Arriba está el certificado original de Peter el Rojo — con su firma.<br>Abajo, el cuestionario sobre la libertad. Cuando termines, pon tu nombre.</p>
+
+  <div class="flujo-campo">
+    <label class="flujo-label" for="input-mi-nombre">Tu nombre en el acta</label>
+    <input class="flujo-input" id="input-mi-nombre" type="text" maxlength="80" autocomplete="name" placeholder="Como quieres que aparezca">
+  </div>
+
+  <div class="flujo-actions">
+    <button type="button" class="dl-btn prim" id="btn-descargar-mia" data-label="Descargar mi acta · PNG">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Descargar mi acta · PNG
+    </button>
+  </div>
+
+  <p class="flujo-hint">Regala el acta a alguien más</p>
+
+  <div class="flujo-campo">
+    <label class="flujo-label" for="input-regalo-nombre">Nombre de quien recibe el acta</label>
+    <input class="flujo-input" id="input-regalo-nombre" type="text" maxlength="80" placeholder="Su nombre en el certificado">
+  </div>
+
+  <div class="flujo-actions">
+    <button type="button" class="dl-btn" id="btn-descargar-regalo" data-label="Descargar acta regalo · PNG">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Descargar acta con su nombre · PNG
+    </button>
+  </div>
+
+  <div class="hidden" id="regalo-link-box"></div>
+</section>
+
+</div><!-- #contenido-acta -->
+
+<script src="js/config.js"></script>
+<script src="js/api-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="js/acta.js"></script>
 <script>
-var DL_ICON = '<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-
-function descargar(btn, pageId, filename) {
-  if (typeof html2canvas === 'undefined') {
-    alert('La librería de captura no cargó. Revisa tu conexión e intenta de nuevo.');
-    return;
-  }
-
-  var labelText = btn.querySelector('svg').nextSibling.textContent.trim();
-  btn.classList.add('is-loading');
-  btn.innerHTML = 'Generando…';
-
-  var el = document.getElementById(pageId);
-  var savedTransform = el.style.transform;
-  el.style.transform = 'none';
-  el.style.position = 'static';
-
-  html2canvas(el, {
-    width: 816,
-    height: 1056,
-    scale: 3,
-    useCORS: true,
-    backgroundColor: null,
-    logging: false
-  }).then(function(canvas) {
-    el.style.transform = savedTransform;
-    el.style.position = 'absolute';
-    scale();
-
-    canvas.toBlob(function(blob) {
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = filename + '.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
-
-      btn.classList.remove('is-loading');
-      btn.innerHTML = DL_ICON + ' ' + labelText;
-    }, 'image/png');
-  }).catch(function(err) {
-    console.error('html2canvas error:', err);
-    el.style.transform = savedTransform;
-    el.style.position = 'absolute';
-    scale();
-    btn.classList.remove('is-loading');
-    btn.innerHTML = DL_ICON + ' Error — intenta de nuevo';
+  document.querySelectorAll('.dl-bar--static').forEach(el => {
+    if (new URLSearchParams(location.search).get('t')) el.style.display = 'none';
   });
-}
 </script>
 
 </body>

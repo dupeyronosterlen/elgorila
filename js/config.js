@@ -25,8 +25,8 @@ window.TEATRO_ID = window.teatroIdActivo();
 /** false = admin.html exige usuario y contraseña (recomendado en producción). */
 window.ADMIN_SIN_LOGIN = false;
 
-/** false = venta pública cerrada (portada «Próximamente» → Instagram). boletera/admin siguen activos. */
-window.VENTA_PUBLICA_ABIERTA = false;
+/** true = venta en boletos.html. false = portada «Próximamente» → Instagram. */
+window.VENTA_PUBLICA_ABIERTA = true;
 window.INSTAGRAM_BOLETOS_URL = 'https://www.instagram.com/elgorilateatro';
 
 /** Precios por zona (deben coincidir con KV config / scripts/init-config.js) */
