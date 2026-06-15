@@ -310,10 +310,12 @@ tbody tr:hover td { color: var(--d-fg); }
   color: transparent;
   font-size: 18px;
 }
-.lista-boleto.usado { opacity: .45; cursor: default; }
+.lista-boleto.usado { opacity: .65; cursor: pointer; }
 .lista-boleto.usado .lista-boleto-check {
   border-color: #4ade80;
   color: #4ade80;
   background: rgba(74,222,128,.08);
 }
+.lista-boleto.usado:hover { opacity: .85; }
 .lista-boleto:active:not(.usado) { opacity: .75; }
+.lista-boleto.usado:active { opacity: .55; }

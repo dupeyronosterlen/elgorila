@@ -432,6 +432,8 @@ function syncVentaUsadoGlobal(venta) {
   if (venta.usado) {
     const ultimo = [...venta.boletos].reverse().find(b => b.usadoEn);
     venta.usadoEn = ultimo?.usadoEn || new Date().toISOString();
+  } else {
+    venta.usadoEn = null;
   }
 }
 
@@ -2595,7 +2597,8 @@ async function handleAdminLogin(request, env) {
     return json({ error: 'Cuentas admin no configuradas.' }, 503, request);
 
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-  if (!await checkRateLimit(ip, env)) {
+  const loginRateLimitOff = env.DISABLE_LOGIN_RATE_LIMIT === 'true' || env.DISABLE_LOGIN_RATE_LIMIT === '1';
+  if (!loginRateLimitOff && !await checkRateLimit(ip, env)) {
     return json({ error: 'Demasiados intentos. Espera 15 minutos.' }, 429, request);
   }
 
@@ -2698,6 +2701,48 @@ async function handleCanjear(tid, codigo, request, env) {
   });
 
   return json({ ok: true, usadoEn: boleto?.usadoEn || venta.usadoEn, folio: boleto?.folio || null }, 200, request);
+}
+
+async function handleDescanjear(tid, codigo, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_CANJEAR.has(payload.rol)) {
+    return json({ error: 'Sin permiso para modificar check-in.' }, 403, request);
+  }
+  if (!codigo || !esCodigoCert(codigo)) return json({ error: 'Código de folio inválido.' }, 400, request);
+
+  const resolved = await _resolveVentaKey(tid, codigo, env);
+  if (!resolved) return json({ error: 'Folio no encontrado.' }, 404, request);
+  const { ventaKey, venta, boletoIdx } = resolved;
+  const boleto = boletoEnVenta(venta, boletoIdx);
+
+  if (boleto) {
+    if (!boleto.usado) {
+      return json({ error: 'Este boleto no tiene check-in registrado.' }, 409, request);
+    }
+    boleto.usado = false;
+    boleto.usadoEn = null;
+    syncVentaUsadoGlobal(venta);
+  } else if (Array.isArray(venta.boletos) && venta.boletos.length) {
+    return json({ error: 'Indica el certificado de la entrada individual, no el de la orden.' }, 400, request);
+  } else {
+    if (!venta.usado) {
+      return json({ error: 'Este boleto no tiene check-in registrado.' }, 409, request);
+    }
+    venta.usado = false;
+    venta.usadoEn = null;
+  }
+
+  await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+
+  await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'descanjear_boleto', teatroId: tid,
+    detalles: `Check-in revertido · CERT ${codigo}${boleto?.folio ? ` · folio ${boleto.folio}` : ''}`,
+    meta: { codigo, folio: boleto?.folio || null, funcion: venta.funcionNombre || venta.fecha },
+  });
+
+  return json({ ok: true, folio: boleto?.folio || null }, 200, request);
 }
 
 // ─── HANDLER: LISTA PUERTA (admin — folios internos agrupados) ────────────────
@@ -3863,6 +3908,10 @@ export default {
       const canjearMatch = sub.match(/^canjear\/([^/]+)$/);
       if (method === 'POST' && canjearMatch)
         return handleCanjear(tid, decodeURIComponent(canjearMatch[1]), request, env);
+
+      const descanjearMatch = sub.match(/^descanjear\/([^/]+)$/);
+      if (method === 'POST' && descanjearMatch)
+        return handleDescanjear(tid, decodeURIComponent(descanjearMatch[1]), request, env);
 
       return json({ error: 'Not found.' }, 404, request);
     }

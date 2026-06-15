@@ -358,7 +358,7 @@ function _boletaRenderGrupos(grupos) {
     const pend = (g.boletos || []).filter(b => !b.usado).length;
     const total = (g.boletos || []).length;
     const boletosHtml = (g.boletos || []).map(b => `
-      <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0" title="Toca para marcar ingreso">
+      <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0" title="${b.usado ? 'Toca para quitar check-in' : 'Toca para marcar ingreso'}">
         <div>
           <div class="lista-boleto-folio">${b.folio || b.cert}</div>
           <div class="lista-boleto-meta">${b.tipo || 'entrada'} · #${b.numero || '—'}</div>
@@ -375,6 +375,9 @@ function _boletaRenderGrupos(grupos) {
   }).join('');
   cont.querySelectorAll('.lista-boleto:not(.usado)').forEach(el => {
     el.onclick = () => _boletaCanjear(el.dataset.cert);
+  });
+  cont.querySelectorAll('.lista-boleto.usado').forEach(el => {
+    el.onclick = () => _boletaDescanjear(el.dataset.cert);
   });
 }
 
@@ -430,6 +433,21 @@ async function _boletaCanjear(cert) {
     });
     const data = await res.json();
     if (!res.ok) { alert(data.error || 'No se pudo marcar'); return; }
+    await _boletaCargarListaPuerta();
+  } catch { alert('Error de conexión'); }
+}
+
+async function _boletaDescanjear(cert) {
+  if (!cert || !confirm(`¿Quitar check-in de ${cert}?`)) return;
+  const token = _boletaToken();
+  if (!token) return;
+  try {
+    const res = await fetch(window.teatroAdminApi(`descanjear/${encodeURIComponent(cert)}`), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'No se pudo quitar el check-in'); return; }
     await _boletaCargarListaPuerta();
   } catch { alert('Error de conexión'); }
 }

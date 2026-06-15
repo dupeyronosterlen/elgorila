@@ -262,12 +262,12 @@ async function cargarListaPuerta() {
         cont.innerHTML = data.grupos.map(g => {
             const color = _colorGrupo(g.certificado);
             const boletosHtml = (g.boletos || []).map(b => `
-              <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0">
+              <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0" title="${b.usado ? 'Toca para quitar check-in' : 'Toca para marcar ingreso'}">
                 <div>
                   <div class="lista-boleto-folio">${b.folio || b.cert}</div>
                   <div class="lista-boleto-meta">${b.tipo || 'entrada'} · #${b.numero || '—'}</div>
                 </div>
-                <div class="lista-boleto-check" aria-hidden="true">✓</div>
+                <div class="lista-boleto-check" aria-hidden="true">${b.usado ? '✓' : ''}</div>
               </div>`).join('');
             return `
               <div class="lista-grupo" style="border-left-color:${color}">
@@ -279,6 +279,9 @@ async function cargarListaPuerta() {
 
         cont.querySelectorAll('.lista-boleto:not(.usado)').forEach(el => {
             el.addEventListener('click', () => canjearDesdeLista(el.dataset.cert));
+        });
+        cont.querySelectorAll('.lista-boleto.usado').forEach(el => {
+            el.addEventListener('click', () => descanjearDesdeLista(el.dataset.cert));
         });
     } catch (e) {
         cont.innerHTML = `<p style="color:#f87171;">${e.message}</p>`;
@@ -298,6 +301,21 @@ async function canjearDesdeLista(cert) {
         if (!res.ok) { alert(data.error || 'No se pudo marcar'); return; }
         await cargarListaPuerta();
         _agregarIngreso(data.folio || cert, 1);
+    } catch { alert('Error de conexión'); }
+}
+
+async function descanjearDesdeLista(cert) {
+    if (!cert || !confirm(`¿Quitar check-in de ${cert}?`)) return;
+    const token = obtenerTokenAdmin();
+    if (!token) return;
+    try {
+        const res = await fetch(window.teatroAdminApi(`descanjear/${encodeURIComponent(cert)}`), {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'No se pudo quitar el check-in'); return; }
+        await cargarListaPuerta();
     } catch { alert('Error de conexión'); }
 }
 

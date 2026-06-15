@@ -28,3 +28,7 @@ preview_id = "8342e8b9abe14759ae1e6ea07d8bbd8c"
 #   → Settings → Variables and Secrets → Add secret
 #
 # ADMIN_USER_UNIVERSAL / ADMIN_PASS_UNIVERSAL → cuenta compartida admin y boletera (solo en Cloudflare Secrets)
+
+# Pruebas: desactiva el rate-limit de login (10 intentos / 15 min). Poner "false" antes de temporada en vivo.
+[vars]
+DISABLE_LOGIN_RATE_LIMIT = "true"
