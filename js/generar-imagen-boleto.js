@@ -11,7 +11,14 @@
   function loadImage(src) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = 'anonymous';
+      try {
+        const resolved = new URL(src, global.location?.href || 'https://elgorilateatro.com.mx/');
+        if (resolved.origin !== (global.location?.origin || '')) {
+          img.crossOrigin = 'anonymous';
+        }
+      } catch {
+        /* rutas relativas: sin crossOrigin para no “taint” el canvas */
+      }
       img.onload = () => resolve(img);
       img.onerror = () => reject(new Error('No se pudo cargar imagen: ' + src));
       img.src = src;
@@ -19,12 +26,23 @@
   }
 
   async function qrCanvas(data, size) {
+    if (typeof QRCode !== 'undefined') {
+      const c = document.createElement('canvas');
+      await QRCode.toCanvas(c, data, {
+        width: size,
+        margin: 1,
+        color: { dark: '#1a1411', light: '#f1ead9' },
+      });
+      return c;
+    }
     const c = document.createElement('canvas');
-    await QRCode.toCanvas(c, data, {
-      width: size,
-      margin: 1,
-      color: { dark: '#1a1411', light: '#f1ead9' },
-    });
+    c.width = size;
+    c.height = size;
+    const payload = encodeURIComponent(data);
+    const img = await loadImage(
+      `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=1a1411&bgcolor=f1ead9&margin=8&data=${payload}`,
+    );
+    c.getContext('2d').drawImage(img, 0, 0, size, size);
     return c;
   }
 
@@ -81,7 +99,7 @@
    * @param {string} [opts.arteUrl]
    */
   async function generar(opts) {
-    if (typeof QRCode === 'undefined') throw new Error('QRCode no disponible.');
+    if (!opts?.qrUrl) throw new Error('Falta código QR del boleto.');
 
     const canvas = document.createElement('canvas');
     canvas.width = W * 2;

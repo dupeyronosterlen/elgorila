@@ -231,7 +231,7 @@ function urlCompartirBoleto(codigo) {
 }
 
 function urlEnviarBoletoWa(codigo) {
-  return `${SITIO_BASE}/enviar-boleto.html?c=${encodeURIComponent(codigo)}`;
+  return `${SITIO_BASE}/enviar-boleto.html?c=${encodeURIComponent(codigo)}&wa=1`;
 }
 
 function urlInvitacionRegalo(certificado, cupon = 'REGALO25') {
@@ -497,7 +497,6 @@ function htmlBoleto(venta, funcionNombre, config) {
   const folioTaquilla = boletos.map(b => b.folio).filter(Boolean).join(' · ') || null;
   const qrUrl        = urlQrBoleto(qrCert);
   const waPaginaUrl  = urlEnviarBoletoWa(certificado);
-  const waTextoUrl   = waMeUrlTexto(textoWhatsAppBoleto(venta, funcionNombre, config));
   const nEntradas    = venta.cantidad || boletos.length || 1;
   const entradasLbl  = nEntradas === 1 ? '1 entrada' : `${nEntradas} entradas`;
   const direccion    = config.direccion || 'José María Velasco 59, San José Insurgentes, CDMX';
@@ -607,10 +606,10 @@ function htmlBoleto(venta, funcionNombre, config) {
       ¿Quieres tenerlo a la mano? Guárdalo en WhatsApp para el día de la función.
     </p>
     <a href="${waPaginaUrl}" style="display:inline-block;background:#128C7E;color:#fff;padding:14px 22px;text-decoration:none;font-family:Georgia,serif;font-size:16px;margin:0 6px 10px;border-radius:2px;">
-      Guardar boleto en WhatsApp →
+      Compartir boleto (imagen QR) por WhatsApp →
     </a>
     <p style="margin:12px 0 0;font-family:Georgia,serif;font-size:13px;line-height:1.5;color:#6b5c4a;">
-      También puedes <a href="${waTextoUrl}" style="color:#128C7E;text-decoration:underline;">enviarte el folio por WhatsApp</a> si prefieres solo el texto.
+      Se abre WhatsApp con la <strong>imagen del boleto</strong> (en el celular elige WhatsApp al compartir). El QR también está arriba en este correo.
     </p>
   </td></tr>
 
@@ -1637,6 +1636,8 @@ async function handleCheckout(tid, request, env, ctx) {
   const utmClean = sanitizarUTM(body.utm);
   const emailRaw = typeof body.email === 'string' ? body.email.trim().toLowerCase().substring(0, 254) : '';
   const emailOk  = emailRaw && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw) ? emailRaw : '';
+  const nombreRaw = typeof body.nombre === 'string' ? body.nombre.trim().substring(0, 120) : '';
+  const nombreOk  = nombreRaw.replace(/[<>]/g, '') || '';
 
   if (!Array.isArray(items) || items.length === 0) {
     return json({ error: 'El carrito está vacío.' }, 400, request);
@@ -1779,6 +1780,7 @@ async function handleCheckout(tid, request, env, ctx) {
   });
 
   if (emailOk) params.set('customer_email', emailOk);
+  if (nombreOk) params.set('metadata[nombre]', nombreOk);
   if (cuponAplicado) {
     params.set('metadata[codigoCupon]', cuponAplicado.codigo);
     params.set('metadata[cuponTipo]', cuponAplicado.tipo || 'porcentaje');
@@ -1916,8 +1918,8 @@ async function handleWebhook(request, env, ctx) {
     cantidad,
     items,
     seccionCantidades,
-    email:        session.customer_details?.email || session.customer_email || null,
-    nombre:       session.customer_details?.name  || null,
+    email:        session.customer_details?.email || session.customer_email || meta.email || null,
+    nombre:       meta.nombre || session.customer_details?.name || null,
     total:        session.amount_total != null ? session.amount_total / 100 : 0,
     fechaCompra:  new Date().toISOString(),
     estado:       'completada',

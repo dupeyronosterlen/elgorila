@@ -184,28 +184,30 @@
     if (!canvasActual) await renderImagen(modo);
     const blob = await GenerarImagenBoleto.canvasToBlob(canvasActual);
     const file = new File([blob], nombreArchivo(modo), { type: 'image/png' });
-    const pagina = urlCompartir(modo.modo === 'certificado'
+    const cert = modo.modo === 'certificado'
       ? (ventaState.certificado || ventaState.codigo)
-      : modo.codigo);
-    const texto =
+      : modo.codigo;
+    let texto =
       `Voy a ver EL GORILA — ${ventaState.funcionNombre || ventaState.fecha}. ` +
-      `${modo.entradas}. ¿Me acompañas?\n${VENUE}\n${pagina}`;
+      `${modo.entradas}.\n${VENUE}`;
+    if (modo.folio) texto += `\nFolio taquilla: ${modo.folio}`;
+    if (cert) texto += `\nCertificado: ${cert}`;
+    texto += '\n\nPresenta el QR adjunto en la entrada del teatro.';
 
     if (navigator.share) {
       try {
-        const payload = { title: 'Mi boleto — EL GORILA', text: texto };
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ ...payload, files: [file] });
+        const payload = { title: 'Mi boleto — EL GORILA', text: texto, files: [file] };
+        if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+          await navigator.share(payload);
           return;
         }
-        await navigator.share(payload);
-        return;
       } catch (e) {
         if (e.name === 'AbortError') return;
       }
     }
 
-    window.location.href = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+    await GenerarImagenBoleto.descargar(canvasActual, nombreArchivo(modo));
+    window.location.href = `https://wa.me/?text=${encodeURIComponent(texto + '\n\nAdjunta la imagen del boleto que acabas de descargar.')}`;
   }
 
   async function compartirInvitacion() {

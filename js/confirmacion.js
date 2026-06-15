@@ -22,7 +22,12 @@ function folioTaquillaOrden(orden) {
 }
 
 function pintarQR(container, url, size) {
-    if (!container || typeof QRCode === 'undefined') return;
+    if (!container || !url) return;
+    if (typeof QRCode === 'undefined') {
+        const data = encodeURIComponent(url);
+        container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${data}" width="${size}" height="${size}" alt="QR boleto" style="display:block;">`;
+        return;
+    }
     container.innerHTML = '';
     const canvas = document.createElement('canvas');
     container.appendChild(canvas);
@@ -58,7 +63,7 @@ async function cargarConfirmacion() {
 
     // --- Stripe: si hay session_id, obtener venta del backend (reintentar si webhook tarda) ---
     if (sessionId && window.API_BASE) {
-        for (let intento = 0; intento < 3; intento++) {
+        for (let intento = 0; intento < 6; intento++) {
             try {
                 const tid = typeof window.teatroIdFromUrl === 'function' ? window.teatroIdFromUrl() : (window.TEATRO_ID || 'wilberto');
                 const res = await fetch(`${window.API_BASE}/api/${tid}/venta/` + encodeURIComponent(sessionId));
@@ -69,6 +74,7 @@ async function cargarConfirmacion() {
                     ordenCompra = {
                         estado: 'completada',
                         email: (local && local.email) || venta.email || '',
+                        nombre: (local && local.nombre) || '',
                         numeroOrden: venta.certificado || venta.codigo || (local && local.numeroOrden) || sessionId,
                         certificado: venta.certificado || venta.codigo,
                         boletos: venta.boletos || [],
@@ -329,48 +335,117 @@ async function initGoogleWalletBtn() {
 }
 
 function mostrarBoletoFolio() {
-    const certOrden = ordenCompra && ordenCompra.numeroOrden;
-    if (!certOrden || !/^CERT-/i.test(certOrden)) {
+    const certificadoInfo = document.getElementById('certificado-info');
+    const certificadosLista = document.getElementById('certificados-lista');
+    if (!certificadoInfo || !certificadosLista || !ordenCompra) return;
+
+    let cant = ordenCompra.cantidadTotal || ordenCompra.cantidad;
+    const certOrden = ordenCompra.numeroOrden || ordenCompra.certificado;
+    if (!cant && certOrden && /^CERT-/i.test(certOrden)) {
+        cant = 1;
+        ordenCompra.cantidad = 1;
+    }
+    if (!cant) {
         mostrarInfoCertificados();
         return;
     }
 
-    const certificadoInfo = document.getElementById('certificado-info');
-    const certificadosLista = document.getElementById('certificados-lista');
-    if (!certificadoInfo || !certificadosLista) return;
-
-    const cantTotal = ordenCompra.cantidadTotal || ordenCompra.cantidad || 1;
-    const folioTaquilla = folioTaquillaOrden(ordenCompra);
     certificadoInfo.classList.remove('hidden');
-    certificadosLista.innerHTML = `
-        <div class="bg-black/30 border border-accent-gold/20 rounded-lg p-4 flex items-start gap-4">
-            <div class="flex-shrink-0"><div id="qr-folio" class="w-24 h-24 bg-white p-2 rounded flex items-center justify-center"></div></div>
-            <div class="flex-grow">
-                <p class="text-sm font-semibold text-white mb-1">${cantTotal === 1 ? '1 entrada' : cantTotal + ' entradas'}</p>
-                ${folioTaquilla ? `<p class="text-xs text-accent-gold font-mono mb-1">Folio taquilla: ${folioTaquilla}</p>` : ''}
-                <p class="text-xs text-text-dark/80 font-mono mb-2">${ordenCompra.numeroOrden}</p>
-                <p class="text-xs text-text-dark/80 mb-2">Presenta el QR en la entrada. También lo tienes en tu correo.</p>
+    certificadosLista.innerHTML = '<div id="boleto-preview-wrap"></div>';
+    void pintarBoletitoCanvas(document.getElementById('boleto-preview-wrap'), ordenCompra);
+}
+
+function htmlVistaBoleto(orden, opts) {
+    const cant = orden.cantidadTotal || orden.cantidad || 1;
+    const folio = folioTaquillaOrden(orden);
+    const cert = orden.numeroOrden || orden.certificado || '';
+    const qrCodigo = codigoQrBoleto(orden);
+    const qrImg = window.ElGorilaQr
+        ? ElGorilaQr.urlQrImagen(qrCodigo, 280)
+        : `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(qrCodigo)}`;
+    const imgSrc = opts.previewSrc || qrImg;
+    const imgAlt = opts.fullTicket ? 'Boleto digital EL GORILA con código QR' : 'Código QR — presentar en puerta';
+    return `
+        <div class="boleto-preview">
+            <img id="boleto-preview-img" src="${imgSrc}" alt="${imgAlt}" loading="eager">
+        </div>
+        <p class="boleto-meta">${cant === 1 ? '1 entrada' : cant + ' entradas'}${folio ? ' · Folio ' + folio : ''}</p>
+        ${cert ? `<p class="boleto-cert">${cert}</p>` : ''}
+        <button type="button" class="btn-guardar-boleto" id="btn-guardar-boleto">
+            <span class="material-symbols-outlined">download</span>
+            Guardar imagen del boleto
+        </button>
+        <p class="boleto-hint">Presenta este QR en la entrada. Al compartir por WhatsApp se envía la imagen del boleto.</p>`;
+}
+
+function enlazarGuardarBoleto(canvas) {
+    document.getElementById('btn-guardar-boleto')?.addEventListener('click', () => {
+        if (!canvas || !window.GenerarImagenBoleto) return;
+        GenerarImagenBoleto.guardarEnDispositivo(canvas, 'el-gorila-boleto.png', 'Mi boleto — EL GORILA')
+            .catch((e) => {
+                if (e.name !== 'AbortError') GenerarImagenBoleto.descargar(canvas, 'el-gorila-boleto.png');
+            });
+    });
+}
+
+async function pintarBoletitoCanvas(container, orden) {
+    if (!container || !orden) return;
+
+    const cant = orden.cantidadTotal || orden.cantidad || 1;
+    const folio = folioTaquillaOrden(orden);
+    const cert = orden.numeroOrden || orden.certificado || '';
+
+    container.innerHTML = htmlVistaBoleto(orden, {});
+
+    if (!window.ElGorilaCompartirWa || !window.GenerarImagenBoleto) {
+        pintarQrFallback(container, orden, cant, folio, cert);
+        return;
+    }
+
+    try {
+        const canvas = await ElGorilaCompartirWa.generarCanvas(orden);
+        const dataUrl = canvas.toDataURL('image/png', 0.92);
+        container.innerHTML = htmlVistaBoleto(orden, { previewSrc: dataUrl, fullTicket: true });
+        enlazarGuardarBoleto(canvas);
+    } catch (err) {
+        console.warn('Boleto completo no disponible, mostrando QR:', err);
+        document.getElementById('btn-guardar-boleto')?.addEventListener('click', async () => {
+            try {
+                const c = await ElGorilaCompartirWa.generarCanvas(orden);
+                await GenerarImagenBoleto.guardarEnDispositivo(c, 'el-gorila-boleto.png', 'Mi boleto — EL GORILA');
+            } catch (e) {
+                if (e.name !== 'AbortError') alert('No se pudo guardar. Usa captura de pantalla del QR o revisa tu correo.');
+            }
+        }, { once: true });
+    }
+}
+
+function pintarQrFallback(container, orden, cant, folio, cert) {
+    const qrCodigo = codigoQrBoleto(orden);
+    const qrData = window.ElGorilaQr ? window.ElGorilaQr.codigoQrPayload(qrCodigo) : qrCodigo;
+    container.innerHTML = `
+        <div class="boleto-fallback-qr">
+            <div class="qr-box"><div id="qr-folio-fallback"></div></div>
+            <div>
+                <p class="boleto-meta" style="text-align:left;margin-bottom:8px;">${cant === 1 ? '1 entrada' : cant + ' entradas'}</p>
+                ${folio ? `<p class="boleto-cert" style="text-align:left;margin-bottom:8px;">Folio: ${folio}</p>` : ''}
+                ${cert ? `<p class="boleto-cert" style="text-align:left;">${cert}</p>` : ''}
+                <p class="boleto-hint" style="text-align:left;margin-top:10px;">Presenta el QR en la entrada. También lo tienes en tu correo.</p>
             </div>
         </div>`;
-
-    const qrCodigo = codigoQrBoleto(ordenCompra);
-    const qrData = window.ElGorilaQr ? window.ElGorilaQr.codigoQrPayload(qrCodigo) : qrCodigo;
-    pintarQR(document.getElementById('qr-folio'), qrData, 88);
+    pintarQR(document.getElementById('qr-folio-fallback'), qrData, 84);
 }
 
 // Mostrar información de certificados (modo simulado / legacy)
 function mostrarInfoCertificados() {
-    if (!ordenCompra || !ordenCompra.cantidad) return;
-    
+    if (!ordenCompra) return;
+
     const certificadoInfo = document.getElementById('certificado-info');
     const certificadosLista = document.getElementById('certificados-lista');
-    
     if (!certificadoInfo || !certificadosLista) return;
-    
-    // Obtener certificados generados
+
     let certificados = [];
     if (ordenCompra.certificados && ordenCompra.certificados.length > 0) {
-        // Si ya tenemos los IDs, obtener los certificados completos
         if (typeof CertificadoManager !== 'undefined') {
             certificados = ordenCompra.certificados.map(id => {
                 const resultado = CertificadoManager.verificarCertificado(id);
@@ -378,52 +453,29 @@ function mostrarInfoCertificados() {
             }).filter(c => c);
         }
     } else if (typeof CertificadoManager !== 'undefined') {
-        // Si no están en la orden, intentar obtenerlos por número de orden
         certificados = CertificadoManager.obtenerCertificadosPorOrden(ordenCompra.numeroOrden);
     }
-    
-    // Si no hay certificados, generar placeholder
-    if (certificados.length === 0) {
-        certificados = Array.from({ length: ordenCompra.cantidad }, (_, i) => ({
-            id: `CERT-PENDING-${i + 1}`,
-            numeroBoleto: i + 1
-        }));
-    }
-    
-    certificadoInfo.classList.remove('hidden');
-    certificadosLista.innerHTML = '';
-    
-    // Mostrar cada certificado con su código QR
-    certificados.forEach((cert, index) => {
-        const certificadoDiv = document.createElement('div');
-        certificadoDiv.className = 'bg-black/30 border border-accent-gold/20 rounded-lg p-4 flex items-start gap-4';
-        
-        const numeroBoleto = cert.numeroBoleto || (index + 1);
-        const codigoQR = cert.id || `CERT-${ordenCompra.numeroOrden}-${numeroBoleto}`;
-        
-        certificadoDiv.innerHTML = `
-            <div class="flex-shrink-0">
-                <div id="qr-${index}" class="w-20 h-20 bg-white p-2 rounded flex items-center justify-center"></div>
-            </div>
-            <div class="flex-grow">
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="material-symbols-outlined text-accent-gold">confirmation_number</span>
-                    <p class="text-sm font-semibold text-white">Boleto #${numeroBoleto}</p>
-                </div>
-                <p class="text-xs text-text-dark/80 font-mono mb-1">${codigoQR}</p>
-                <p class="text-xs text-text-dark/80">Presenta el QR en la entrada del teatro</p>
-            </div>
-        `;
-        certificadosLista.appendChild(certificadoDiv);
 
-        const qrContainer = document.getElementById(`qr-${index}`);
-        if (qrContainer) {
-            const payload = window.ElGorilaQr
-                ? window.ElGorilaQr.codigoQrPayload(codigoQR)
-                : codigoQR;
-            pintarQR(qrContainer, payload, 80);
-        }
-    });
+    if (!ordenCompra.cantidad && !ordenCompra.cantidadTotal && certificados.length) {
+        ordenCompra.cantidad = certificados.length;
+        ordenCompra.cantidadTotal = certificados.length;
+    }
+
+    const cant = ordenCompra.cantidadTotal || ordenCompra.cantidad;
+    if (cant) {
+        certificadoInfo.classList.remove('hidden');
+        certificadosLista.innerHTML = '<div id="boleto-preview-wrap"></div>';
+        void pintarBoletitoCanvas(document.getElementById('boleto-preview-wrap'), ordenCompra);
+        return;
+    }
+
+    if (certificados.length === 0) return;
+
+    certificadoInfo.classList.remove('hidden');
+    certificadosLista.innerHTML = '<div id="boleto-preview-wrap"></div>';
+    ordenCompra.cantidad = certificados.length;
+    ordenCompra.cantidadTotal = certificados.length;
+    void pintarBoletitoCanvas(document.getElementById('boleto-preview-wrap'), ordenCompra);
 }
 
 // Validar email

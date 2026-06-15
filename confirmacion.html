@@ -250,7 +250,46 @@ body::before {
 #certificado-info .material-symbols-outlined { color: var(--gold); flex-shrink: 0; font-size: 26px; }
 .cert-title { font-family: var(--display); font-size: 22px; font-weight: 500; color: var(--ink); margin-bottom: 8px; line-height: 1.1; }
 .cert-desc { font-family: var(--cuerpo); font-size: 18px; color: var(--ink-dim); line-height: 1.72; margin-bottom: 14px; }
-#certificados-lista { display: flex; flex-wrap: wrap; gap: 8px; }
+#certificados-lista { display: block; }
+.boleto-cargando {
+  font-family: var(--cuerpo); font-size: 17px; color: var(--ink-dim);
+  text-align: center; padding: 24px 0;
+}
+.boleto-preview {
+  margin: 0 auto 14px; max-width: 270px;
+  border: 1px solid var(--gold-faint); background: rgba(0,0,0,.35);
+}
+.boleto-preview img { display: block; width: 100%; height: auto; }
+.boleto-meta {
+  font-family: var(--display); font-size: 20px; font-weight: 500;
+  color: var(--ink); text-align: center; margin: 0 0 6px;
+}
+.boleto-cert {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+  color: rgba(241,234,217,.55); text-align: center; word-break: break-all;
+  margin: 0 0 14px;
+}
+.btn-guardar-boleto {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px 18px; margin-bottom: 10px;
+  background: transparent; border: 1px solid var(--gold-faint);
+  color: var(--gold) !important; font-family: var(--cuerpo); font-size: 17px;
+  font-weight: 500; cursor: pointer; transition: border-color .15s, background .15s;
+}
+.btn-guardar-boleto:hover { border-color: var(--gold-dim); background: rgba(212,175,55,0.06); }
+.btn-guardar-boleto .material-symbols-outlined { font-size: 20px; }
+.boleto-hint {
+  font-family: var(--cuerpo); font-size: 16px; line-height: 1.65;
+  color: var(--ink-dim); text-align: center; margin: 0;
+}
+.boleto-fallback-qr {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px; border: 1px solid var(--gold-faint); background: rgba(0,0,0,.2);
+}
+.boleto-fallback-qr .qr-box {
+  flex-shrink: 0; width: 96px; height: 96px; padding: 6px;
+  background: #fff; border-radius: 4px;
+}
 
 /* Siguientes pasos */
 .pasos-titulo {
@@ -280,6 +319,38 @@ body::before {
   transition: border-color .15s, background .15s;
 }
 .cta-volver:hover { border-color: var(--gold-dim); background: rgba(212,175,55,0.05); }
+
+/* WhatsApp flotante (mismo que index) */
+.fab-whatsapp {
+  position: fixed;
+  right: max(0.85rem, env(safe-area-inset-right, 0px));
+  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.95rem;
+  height: 2.95rem;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab-whatsapp:hover {
+  transform: scale(1.06);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+}
+.fab-whatsapp:focus-visible {
+  outline: 2px solid #c9a84b;
+  outline-offset: 3px;
+}
+.fab-whatsapp svg {
+  width: 1.55rem;
+  height: 1.55rem;
+  flex-shrink: 0;
+}
 
 /* ── FOOTER ──────────────────────────────────────────────── */
 .conf-footer {
@@ -397,7 +468,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span class="material-symbols-outlined">verified</span>
         <div style="flex:1;">
           <div class="cert-title">Certificado Digital Único</div>
-          <p class="cert-desc">Tu boleto incluye un código QR para la entrada. También lo recibirás en tu correo electrónico.</p>
+          <p class="cert-desc">Tu boleto con QR listo para guardar o compartir. También lo recibirás por correo.</p>
           <div id="certificados-lista"></div>
 </div>
 </div>
@@ -433,7 +504,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <a href="index.html">Volver al inicio</a>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/qr-boleto.js"></script>
 <script src="js/generar-imagen-boleto.js"></script>
@@ -443,5 +514,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/imagenes.js"></script>
 <script src="js/certificado.js"></script>
 <script src="js/confirmacion.js"></script>
+<a class="fab-whatsapp touch-manipulation" href="https://wa.me/5215512037223" target="_blank" rel="noopener noreferrer" aria-label="¿Problemas con tu compra? Escríbenos por WhatsApp" title="WhatsApp — ayuda">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.883 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+<script>
+(function () {
+  function applyWa(num) {
+    var n = (num || '').trim().replace(/\D/g, '') || '5215512037223';
+    document.querySelectorAll('a.fab-whatsapp').forEach(function (a) {
+      a.href = 'https://wa.me/' + n;
+    });
+  }
+  try {
+    var local = (localStorage.getItem('elgorila_whatsapp') || '').trim();
+    if (local) applyWa(local);
+  } catch (_) {}
+  fetch('/api/config').then(function (r) { return r.ok ? r.json() : null; }).then(function (cfg) {
+    if (cfg && cfg.whatsapp) applyWa(cfg.whatsapp);
+  }).catch(function () {});
+})();
+</script>
 </body>
 </html>

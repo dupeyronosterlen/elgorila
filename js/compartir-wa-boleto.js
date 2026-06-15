@@ -1,4 +1,4 @@
-/** Compartir boleto por WhatsApp sin subpágina — genera imagen y abre WA / share sheet. */
+/** Compartir boleto por WhatsApp — imagen PNG del boleto, sin subpágina intermedia. */
 (function (global) {
   const VENUE = 'Teatro Wilberto Cantón, San José Insurgentes, CDMX';
 
@@ -30,8 +30,10 @@
     const fn = orden.fecha || orden.funcionNombre || 'EL GORILA';
     const entradas = entradasLabel(orden);
     const folio = folioTaquilla(orden);
+    const cert = orden.certificado || orden.numeroOrden || orden.codigo || '';
     let t = `Voy a ver EL GORILA — ${fn}. ${entradas}.\n${VENUE}`;
     if (folio) t += `\nFolio taquilla: ${folio}`;
+    if (cert) t += `\nCertificado: ${cert}`;
     t += '\n\nPresenta el QR adjunto en la entrada del teatro.';
     return t;
   }
@@ -63,25 +65,30 @@
     return `https://wa.me/?text=${encodeURIComponent(texto)}`;
   }
 
+  async function compartirArchivoNativo(file, texto) {
+    if (!navigator.share) return false;
+    const payload = { title: 'Mi boleto — EL GORILA', text: texto, files: [file] };
+    try {
+      if (navigator.canShare && !navigator.canShare({ files: [file] })) return false;
+      await navigator.share(payload);
+      return true;
+    } catch (e) {
+      if (e.name === 'AbortError') throw e;
+      return false;
+    }
+  }
+
   async function compartirPorWhatsApp(orden) {
     const texto = textoWhatsApp(orden);
-    try {
-      const canvas = await generarCanvas(orden);
-      const blob = await GenerarImagenBoleto.canvasToBlob(canvas);
-      const file = new File([blob], 'el-gorila-boleto.png', { type: 'image/png' });
-      if (navigator.share) {
-        const payload = { title: 'Mi boleto — EL GORILA', text: texto };
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ ...payload, files: [file] });
-          return;
-        }
-        await navigator.share(payload);
-        return;
-      }
-    } catch (e) {
-      if (e.name === 'AbortError') return;
-    }
-    window.open(waMeUrl(texto), '_blank', 'noopener');
+    const canvas = await generarCanvas(orden);
+    const blob = await GenerarImagenBoleto.canvasToBlob(canvas);
+    const file = new File([blob], 'el-gorila-boleto.png', { type: 'image/png' });
+
+    if (await compartirArchivoNativo(file, texto)) return;
+
+    await GenerarImagenBoleto.descargar(canvas, 'el-gorila-boleto.png');
+    const hint = 'Adjunta la imagen *el-gorila-boleto.png* (acaba de descargarse) en este chat de WhatsApp.';
+    window.open(waMeUrl(`${texto}\n\n${hint}`), '_blank', 'noopener');
   }
 
   global.ElGorilaCompartirWa = {

@@ -82,12 +82,15 @@
             await ElGorilaCompartirWa.compartirPorWhatsApp(orden);
           } catch (e) {
             if (e.name !== 'AbortError') {
-              window.open(ElGorilaCompartirWa.waMeUrl(ElGorilaCompartirWa.textoWhatsApp(orden)), '_blank', 'noopener');
+              alert('No se pudo compartir. El QR está arriba: guárdalo con captura o el botón de descarga.');
             }
           } finally {
             btn.disabled = false;
           }
         });
+        if (new URLSearchParams(window.location.search).get('wa') === '1') {
+          setTimeout(() => btn.click(), 400);
+        }
       }
     } catch (e) {
       showError(e.message || 'No se pudo cargar el boleto.');

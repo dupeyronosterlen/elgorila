@@ -1159,6 +1159,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="ichk-cupon-msg" aria-live="polite"></div>
     </div>
 
+    <!-- Nombre (lista de puerta / boletera) -->
+    <div class="ichk-input-wrap">
+      <label class="ichk-label" for="ichk-nombre-input">
+        Tu nombre
+        <span class="ichk-hint">Para la lista de entrada en taquilla</span>
+      </label>
+      <input
+        type="text"
+        id="ichk-nombre-input"
+        class="ichk-input"
+        placeholder="Nombre y apellido"
+        autocomplete="name"
+        maxlength="120"
+      >
+    </div>
+
     <!-- Campo de correo electrónico -->
     <div class="ichk-input-wrap">
       <label class="ichk-label" for="ichk-email-input">
@@ -1484,6 +1500,7 @@ async function aplicarCuponInline() {
 
 async function procesarPagoInline() {
   const emailEl  = document.getElementById('ichk-email-input');
+  const nombreEl = document.getElementById('ichk-nombre-input');
   const errorEl  = document.getElementById('ichk-error');
   const btnEl    = document.getElementById('btn-pagar-inline');
   const textoBtn = document.getElementById('ichk-btn-texto');
@@ -1497,6 +1514,7 @@ async function procesarPagoInline() {
   ocultarError();
 
   const email = emailEl ? emailEl.value.trim().substring(0, 254).replace(/[<>]/g, '') : '';
+  const nombre = nombreEl ? nombreEl.value.trim().substring(0, 120).replace(/[<>]/g, '') : '';
   if (!email || !_validarEmail(email)) {
     mostrarError('Por favor ingresa un correo electrónico válido para recibir tu boleto.');
     return;
@@ -1520,6 +1538,7 @@ async function procesarPagoInline() {
   if (window.ElGorilaAnalytics) ElGorilaAnalytics.addPaymentInfo(orden);
 
   orden.email = email;
+  if (nombre) orden.nombre = nombre;
   localStorage.setItem('orden_compra', JSON.stringify(orden));
 
   /* ── Con backend (Stripe) ── */
@@ -1534,6 +1553,7 @@ async function procesarPagoInline() {
           items:       orden.items,
           fecha:       orden.fechaIso,
           email,
+          nombre:      nombre || undefined,
           codigoCupon: orden.codigoCupon || undefined,
           referidoDe:  orden.referidoDe || undefined,
           utm:         (typeof window.obtenerUTM === 'function' ? window.obtenerUTM() : {}),

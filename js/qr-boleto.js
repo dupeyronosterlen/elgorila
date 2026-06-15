@@ -12,5 +12,10 @@
     return cert;
   }
 
-  global.ElGorilaQr = { codigoQrPayload, codigoQrOficial };
+  function urlQrImagen(codigo, size = 240) {
+    const data = encodeURIComponent(codigoQrPayload(codigo));
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=1a1411&bgcolor=f1ead9&margin=8&data=${data}`;
+  }
+
+  global.ElGorilaQr = { codigoQrPayload, codigoQrOficial, urlQrImagen };
 })(window);

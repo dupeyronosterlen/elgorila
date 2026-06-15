@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <script>
   tailwind.config = {
     darkMode: 'class',
@@ -368,6 +368,7 @@ function _boletaRenderGrupos(grupos) {
     return `
       <div class="lista-grupo" style="border-left-color:${color}">
         <p class="lista-grupo-nombre">${g.nombre || '—'} <span style="font-size:12px;color:var(--d-soft);">(${pend}/${total} pendientes)</span></p>
+        ${g.email && g.email !== g.nombre ? `<p class="lista-grupo-cert" style="margin-top:-4px;margin-bottom:6px;">${g.email}</p>` : ''}
         <p class="lista-grupo-cert">${g.certificado}</p>
         ${boletosHtml}
       </div>`;
