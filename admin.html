@@ -15,6 +15,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <title>Panel de Administración — El Gorila</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/operaciones.css">
 <style>
 :root {
   --bg:    #0a0706;
@@ -238,6 +240,8 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
 
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-thumb{background:var(--faint2)}
+.bol-tab.active{border-color:var(--gold)!important;color:var(--gold)!important}
+.admin-ops-wrap .bol-card{background:var(--bg2);border:1px solid var(--faint);padding:24px;margin-bottom:20px}
 </style>
 </head>
 <body>
@@ -276,7 +280,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <a href="index.html" class="topbar-btn">Sitio</a>
     <a href="admin.html" id="link-boletera" class="topbar-btn hidden" onclick="event.preventDefault(); abrirBoletera();">Boletera</a>
     <button type="button" id="btn-copiar-boletera" class="topbar-btn hidden" onclick="abrirModalEnlaceTaquilla();">Enlace taquilla</button>
-    <a href="verificar.html" id="link-verificar" class="topbar-btn hidden">Verificar</a>
+    <a href="admin.html" id="link-verificar" class="topbar-btn hidden" onclick="event.preventDefault(); abrirVerificar();">Verificar</a>
     <div class="topbar-user">
       <div class="topbar-dot"></div>
       <span id="usuario-actual">—</span>
@@ -296,6 +300,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <button class="nav-item" data-nav="ops" onclick="navGo(this,'ops')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       Buscar venta
+    </button>
+    <button type="button" class="nav-item hidden" id="nav-boletera" data-nav="boletera" onclick="navGo(this,'boletera')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+      Boletera taquilla
+    </button>
+    <button type="button" class="nav-item hidden" id="nav-verificar" data-nav="verificar" onclick="navGo(this,'verificar')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Verificar entrada
     </button>
     <div class="sidebar-section">Funciones</div>
     <button class="nav-item" data-nav="funciones" onclick="navGo(this,'funciones')">
@@ -319,15 +331,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
       Sitio web
     </button>
-    <div class="sidebar-divider"></div>
-    <button type="button" class="nav-item hidden" id="nav-boletera" data-nav="boletera" onclick="navGo(this,'boletera')">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-      Boletera taquilla
-    </button>
-    <a href="verificar.html" class="nav-item">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      Verificar entrada
-    </a>
   </nav>
 
   <main class="main" id="admin-app">
@@ -651,12 +654,322 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </div>
 
-    <!-- VIEW: BOLETERA (embebida) -->
-    <div id="view-boletera" class="hidden" style="padding:0;margin:-26px -30px;height:calc(100vh - var(--topbar));overflow:hidden">
-      <iframe id="iframe-boletera" title="Boletera taquilla" src="about:blank" style="width:100%;height:100%;border:none;display:block;background:var(--bg)"></iframe>
+    <!-- VIEW: BOLETERA -->
+    <div id="view-boletera" class="hidden">
+      <div class="page-hd">
+        <div class="page-hd-left">
+          <span class="page-kicker">Taquilla</span>
+          <h1 class="page-title">Boletera</h1>
+        </div>
+      </div>
+      <div class="bol-tabs" style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+        <button type="button" class="btn-ghost bol-tab active" onclick="BoleteraPanel.bolNavGo(this,'venta')">Venta efectivo</button>
+        <button type="button" class="btn-ghost bol-tab" onclick="BoleteraPanel.bolNavGo(this,'lista')">Lista visitantes</button>
+        <button type="button" class="btn-ghost bol-tab" onclick="BoleteraPanel.bolNavGo(this,'hoy')">Ventas hoy</button>
+      </div>
+<div id="view-bol-venta" class="bol-admin-view">
+    <div class="bol-card">
+      <h2 class="bol-card-title">Venta manual — efectivo</h2>
+      <div class="bol-card-rule"></div>
+      <span class="sec-label">Registra en el servidor · CERT por boleto · folio interno puerta</span>
+
+      <form id="form-efectivo" onsubmit="event.preventDefault(); generarCodigo();">
+        <div class="form-grid">
+          <div style="grid-column:1/-1;">
+            <span class="sec-label" style="display:block;margin-bottom:10px;">Función</span>
+            <div id="bol-venta-funciones-grid"></div>
+            <input type="hidden" id="fecha-efectivo" value="" required>
+            <p id="bol-funcion-seleccionada" class="bol-funcion-seleccionada">Selecciona una función</p>
+          </div>
+        </div>
+
+        <span class="sec-label" style="display:block;margin-bottom:10px;">Boletos — combina general y credencial</span>
+
+        <div class="bol-ticket-fila">
+          <div>
+            <div class="bol-ticket-nombre">General</div>
+            <div class="bol-ticket-precio">$350 MXN</div>
+            <div class="bol-ticket-nota">Código <strong>ESPEJO</strong>: 2 generales = $600</div>
+          </div>
+          <div class="bol-qty-controls">
+            <button type="button" class="bol-qty-btn" onclick="BoleteraVenta.cambiarCantidad('general', -1)" aria-label="Menos general">−</button>
+            <span id="bol-cant-general" class="bol-qty-count">0</span>
+            <button type="button" class="bol-qty-btn" onclick="BoleteraVenta.cambiarCantidad('general', 1)" aria-label="Más general">+</button>
+          </div>
+        </div>
+
+        <div class="bol-ticket-fila">
+          <div>
+            <div class="bol-ticket-nombre">INAPAM · Estudiante · Maestro</div>
+            <div class="bol-ticket-precio">
+              <span style="text-decoration:line-through;opacity:.45;">$350</span>
+              <span> → </span>
+              <span class="bol-ticket-promo">$245 MXN</span>
+              <span style="opacity:.55;"> · −30%</span>
+            </div>
+            <div class="bol-ticket-nota">Credencial al ingresar</div>
+          </div>
+          <div class="bol-qty-controls">
+            <button type="button" class="bol-qty-btn" onclick="BoleteraVenta.cambiarCantidad('estudiante', -1)" aria-label="Menos credencial">−</button>
+            <span id="bol-cant-estudiante" class="bol-qty-count">0</span>
+            <button type="button" class="bol-qty-btn" onclick="BoleteraVenta.cambiarCantidad('estudiante', 1)" aria-label="Más credencial">+</button>
+          </div>
+        </div>
+
+        <div class="bol-resumen-wrap">
+          <div id="bol-items-resumen"></div>
+          <div id="bol-promo-hint" class="bol-promo-hint" style="display:none;"></div>
+          <div id="bol-descuento-fila" class="bol-resumen-linea bol-descuento" style="display:none;">
+            <span>Descuento</span>
+            <span id="bol-descuento-monto">—</span>
+          </div>
+          <div class="bol-total-fila">
+            <span class="bol-total-label">Total efectivo</span>
+            <span id="bol-total-precio" class="bol-total-precio">$0.00 MXN</span>
+          </div>
+        </div>
+
+        <div class="bol-cupon-wrap">
+          <label class="form-label" for="bol-cupon-input">Cupón / promo (opcional)</label>
+          <div class="bol-cupon-fila">
+            <input type="text" id="bol-cupon-input" class="form-input" placeholder="ESPEJO, GRUPO20, PRENSA30…" autocomplete="off" spellcheck="false" maxlength="32">
+            <button type="button" id="bol-btn-cupon" class="btn-copiar" onclick="BoleteraVenta.aplicarCupon()">Aplicar</button>
+          </div>
+          <div id="bol-cupon-msg" class="bol-cupon-msg" aria-live="polite"></div>
+        </div>
+
+        <div class="form-grid">
+          <div>
+            <label class="form-label" for="nombre-efectivo">Nombre comprador</label>
+            <input type="text" id="nombre-efectivo" class="form-input" placeholder="Opcional">
+          </div>
+          <div>
+            <label class="form-label" for="email-efectivo">Correo (envía boleto)</label>
+            <input type="email" id="email-efectivo" class="form-input" placeholder="correo@ejemplo.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div>
+            <label class="form-label" for="telefono-efectivo">WhatsApp (solo números)</label>
+            <input type="tel" id="telefono-efectivo" class="form-input" placeholder="52… (código país + número)">
+          </div>
+          <div>
+            <label class="form-label" for="notas-efectivo">Notas (opcional)</label>
+            <input type="text" id="notas-efectivo" class="form-input" placeholder="Observaciones internas…">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-generar" id="btn-generar" disabled>
+          <span class="material-symbols-outlined" style="font-size:20px;">confirmation_number</span>
+          Registrar venta y generar folio
+        </button>
+      </form>
+
+      <div id="venta-error" style="display:none;margin-top:10px;color:#f87171;font-size:15px;"></div>
+
+      <!-- Folio generado -->
+      <div id="codigo-generado" style="display:none;margin-top:18px;">
+        <div id="qr-codigo-efectivo" style="margin-bottom:12px;"></div>
+        <p id="codigo-texto" style="font-family:var(--mono);font-size:13px;letter-spacing:.08em;word-break:break-all;">—</p>
+        <p id="codigo-info" style="font-size:15px;color:var(--d-soft);margin-top:8px;line-height:1.5;">—</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+          <button type="button" class="btn-copiar" onclick="copiarCodigo()">
+            <span class="material-symbols-outlined" style="font-size:14px;">content_copy</span>
+            Copiar folio
+          </button>
+          <button type="button" class="btn-copiar" id="btn-wa-enviar" style="background:rgba(37,211,102,.15);border-color:rgba(37,211,102,.4);">
+            <span class="material-symbols-outlined" style="font-size:14px;">chat</span>
+            Enviar boleto por WhatsApp
+          </button>
+          <button type="button" class="btn-copiar" onclick="copiarTextoWa()">
+            Copiar texto WA
+          </button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div id="view-bol-lista" class="bol-admin-view hidden">
+    <!-- 2. LISTA VISITANTES — check-in manual -->
+    <div class="bol-card">
+      <h2 class="bol-card-title">Lista de visitantes — check-in</h2>
+      <div class="bol-card-rule"></div>
+      <span class="sec-label">Por función · valida por nombre o folio · entrada individual si no llegan juntos</span>
+
+      <div style="margin-bottom:14px;">
+        <span class="sec-label" style="display:block;margin-bottom:10px;">Función</span>
+        <div id="bol-lista-funciones-grid"></div>
+        <input type="hidden" id="bol-lista-funcion" value="">
+      </div>
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div style="grid-column:1/-1;">
+          <label class="form-label" for="bol-lista-buscar">Buscar nombre o folio</label>
+          <input type="search" id="bol-lista-buscar" class="form-input"
+                 placeholder="Nombre, CERT o folio interno…">
+        </div>
+      </div>
+
+      <p id="bol-lista-resumen" class="sec-label" style="margin-bottom:10px;">—</p>
+      <div id="bol-lista-grupos" class="lista-grupos">
+        <p style="font-family:var(--mono,monospace);font-size:11px;color:var(--d-soft);">Selecciona una función…</p>
+      </div>
+    </div>
+    </div>
+
+    <div id="view-bol-hoy" class="bol-admin-view hidden">
+    <!-- 3. VENTAS MANUALES HOY -->
+    <div class="bol-card">
+      <h2 class="bol-card-title">Ventas manuales hoy</h2>
+      <div class="bol-card-rule"></div>
+      <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Función</th>
+              <th>Cantidad</th>
+              <th>Estado</th>
+              <th>Info</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-efectivo">
+            <tr><td colspan="5" style="text-align:center;color:var(--d-faint);font-family:var(--mono);font-size:10px;letter-spacing:.18em;">Sin registros hoy</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4. DISPONIBILIDAD (325 butacas) -->
+    <div class="bol-card">
+      <h2 class="bol-card-title">Disponibilidad — 325 butacas</h2>
+      <div class="bol-card-rule"></div>
+      <span class="sec-label">250 platea + 75 galería · todas las funciones activas</span>
+      <div id="disponibilidad-fechas">
+        <p style="font-family:var(--mono,monospace);font-size:11px;color:var(--d-soft);letter-spacing:.1em;">Cargando…</p>
+      </div>
+    </div>
+    </div>
+
+    
+    </div>
+
+    <!-- VIEW: VERIFICAR -->
+    <div id="view-verificar" class="hidden">
+      <div class="page-hd">
+        <div class="page-hd-left">
+          <span class="page-kicker">Puerta</span>
+          <h1 class="page-title">Verificar entrada</h1>
+        </div>
+      </div>
+      <div class="admin-ops-wrap">
+<div class="bol-card">
+    <h2 class="bol-card-title">Folio o QR</h2>
+    <div class="bol-card-rule"></div>
+    <span class="sec-label">Escanea el QR del boleto (CERT-)</span>
+
+    <label class="form-label" for="codigo-qr-input">Código CERT</label>
+    <div class="form-row" style="margin-bottom:14px;">
+      <input type="text" id="codigo-qr-input" class="form-input"
+             placeholder="CERT-…" autocomplete="off" autocapitalize="characters">
+      <button type="button" id="btn-verificar" class="btn-primario" style="flex:0 0 auto;">
+        Verificar
+      </button>
+    </div>
+
+    <button type="button" id="btn-escanear" class="btn-link">
+      <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">qr_code_scanner</span>
+      Escanear con cámara
+    </button>
+  </div>
+
+  <div id="resultado-verificacion" class="hidden">
+
+    <div id="resultado-valido" class="bol-card resultado-panel hidden">
+      <div class="resultado-ok">
+        <h3 class="resultado-titulo ok">
+          <span class="material-symbols-outlined">check_circle</span>
+          Boleto válido
+        </h3>
+        <div class="resultado-fila"><span>Folio</span><span id="resultado-codigo">—</span></div>
+        <div class="resultado-fila"><span>Función</span><span id="resultado-fecha">—</span></div>
+        <div class="resultado-fila hidden" id="fila-comprador"><span>Comprador</span><span id="resultado-orden">—</span></div>
+        <div class="resultado-fila hidden" id="fila-email"><span>Email</span><span id="resultado-email">—</span></div>
+        <div class="resultado-fila"><span>Estado</span><span id="resultado-estado" style="color:#4ade80;">Válido</span></div>
+        <button type="button" id="btn-marcar-usado" class="btn-canjear hidden">
+          <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;">done</span>
+          Marcar entrada (canjear)
+        </button>
+      </div>
+    </div>
+
+    <div id="resultado-invalido" class="bol-card resultado-panel hidden">
+      <div class="resultado-error-box">
+        <h3 class="resultado-titulo bad">
+          <span class="material-symbols-outlined">cancel</span>
+          No válido
+        </h3>
+        <p id="resultado-error" style="color:var(--d-soft);margin:0;">—</p>
+        <div id="resultado-info-adicional" class="hidden" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bol-card hidden" id="panel-lista-puerta">
+    <h2 class="bol-card-title">Lista de llamado</h2>
+    <div class="bol-card-rule"></div>
+    <span class="sec-label">Folios internos · agrupados por certificado · toca para marcar entrada</span>
+    <p id="lista-sin-sesion" style="display:none" class="hidden" style="font-size:14px;color:#f87171;margin-bottom:12px;">
+      Abre la boletera desde <a href="admin.html" style="color:var(--gold);">admin</a> (enlace de taquilla).
+    </p>
+    <label class="form-label" for="lista-funcion">Función</label>
+    <select id="lista-funcion" class="form-input" style="margin-bottom:12px;"></select>
+    <div id="lista-resumen" class="lista-resumen"></div>
+    <div id="lista-grupos" class="lista-grupos"></div>
+  </div>
+
+  <div class="bol-card" id="panel-nombre">
+    <h2 class="bol-card-title">Por nombre (cola rápida)</h2>
+    <div class="bol-card-rule"></div>
+    <span class="sec-label">Busca comprador · marca entrada sin escanear cada QR</span>
+    <p id="nombre-sin-sesion" style="display:none" class="hidden" style="font-size:14px;color:#f87171;margin-bottom:12px;">
+      Abre la boletera desde <a href="admin.html" style="color:var(--gold);">admin</a> o usa verificar con usuario de puerta.
+    </p>
+    <label class="form-label" for="nombre-funcion">Función</label>
+    <select id="nombre-funcion" class="form-input" style="margin-bottom:12px;"></select>
+    <label class="form-label" for="nombre-buscar">Nombre o email</label>
+    <div class="form-row" style="margin-bottom:12px;">
+      <input type="search" id="nombre-buscar" class="form-input" placeholder="María, lopez@…">
+      <button type="button" id="btn-buscar-nombre" class="btn-primario" style="flex:0 0 auto;">Buscar</button>
+    </div>
+    <div id="nombre-resultados"></div>
+    <button type="button" id="btn-canjear-seleccion" class="btn-canjear hidden" style="margin-top:14px;">
+      Marcar entrada seleccionados
+    </button>
+  </div>
+
+  <div class="bol-card" id="panel-ingresados">
+    <h2 class="bol-card-title">Ingresados hoy</h2>
+    <div class="bol-card-rule"></div>
+    <ul id="lista-ingresados" style="list-style:none;padding:0;margin:0;font-size:15px;color:var(--d-soft);"></ul>
+  </div>
+      </div>
     </div>
 
   </main>
+</div>
+
+<div id="modal-scanner" class="modal-scanner hidden" style="display:none;">
+  <div style="width:100%;max-width:360px;position:relative;">
+    <button type="button" onclick="cerrarScanner()" class="btn-accion" style="position:absolute;top:0;right:0;z-index:10;">
+      <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+      Cerrar
+    </button>
+    <video id="scanner-video" playsinline autoplay muted></video>
+    <canvas id="scanner-canvas" class="hidden"></canvas>
+    <p style="text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--soft);margin-top:12px;">Apunta al QR del boleto</p>
+  </div>
 </div>
 
 <!-- MODAL CONFIRMACIÓN OPS -->
@@ -773,9 +1086,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="js/qr-boleto.js"></script>
 <script src="js/generar-imagen-boleto.js"></script>
+<script src="js/compartir-wa-boleto.js"></script>
 <script src="js/selector-funciones.js"></script>
+<script src="js/boletera-venta.js"></script>
+<script src="js/boletera-panel.js"></script>
+<script src="js/verificar.js"></script>
 <script src="js/admin-panel.js"></script>
 </body>
 </html>

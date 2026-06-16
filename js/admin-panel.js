@@ -1817,7 +1817,7 @@
 
   function v4ShowView(view) {
     state.view = view;
-    ['hub', 'ops', 'funciones', 'informes', 'equipo', 'auditoria', 'sitio', 'boletera'].forEach(v => {
+    ['hub', 'ops', 'funciones', 'informes', 'equipo', 'auditoria', 'sitio', 'boletera', 'verificar'].forEach(v => {
       v4Toggle(`view-${v}`, v === view);
     });
     document.querySelectorAll('.nav-item[data-nav]').forEach(el => {
@@ -1828,14 +1828,11 @@
   }
 
   function v4CargarIframeBoletera() {
-    const iframe = document.getElementById('iframe-boletera');
-    if (!iframe) return;
-    const src = iframe.getAttribute('data-loaded-src');
-    const want = 'boletera.html?embed=1';
-    if (src !== want) {
-      iframe.src = want;
-      iframe.setAttribute('data-loaded-src', want);
-    }
+    window.BoleteraPanel?.init?.();
+  }
+
+  function v4CargarVerificar() {
+    window.VerificarPanel?.init?.();
   }
 
   async function v4PreviewBoleto(cert) {
@@ -1945,6 +1942,9 @@
       } else if (view === 'boletera') {
         if (!perm('venderEfectivo')) { v4ShowView('hub'); return v4PaintView('hub'); }
         v4CargarIframeBoletera();
+      } else if (view === 'verificar') {
+        if (!perm('verificarBoletos')) { v4ShowView('hub'); return v4PaintView('hub'); }
+        v4CargarVerificar();
       }
     } catch (e) {
       alert(e.message);
@@ -1971,6 +1971,7 @@
       auditoria: perm('verAuditoria'),
       sitio: perm('editarSitio'),
       boletera: perm('venderEfectivo'),
+      verificar: perm('verificarBoletos'),
     };
     let first = null;
     document.querySelectorAll('.nav-item[data-nav]').forEach(el => {
@@ -2294,6 +2295,11 @@
     navGo(nav, 'boletera');
   }
 
+  function abrirVerificar() {
+    const nav = document.getElementById('nav-verificar') || document.querySelector('[data-nav=verificar]');
+    navGo(nav, 'verificar');
+  }
+
   function abrirModalEnlaceTaquilla() {
     document.getElementById('enlace-nombre')?.focus();
     document.getElementById('enlace-error')?.classList.add('hidden');
@@ -2322,6 +2328,7 @@
   }
 
   window.abrirBoletera = abrirBoletera;
+  window.abrirVerificar = abrirVerificar;
   window.abrirModalEnlaceTaquilla = abrirModalEnlaceTaquilla;
   window.copiarEnlaceBoletera = copiarEnlaceBoletera;
   window.v4PreviewBoleto = v4PreviewBoleto;
@@ -2402,7 +2409,7 @@
     document.querySelectorAll('.nav-item[data-nav]').forEach(el => {
       const nav = el.dataset.nav;
       if (!viaEmail) return;
-      const ok = nav === 'boletera';
+      const ok = nav === 'boletera' || nav === 'verificar';
       el.classList.toggle('hidden', !ok);
     });
     document.querySelectorAll('.sidebar-section').forEach(el => { if (viaEmail) el.classList.add('hidden'); });
@@ -2412,13 +2419,13 @@
     v4Toggle('btn-copiar-boletera', !viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente'));
     v4Toggle('link-verificar', !viaEmail && perm('verificarBoletos'));
     v4Toggle('nav-boletera', perm('venderEfectivo'));
+    v4Toggle('nav-verificar', perm('verificarBoletos'));
   }
 
   window.AdminPanel = {
     iniciar(usuario, viewInicial) {
       if (usuario.rol === 'validacion' && !usuario.viaEmail) {
-        window.location.href = 'verificar.html';
-        return;
+        state.view = 'verificar';
       }
 
       const elU = document.getElementById('usuario-actual');
@@ -2433,11 +2440,14 @@
       v4Toggle('btn-copiar-boletera', !usuario.viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente'));
       v4Toggle('link-verificar', !usuario.viaEmail && perm('verificarBoletos'));
       v4Toggle('nav-boletera', perm('venderEfectivo'));
+      v4Toggle('nav-verificar', perm('verificarBoletos'));
 
       v4AplicarUiAcceso(usuario);
 
       if (usuario.viaEmail) state.view = 'boletera';
       else if (viewInicial === 'boletera' && perm('venderEfectivo')) state.view = 'boletera';
+      else if (viewInicial === 'verificar' && perm('verificarBoletos')) state.view = 'verificar';
+      else if (usuario.rol === 'validacion') state.view = 'verificar';
       else if (!perm('verVentas') && IS_V4()) {
         if (perm('verAuditoria')) state.view = 'auditoria';
         else if (perm('editarSitio')) state.view = 'sitio';
@@ -2510,7 +2520,7 @@
     if (u) {
       document.getElementById('login-screen')?.classList.add('hidden');
       document.getElementById('admin-panel')?.classList.remove('hidden');
-      AdminPanel.iniciar(u, viewParam === 'boletera' ? 'boletera' : undefined);
+      AdminPanel.iniciar(u, viewParam === 'boletera' || viewParam === 'verificar' ? viewParam : undefined);
       return;
     }
 

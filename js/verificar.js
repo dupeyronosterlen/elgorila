@@ -1,10 +1,19 @@
 // --- VERIFICACIÓN DE BOLETOS (Worker API) ---
 
+let _verRoot = null;
+function v$(id) {
+  if (_verRoot) {
+    const el = _verRoot.querySelector('#' + id);
+    if (el) return el;
+  }
+  return document.getElementById(id);
+}
+
 let _ventaActual  = null;
 let _codigoActual = null;
 
 async function verificarBoleto() {
-    const input    = document.getElementById('codigo-qr-input');
+    const input    = v$('codigo-qr-input');
     const codigo   = (input?.value || '').trim().toUpperCase();
     if (!codigo) { alert('Ingresa un código de folio'); return; }
     if (!window.API_BASE) { alert('API no configurada'); return; }
@@ -12,7 +21,7 @@ async function verificarBoleto() {
     _codigoActual = codigo;
     _ventaActual  = null;
 
-    const btnV = document.getElementById('btn-verificar');
+    const btnV = v$('btn-verificar');
     if (btnV) { btnV.disabled = true; btnV.textContent = 'Verificando…'; }
 
     try {
@@ -40,9 +49,9 @@ async function verificarBoleto() {
 }
 
 function mostrarValido(venta) {
-    document.getElementById('resultado-verificacion').classList.remove('hidden');
-    document.getElementById('resultado-valido').classList.remove('hidden');
-    document.getElementById('resultado-invalido').classList.add('hidden');
+    v$('resultado-verificacion').classList.remove('hidden');
+    v$('resultado-valido').classList.remove('hidden');
+    v$('resultado-invalido').classList.add('hidden');
 
     const entradaLbl = venta.totalBoletos > 1
         ? (venta.esCertificado && venta.pendientes != null
@@ -50,26 +59,26 @@ function mostrarValido(venta) {
             : `Entrada ${venta.boletoNum || 1} de ${venta.totalBoletos}`)
         : '1 entrada';
 
-    document.getElementById('resultado-codigo').textContent  = venta.codigo;
-    document.getElementById('resultado-fecha').textContent   =
+    v$('resultado-codigo').textContent  = venta.codigo;
+    v$('resultado-fecha').textContent   =
         `${venta.funcionNombre || venta.fecha || '—'} · ${entradaLbl}`;
-    const filaComprador = document.getElementById('fila-comprador');
-    const filaEmail     = document.getElementById('fila-email');
+    const filaComprador = v$('fila-comprador');
+    const filaEmail     = v$('fila-email');
     const mostrarPii    = _puedeVerComprador() && (venta.nombre || venta.email);
     if (filaComprador) {
         filaComprador.classList.toggle('hidden', !mostrarPii);
-        document.getElementById('resultado-orden').textContent = venta.nombre || venta.email || '—';
+        v$('resultado-orden').textContent = venta.nombre || venta.email || '—';
     }
     if (filaEmail) {
         filaEmail.classList.toggle('hidden', !(mostrarPii && venta.email));
-        document.getElementById('resultado-email').textContent = venta.email || '—';
+        v$('resultado-email').textContent = venta.email || '—';
     }
 
-    const estadoEl = document.getElementById('resultado-estado');
+    const estadoEl = v$('resultado-estado');
     estadoEl.textContent = 'VÁLIDO — No canjeado';
     estadoEl.className   = 'font-semibold text-green-400';
 
-    const btnU = document.getElementById('btn-marcar-usado');
+    const btnU = v$('btn-marcar-usado');
     if (btnU) {
         btnU.classList.toggle('hidden', !_puedeCanjear());
         btnU.disabled = false;
@@ -77,13 +86,13 @@ function mostrarValido(venta) {
 }
 
 function mostrarYaCanjeado(venta, cuandoMX) {
-    document.getElementById('resultado-verificacion').classList.remove('hidden');
-    document.getElementById('resultado-valido').classList.add('hidden');
-    document.getElementById('resultado-invalido').classList.remove('hidden');
+    v$('resultado-verificacion').classList.remove('hidden');
+    v$('resultado-valido').classList.add('hidden');
+    v$('resultado-invalido').classList.remove('hidden');
 
-    document.getElementById('resultado-error').textContent = `Ya fue canjeado el ${cuandoMX}.`;
+    v$('resultado-error').textContent = `Ya fue canjeado el ${cuandoMX}.`;
 
-    const info = document.getElementById('resultado-info-adicional');
+    const info = v$('resultado-info-adicional');
     info.classList.remove('hidden');
     const emailRow = (_puedeVerComprador() && venta.email)
         ? `<div class="resultado-fila"><span>Email</span><span>${venta.email}</span></div>` : '';
@@ -94,11 +103,11 @@ function mostrarYaCanjeado(venta, cuandoMX) {
 }
 
 function mostrarInvalido(mensaje) {
-    document.getElementById('resultado-verificacion').classList.remove('hidden');
-    document.getElementById('resultado-valido').classList.add('hidden');
-    document.getElementById('resultado-invalido').classList.remove('hidden');
-    document.getElementById('resultado-error').textContent = mensaje;
-    document.getElementById('resultado-info-adicional').classList.add('hidden');
+    v$('resultado-verificacion').classList.remove('hidden');
+    v$('resultado-valido').classList.add('hidden');
+    v$('resultado-invalido').classList.remove('hidden');
+    v$('resultado-error').textContent = mensaje;
+    v$('resultado-info-adicional').classList.add('hidden');
 }
 
 async function marcarComoUsado() {
@@ -110,7 +119,7 @@ async function marcarComoUsado() {
 
     if (!confirm('¿Marcar este boleto como canjeado? Esta acción no se puede deshacer.')) return;
 
-    const btnU = document.getElementById('btn-marcar-usado');
+    const btnU = v$('btn-marcar-usado');
     if (btnU) { btnU.disabled = true; btnU.textContent = 'Canjeando…'; }
 
     try {
@@ -127,7 +136,7 @@ async function marcarComoUsado() {
         }
 
         // Actualizar UI
-        const estadoEl = document.getElementById('resultado-estado');
+        const estadoEl = v$('resultado-estado');
         estadoEl.textContent = '✓ CANJEADO';
         estadoEl.className   = 'font-semibold text-yellow-400';
         if (btnU) { btnU.disabled = true; btnU.classList.add('hidden'); }
@@ -151,21 +160,21 @@ function obtenerTokenAdmin() {
 let _scannerStream = null;
 
 function abrirScanner() {
-    const modal = document.getElementById('modal-scanner');
+    const modal = v$('modal-scanner');
     if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
     iniciarCamara();
 }
 
 function cerrarScanner() {
     pararCamara();
-    const modal = document.getElementById('modal-scanner');
+    const modal = v$('modal-scanner');
     if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
 }
 
 async function iniciarCamara() {
     try {
         _scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        const video = document.getElementById('scanner-video');
+        const video = v$('scanner-video');
         if (video) { video.srcObject = _scannerStream; video.play(); }
         requestAnimationFrame(escanearFrame);
     } catch {
@@ -180,8 +189,8 @@ function pararCamara() {
 
 function escanearFrame() {
     if (!_scannerStream) return;
-    const video  = document.getElementById('scanner-video');
-    const canvas = document.getElementById('scanner-canvas');
+    const video  = v$('scanner-video');
+    const canvas = v$('scanner-canvas');
     if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) {
         requestAnimationFrame(escanearFrame);
         return;
@@ -200,7 +209,7 @@ function escanearFrame() {
             const urlMatch = codigo.match(/[?&]codigo=([^&]+)/);
             if (urlMatch) codigo = decodeURIComponent(urlMatch[1]);
             cerrarScanner();
-            const input = document.getElementById('codigo-qr-input');
+            const input = v$('codigo-qr-input');
             if (input) { input.value = codigo.toUpperCase(); }
             verificarBoleto();
             return;
@@ -222,7 +231,7 @@ function _colorGrupo(certificado) {
 }
 
 async function cargarFuncionesLista() {
-    const sel = document.getElementById('lista-funcion');
+    const sel = v$('lista-funcion');
     if (!sel || !window.API_BASE) return;
     try {
         const res = await fetch(window.teatroApi('funciones'));
@@ -236,9 +245,9 @@ async function cargarFuncionesLista() {
 }
 
 async function cargarListaPuerta() {
-    const cont   = document.getElementById('lista-grupos');
-    const resumen = document.getElementById('lista-resumen');
-    const fecha  = document.getElementById('lista-funcion')?.value;
+    const cont   = v$('lista-grupos');
+    const resumen = v$('lista-resumen');
+    const fecha  = v$('lista-funcion')?.value;
     const token  = obtenerTokenAdmin();
     if (!cont || !fecha || !token || !_puedeVerListaPuerta()) return;
 
@@ -346,14 +355,14 @@ function _puedeVerComprador() {
 function _aplicarUIPermisos() {
     const buscar = _puedeBuscarNombre();
     const lista  = _puedeVerListaPuerta();
-    document.getElementById('panel-nombre')?.classList.toggle('hidden', !buscar);
-    document.getElementById('panel-ingresados')?.classList.toggle('hidden', !buscar);
-    document.getElementById('panel-lista-puerta')?.classList.toggle('hidden', !lista);
-    if (!lista) document.getElementById('lista-sin-sesion')?.classList.toggle('hidden', true);
+    v$('panel-nombre')?.classList.toggle('hidden', !buscar);
+    v$('panel-ingresados')?.classList.toggle('hidden', !buscar);
+    v$('panel-lista-puerta')?.classList.toggle('hidden', !lista);
+    if (!lista) v$('lista-sin-sesion')?.classList.toggle('hidden', true);
 }
 
 function _cargarIngresados() {
-    const ul = document.getElementById('lista-ingresados');
+    const ul = v$('lista-ingresados');
     if (!ul) return;
     let list = [];
     try { list = JSON.parse(sessionStorage.getItem(INGRESOS_KEY) || '[]'); } catch { list = []; }
@@ -379,7 +388,7 @@ function _agregarIngreso(nombre, cantidad) {
 }
 
 async function cargarFuncionesNombre() {
-    const sel = document.getElementById('nombre-funcion');
+    const sel = v$('nombre-funcion');
     if (!sel || !window.API_BASE) return;
     try {
         const res = await fetch(window.teatroApi('funciones'));
@@ -392,18 +401,18 @@ async function cargarFuncionesNombre() {
 }
 
 async function buscarPorNombre() {
-    const q = document.getElementById('nombre-buscar')?.value?.trim();
-    const fecha = document.getElementById('nombre-funcion')?.value;
-    const cont = document.getElementById('nombre-resultados');
-    const btnLote = document.getElementById('btn-canjear-seleccion');
+    const q = v$('nombre-buscar')?.value?.trim();
+    const fecha = v$('nombre-funcion')?.value;
+    const cont = v$('nombre-resultados');
+    const btnLote = v$('btn-canjear-seleccion');
     if (!q || !fecha || !cont) return;
     if (!_puedeBuscarNombre()) {
-        document.getElementById('nombre-sin-sesion')?.classList.remove('hidden');
+        v$('nombre-sin-sesion')?.classList.remove('hidden');
         return;
     }
     const token = obtenerTokenAdmin();
     if (!token) {
-        document.getElementById('nombre-sin-sesion')?.classList.remove('hidden');
+        v$('nombre-sin-sesion')?.classList.remove('hidden');
         return;
     }
     cont.innerHTML = '<p style="color:var(--d-soft);font-size:14px;">Buscando…</p>';
@@ -458,19 +467,17 @@ async function canjearSeleccionados() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');
         _agregarIngreso(nombre, cant);
-        document.getElementById('nombre-resultados').innerHTML = '<p style="color:#4ade80;">✓ Entrada registrada</p>';
-        document.getElementById('btn-canjear-seleccion')?.classList.add('hidden');
+        v$('nombre-resultados').innerHTML = '<p style="color:#4ade80;">✓ Entrada registrada</p>';
+        v$('btn-canjear-seleccion')?.classList.add('hidden');
         _ventasNombre = [];
     } catch (e) { alert(e.message); }
 }
 
-// ── Inicialización ─────────────────────────────────────────────────────────────
-
-document.addEventListener('DOMContentLoaded', function() {
-    const btnV = document.getElementById('btn-verificar');
-    const btnU = document.getElementById('btn-marcar-usado');
-    const btnS = document.getElementById('btn-escanear');
-    const input = document.getElementById('codigo-qr-input');
+function _bindVerificarUI() {
+    const btnV = v$('btn-verificar');
+    const btnU = v$('btn-marcar-usado');
+    const btnS = v$('btn-escanear');
+    const input = v$('codigo-qr-input');
 
     if (btnV) btnV.addEventListener('click', verificarBoleto);
     if (btnU) btnU.addEventListener('click', marcarComoUsado);
@@ -481,7 +488,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (input) {
         input.addEventListener('keypress', e => { if (e.key === 'Enter') verificarBoleto(); });
         input.addEventListener('input', () => {
-            document.getElementById('resultado-verificacion')?.classList.add('hidden');
+            v$('resultado-verificacion')?.classList.add('hidden');
             _ventaActual = null;
         });
         input.focus();
@@ -499,16 +506,33 @@ document.addEventListener('DOMContentLoaded', function() {
     if (_puedeVerListaPuerta() && obtenerTokenAdmin()) {
         cargarFuncionesLista();
     } else if (!obtenerTokenAdmin()) {
-        document.getElementById('lista-sin-sesion')?.classList.remove('hidden');
+        v$('lista-sin-sesion')?.classList.remove('hidden');
     }
     if (_puedeBuscarNombre()) {
         cargarFuncionesNombre();
         _cargarIngresados();
     }
-    document.getElementById('btn-buscar-nombre')?.addEventListener('click', buscarPorNombre);
-    document.getElementById('btn-canjear-seleccion')?.addEventListener('click', canjearSeleccionados);
-    document.getElementById('nombre-buscar')?.addEventListener('keypress', e => {
+    v$('btn-buscar-nombre')?.addEventListener('click', buscarPorNombre);
+    v$('btn-canjear-seleccion')?.addEventListener('click', canjearSeleccionados);
+    v$('nombre-buscar')?.addEventListener('keypress', e => {
         if (e.key === 'Enter') buscarPorNombre();
     });
-    document.getElementById('lista-funcion')?.addEventListener('change', cargarListaPuerta);
-});
+    v$('lista-funcion')?.addEventListener('change', cargarListaPuerta);
+
+}
+
+window.VerificarPanel = {
+  _inited: false,
+  init() {
+    if (this._inited) return;
+    const root = document.getElementById('view-verificar');
+    if (!root && !document.getElementById('codigo-qr-input')) return;
+    _verRoot = root;
+    this._inited = true;
+    _bindVerificarUI();
+  },
+};
+
+if (!document.getElementById('admin-panel')) {
+  document.addEventListener('DOMContentLoaded', () => window.VerificarPanel.init());
+}
