@@ -12,10 +12,25 @@
 /privacidad       /terminos.html#privacidad   200
 /privacidad/      /terminos.html#privacidad   200
 
-# Legacy → panel único admin.html
+# Legacy operativo → panel único admin.html
+/boletera                   /admin.html?view=boletera     301
+/boletera/                  /admin.html?view=boletera     301
 /boletera.html              /admin.html?view=boletera     301
+/verificar                  /admin.html?view=verificar    301
+/verificar/                 /admin.html?view=verificar    301
 /verificar.html             /admin.html?view=verificar    301
+/taquilla                   /admin.html?view=boletera     301
+/taquilla/                  /admin.html?view=boletera     301
 /taquilla.html              /admin.html?view=boletera     301
+/acomodadores               /admin.html?view=verificar    301
+/acomodadores/              /admin.html?view=verificar    301
 /acomodadores.html          /admin.html?view=verificar    301
-/admin-panel-v4.html        /admin.html                   301
 /admin-panel-v4             /admin.html                   301
+/admin-panel-v4.html        /admin.html                   301
+/admin                      /admin.html                   301
+/admin/                     /admin.html                   301
+
+# Encuesta legacy → acta (query ?t= se conserva)
+/encuesta                   /acta.html                    301
+/encuesta/                  /acta.html                    301
+/encuesta.html              /acta.html                    301

@@ -169,7 +169,7 @@ async function main() {
   console.log('\nPrueba manual recomendada (después de deploy):');
   console.log('  1. Compra 1 boleto en boletos.html (tarjeta test o real)');
   console.log('  2. Copia folio CERT-… de confirmacion.html');
-  console.log('  3. verificar.html → debe mostrar VÁLIDO');
+  console.log('  3. admin.html?view=verificar → escanear QR → debe mostrar VÁLIDO');
   console.log('  4. Admin canjea → segundo escaneo debe decir YA CANJEADO');
   console.log('  5. Revisa email elgorilateatro@gmail.com con aviso de venta\n');
 }

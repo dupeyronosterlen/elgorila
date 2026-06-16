@@ -31,7 +31,7 @@ CÓMO FUNCIONA LA VENTA (para todo el equipo)
 DÓNDE VER DISPONIBILIDAD
 ────────────────────────
   · Público: boletos.html (solo muestra si hay lugares, no el número exacto)
-  · Boletera: boletera.html → elige fecha → platea / galería / vendidos
+  · Boletera: admin.html?view=boletera → elige fecha → platea / galería / vendidos
   · Admin: admin.html → Teatros → Wilberto → función → tabla ventas + CSV
   · Script técnico: node scripts/verify-capacidad.js
 
@@ -39,7 +39,7 @@ DÓNDE VER DISPONIBILIDAD
 QUIÉN DEBE SABER QUÉ
 ────────────────────
   Producción / teatro .......... 325 total · platea primero · galería al final
-  Taquilla ..................... boletera.html · no vender si dice sin cupo
+  Taquilla ..................... admin.html?view=boletera · no vender si dice sin cupo
   Reclamos ..................... admin → reenviar boleto (no crea cupo extra)
   Marketing / agencia .......... no prometer más de 325 por función
   Técnico ...................... KV Cloudflare + Worker (ver abajo)
@@ -100,8 +100,8 @@ SEPTIEMBRE 2026
 BOLETO PARA EL PÚBLICO (sin «verificar en línea»)
 ──────────────────────────────────────────────────
   · El QR del correo / confirmación / imagen = solo el código CERT (ej. CERT-6787…).
-  · Puerta escanea ese QR con verificar.html (solo staff).
-  · El público NO debe abrir verificar.html — mensaje: «Presenta el QR en la entrada».
+  · Puerta escanea ese QR en admin.html?view=verificar (solo staff).
+  · El público NO debe abrir el panel de verificar — mensaje: «Presenta el QR en la entrada».
   · Compartir: botón WhatsApp en confirmación (imagen + texto, sin subpágina).
   · compartir-boleto.html solo para staff/admin (vista previa).
 

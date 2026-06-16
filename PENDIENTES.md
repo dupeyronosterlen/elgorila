@@ -1,6 +1,6 @@
 # PENDIENTES — El Gorila Boletaje
 
-Actualizado: **2026-06-15**
+Actualizado: **2026-06-16**
 
 ---
 
@@ -8,9 +8,61 @@ Actualizado: **2026-06-15**
 
 **Venta pública ABIERTA** (`VENTA_PUBLICA_ABIERTA = true`):
 - Portada → `boletos.html` · «Adquiere tus boletos»
-- Stripe online + boletera efectivo operativos
+- Stripe online + boletera efectivo operativos (panel único: `admin.html`)
 - Resend verificado · emails operativos
 - **Confirmación con QR visible** · compartir boleto por WhatsApp con imagen (desplegado 2026-06-15)
+
+**Panel operativo único:** `admin.html` (ventas, boletera, verificar, auditoría).  
+URLs legacy (`boletera.html`, `verificar.html`, `taquilla.html`, etc.) → 301 en `_redirects`.
+
+---
+
+## Sesión 2026-06-16 — auditoría y limpieza repo
+
+### Qué se hizo
+| Área | Cambio |
+|------|--------|
+| JS muerto | Eliminado `js/admin.js` (reemplazado por `admin-panel.js`; sin referencias) |
+| Docs ops | `CAPACIDAD-TEATRO.template.txt` y `verify-sistema.js` apuntan a `admin.html` |
+| Redirects (P-17) | `_redirects`: rutas sin `.html`, `/admin`, `/encuesta*` → `acta.html` |
+| Legacy HTML (P-19) | Deletes en `b36be76` (`boletera`, `verificar`, `taquilla`, `acomodadores`, `admin-panel-v4`, `boletera-gate.js`) |
+| Encuesta UI | **No se tocó** — ver P-16 abajo |
+
+### Qué NO borrar (aunque parezca huérfano)
+| Archivo | Motivo |
+|---------|--------|
+| `js/encuesta.js` + `css/encuesta.css` | UI de encuesta + tarjetas de cupón; desconectada de HTML, pendiente P-16 |
+| `encuesta.html` | Redirect a `acta.html` (emails viejos / bookmarks) |
+| `checkout.html` + `checkout.js` | Fallback si `boletos.html` no tiene panel inline |
+| `cupon-invitado.html` | Normaliza `?c=` → `invitacion.html?de=` |
+
+### Limpieza repo — pendiente (PRs pequeños, no urgente)
+| ID | Descripción |
+|----|-------------|
+| P-20 | Actualizar `.claude/skills/claude-seo/skill.md` (quitar taquilla/verificar como páginas vivas) |
+
+**Decisión 2026-06-16:** `programa/v1`–`v5` y `mano-v2` **se mantienen** — cada versión se usa en distintos momentos/canales (QR impreso, email, gracias, promo). P-18 cancelado.
+
+---
+
+## 🔴 P-16 — Encuesta post-función + cupones (no urgente)
+
+**Contexto:** Al salir del teatro, el comprador recibe email nocturno → `acta.html?t=TOKEN`. El worker guarda respuestas en KV (`encuesta:TOKEN`) y devuelve cupones referido.
+
+**Qué funciona hoy:**
+- Email post-función → `acta.html` (worker `urlEncuesta`)
+- Acta imprimible + cuestionario del reverso (`acta.js`)
+- API `GET/POST …/encuesta/{token}` + cupones **REGALO25** (siempre), **OTRA50**, **MANADA15** (condicionales)
+- Invitar −25% desde boleto ya comprado: `compartir-boleto.html` → `invitacion.html` → **INVITADO25** en `boletos.html`
+
+**Qué quedó a medias (regresión al migrar encuesta → acta):**
+1. `js/encuesta.js` tiene el wizard completo (NPS, volvería, compañía, tarjetas regalo con QR) pero **ningún HTML lo carga**.
+2. `acta.js` solo envía `{ acta, nombrePortador, nombreRegalo }` — no las preguntas de encuesta → **OTRA50** y **MANADA15** casi nunca se desbloquean.
+3. UI de regalos reducida a un enlace en `#regalo-link-box`, no las tarjetas de `encuesta.js`.
+
+**Tarea cuando toque:**
+- Integrar paso encuesta + pantalla de regalos en `acta.html` (reutilizar `encuesta.js` + `encuesta.css`), **sin cambiar worker**.
+- Probar flujo: email dry-run → acta → encuesta → copiar enlace REGALO25 → compra en `boletos.html`.
 
 ---
 
@@ -31,9 +83,6 @@ Actualizado: **2026-06-15**
 | Checkout online | Campo **nombre** en `boletos.html` → metadata Stripe → KV → lista de puerta en boletera |
 | Soporte | Botón flotante WhatsApp en `confirmacion.html` (mismo número que index) |
 | Deploy | Worker `elgorila-api` + GitHub Pages (`640c139` en `main`) |
-
-### Archivos tocados
-`confirmacion.html`, `confirmacion.js`, `compartir-wa-boleto.js`, `compartir-boleto.js`, `generar-imagen-boleto.js`, `qr-boleto.js`, `enviar-boleto.js`, `enviar-boleto.html`, `boletos.html`, `boletera.html`, `gracias.html`, `compartir-boleto.html`, `worker/index.js`
 
 ### Notas operativas
 - **Celular:** Compartir → WhatsApp → elige la imagen del boleto.
@@ -96,6 +145,8 @@ Hasta P-14, la agencia usa admin CSV + `/api/reporte` (stats sin nombres/emails)
 | P-13 | Admin Sitio → KV a index.html |
 | P-14 | Boletera → base procesada → agente IA agencia |
 | P-15 | Hacer **obligatorio** el nombre en checkout online (hoy opcional) |
+| P-16 | Encuesta post-función + cupones en `acta.html` (ver sección arriba) |
+| P-20 | Actualizar skill SEO interno |
 
 ---
 
@@ -107,10 +158,12 @@ Hasta P-14, la agencia usa admin CSV + `/api/reporte` (stats sin nombres/emails)
 | QR confirmación | Visible al instante + boletito exportable (2026-06-15) |
 | WhatsApp boleto | Imagen PNG nativa; correo con auto-share `&wa=1` |
 | Nombre comprador online | Checkout → KV → lista puerta boletera |
-| Boletera taquilla | Venta efectivo, verificar, canje puerta |
-| Post-función | Email batch, acta, cupones REGALO25/OTRA50/MANADA15 |
+| Boletera taquilla | Venta efectivo, verificar, canje puerta (en `admin.html`) |
+| Post-función | Email batch → acta; backend cupones REGALO25/OTRA50/MANADA15 |
+| Invitación −25% | `invitacion.html` + INVITADO25 desde compartir boleto |
 | Soporte confirmación | Botón flotante WhatsApp |
 | Admin | Informes, reenvío, anular ventas manuales |
+| Limpieza repo (P-19) | Eliminado `js/admin.js`; docs ops → `admin.html`; redirects ampliados |
 
 ---
 
@@ -122,4 +175,5 @@ Hasta P-14, la agencia usa admin CSV + `/api/reporte` (stats sin nombres/emails)
 | Sitio | `https://elgorilateatro.com.mx` |
 | Reporte agencia | `GET /api/reporte` + header `Authorization: Bearer {REPORTE_TOKEN}` |
 | Admin | `admin.html` |
-| Boletera | `boletera.html` |
+| Boletera | `admin.html?view=boletera` |
+| Verificar puerta | `admin.html?view=verificar` |
