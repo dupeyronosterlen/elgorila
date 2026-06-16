@@ -147,6 +147,10 @@
     configure(usuario) {
       configureBottomNav(usuario);
       syncUserTopbar(usuario);
+      if (isMobile()) {
+        const main = $('admin-app');
+        if (main) main.style.overflow = '';
+      }
     },
     onNav(view) {
       syncBottomNav(view);

@@ -1824,7 +1824,10 @@
       el.classList.toggle('active', el.dataset.nav === view);
     });
     const main = document.getElementById('admin-app');
-    if (main) main.style.overflow = view === 'boletera' ? 'hidden' : '';
+    if (main) {
+      const mob = window.matchMedia('(max-width: 900px)').matches;
+      main.style.overflow = mob ? '' : (view === 'boletera' ? 'hidden' : '');
+    }
   }
 
   function v4CargarIframeBoletera() {
