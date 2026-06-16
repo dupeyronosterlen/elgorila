@@ -101,7 +101,7 @@ const AuthManager = {
 
     // ─── AUTENTICACIÓN (server-side vía secrets) ─────────────────────────────
 
-    // Admin login vía secrets del Worker — token 30 días en localStorage
+    // Admin login vía secrets del Worker — token 12 h en localStorage
     async autenticarAdmin(usuarioId, password) {
         if (!window.API_BASE) return { exito: false, error: 'API no configurada.' };
         try {
@@ -146,8 +146,9 @@ const AuthManager = {
             if (!res.ok || !data.ok) return { ok: false, error: data.error || 'Enlace inválido o expirado.' };
             sessionStorage.setItem('elgorila_acceso_token', token);
             sessionStorage.setItem('elgorila_acceso_sesion', JSON.stringify({
-                usuarioId: data.telefono || data.usuario,
-                telefono:  data.telefono || data.usuario,
+                usuarioId: data.email || data.telefono || data.usuario,
+                email:     data.email || null,
+                telefono:  data.telefono || null,
                 nombre:    data.nombre,
                 rol:       data.rol || 'taquilla',
                 viaEmail:  true,
@@ -156,8 +157,45 @@ const AuthManager = {
             return {
                 ok: true,
                 usuario: {
-                    usuarioId: data.telefono || data.usuario,
-                    telefono:  data.telefono || data.usuario,
+                    usuarioId: data.email || data.telefono || data.usuario,
+                    email:     data.email || null,
+                    telefono:  data.telefono || null,
+                    nombre:    data.nombre,
+                    rol:       data.rol || 'taquilla',
+                    viaEmail:  true,
+                },
+            };
+        } catch {
+            return { ok: false, error: 'Error de conexión.' };
+        }
+    },
+
+    async autenticarAccesoTaquilla(nombre, email) {
+        if (!window.API_BASE) return { ok: false, error: 'API no configurada.' };
+        try {
+            const res = await fetch(`${window.API_BASE}/api/admin/acceso/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre: nombre.trim(), email: email.trim() }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.token) {
+                return { ok: false, error: data.error || 'Acceso denegado.' };
+            }
+            sessionStorage.setItem('elgorila_acceso_token', data.token);
+            sessionStorage.setItem('elgorila_acceso_sesion', JSON.stringify({
+                usuarioId: data.email || data.usuario,
+                email:     data.email || data.usuario,
+                nombre:    data.nombre,
+                rol:       data.rol || 'taquilla',
+                viaEmail:  true,
+                exp:       data.exp,
+            }));
+            return {
+                ok: true,
+                usuario: {
+                    usuarioId: data.email || data.usuario,
+                    email:     data.email || data.usuario,
                     nombre:    data.nombre,
                     rol:       data.rol || 'taquilla',
                     viaEmail:  true,
@@ -198,7 +236,7 @@ const AuthManager = {
         };
     },
 
-    // Sesión activa: admin (localStorage 30 d) o taquilla vía enlace (sessionStorage 4 h)
+    // Sesión activa: admin (localStorage 12 h) o taquilla vía enlace (sessionStorage 4 h)
     obtenerUsuarioActual() {
         const local = this._sesionLocalAdmin();
         if (local) return local;
@@ -228,8 +266,9 @@ const AuthManager = {
             const p = this._decodeJWT(accesoToken);
             if (p && p.purpose === 'acceso_email') {
                 return {
-                    usuarioId: p.telefono || p.usuario,
-                    telefono:  p.telefono || p.usuario,
+                    usuarioId: p.email || p.telefono || p.usuario,
+                    email:     p.email || null,
+                    telefono:  p.telefono || null,
                     nombre:    p.nombre || p.usuario,
                     rol:       p.rol || 'taquilla',
                     viaEmail:  true,

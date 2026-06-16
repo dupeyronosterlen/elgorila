@@ -282,7 +282,7 @@
       </div>
       <div class="flex flex-wrap gap-2 mb-6">
         ${perm('venderEfectivo') ? '<button type="button" onclick="abrirBoletera()" class="px-3 py-2 text-sm border border-primary/30 text-primary">Boletera</button>' : ''}
-        ${perm('verificarBoletos') ? '<a href="verificar.html" class="px-3 py-2 text-sm border border-primary/30 text-primary">Verificar</a>' : ''}
+        ${perm('verificarBoletos') ? '<button type="button" onclick="abrirVerificar()" class="px-3 py-2 text-sm border border-primary/30 text-primary">Verificar</button>' : ''}
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         ${perm('verFiscal') ? `<div class="p-4 border border-primary/20"><div class="text-xs font-mono text-text-dark/50">RESERVA FISCAL 8%</div><div class="text-2xl text-yellow-400 font-display">${fmtMXN(state.fiscal)}</div></div>` : ''}
@@ -511,7 +511,7 @@
         <button type="button" id="btn-buscar-ventas" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Buscar</button>
         ${perm('exportarDatos') ? '<button type="button" id="btn-export-funcion" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Exportar CSV</button>' : ''}
         ${perm('reenviarBoleto') ? '<button type="button" id="btn-email-post-funcion" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Email post-función (22h)</button>' : ''}
-        ${perm('verificarBoletos') ? '<a href="verificar.html" class="px-4 py-2 border border-primary/30 text-primary text-sm">Verificar</a>' : ''}
+        ${perm('verificarBoletos') ? '<button type="button" onclick="abrirVerificar()" class="px-4 py-2 border border-primary/30 text-primary text-sm">Verificar</button>' : ''}
       </div>
       <div class="overflow-x-auto border border-primary/20">
         <table class="w-full text-left text-sm min-w-[900px]">
@@ -2286,6 +2286,7 @@
     if (el?.dataset?.nav) view = el.dataset.nav;
     v4ShowView(view);
     v4PaintView(view);
+    window.AdminMobile?.onNav?.(view);
   };
 
   window.closeDrawer = v4CerrarDrawer;
@@ -2308,22 +2309,26 @@
 
   async function copiarEnlaceBoletera() {
     const nombre = document.getElementById('enlace-nombre')?.value?.trim();
-    const telefono = document.getElementById('enlace-telefono')?.value?.trim();
+    const email = document.getElementById('enlace-email')?.value?.trim();
     const errEl = document.getElementById('enlace-error');
-    if (!nombre || !telefono) {
-      if (errEl) { errEl.textContent = 'Nombre y teléfono son obligatorios.'; errEl.classList.remove('hidden'); }
+    if (!nombre || !email) {
+      if (errEl) { errEl.textContent = 'Nombre y correo son obligatorios.'; errEl.classList.remove('hidden'); }
       return;
     }
     try {
       const data = await api(`${window.API_BASE}/api/admin/acceso/crear`, {
         method: 'POST',
-        body: JSON.stringify({ nombre, telefono }),
+        body: JSON.stringify({ nombre, email }),
       });
-      await navigator.clipboard.writeText(data.url);
       document.getElementById('modal-enlace-taquilla')?.classList.remove('open');
-      alert(`Enlace copiado para ${data.nombre} (válido 4 h). Envíalo por correo o WhatsApp.`);
+      if (data.emailEnviado) {
+        alert(`Correo enviado a ${data.email}. Válido 4 h.`);
+      } else if (data.url) {
+        await navigator.clipboard.writeText(data.url);
+        alert(`No se pudo enviar el correo. Enlace copiado para ${data.nombre} (válido 4 h).`);
+      }
     } catch (e) {
-      if (errEl) { errEl.textContent = e.message || 'No se pudo generar el enlace.'; errEl.classList.remove('hidden'); }
+      if (errEl) { errEl.textContent = e.message || 'No se pudo generar el acceso.'; errEl.classList.remove('hidden'); }
     }
   }
 
@@ -2420,6 +2425,8 @@
     v4Toggle('link-verificar', !viaEmail && perm('verificarBoletos'));
     v4Toggle('nav-boletera', perm('venderEfectivo'));
     v4Toggle('nav-verificar', perm('verificarBoletos'));
+    v4Toggle('mob-nav-boletera', perm('venderEfectivo'));
+    v4Toggle('mob-nav-verificar', perm('verificarBoletos'));
   }
 
   window.AdminPanel = {
@@ -2430,8 +2437,8 @@
 
       const elU = document.getElementById('usuario-actual');
       const elR = document.getElementById('rol-actual');
-      const label = usuario.viaEmail && usuario.telefono
-        ? `${usuario.nombre} · ${usuario.telefono}`
+      const label = usuario.viaEmail && (usuario.email || usuario.telefono)
+        ? `${usuario.nombre} · ${usuario.email || usuario.telefono}`
         : (usuario.nombre || usuario.usuarioId);
       if (elU) elU.textContent = label;
       if (elR) elR.textContent = usuario.viaEmail ? 'TAQUILLA · ENLACE' : (usuario.rol || 'admin').toUpperCase();
@@ -2454,17 +2461,65 @@
         else if (perm('gestionarEquipo')) state.view = 'equipo';
       }
       paint();
+      window.AdminMobile?.configure?.(usuario);
+      window.AdminMobile?.onNav?.(state.view);
     },
   };
 
+  let loginTaquillaMode = false;
+
+  window.toggleLoginTaquilla = function toggleLoginTaquilla() {
+    loginTaquillaMode = !loginTaquillaMode;
+    document.getElementById('login-admin-fields')?.classList.toggle('hidden', loginTaquillaMode);
+    document.getElementById('login-taquilla-fields')?.classList.toggle('hidden', !loginTaquillaMode);
+    const btn = document.getElementById('login-submit-btn');
+    const toggle = document.getElementById('login-toggle-taquilla');
+    if (btn) btn.textContent = loginTaquillaMode ? 'Entrar taquilla' : 'Entrar';
+    if (toggle) {
+      toggle.textContent = loginTaquillaMode
+        ? 'Volver a acceso administrador'
+        : 'Acceso taquilla (nombre + correo)';
+    }
+    const err = document.getElementById('error-login');
+    if (err) { err.textContent = ''; err.style.display = 'none'; }
+  };
+
   window.verificarAcceso = async function verificarAcceso() {
-    const usuarioId = document.getElementById('usuario-input')?.value?.trim();
-    const password  = document.getElementById('password-input')?.value;
-    const errorDiv  = document.getElementById('error-login');
+    const errorDiv = document.getElementById('error-login');
     if (errorDiv) {
       if (IS_V4()) errorDiv.style.display = 'none';
       else errorDiv.classList.add('hidden');
     }
+
+    if (loginTaquillaMode) {
+      const nombre = document.getElementById('taquilla-nombre-input')?.value?.trim();
+      const email  = document.getElementById('taquilla-email-input')?.value?.trim();
+      if (!nombre || !email) {
+        if (errorDiv) {
+          errorDiv.textContent = 'Ingresa nombre y correo autorizados';
+          if (IS_V4()) { errorDiv.style.display = 'block'; errorDiv.classList.remove('hidden'); }
+          else errorDiv.classList.remove('hidden');
+        }
+        return;
+      }
+      const r = await AuthManager.autenticarAccesoTaquilla(nombre, email);
+      if (!r.ok) {
+        if (errorDiv) {
+          errorDiv.textContent = r.error || 'Acceso denegado';
+          if (IS_V4()) { errorDiv.style.display = 'block'; errorDiv.classList.remove('hidden'); }
+          else errorDiv.classList.remove('hidden');
+        }
+        return;
+      }
+      if (errorDiv && IS_V4()) errorDiv.style.display = 'none';
+      document.getElementById('login-screen')?.classList.add('hidden');
+      document.getElementById('admin-panel')?.classList.remove('hidden');
+      AdminPanel.iniciar(r.usuario, 'boletera');
+      return;
+    }
+
+    const usuarioId = document.getElementById('usuario-input')?.value?.trim();
+    const password  = document.getElementById('password-input')?.value;
     if (!usuarioId || !password) {
     if (errorDiv) {
       errorDiv.textContent = 'Ingresa usuario y contraseña';

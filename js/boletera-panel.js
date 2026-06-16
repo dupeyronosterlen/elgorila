@@ -158,10 +158,16 @@ async function _boletaCanjear(cert) {
   if (!cert || !confirm(`¿Marcar ingreso de ${cert}?`)) return;
   const token = _boletaToken();
   if (!token) return;
+  const fecha = document.getElementById('bol-lista-funcion')?.value;
+  const body = fecha ? JSON.stringify({ fecha }) : undefined;
   try {
     const res = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(cert)}`), {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body,
     });
     const data = await res.json();
     if (!res.ok) { alert(data.error || 'No se pudo marcar'); return; }

@@ -12,6 +12,15 @@ function v$(id) {
 let _ventaActual  = null;
 let _codigoActual = null;
 
+function _fechaPuertaSeleccionada() {
+  return v$('lista-funcion')?.value || null;
+}
+
+function _canjeBodyExtra() {
+  const fecha = _fechaPuertaSeleccionada();
+  return fecha ? JSON.stringify({ fecha }) : undefined;
+}
+
 async function verificarBoleto() {
     const input    = v$('codigo-qr-input');
     const codigo   = (input?.value || '').trim().toUpperCase();
@@ -25,7 +34,9 @@ async function verificarBoleto() {
     if (btnV) { btnV.disabled = true; btnV.textContent = 'Verificando…'; }
 
     try {
-        const res  = await fetch(window.teatroApi(`venta/${encodeURIComponent(codigo)}`));
+        const fecha = _fechaPuertaSeleccionada();
+        const qs = fecha ? `?fecha=${encodeURIComponent(fecha)}` : '';
+        const res  = await fetch(window.teatroApi(`venta/${encodeURIComponent(codigo)}${qs}`));
         const data = await res.json();
 
         if (!res.ok) {
@@ -34,6 +45,11 @@ async function verificarBoleto() {
         }
 
         _ventaActual = data;
+
+        if (data.estado === 'reembolsada' || data.estado === 'cancelada') {
+            mostrarInvalido(data.error || 'Este boleto ya no tiene validez.');
+            return;
+        }
 
         if (data.usado) {
             const cuandoMX = new Date(data.usadoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
@@ -125,7 +141,11 @@ async function marcarComoUsado() {
     try {
         const res  = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(_codigoActual)}`), {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+                Authorization: `Bearer ${token}`,
+                ...( _canjeBodyExtra() ? { 'Content-Type': 'application/json' } : {}),
+            },
+            body: _canjeBodyExtra(),
         });
         const data = await res.json();
 
@@ -302,9 +322,14 @@ async function canjearDesdeLista(cert) {
     const token = obtenerTokenAdmin();
     if (!token) return;
     try {
+        const body = _canjeBodyExtra();
         const res = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(cert)}`), {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+                Authorization: `Bearer ${token}`,
+                ...(body ? { 'Content-Type': 'application/json' } : {}),
+            },
+            body,
         });
         const data = await res.json();
         if (!res.ok) { alert(data.error || 'No se pudo marcar'); return; }
@@ -459,10 +484,11 @@ async function canjearSeleccionados() {
     if (!codigos.length) { alert('Selecciona al menos un boleto'); return; }
     if (!confirm(`¿Marcar entrada de ${cant} boleto(s)?`)) return;
     try {
+        const fecha = _fechaPuertaSeleccionada();
         const res = await fetch(window.teatroAdminApi('canjear-lote'), {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ codigos }),
+            body: JSON.stringify({ codigos, ...(fecha ? { fecha } : {}) }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');

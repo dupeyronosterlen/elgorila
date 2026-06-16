@@ -10,13 +10,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0706">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
 <title>Panel de Administración — El Gorila</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/operaciones.css">
+<link rel="stylesheet" href="css/admin-mobile.css">
 <style>
 :root {
   --bg:    #0a0706;
@@ -258,6 +263,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <h1 class="login-title">El Gorila</h1>
       <p class="login-sub">Panel de operaciones</p>
     </div>
+    <div id="login-admin-fields">
     <div class="form-field">
       <label class="form-label">Usuario</label>
       <input type="text" id="usuario-input" placeholder="tu usuario" autocomplete="username">
@@ -266,8 +272,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <label class="form-label">Contraseña</label>
       <input type="password" id="password-input" placeholder="••••••••" autocomplete="current-password">
     </div>
+    </div>
+    <div id="login-taquilla-fields" class="hidden">
+      <div class="form-field">
+        <label class="form-label">Nombre en taquilla</label>
+        <input type="text" id="taquilla-nombre-input" placeholder="María López" autocomplete="name">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Correo autorizado</label>
+        <input type="email" id="taquilla-email-input" placeholder="nombre@correo.com" autocomplete="email">
+      </div>
+    </div>
     <div class="login-error" id="error-login"></div>
-    <button class="login-btn" onclick="verificarAcceso()">Entrar</button>
+    <button class="login-btn" id="login-submit-btn" onclick="verificarAcceso()">Entrar</button>
+    <button type="button" class="login-btn" id="login-toggle-taquilla" style="margin-top:10px;background:transparent;border:1px solid rgba(241,234,217,.2);color:var(--soft);font-size:12px" onclick="toggleLoginTaquilla()">Acceso taquilla (nombre + correo)</button>
   </div>
 </div>
 
@@ -275,6 +293,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div id="admin-panel" class="shell hidden">
 
   <header class="topbar">
+    <button type="button" id="btn-mobile-menu" class="mobile-menu-btn" aria-label="Menú">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
     <div class="topbar-logo">El Gorila <span>Panel de operaciones</span></div>
     <div class="topbar-sep"></div>
     <a href="index.html" class="topbar-btn">Sitio</a>
@@ -287,10 +308,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span style="opacity:.35">·</span>
       <span id="rol-actual" style="color:var(--gold)">—</span>
     </div>
-    <button class="topbar-btn" onclick="cerrarSesion()">Salir</button>
+    <div class="topbar-user topbar-user-mobile hidden">
+      <span id="usuario-actual-mobile">—</span>
+      <span id="rol-actual-mobile" style="color:var(--gold)">—</span>
+    </div>
+    <button type="button" class="topbar-btn topbar-btn-salir" onclick="cerrarSesion()">Salir</button>
   </header>
 
-  <nav class="sidebar">
+  <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+  <nav id="sidebar" class="sidebar">
     <div class="sidebar-section">Operaciones</div>
     <button class="nav-item active" data-nav="hub" onclick="navGo(this,'hub')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14"/><path d="M3 9h18"/></svg>
@@ -960,6 +987,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </main>
 </div>
 
+<nav id="mobile-bottom-nav" class="mobile-bottom-nav hidden" aria-label="Navegación principal">
+  <button type="button" class="mob-nav-item active" data-mob-nav="hub">
+    <span class="material-symbols-outlined">receipt_long</span>
+    Ventas
+  </button>
+  <button type="button" class="mob-nav-item" data-mob-nav="boletera" id="mob-nav-boletera">
+    <span class="material-symbols-outlined">point_of_sale</span>
+    Taquilla
+  </button>
+  <button type="button" class="mob-nav-item" data-mob-nav="verificar" id="mob-nav-verificar">
+    <span class="material-symbols-outlined">qr_code_scanner</span>
+    Puerta
+  </button>
+  <button type="button" class="mob-nav-item" data-mob-nav="ops">
+    <span class="material-symbols-outlined">search</span>
+    Buscar
+  </button>
+  <button type="button" class="mob-nav-item" data-mob-nav="menu">
+    <span class="material-symbols-outlined">more_horiz</span>
+    Más
+  </button>
+</nav>
+
 <div id="modal-scanner" class="modal-scanner hidden" style="display:none;">
   <div style="width:100%;max-width:360px;position:relative;">
     <button type="button" onclick="cerrarScanner()" class="btn-accion" style="position:absolute;top:0;right:0;z-index:10;">
@@ -1060,14 +1110,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <button class="modal-close" type="button" id="modal-enlace-close">✕</button>
     <h2 class="modal-title">Enlace taquilla (4 h)</h2>
     <p style="font-family:var(--mono);font-size:11px;color:var(--soft);letter-spacing:.06em;margin-bottom:14px;line-height:1.5">
-      Genera un acceso al panel con boletera. Queda registrado nombre y teléfono en auditoría.
+      Se envía un correo con el acceso. También queda registrado nombre y correo en auditoría.
     </p>
     <div class="form-field"><label class="form-label">Nombre en taquilla</label><input type="text" id="enlace-nombre" placeholder="María López" autocomplete="name"></div>
-    <div class="form-field"><label class="form-label">Teléfono (WhatsApp)</label><input type="tel" id="enlace-telefono" placeholder="52…" inputmode="numeric" autocomplete="tel"></div>
+    <div class="form-field"><label class="form-label">Correo electrónico</label><input type="email" id="enlace-email" placeholder="nombre@correo.com" autocomplete="email"></div>
     <p id="enlace-error" class="hidden" style="font-family:var(--mono);font-size:11px;color:#f87171;margin-top:6px"></p>
     <div style="display:flex;gap:8px;margin-top:12px">
       <button type="button" class="btn-ghost" style="flex:1" id="modal-enlace-cancel">Cancelar</button>
-      <button type="button" class="btn-primary" style="flex:1" id="modal-enlace-ok">Copiar enlace</button>
+      <button type="button" class="btn-primary" style="flex:1" id="modal-enlace-ok">Enviar acceso</button>
     </div>
   </div>
 </div>
@@ -1094,6 +1144,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/boletera-venta.js"></script>
 <script src="js/boletera-panel.js"></script>
 <script src="js/verificar.js"></script>
+<script src="js/admin-mobile.js"></script>
 <script src="js/admin-panel.js"></script>
 </body>
 </html>

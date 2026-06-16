@@ -654,6 +654,55 @@ function htmlBoleto(venta, funcionNombre, config, opts = {}) {
 </body></html>`;
 }
 
+// ─── EMAIL: ACCESO TAQUILLA (4 h) ─────────────────────────────────────────────
+
+function normalizeEmail(raw) {
+  return String(raw || '').trim().toLowerCase();
+}
+
+function htmlAccesoTaquilla(nombre, url, horas = 4) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Acceso taquilla — EL GORILA</title>
+</head>
+<body style="margin:0;padding:0;background:#0a0706;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0706;padding:28px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+  <tr><td style="background:#0a0706;padding:32px 28px 24px;border:1px solid rgba(241,234,217,.12);">
+    <p style="margin:0 0 16px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#d99b3a;">
+      Panel de taquilla · ${horas} horas
+    </p>
+    <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:32px;line-height:1.05;font-weight:500;color:#f1ead9;">
+      Hola, ${nombre}
+    </h1>
+    <p style="margin:18px 0 0;font-family:Georgia,serif;font-size:16px;line-height:1.55;color:rgba(241,234,217,.82);">
+      Te dieron acceso al panel para vender en efectivo y verificar entradas. El enlace caduca en <strong>${horas} horas</strong>.
+    </p>
+    <p style="margin:14px 0 0;font-family:Georgia,serif;font-size:14px;line-height:1.5;color:rgba(241,234,217,.65);">
+      Si cierras el navegador, puedes volver a entrar con tu <strong>nombre</strong> y tu <strong>correo</strong> en la pantalla de login (opción «Acceso taquilla»).
+    </p>
+    <a href="${url}" style="display:inline-block;margin-top:22px;background:#D43A1A;color:#f1ead9;padding:14px 26px;text-decoration:none;font-family:Georgia,serif;font-size:17px;border-radius:2px;">
+      Abrir panel de taquilla →
+    </a>
+    <p style="margin:18px 0 0;font-family:'Courier New',monospace;font-size:10px;line-height:1.5;color:#6b5c4a;word-break:break-all;">
+      ${url}
+    </p>
+  </td></tr>
+  <tr><td style="background:#120d0b;padding:20px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
+    <p style="margin:0;font-family:Georgia,serif;font-size:12px;color:#6b5c4a;">
+      EL GORILA · ${EMAIL_OPERATIVO}
+    </p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
 // ─── EMAIL: POST-FUNCIÓN (sobre privado → encuesta con token) ─────────────────
 
 function htmlEmailPostFuncion(venta, funcionNombre, config, opts = {}) {
@@ -1646,9 +1695,42 @@ async function requireAdmin(request, env) {
 
 function actorLabel(payload) {
   if (!payload) return '—';
-  const tel = payload.telefono ? String(payload.telefono) : '';
-  const nom = payload.nombre || payload.usuario || '—';
-  return tel && payload.purpose === 'acceso_email' ? `${nom} · ${tel}` : (nom || payload.usuario);
+  const nom   = payload.nombre || payload.usuario || '—';
+  const email = payload.email ? String(payload.email) : '';
+  const tel   = payload.telefono ? String(payload.telefono) : '';
+  if (payload.purpose === 'acceso_email') {
+    if (email) return `${nom} · ${email}`;
+    if (tel) return `${nom} · ${tel}`;
+  }
+  return nom || payload.usuario;
+}
+
+function _errorCanjeVenta(venta, fechaPuerta) {
+  if (!venta) return 'Venta no encontrada.';
+  if (venta.estado === 'reembolsada') {
+    return 'Este boleto fue reembolsado y ya no tiene validez.';
+  }
+  if (venta.estado === 'cancelada' || venta.cancelada === true) {
+    return 'Este boleto fue cancelado y ya no tiene validez.';
+  }
+  const fechaVenta           = venta.fecha;
+  const fechaOrigenCancelada = venta.fechaAnterior || venta.reagendado?.de || null;
+  if (fechaPuerta && fechaOrigenCancelada && fechaPuerta === fechaOrigenCancelada && fechaVenta !== fechaPuerta) {
+    return `Función cancelada por reagendamiento. Válido solo para ${venta.funcionNombre || fechaVenta}.`;
+  }
+  if (fechaPuerta && fechaVenta && fechaPuerta !== fechaVenta) {
+    return `Este boleto es para ${venta.funcionNombre || fechaVenta}, no para la función seleccionada.`;
+  }
+  return null;
+}
+
+async function _fechaCanjeDesdeRequest(request) {
+  try {
+    const body = await request.clone().json();
+    const fecha = body?.fecha;
+    if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) return fecha;
+  } catch { /* sin cuerpo */ }
+  return null;
 }
 
 async function requireRolAdmin(request, env) {
@@ -2566,6 +2648,19 @@ async function handleVenta(tid, id, request, env) {
       v = JSON.parse(ventaRaw);
     }
 
+    if (v.estado === 'reembolsada') {
+      return json({ error: 'Este boleto fue reembolsado y ya no tiene validez.', estado: 'reembolsada' }, 410, request);
+    }
+    if (v.estado === 'cancelada' || v.cancelada === true) {
+      return json({ error: 'Este boleto fue cancelado y ya no tiene validez.', estado: 'cancelada' }, 410, request);
+    }
+
+    const fechaPuerta = new URL(request.url).searchParams.get('fecha');
+    if (fechaPuerta && /^\d{4}-\d{2}-\d{2}$/.test(fechaPuerta)) {
+      const errFn = _errorCanjeVenta(v, fechaPuerta);
+      if (errFn) return json({ error: errFn }, 409, request);
+    }
+
     const boleto = boletoEnVenta(v, boletoIdx);
     const resp   = respuestaBoletoPublica(v, tid, boleto, boletoIdx);
     resp.boletos = (v.boletos || []).map(b => ({
@@ -2874,34 +2969,109 @@ async function handleAdminAccesoCrear(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
 
-  const nombre   = String(body.nombre || '').trim().substring(0, 80);
-  const telefono = String(body.telefono || '').replace(/\D/g, '').substring(0, 15);
+  const nombre = String(body.nombre || '').trim().substring(0, 80);
+  const email  = normalizeEmail(body.email || body.correo);
   if (!nombre) return json({ error: 'Indica el nombre de quien usará taquilla.' }, 400, request);
-  if (telefono.length < 10) return json({ error: 'Indica un teléfono válido (10 dígitos mínimo).' }, 400, request);
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json({ error: 'Indica un correo electrónico válido.' }, 400, request);
+  }
 
-  const now = Math.floor(Date.now() / 1000);
+  const now   = Math.floor(Date.now() / 1000);
+  const exp   = now + ACCESO_TAQUILLA_TTL;
   const token = await signJWT({
-    purpose:  'acceso_email',
-    usuario:  telefono,
-    telefono,
+    purpose: 'acceso_email',
+    usuario: email,
+    email,
     nombre,
-    rol:      'taquilla',
-    iat:      now,
-    exp:      now + ACCESO_TAQUILLA_TTL,
+    rol:     'taquilla',
+    iat:     now,
+    exp,
   }, env.JWT_SECRET);
 
   const url = `${SITIO_BASE}/admin.html?acceso=${encodeURIComponent(token)}&view=boletera`;
+
+  await env.VENTAS.put(
+    `acceso-taquilla:${email}`,
+    JSON.stringify({ nombre, email, exp }),
+    { expirationTtl: ACCESO_TAQUILLA_TTL },
+  );
+
+  const emailEnviado = await enviarEmail(
+    email,
+    `Acceso taquilla — EL GORILA (4 h)`,
+    htmlAccesoTaquilla(nombre, url, 4),
+    env,
+  );
 
   await registrarAuditoria(env, {
     usuarioId: payload.usuario,
     usuario:   payload.nombre || payload.usuario,
     rol:       payload.rol,
     accion:    'acceso_taquilla_creado',
-    detalles:  `Enlace taquilla · ${nombre} · ${telefono}`,
-    meta:      { nombre, telefono, exp: now + ACCESO_TAQUILLA_TTL },
+    detalles:  `Enlace taquilla · ${nombre} · ${email}${emailEnviado ? ' · correo enviado' : ' · correo no enviado'}`,
+    meta:      { nombre, email, exp, emailEnviado },
   });
 
-  return json({ ok: true, token, exp: now + ACCESO_TAQUILLA_TTL, url, nombre, telefono }, 200, request);
+  return json({ ok: true, token, exp, url, nombre, email, emailEnviado }, 200, request);
+}
+
+async function handleAdminAccesoLogin(request, env) {
+  if (!env.JWT_SECRET) return json({ error: 'Configuración incompleta.' }, 500, request);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+
+  const nombre = String(body.nombre || '').trim().substring(0, 80);
+  const email  = normalizeEmail(body.email || body.correo);
+  if (!nombre) return json({ error: 'Indica tu nombre.' }, 400, request);
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json({ error: 'Indica un correo válido.' }, 400, request);
+  }
+
+  const raw = await env.VENTAS.get(`acceso-taquilla:${email}`);
+  if (!raw) {
+    return json({ error: 'No hay acceso activo para este correo. Pide un enlace al administrador.' }, 401, request);
+  }
+
+  let grant;
+  try { grant = JSON.parse(raw); } catch { return json({ error: 'Acceso inválido.' }, 401, request); }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (!grant.exp || grant.exp < now) {
+    return json({ error: 'El acceso expiró. Pide un enlace nuevo al administrador.' }, 401, request);
+  }
+  if (grant.nombre.trim().toLowerCase() !== nombre.trim().toLowerCase()) {
+    return json({ error: 'El nombre no coincide con el acceso autorizado.' }, 401, request);
+  }
+
+  const token = await signJWT({
+    purpose: 'acceso_email',
+    usuario: email,
+    email,
+    nombre:  grant.nombre,
+    rol:     'taquilla',
+    iat:     now,
+    exp:     grant.exp,
+  }, env.JWT_SECRET);
+
+  await registrarAuditoria(env, {
+    usuarioId: email,
+    usuario:   `${grant.nombre} · ${email}`,
+    rol:       'taquilla',
+    accion:    'acceso_taquilla_login',
+    detalles:  `Ingreso taquilla con nombre y correo · ${grant.nombre} · ${email}`,
+    meta:      { nombre: grant.nombre, email, via: 'login' },
+  });
+
+  return json({
+    ok: true,
+    token,
+    usuario: email,
+    email,
+    nombre:  grant.nombre,
+    rol:     'taquilla',
+    exp:     grant.exp,
+  }, 200, request);
 }
 
 async function handleAdminAccesoValidar(request, env) {
@@ -2918,18 +3088,19 @@ async function handleAdminAccesoValidar(request, env) {
   }
 
   await registrarAuditoria(env, {
-    usuarioId: payload.telefono || payload.usuario,
+    usuarioId: payload.email || payload.usuario,
     usuario:   actorLabel(payload),
     rol:       payload.rol,
     accion:    'acceso_taquilla_login',
-    detalles:  `Ingreso taquilla vía enlace · ${payload.nombre || '—'} · ${payload.telefono || payload.usuario}`,
-    meta:      { nombre: payload.nombre, telefono: payload.telefono, via: 'email' },
+    detalles:  `Ingreso taquilla vía enlace · ${payload.nombre || '—'} · ${payload.email || payload.telefono || payload.usuario}`,
+    meta:      { nombre: payload.nombre, email: payload.email, telefono: payload.telefono, via: 'enlace' },
   });
 
   return json({
     ok:       true,
-    usuario:  payload.telefono || payload.usuario,
-    telefono: payload.telefono || payload.usuario,
+    usuario:  payload.email || payload.telefono || payload.usuario,
+    email:    payload.email || null,
+    telefono: payload.telefono || null,
     nombre:   payload.nombre || payload.usuario,
     rol:      payload.rol,
     exp:      payload.exp,
@@ -2942,7 +3113,7 @@ async function handleBoleteraPase(request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
   return json({
-    error: 'Usa el botón Boletera en el panel o «Enlace taquilla» con nombre y teléfono.',
+    error: 'Usa el botón Boletera en el panel o «Enlace taquilla» con nombre y correo.',
     embed: `${SITIO_BASE}/admin.html?view=boletera`,
   }, 400, request);
 }
@@ -3010,8 +3181,8 @@ async function handleAdminLogin(request, env) {
   }
 
   const now     = Math.floor(Date.now() / 1000);
-  const TTL_30D = 30 * 24 * 60 * 60;
-  const token   = await signJWT({ usuario: u, nombre, rol, iat: now, exp: now + TTL_30D }, env.JWT_SECRET);
+  const TTL_12H = 12 * 60 * 60;
+  const token   = await signJWT({ usuario: u, nombre, rol, iat: now, exp: now + TTL_12H }, env.JWT_SECRET);
   return json({ token, usuario: u, nombre, rol }, 200, request);
 }
 
@@ -3029,6 +3200,10 @@ async function handleCanjear(tid, codigo, request, env) {
   if (!resolved) return json({ error: 'Folio no encontrado.' }, 404, request);
   const { ventaKey, venta, boletoIdx } = resolved;
   const boleto = boletoEnVenta(venta, boletoIdx);
+
+  const fechaPuerta = await _fechaCanjeDesdeRequest(request);
+  const errCanje = _errorCanjeVenta(venta, fechaPuerta);
+  if (errCanje) return json({ error: errCanje }, 409, request);
 
   if (boleto) {
     if (boleto.usado) {
@@ -3705,6 +3880,7 @@ async function handleCanjearLote(tid, request, env) {
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
   const codigos = Array.isArray(body.codigos) ? body.codigos.map(c => String(c).trim().toUpperCase()) : [];
   if (!codigos.length) return json({ error: 'Indica al menos un folio.' }, 400, request);
+  const fechaPuerta = body.fecha && /^\d{4}-\d{2}-\d{2}$/.test(body.fecha) ? body.fecha : null;
 
   const resultados = [];
   for (const codigo of codigos) {
@@ -3712,6 +3888,8 @@ async function handleCanjearLote(tid, request, env) {
     if (!resolved) { resultados.push({ codigo, ok: false, error: 'No encontrado' }); continue; }
     const { ventaKey, venta, boletoIdx } = resolved;
     const boleto = boletoEnVenta(venta, boletoIdx);
+    const errCanje = _errorCanjeVenta(venta, fechaPuerta);
+    if (errCanje) { resultados.push({ codigo, ok: false, error: errCanje }); continue; }
     if (boleto) {
       if (boleto.usado) { resultados.push({ codigo, ok: false, error: 'Ya canjeado' }); continue; }
       boleto.usado = true;
@@ -4284,6 +4462,9 @@ export default {
     }
     if (method === 'GET' && pathname === '/api/admin/acceso/validar') {
       return handleAdminAccesoValidar(request, env);
+    }
+    if (method === 'POST' && pathname === '/api/admin/acceso/login') {
+      return handleAdminAccesoLogin(request, env);
     }
     if (method === 'POST' && pathname === '/api/admin/boletera/pase') {
       return handleBoleteraPase(request, env);
