@@ -1514,7 +1514,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         bottom: calc(5.65rem + env(safe-area-inset-bottom, 0px));
       }
     }
-    /* Botón fijo de compra: flotante con efecto 3D */
+    /* Botón fijo de compra: el <a> es el botón entero (área clicable = todo el rojo) */
     .barra-compra-fija {
       position: fixed;
       left: 0.5rem;
@@ -1522,8 +1522,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
       z-index: 40;
       display: flex;
-      align-items: center;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
       justify-content: center;
+      gap: 0.35rem 0.65rem;
       padding: 1rem 1.5rem;
       background: #D43A1A;
       border: 1px solid rgba(212,58,26,.55);
@@ -1531,6 +1534,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       box-shadow: 0 8px 28px rgba(212,58,26,.32), 0 4px 12px rgba(0,0,0,.45);
       transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
       -webkit-tap-highlight-color: transparent;
+      color: #f1ead9;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-weight: 600;
+      font-size: 1.15rem;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      text-shadow: none;
+      text-align: center;
+      line-height: 1.2;
+      cursor: pointer;
     }
     .barra-compra-fija:hover {
       transform: translateY(-2px);
@@ -1540,25 +1553,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .barra-compra-fija:active {
       transform: translateY(1px);
       box-shadow: 0 4px 12px rgba(212,58,26,.25);
-    }
-    .barra-compra-fija a {
-      color: #f1ead9;
-      font-family: 'EB Garamond', Georgia, serif;
-      font-weight: 600;
-      font-size: 1.15rem;
-      letter-spacing: 0.02em;
-      text-decoration: none;
-      text-shadow: none;
-      -webkit-tap-highlight-color: transparent;
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: baseline;
-      justify-content: center;
-      gap: 0.35rem 0.65rem;
-      width: 100%;
-      text-align: center;
-      line-height: 1.2;
     }
     .barra-compra-fija .barra-compra-titulo {
       display: block;
@@ -1627,10 +1621,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         max-width: 960px;
         width: calc(100% - 3rem);
         border-radius: 16px;
+        font-size: 1.3rem;
       }
       .barra-compra-fija:hover { transform: translateX(-50%) translateY(-2px); }
       .barra-compra-fija:active { transform: translateX(-50%) translateY(1px); }
-      .barra-compra-fija a { font-size: 1.3rem; }
       .barra-compra-fija .barra-compra-precio-tachado {
         font-size: 0.78rem;
         letter-spacing: 0.1em;
@@ -3342,15 +3336,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </div>
 <!-- Barra fija de compra -->
-<div class="barra-compra-fija">
-  <a class="link-venta-boletos" href="/boletos.html" aria-label="Adquiere tus entradas — desde $350">
-    <span class="barra-compra-titulo">Adquiere tus entradas</span>
-    <span class="barra-compra-meta" aria-hidden="true">
-      <span class="barra-compra-precio-tachado">$400</span>
-      <span class="barra-compra-precio-promo">$350</span>
-    </span>
-  </a>
-</div>
+<a class="barra-compra-fija link-venta-boletos" href="/boletos.html" aria-label="Adquiere tus entradas — desde $350">
+  <span class="barra-compra-titulo">Adquiere tus entradas</span>
+  <span class="barra-compra-meta" aria-hidden="true">
+    <span class="barra-compra-precio-tachado">$400</span>
+    <span class="barra-compra-precio-promo">$350</span>
+  </span>
+</a>
 <script src="js/rutas.js"></script>
 <script>
   (function () {
@@ -3386,7 +3378,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     var btnGorila = document.getElementById('btn-gorila-inicio');
     if (!btnGorila) return;
     btnGorila.addEventListener('click', function() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.scrollY > 120) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      if (typeof window.irA === 'function') window.irA('/');
+      else location.href = location.protocol === 'file:' ? 'index.html' : '/';
     });
   })();
   (function() {
@@ -3762,6 +3759,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     var cooldownUntil = 0;
     function isSensitiveTarget(el) {
       if (!el || !el.closest) return false;
+      if (el.closest('#btn-gorila-inicio')) return false;
       return el.closest('a[href="#contacto"]') || el.closest('a[href="#venta-boletos"]') || el.closest('a[href*="carpageodesica"]') || el.closest('button');
     }
     function showThrottleMessage() {
@@ -3895,7 +3893,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   })();
   (function() {
     var el = document.getElementById('scroll-indicator');
-    var cta = document.querySelector('.barra-compra-fija .link-venta-boletos');
+    var cta = document.querySelector('.barra-compra-fija.link-venta-boletos');
     var UMBRAL_SCROLL = 120;
     var ANCHO_ANCHO = 1024;
     var ZONA_INFERIOR_PX = 140;
