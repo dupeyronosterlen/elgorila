@@ -60,10 +60,27 @@ Ir en orden. Marcar ✅ al desplegar.
 | SEO-07 | Skill SEO interno + este checklist | `.claude/skills/…`, `PENDIENTES.md` | ✅ |
 | SEO-08 | Tailwind: CDN → `css/tailwind.css` compilado (`npm run build:css`) | `index`, funnel, `tailwind.config.js` | ✅ |
 | SEO-10 | OG en programas v1–v5 + preload hero `portada-v4` | `programa/`, `index.html` | ✅ |
-| SEO-09 | Validar en producción: Facebook Debugger + Rich Results Test | — | ⬜ post-deploy |
 | SEO-11 | GTM en funnel + público; **excluido** `admin.html` | 20 páginas | ✅ |
+| SEO-12 | `llms.txt` — hechos oficiales para crawlers IA | `llms.txt` | ✅ |
+| SEO-13 | `/funciones.html` indexable (fechas, sede, CTA boletos) | `funciones.html`, `sitemap`, `_redirects` | ✅ |
+| SEO-14 | Schema `TheaterEvent` × 13 + `ItemList` en funciones | `funciones.html` | ✅ |
+| SEO-15 | Search Console + GEO (manual, ver abajo) | — | ⬜ manual |
+| SEO-09 | Validar en producción: Facebook Debugger + Rich Results Test | — | ⬜ post-deploy |
 
 **No incluido a propósito:** `mano-v2.html` (noindex impresión), funnel (`boletos`, `checkout`, …), `presskit/` (noindex).
+
+### SEO-15 — Google Search Console (manual)
+
+Hacer una vez desplegado en producción:
+
+1. **Propiedad:** verificar `https://elgorilateatro.com.mx` en [Search Console](https://search.google.com/search-console) (DNS o archivo HTML).
+2. **Sitemap:** enviar `https://elgorilateatro.com.mx/sitemap.xml` (incluye `funciones.html`).
+3. **Inspección de URL:** pedir indexación de `/`, `/funciones.html` y `/terminos.html`.
+4. **Rich Results Test:** pegar URL de `funciones.html` → confirmar 13 eventos + WebPage.
+5. **Facebook Debugger:** `funciones.html` e `index.html` → scrapear de nuevo (OG `portada-v4.jpg`).
+6. **Enlaces internos:** confirmar en vivo footer «Funciones y fechas» → `funciones.html`.
+7. **Monitoreo (semanal):** impresiones/clics para «el gorila teatro», «gorila teatro cdmx», «wilberto cantón gorila».
+8. **llms.txt:** comprobar `https://elgorilateatro.com.mx/llms.txt` responde 200 (Cloudflare Pages sirve estático en raíz).
 
 ---
 
