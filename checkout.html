@@ -19,24 +19,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<!-- Tailwind — mantenido para clases dinámicas del JS -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-<script>
-        tailwind.config = {
-    darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-          primary:            '#d99b3a',
-          'background-dark':  '#0a0706',
-          'text-dark':        '#f1ead9',
-          'accent-gold':      '#d99b3a',
-          'rich-dark':        '#120d0b',
-        },
-                },
-            },
-        };
-    </script>
+<!-- Tailwind compilado (sin CDN en runtime) -->
+<link rel="stylesheet" href="css/tailwind.css"/>
 <style>
 /* ── TOKENS v3 (programa de mano) ────────────────────────── */
 :root {

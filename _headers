@@ -21,3 +21,6 @@
   X-Robots-Tag: noindex, nofollow, noarchive
 /acta.html
   X-Robots-Tag: noindex, nofollow, noarchive
+
+/css/tailwind.css
+  Cache-Control: public, max-age=31536000, immutable

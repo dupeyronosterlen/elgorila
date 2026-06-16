@@ -21,27 +21,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- Material Symbols para iconos en modales -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<!-- Tailwind — necesario para clases dinámicas de main.js -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-<script>
-  tailwind.config = {
-    darkMode: 'class',
-    theme: {
-      extend: {
-        colors: {
-          primary:            '#8B0000',
-          'background-dark':  '#1a150e',
-          'text-dark':        '#f1ead9',
-          'text-muted-dark':  'rgba(241,234,217,.88)',
-          'accent-gold':      '#d99b3a',
-          'rich-dark':        '#120d0b',
-          'accent-green-dark':'#346F63',
-          'accent-maroon-dark':'#A6365F',
-        },
-      },
-    },
-  };
-</script>
+<!-- Tailwind compilado (sin CDN en runtime) -->
+<link rel="stylesheet" href="css/tailwind.css"/>
 <style>
 /* ── TOKENS v3 (programa de mano) ────────────────────────── */
 :root {

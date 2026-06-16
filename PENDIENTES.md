@@ -26,6 +26,7 @@ URLs legacy (`boletera.html`, `verificar.html`, `taquilla.html`, etc.) → 301 e
 | Docs ops | `CAPACIDAD-TEATRO.template.txt` y `verify-sistema.js` apuntan a `admin.html` |
 | Redirects (P-17) | `_redirects`: rutas sin `.html`, `/admin`, `/encuesta*` → `acta.html` |
 | Legacy HTML (P-19) | Deletes en `b36be76` (`boletera`, `verificar`, `taquilla`, `acomodadores`, `admin-panel-v4`, `boletera-gate.js`) |
+| Skill SEO (P-20) | `.claude/skills/claude-seo/skill.md` alineado a panel único + robots/sitemap actuales |
 | Encuesta UI | **No se tocó** — ver P-16 abajo |
 
 ### Qué NO borrar (aunque parezca huérfano)
@@ -37,11 +38,32 @@ URLs legacy (`boletera.html`, `verificar.html`, `taquilla.html`, etc.) → 301 e
 | `cupon-invitado.html` | Normaliza `?c=` → `invitacion.html?de=` |
 
 ### Limpieza repo — pendiente (PRs pequeños, no urgente)
-| ID | Descripción |
-|----|-------------|
-| P-20 | Actualizar `.claude/skills/claude-seo/skill.md` (quitar taquilla/verificar como páginas vivas) |
+
+_Ninguno pendiente de la auditoría 2026-06-16._
 
 **Decisión 2026-06-16:** `programa/v1`–`v5` y `mano-v2` **se mantienen** — cada versión se usa en distintos momentos/canales (QR impreso, email, gracias, promo). P-18 cancelado.
+
+---
+
+## 📋 SEO — checklist (auditoría 2026-06-16)
+
+Ir en orden. Marcar ✅ al desplegar.
+
+| # | Tarea | Archivo(s) | Estado |
+|---|--------|------------|--------|
+| SEO-01 | Imagen OG/Twitter → `portada-v4.jpg` + `og:image:alt` | `index.html` | ✅ |
+| SEO-02 | Meta description ~130 chars (13 funciones jul–sep) | `index.html` | ✅ |
+| SEO-03 | Schema `TheaterEvent` único + `price: 350` + fechas jul–sep | `index.html` | ✅ |
+| SEO-04 | Open Graph en términos legales | `terminos.html` | ✅ |
+| SEO-05 | `sitemap.xml`: home, terminos, programa v1–v5 + `lastmod` | `sitemap.xml` | ✅ |
+| SEO-06 | `robots index,follow` explícito en programas v1–v5 | `programa/v*.html` | ✅ |
+| SEO-07 | Skill SEO interno + este checklist | `.claude/skills/…`, `PENDIENTES.md` | ✅ |
+| SEO-08 | Tailwind: CDN → `css/tailwind.css` compilado (`npm run build:css`) | `index`, funnel, `tailwind.config.js` | ✅ |
+| SEO-10 | OG en programas v1–v5 + preload hero `portada-v4` | `programa/`, `index.html` | ✅ |
+| SEO-09 | Validar en producción: Facebook Debugger + Rich Results Test | — | ⬜ post-deploy |
+| SEO-11 | GTM `GTM-P4BDXRN9` en todas las páginas HTML del sitio | 21 archivos | ✅ |
+
+**No incluido a propósito:** `mano-v2.html` (noindex impresión), funnel (`boletos`, `checkout`, …), `presskit/` (noindex).
 
 ---
 
@@ -146,7 +168,6 @@ Hasta P-14, la agencia usa admin CSV + `/api/reporte` (stats sin nombres/emails)
 | P-14 | Boletera → base procesada → agente IA agencia |
 | P-15 | Hacer **obligatorio** el nombre en checkout online (hoy opcional) |
 | P-16 | Encuesta post-función + cupones en `acta.html` (ver sección arriba) |
-| P-20 | Actualizar skill SEO interno |
 
 ---
 
@@ -163,7 +184,8 @@ Hasta P-14, la agencia usa admin CSV + `/api/reporte` (stats sin nombres/emails)
 | Invitación −25% | `invitacion.html` + INVITADO25 desde compartir boleto |
 | Soporte confirmación | Botón flotante WhatsApp |
 | Admin | Informes, reenvío, anular ventas manuales |
-| Limpieza repo (P-19) | Eliminado `js/admin.js`; docs ops → `admin.html`; redirects ampliados |
+| Limpieza repo (P-19/P-20) | `js/admin.js` fuera; docs ops; redirects; skill SEO interno |
+| SEO on-page (SEO-01–10) | OG, schema, sitemap, Tailwind compilado, programas OG |
 
 ---
 
