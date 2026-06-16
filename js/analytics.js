@@ -1,11 +1,16 @@
 /**
- * Analytics centralizado — GA4 + Google Ads + Meta Pixel.
+ * Analytics centralizado — GA4 + Google Ads + Meta Pixel (solo eventos de funnel).
  * Cargar en <head> (antes de main.js / confirmacion.js) en páginas del funnel.
+ *
+ * Layer contract:
+ *   GTM  → page_view, Meta init/PageView, engagement (whatsapp, FAQ, CTA click…)
+ *   Aquí → add_to_cart, begin_checkout, add_payment_info, purchase (+ fbq track)
+ *   GA4 page_view: GTM (analytics.js usa send_page_view: false)
+ *   Meta init:     GTM únicamente; trackMeta() asume que fbq ya existe
  */
 (function () {
   var GA4_ID = 'G-NXF8093MDJ';
   var AW_ID = 'AW-17961021514';
-  var FB_PIXEL_ID = '24471801772518505';
 
   window.dataLayer = window.dataLayer || [];
   function gtag() { window.dataLayer.push(arguments); }
@@ -25,24 +30,8 @@
   }
 
   function initMetaPixel() {
-    if (window._egFBInit || typeof window.fbq === 'function') {
-      window._egFBInit = true;
-      return;
-    }
+    // Meta base (init + PageView) lo carga GTM en All Pages.
     window._egFBInit = true;
-    !function (f, b, e, v, n, t, s) {
-      if (f.fbq) return;
-      n = f.fbq = function () {
-        n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-      };
-      if (!f._fbq) f._fbq = n;
-      n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = [];
-      t = b.createElement(e); t.async = !0;
-      t.src = v; s = b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t, s);
-    }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', FB_PIXEL_ID);
-    fbq('track', 'PageView');
   }
 
   function mapItems(orden) {

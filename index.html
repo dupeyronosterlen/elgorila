@@ -2393,23 +2393,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7) !important;
   }
 </style>
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '24471801772518505');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -3815,18 +3798,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     var MAX_EVENTS = 500;
     function pushEvent(type, data) {
       try {
+        var payload = data || {};
         var raw = localStorage.getItem(LANDING_EVENTS_KEY);
         var list = raw ? JSON.parse(raw) : [];
-        list.push({ t: Date.now(), type: type, data: data || {} });
+        list.push({ t: Date.now(), type: type, data: payload });
         if (list.length > MAX_EVENTS) list = list.slice(-MAX_EVENTS);
         localStorage.setItem(LANDING_EVENTS_KEY, JSON.stringify(list));
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: type, landing_data: payload });
       } catch (e) {}
     }
     pushEvent('visit', { ua: navigator.userAgent.substring(0, 80), w: window.innerWidth });
-    var whatsapp = document.querySelector('a[href^="https://wa.me/"]');
-    var email = document.querySelector('a[href^="mailto:"]');
-    if (whatsapp) whatsapp.addEventListener('click', function() { pushEvent('whatsapp_click'); }, true);
-    if (email) email.addEventListener('click', function() { pushEvent('email_click'); }, true);
+    document.querySelectorAll('a[href*="wa.me"]').forEach(function (a) {
+      a.addEventListener('click', function () { pushEvent('whatsapp_click'); }, true);
+    });
+    document.querySelectorAll('a[href^="mailto:"]').forEach(function (a) {
+      a.addEventListener('click', function () { pushEvent('email_click'); }, true);
+    });
+    document.querySelectorAll('.link-venta-boletos').forEach(function (a) {
+      a.addEventListener('click', function () {
+        pushEvent('cta_comprar_click', { href: a.href || '' });
+      }, true);
+    });
   })();
   (function() {
     /* Zoom solo en desktop (>=1230px); en móvil/tablet la lupa no se muestra */
