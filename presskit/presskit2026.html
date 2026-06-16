@@ -83,9 +83,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
   .cover__photo{
     position:absolute;inset:0;
-    background-image:url('../img/GALERIA/058.png');
+    background-image:url('../img/GALERIA/052.png');
     background-size:cover;
-    background-position:center 38%;
+    background-position:28% center;
     filter:contrast(1.05) saturate(.95);
   }
   .cover__photo::after{
@@ -450,6 +450,106 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
   .pull-quote em{color:#c9302c;font-style:italic}
 
+  /* ---------- CRÍTICA ---------- */
+  .critica-meta{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:32px;
+    align-items:flex-end;
+    padding-bottom:28px;
+    margin-bottom:32px;
+    border-bottom:2px solid var(--ink);
+  }
+  .critica-meta h3{
+    font-family:"Cormorant Garamond",serif;
+    font-size:42px;
+    font-weight:500;
+    line-height:1.05;
+    margin-bottom:8px;
+  }
+  .critica-meta .role{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--red);
+    margin-bottom:6px;
+  }
+  .critica-meta .article-title{
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-size:22px;
+    color:var(--ink-soft);
+  }
+  .critica-meta .pub{
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    text-align:right;
+    line-height:1.6;
+  }
+  .critica{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:64px;
+    align-items:flex-start;
+  }
+  .critica .lead{
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-weight:300;
+    font-size:32px;
+    line-height:1.22;
+    color:var(--ink);
+  }
+  .critica .lead em{color:var(--red-deep);font-style:italic;font-weight:400}
+  .critica .body{
+    font-size:17px;
+    line-height:1.7;
+    text-align:justify;
+    hyphens:auto;
+  }
+  .critica .body p+p{margin-top:14px;text-indent:1.4em}
+  .critica .body strong{font-weight:500;color:var(--ink)}
+  .pull-quote--paper{
+    margin:48px 0;
+    padding:32px 48px;
+    border-top:2px solid var(--red);
+    border-bottom:2px solid var(--red);
+    font-family:"Cormorant Garamond",serif;
+    font-style:italic;
+    font-weight:300;
+    font-size:36px;
+    line-height:1.2;
+    color:var(--ink);
+    text-align:center;
+    letter-spacing:-.01em;
+  }
+  .pull-quote--paper em{color:var(--red);font-style:italic}
+  .critica-source{
+    margin-top:40px;
+    padding-top:24px;
+    border-top:1px solid var(--rule);
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    line-height:1.7;
+  }
+  .critica-source a{
+    color:var(--red-deep);
+    text-decoration:none;
+    border-bottom:1px solid var(--red);
+    letter-spacing:.08em;
+    text-transform:none;
+    font-family:"Cormorant Garamond",serif;
+    font-size:17px;
+    font-style:italic;
+  }
+
   /* ---------- CONTACTO ---------- */
   .contacto{
     display:grid;
@@ -660,7 +760,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   @media (max-width: 900px){
     .sheet{padding:64px 32px}
     .cover{padding:32px 24px}
-    .index,.sinopsis,.historial,.bio,.bio.reverse,.nota,.contacto{grid-template-columns:1fr;gap:32px}
+    .index,.sinopsis,.historial,.bio,.bio.reverse,.nota,.critica,.critica-meta,.contacto{grid-template-columns:1fr;gap:32px}
     .cover__bottom{grid-template-columns:1fr;gap:24px}
     .photo-strip{grid-template-columns:1fr;height:auto}
     .photo-strip > div{height:60vw;min-height:280px}
@@ -700,7 +800,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <a href="../index.html" class="presskit-back" aria-label="Volver al sitio web">← Sitio web</a>
 
-<div class="runner">Kit de Prensa · <span>El Gorila</span> · Temporada 2026</div>
+<div class="runner">Kit de Prensa · <span>El Gorila</span> · 37 años en escena</div>
 
 <!-- ============== COVER ============== -->
 <section class="cover" data-screen-label="01 Portada">
@@ -709,8 +809,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="cover__top">
     <div class="cover__crest">
       <strong>Kit de Prensa</strong>
-      Temporada 2026<br/>
-      Documento Oficial
+      37 años en escena<br/>
+      Teatro Wilberto Cantón
     </div>
     <div class="cover__meta">
       Monólogo · 90 min<br/>
@@ -757,8 +857,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <li><span class="title">Historial de la obra</span><span class="pg">P. 06</span></li>
       <li><span class="title">Biografías</span><span class="pg">P. 08</span></li>
       <li><span class="title">Nota de producción</span><span class="pg">P. 10</span></li>
+      <li><span class="title">Crítica · Vera Milarka</span><span class="pg">P. 11</span></li>
       <li><span class="title">Contacto de prensa</span><span class="pg">P. 12</span></li>
-      <li><span class="title">Imágenes de alta resolución</span><span class="pg">P. 13</span></li>
     </ol>
   </div>
 </section>
@@ -979,35 +1079,88 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 
   <div class="pull-quote">
-    No es teatro fácil. No es entretenimiento.<br/>
-    Es una <em>cita con lo incómodo</em>, con lo necesario.
+    Es una <em>cita con lo necesario</em>,<br/>
+    con la consciencia y el humor de Humberto Dupeyron.
   </div>
 
   <div class="nota">
     <div class="body" style="grid-column:1 / -1;column-count:2;column-gap:64px;text-indent:0">
       <p>A lo largo de casi cuatro décadas, <em>El Gorila</em> ha recorrido decenas de foros de la Ciudad de México y del interior de la república. En cada espacio, el público se encuentra con Humberto Dupeyron —y con Peter el Rojo— en una experiencia teatral que no concede tregua.</p>
       <p>La decisión de sostener este monólogo durante 37 años consecutivos no es solo una proeza actoral: es un acto de resistencia. En un contexto cultural que privilegia lo efímero y lo espectacular, <em>El Gorila</em> insiste en la permanencia, en la profundidad, en el valor de un texto que no busca complacer sino confrontar.</p>
-      <p>No es teatro fácil. No es entretenimiento. Es una cita con lo incómodo, con lo necesario, con la consciencia y el humor que caracteriza a Humberto Dupeyron. <strong>Y por eso sigue vivo.</strong></p>
+      <p>Es una cita con lo necesario, con la consciencia y el humor que caracteriza a Humberto Dupeyron. <strong>Y por eso sigue vivo.</strong></p>
     </div>
+  </div>
+</section>
+
+<!-- ============== 06 CRÍTICA ============== -->
+<section class="sheet sheet--paper" data-screen-label="08 Crítica">
+  <div class="section-head">
+    <div class="num">06</div>
+    <div>
+      <div class="label" style="margin-bottom:10px">Sección seis</div>
+      <div class="ttl display">Crí<em>tica</em></div>
+    </div>
+  </div>
+
+  <div class="critica-meta">
+    <div>
+      <div class="role">Crítica de teatro</div>
+      <h3>Vera Milarka</h3>
+      <div class="article-title">«Una monada de mónada» · <em>El Gorila, de Dupeyron</em></div>
+    </div>
+    <div class="pub">
+      Publicado 17 may 2026<br/>
+      LinkedIn · Artículo completo
+    </div>
+  </div>
+
+  <div class="critica">
+    <div class="lead dropcap">
+      <p>Más de mil funciones antecedieron al día en que asistí a corroborar lo que la prensa y la crítica especializada han dicho durante más de tres décadas: <em>El Gorila</em> sigue triunfando de forma admirable, en un <em>convivio teatral</em> conmovedor.</p>
+    </div>
+    <div class="body">
+      <p>El caso de <em>El Gorila, de Dupeyron</em> —aunque sabemos que es de Kafka e innegablemente de Jodorowsky— habla de una apropiación actoral que se ha ido renovando: el maestro Humberto ha incorporado nuevas realidades personales e interpretativas en el transcurso de estos 37 años en escena. Hoy este montaje es la suma de un desarrollo de reflexiones posteriores a las que Kafka planteó a principios del siglo pasado.</p>
+      <p>Como crítica de teatro, me obligo a subrayar cómo sobrevive una puesta con tanta intensidad de asistencia y refrenda su éxito consuetudinario, más allá de la promoción o de una estrategia de mercadotecnia. Mi curiosidad es averiguar en qué consiste la aclamación de un público que sigue yendo a verla no sólo una vez, sino varias veces —eufórico y complacido— en un país donde todavía hay teatros con más actores en el escenario que espectadores en la sala.</p>
+    </div>
+  </div>
+
+  <div class="pull-quote--paper">
+    Hoy, el maestro Dupeyron encarna su personaje a sus 80 años, en una silla de ruedas que no es estorbo ni distractor: somos parte del milagro teatral de creer que estamos ante un orangután entrado en años.
+  </div>
+
+  <div class="critica">
+    <div class="body">
+      <p>Actor y espectadores somos, innegablemente, siempre co-creadores; pero en este montaje más todavía, al urdir un acontecimiento que aún siendo «predecible» nunca es igual, jamás el mismo, y adquiere una espesura según el día, el número de asistentes y la extraordinaria disposición energética de un artista como Dupeyron.</p>
+      <p>La plasticidad adaptativa a los tiempos que corren y a las transformaciones psico-físicas del actor es lo inevitablemente más valioso de un artista que literalmente se deja la piel —como su personaje— para (de)mostrarnos su experiencia como <em>animal teatral</em>; además de su vivencia personalísima sobre lo que le atraviesa en cada función al interactuar con el público con el que juega.</p>
+    </div>
+    <div class="body">
+      <p>A la pregunta de una espectadora sobre «¿por qué seguía haciendo esta obra?», el maestro respondió llanamente que porque era de lo que vivía. Pero la respuesta no se refiere al mero sentido pragmático de la subsistencia económica, sino a lo que implica que sólo quien hace teatro como forma de vida puede realmente entenderla: la parte significativamente ontológica y vital de una vocación irrenunciable.</p>
+      <p>Precisamente el filósofo Jacques Derrida se afanaba en explicar que los contextos interpretativos son abiertos e ilimitados. No vamos a ver si esta vez Otelo no mata a Desdémona, sino a disfrutar de las rutas interpretativas donde esos personajes trascienden el tiempo y el espacio y nos llegan una y otra vez renovados en el presente. <strong>¿Los animales pueden sufrir «ontológicamente»?</strong> Si quiere saber la respuesta, no deje de ver el kafkiano monólogo de <em>El Gorila</em> del maestro Dupeyron.</p>
+    </div>
+  </div>
+
+  <div class="critica-source">
+    Texto reproducido con autorización · extractos del artículo original<br/>
+    <a href="https://es.linkedin.com/pulse/el-gorila-de-dupeyron-vera-milarka-c8psc" rel="noopener noreferrer" target="_blank">El Gorila, de Dupeyron — Vera Milarka (LinkedIn)</a>
   </div>
 </section>
 
 <!-- ============== PHOTO STRIP ============== -->
 <section class="sheet--bleed">
   <div class="photo-strip">
-    <div style="background-image:url('assets/escena-1.jpg')"><div class="ph-cap">Escena 01</div></div>
-    <div style="background-image:url('assets/escena-2.jpg')"><div class="ph-cap">Escena 02</div></div>
-    <div style="background-image:url('assets/escena-3.jpg')"><div class="ph-cap">Escena 03</div></div>
+    <div style="background-image:url('../img/GALERIA/052.png');background-position:28% center"><div class="ph-cap">01</div></div>
+    <div style="background-image:url('assets/escena-2.jpg')"><div class="ph-cap">02</div></div>
+    <div style="background-image:url('assets/escena-3.jpg')"><div class="ph-cap">03</div></div>
   </div>
 </section>
 
-<!-- ============== 06 CONTACTO + 07 IMÁGENES ============== -->
-<section class="sheet sheet--paper" data-screen-label="08 Contacto e imágenes">
+<!-- ============== 07 CONTACTO ============== -->
+<section class="sheet sheet--paper" data-screen-label="09 Contacto">
   <div class="section-head">
-    <div class="num">06</div>
+    <div class="num">07</div>
     <div>
-      <div class="label" style="margin-bottom:10px">Sección seis · siete</div>
-      <div class="ttl display">Contacto <em>&amp;</em> material</div>
+      <div class="label" style="margin-bottom:10px">Sección siete</div>
+      <div class="ttl display">Contacto</div>
     </div>
   </div>
 
@@ -1037,37 +1190,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </dl>
     </div>
 
-    <div class="imagenes">
-      <div class="label" style="margin-bottom:12px">Sección 07</div>
-      <h3>Imágenes de alta resolución</h3>
-      <div class="sub">Material fotográfico disponible para uso editorial.</div>
-
-      <ul>
-        <li>
-          <div>
-            Poster oficial
-            <small>ElGorila_Poster_Oficial_2026.png</small>
-          </div>
-        </li>
-        <li>
-          <div>
-            Retrato del actor
-            <small>ElGorila_Retrato_HumbertoDupeyron.jpeg</small>
-          </div>
-        </li>
-        <li>
-          <div>
-            Escenas de la obra
-            <small>7 imágenes de alta resolución</small>
-          </div>
-        </li>
-      </ul>
-
-      <div class="credits">
-        <strong>Créditos fotográficos</strong>
-        Todas las imágenes: © El Gorila Teatro.<br/>
-        Uso permitido únicamente para difusión editorial relacionada con la obra. Se requiere acreditación.
-      </div>
+    <div class="credits" style="margin-top:0">
+      <strong>Créditos fotográficos</strong>
+      Todas las imágenes: © El Gorila Teatro.<br/>
+      Uso permitido únicamente para difusión editorial relacionada con la obra. Se requiere acreditación.
     </div>
   </div>
 </section>
@@ -1076,9 +1202,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section class="colophon" data-screen-label="09 Colofón">
   <div class="big display">El <em>Gorila</em><br/>37 años en escena</div>
   <div class="meta">
-    <strong>Temporada 2026</strong>
+    <strong>37 años en escena</strong>
+    Teatro Wilberto Cantón<br/>
     Monólogo · 90 min<br/>
-    37 años en escena<br/>
     Ciudad de México
   </div>
   <div class="meta" style="text-align:right">

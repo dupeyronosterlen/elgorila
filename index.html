@@ -3029,7 +3029,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </summary>
 <div class="mt-3 pl-4 border-l-2 border-accent-gold/40 bg-black/40 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/25">
 <p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
-                Sí: en <strong>Teatro Wilberto Cantón</strong>, <strong>13 funciones</strong> los <strong>miércoles a las 20:30</strong>. Temporada de <strong>tres meses</strong> (julio–septiembre). Boletos en <a href="boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a> o avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">Instagram</a>.
+                Sí: en <strong>Teatro Wilberto Cantón</strong>, <strong>13 funciones</strong> los <strong>miércoles a las 20:30</strong>. Temporada de <strong>tres meses</strong> (julio–septiembre). Boletos en <a href="/boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a> o avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">Instagram</a>.
               </p>
 </div>
 </details>
@@ -3041,7 +3041,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </span>
 </summary>
 <p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
-                La venta en línea ya está abierta en <a href="boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a>: elige fecha, tipo de boleto y paga en el sitio. También puedes seguir <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">@elgorilateatro</a> en Instagram para novedades y avisos de temporada.
+                La venta en línea ya está abierta en <a href="/boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a>: elige fecha, tipo de boleto y paga en el sitio. También puedes seguir <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">@elgorilateatro</a> en Instagram para novedades y avisos de temporada.
               </p>
 </details>
 <details class="group py-3 sm:py-4">
@@ -3343,7 +3343,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 <!-- Barra fija de compra -->
 <div class="barra-compra-fija">
-  <a class="link-venta-boletos" href="boletos.html" aria-label="Adquiere tus entradas — desde $350">
+  <a class="link-venta-boletos" href="/boletos.html" aria-label="Adquiere tus entradas — desde $350">
     <span class="barra-compra-titulo">Adquiere tus entradas</span>
     <span class="barra-compra-meta" aria-hidden="true">
       <span class="barra-compra-precio-tachado">$400</span>
@@ -3425,7 +3425,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   (function() {
     /** false = «Próximamente» → Instagram. true = venta oficial en boletos.html */
     var VENTA_PUBLICA_ABIERTA = true;
-    var URL_VENTA_DEFAULT = 'boletos.html';
+    var URL_VENTA_DEFAULT = '/boletos.html';
     function getLocalConfig() {
       var c = {};
       try {
@@ -3523,10 +3523,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           a.setAttribute('rel', 'noopener');
         } else {
           a.removeAttribute('target');
-          a.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.location.href = urlVenta;
-          });
+          a.removeAttribute('rel');
         }
       });
     }
@@ -3740,7 +3737,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     var cooldownUntil = 0;
     function isSensitiveTarget(el) {
       if (!el || !el.closest) return false;
-      return el.closest('a[href="#contacto"]') || el.closest('.link-venta-boletos') || el.closest('a[href="#venta-boletos"]') || el.closest('a[href*="carpageodesica"]') || el.closest('button');
+      return el.closest('a[href="#contacto"]') || el.closest('a[href="#venta-boletos"]') || el.closest('a[href*="carpageodesica"]') || el.closest('button');
     }
     function showThrottleMessage() {
       var existing = document.getElementById('throttle-toast');
