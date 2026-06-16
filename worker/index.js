@@ -1631,6 +1631,8 @@ function timingSafeEqual(a, b) {
 
 const ROLES_AUTH = new Set(['admin', 'gerente', 'taquilla', 'validacion', 'reclamos']);
 
+const JWT_PURPOSES_OK = new Set(['boletera', 'acceso_email']);
+
 async function requireAdmin(request, env) {
   if (!env.JWT_SECRET) return null;
   const auth  = request.headers.get('Authorization') || '';
@@ -1638,7 +1640,15 @@ async function requireAdmin(request, env) {
   if (!token) return null;
   const payload = await verifyJWT(token, env.JWT_SECRET);
   if (!payload || !ROLES_AUTH.has(payload.rol)) return null;
+  if (payload.purpose && !JWT_PURPOSES_OK.has(payload.purpose)) return null;
   return payload;
+}
+
+function actorLabel(payload) {
+  if (!payload) return '—';
+  const tel = payload.telefono ? String(payload.telefono) : '';
+  const nom = payload.nombre || payload.usuario || '—';
+  return tel && payload.purpose === 'acceso_email' ? `${nom} · ${tel}` : (nom || payload.usuario);
 }
 
 async function requireRolAdmin(request, env) {
@@ -2841,6 +2851,112 @@ async function handleReenviarEmail(tid, id, request, env) {
 
 // ─── HANDLER: ADMIN LOGIN ─────────────────────────────────────────────────────
 
+const PIN_FINANCIERO_DEFAULT = '9999';
+
+function pinFinancieroOk(body, env) {
+  const expected = String(env.PIN_FINANCIERO || PIN_FINANCIERO_DEFAULT).trim();
+  const got = String(body?.pinFinanciero ?? body?.pin ?? '').trim();
+  return got.length > 0 && timingSafeEqual(got, expected);
+}
+
+const ACCESO_TAQUILLA_TTL = 4 * 60 * 60;
+
+async function handleAdminAccesoCrear(request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (payload.purpose) {
+    return json({ error: 'Genera el enlace con sesión de administrador (usuario y contraseña).' }, 403, request);
+  }
+  if (payload.rol !== 'admin' && payload.rol !== 'gerente') {
+    return json({ error: 'Solo admin o gerente pueden crear enlaces de taquilla.' }, 403, request);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+
+  const nombre   = String(body.nombre || '').trim().substring(0, 80);
+  const telefono = String(body.telefono || '').replace(/\D/g, '').substring(0, 15);
+  if (!nombre) return json({ error: 'Indica el nombre de quien usará taquilla.' }, 400, request);
+  if (telefono.length < 10) return json({ error: 'Indica un teléfono válido (10 dígitos mínimo).' }, 400, request);
+
+  const now = Math.floor(Date.now() / 1000);
+  const token = await signJWT({
+    purpose:  'acceso_email',
+    usuario:  telefono,
+    telefono,
+    nombre,
+    rol:      'taquilla',
+    iat:      now,
+    exp:      now + ACCESO_TAQUILLA_TTL,
+  }, env.JWT_SECRET);
+
+  const url = `${SITIO_BASE}/admin.html?acceso=${encodeURIComponent(token)}&view=boletera`;
+
+  await registrarAuditoria(env, {
+    usuarioId: payload.usuario,
+    usuario:   payload.nombre || payload.usuario,
+    rol:       payload.rol,
+    accion:    'acceso_taquilla_creado',
+    detalles:  `Enlace taquilla · ${nombre} · ${telefono}`,
+    meta:      { nombre, telefono, exp: now + ACCESO_TAQUILLA_TTL },
+  });
+
+  return json({ ok: true, token, exp: now + ACCESO_TAQUILLA_TTL, url, nombre, telefono }, 200, request);
+}
+
+async function handleAdminAccesoValidar(request, env) {
+  if (!env.JWT_SECRET) return json({ error: 'Configuración incompleta.' }, 500, request);
+  const tokenRaw = new URL(request.url).searchParams.get('token') || '';
+  if (!tokenRaw) return json({ error: 'Falta token.' }, 400, request);
+
+  const payload = await verifyJWT(tokenRaw, env.JWT_SECRET);
+  if (!payload || payload.purpose !== 'acceso_email') {
+    return json({ error: 'Enlace inválido o expirado.' }, 401, request);
+  }
+  if (!PUEDE_VENTA_MAN.has(payload.rol)) {
+    return json({ error: 'Sin permiso.' }, 403, request);
+  }
+
+  await registrarAuditoria(env, {
+    usuarioId: payload.telefono || payload.usuario,
+    usuario:   actorLabel(payload),
+    rol:       payload.rol,
+    accion:    'acceso_taquilla_login',
+    detalles:  `Ingreso taquilla vía enlace · ${payload.nombre || '—'} · ${payload.telefono || payload.usuario}`,
+    meta:      { nombre: payload.nombre, telefono: payload.telefono, via: 'email' },
+  });
+
+  return json({
+    ok:       true,
+    usuario:  payload.telefono || payload.usuario,
+    telefono: payload.telefono || payload.usuario,
+    nombre:   payload.nombre || payload.usuario,
+    rol:      payload.rol,
+    exp:      payload.exp,
+    purpose:  payload.purpose,
+  }, 200, request);
+}
+
+/** @deprecated — la boletera vive dentro de admin.html */
+async function handleBoleteraPase(request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  return json({
+    error: 'Usa el botón Boletera en el panel o «Enlace taquilla» con nombre y teléfono.',
+    embed: `${SITIO_BASE}/admin.html?view=boletera`,
+  }, 400, request);
+}
+
+async function handleBoleteraValidar(request, env) {
+  const url = new URL(request.url);
+  const pase = url.searchParams.get('pase') || '';
+  if (pase) {
+    url.searchParams.set('token', pase);
+    return handleAdminAccesoValidar(new Request(url.toString(), request), env);
+  }
+  return handleAdminAccesoValidar(request, env);
+}
+
 async function handleAdminLogin(request, env) {
   if (!env.JWT_SECRET)              return json({ error: 'Configuración incompleta.' }, 500, request);
   if (!env.ADMIN_USER || !env.ADMIN_PASS)
@@ -3274,10 +3390,13 @@ async function handleVentaManual(tid, request, env, ctx) {
     : `https://wa.me/?text=${encodeURIComponent(waTexto)}`;
 
   await registrarAuditoria(env, {
-    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
-    rol: payload.rol, accion: 'venta_manual', teatroId: canonical,
-    detalles: `Venta efectivo ${gen.certificado} — ${cantidadTotal} boleto(s) — ${funcion.nombre}`,
-    meta: { codigo: gen.certificado, fecha, total, email: email || null, codigoCupon: cuponAplicado?.codigo || null },
+    usuarioId: payload.telefono || payload.usuario,
+    usuario:   actorLabel(payload),
+    rol:       payload.rol,
+    accion:    'venta_manual',
+    teatroId:  canonical,
+    detalles:  `Venta efectivo ${gen.certificado} — ${cantidadTotal} boleto(s) — ${funcion.nombre}`,
+    meta:      { codigo: gen.certificado, fecha, total, email: email || null, codigoCupon: cuponAplicado?.codigo || null, via: payload.purpose || 'admin' },
   });
 
   return json({
@@ -3471,10 +3590,13 @@ async function handleReembolso(tid, request, env, ctx) {
   if (payload.rol !== 'admin') {
     return json({ error: 'Solo el administrador puede reembolsar.' }, 403, request);
   }
-  if (!env.STRIPE_SECRET_KEY) return json({ error: 'Stripe no configurado.' }, 503, request);
 
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+
+  if (!pinFinancieroOk(body, env)) {
+    return json({ error: 'PIN de operaciones incorrecto.' }, 403, request);
+  }
 
   const codigo = (body.codigo || '').trim().toUpperCase();
   if (!esCodigoCert(codigo)) return json({ error: 'Folio inválido.' }, 400, request);
@@ -3488,6 +3610,9 @@ async function handleReembolso(tid, request, env, ctx) {
 
   const sessionId = venta.sessionId || '';
   const esManual  = sessionId.startsWith('manual_') || venta.metodoPago === 'efectivo';
+  if (!esManual && !env.STRIPE_SECRET_KEY) {
+    return json({ error: 'Stripe no configurado.' }, 503, request);
+  }
   let stripeRefundId = null;
 
   if (!esManual) {
@@ -3926,6 +4051,12 @@ async function handleFiscalReset(tid, request, env) {
   const payload = await requireRolAdmin(request, env);
   if (!payload) return json({ error: 'Solo el administrador.' }, 403, request);
 
+  let body = {};
+  try { body = await request.json(); } catch { /* vacío ok */ }
+  if (!pinFinancieroOk(body, env)) {
+    return json({ error: 'PIN de operaciones incorrecto.' }, 403, request);
+  }
+
   await env.VENTAS.put(kv(tid, 'fiscal:reserva:acumulado'), JSON.stringify({ acumulado: 0 }));
 
   await registrarAuditoria(env, {
@@ -4147,6 +4278,18 @@ export default {
     }
     if (method === 'POST' && pathname === '/api/admin/login') {
       return handleAdminLogin(request, env);
+    }
+    if (method === 'POST' && pathname === '/api/admin/acceso/crear') {
+      return handleAdminAccesoCrear(request, env);
+    }
+    if (method === 'GET' && pathname === '/api/admin/acceso/validar') {
+      return handleAdminAccesoValidar(request, env);
+    }
+    if (method === 'POST' && pathname === '/api/admin/boletera/pase') {
+      return handleBoleteraPase(request, env);
+    }
+    if (method === 'GET' && pathname === '/api/admin/boletera/validar') {
+      return handleBoleteraValidar(request, env);
     }
     if (method === 'GET' && pathname === '/api/reporte') {
       return handleReporte(request, env, ctx);

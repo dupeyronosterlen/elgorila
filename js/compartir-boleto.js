@@ -138,27 +138,35 @@
 
   async function renderImagen(modo) {
     if (!window.GenerarImagenBoleto) throw new Error('Generador de imagen no cargado.');
-    const canvas = await GenerarImagenBoleto.generar({
-      funcion: ventaState.funcionNombre || ventaState.fecha || '',
-      entradas: modo.entradas,
-      modo: modo.modo,
-      codigoLabel: modo.codigoLabel,
-      codigo: modo.codigo,
-      folio: modo.folio,
-      tipo: modo.tipo,
-      seccion: modo.seccion,
-      qrUrl: qrPayload(modo.qrCodigo),
-      logoUrl: 'img/LOGO/1.jpg',
-      arteUrl: 'img/programa/portada-v4.jpg',
-    });
-    canvasActual = canvas;
-    document.getElementById('preview-img').src = canvas.toDataURL('image/png');
+    try {
+      const canvas = await GenerarImagenBoleto.generar({
+        funcion: ventaState.funcionNombre || ventaState.fecha || '',
+        entradas: modo.entradas,
+        modo: modo.modo,
+        codigoLabel: modo.codigoLabel,
+        codigo: modo.codigo,
+        folio: modo.folio,
+        tipo: modo.tipo,
+        seccion: modo.seccion,
+        qrUrl: qrPayload(modo.qrCodigo),
+        logoUrl: 'img/LOGO/1.jpg',
+        arteUrl: 'img/programa/portada-v4.jpg',
+      });
+      canvasActual = canvas;
+      document.getElementById('preview-img').src = canvas.toDataURL('image/png');
+    } catch (err) {
+      console.warn('Canvas boleto:', err);
+      const qrImg = window.ElGorilaQr?.urlQrImagen?.(modo.qrCodigo, 320)
+        || `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrPayload(modo.qrCodigo))}`;
+      document.getElementById('preview-img').src = qrImg;
+      canvasActual = null;
+    }
     const folioHint = modo.folio ? ` Folio taquilla: ${modo.folio}.` : '';
     document.getElementById('modo-hint').textContent = (modo.modo === 'certificado'
       ? 'Presenta el QR en la entrada del teatro — válido para todas las entradas.'
       : 'Presenta este QR en puerta — una persona por pase.') + folioHint;
     await actualizarWallet(modo);
-    return canvas;
+    return canvasActual;
   }
 
   function renderTabs() {

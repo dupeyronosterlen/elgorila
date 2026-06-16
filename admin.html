@@ -274,7 +274,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="topbar-logo">El Gorila <span>Panel de operaciones</span></div>
     <div class="topbar-sep"></div>
     <a href="index.html" class="topbar-btn">Sitio</a>
-    <a href="boletera.html" id="link-boletera" class="topbar-btn hidden">Boletera</a>
+    <a href="admin.html" id="link-boletera" class="topbar-btn hidden" onclick="event.preventDefault(); abrirBoletera();">Boletera</a>
+    <button type="button" id="btn-copiar-boletera" class="topbar-btn hidden" onclick="abrirModalEnlaceTaquilla();">Enlace taquilla</button>
     <a href="verificar.html" id="link-verificar" class="topbar-btn hidden">Verificar</a>
     <div class="topbar-user">
       <div class="topbar-dot"></div>
@@ -319,10 +320,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       Sitio web
     </button>
     <div class="sidebar-divider"></div>
-    <a href="boletera.html" class="nav-item">
+    <button type="button" class="nav-item hidden" id="nav-boletera" data-nav="boletera" onclick="navGo(this,'boletera')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
       Boletera taquilla
-    </a>
+    </button>
     <a href="verificar.html" class="nav-item">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       Verificar entrada
@@ -531,6 +532,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <option value="cancelacion">Cancelación</option>
               <option value="email">Correo / reenvío</option>
               <option value="canje">Canje en puerta</option>
+              <option value="acceso">Accesos taquilla</option>
               <option value="venta_manual">Venta taquilla</option>
               <option value="fiscal">Fiscal</option>
               <option value="equipo">Equipo / sitio</option>
@@ -608,6 +610,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <option value="cancelacion">Cancelación</option>
             <option value="email">Correo / reenvío</option>
             <option value="canje">Canje en puerta</option>
+            <option value="acceso">Accesos taquilla</option>
             <option value="venta_manual">Venta taquilla</option>
             <option value="fiscal">Fiscal</option>
             <option value="equipo">Equipo / sitio</option>
@@ -648,6 +651,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </div>
 
+    <!-- VIEW: BOLETERA (embebida) -->
+    <div id="view-boletera" class="hidden" style="padding:0;margin:-26px -30px;height:calc(100vh - var(--topbar));overflow:hidden">
+      <iframe id="iframe-boletera" title="Boletera taquilla" src="about:blank" style="width:100%;height:100%;border:none;display:block;background:var(--bg)"></iframe>
+    </div>
+
   </main>
 </div>
 
@@ -657,6 +665,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <button class="modal-close" type="button" id="confirm-op-cancel">✕</button>
     <h2 class="modal-title" id="confirm-op-title">Confirmar</h2>
     <div id="confirm-op-body"></div>
+    <div id="confirm-op-pin-wrap" class="hidden" style="margin-top:12px">
+      <label class="form-label" for="confirm-op-pin">PIN operaciones (dinero)</label>
+      <input type="password" id="confirm-op-pin" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••">
+      <p id="confirm-op-pin-error" class="hidden" style="font-family:var(--mono);font-size:11px;color:#f87171;margin-top:6px">PIN incorrecto</p>
+    </div>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button type="button" class="btn-ghost" style="flex:1" id="confirm-op-cancel2">Cancelar</button>
       <button type="button" class="btn-primary" style="flex:1" id="confirm-op-ok">Confirmar</button>
@@ -724,12 +737,44 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <button class="dact hidden" id="dv-btn-email">Corregir email</button>
       <button class="dact danger hidden" id="dv-btn-reembolso">Reembolso</button>
     </div>
-    <a id="dv-preview" href="#" target="_blank" rel="noopener" class="dact" style="text-align:center;margin-top:4px;display:none">Vista previa boleto</a>
+    <button type="button" class="dact" id="dv-btn-preview" style="text-align:center;margin-top:4px;display:none">Vista previa boleto</button>
+  </div>
+</div>
+
+<!-- MODAL ENLACE TAQUILLA -->
+<div id="modal-enlace-taquilla" class="modal-overlay">
+  <div class="modal-box confirm-box">
+    <button class="modal-close" type="button" id="modal-enlace-close">✕</button>
+    <h2 class="modal-title">Enlace taquilla (4 h)</h2>
+    <p style="font-family:var(--mono);font-size:11px;color:var(--soft);letter-spacing:.06em;margin-bottom:14px;line-height:1.5">
+      Genera un acceso al panel con boletera. Queda registrado nombre y teléfono en auditoría.
+    </p>
+    <div class="form-field"><label class="form-label">Nombre en taquilla</label><input type="text" id="enlace-nombre" placeholder="María López" autocomplete="name"></div>
+    <div class="form-field"><label class="form-label">Teléfono (WhatsApp)</label><input type="tel" id="enlace-telefono" placeholder="52…" inputmode="numeric" autocomplete="tel"></div>
+    <p id="enlace-error" class="hidden" style="font-family:var(--mono);font-size:11px;color:#f87171;margin-top:6px"></p>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button type="button" class="btn-ghost" style="flex:1" id="modal-enlace-cancel">Cancelar</button>
+      <button type="button" class="btn-primary" style="flex:1" id="modal-enlace-ok">Copiar enlace</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VISTA PREVIA BOLETO -->
+<div id="modal-preview-boleto" class="modal-overlay">
+  <div class="modal-box" style="max-width:420px">
+    <button class="modal-close" type="button" id="modal-preview-close">✕</button>
+    <h2 class="modal-title">Vista previa boleto</h2>
+    <div id="preview-boleto-loading" style="text-align:center;padding:24px;font-family:var(--mono);font-size:11px;color:var(--soft)">Generando…</div>
+    <div id="preview-boleto-error" class="hidden" style="color:#f87171;font-family:var(--mono);font-size:11px;padding:12px 0"></div>
+    <img id="preview-boleto-img" alt="Boleto" style="display:none;width:100%;max-width:320px;margin:0 auto;border:1px solid var(--faint)">
   </div>
 </div>
 
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script src="js/qr-boleto.js"></script>
+<script src="js/generar-imagen-boleto.js"></script>
 <script src="js/selector-funciones.js"></script>
 <script src="js/admin-panel.js"></script>
 </body>

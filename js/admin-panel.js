@@ -106,6 +106,7 @@
     if (filtro === 'cancelacion') return metaTipo === 'cancelacion' || (a.detalles || '').toLowerCase().includes('cancelado');
     if (filtro === 'email') return key.includes('email');
     if (filtro === 'canje') return key.includes('canjear');
+    if (filtro === 'acceso') return key.includes('acceso_taquilla');
     if (filtro === 'venta_manual') return key === 'venta_manual';
     if (filtro === 'fiscal') return key.includes('fiscal');
     if (filtro === 'equipo') return key.includes('usuario') || key.includes('sitio');
@@ -280,7 +281,7 @@
         <h2 class="text-2xl font-display text-primary">Wilberto Cantón</h2>
       </div>
       <div class="flex flex-wrap gap-2 mb-6">
-        ${perm('venderEfectivo') ? '<a href="boletera.html" class="px-3 py-2 text-sm border border-primary/30 text-primary">Boletera</a>' : ''}
+        ${perm('venderEfectivo') ? '<button type="button" onclick="abrirBoletera()" class="px-3 py-2 text-sm border border-primary/30 text-primary">Boletera</button>' : ''}
         ${perm('verificarBoletos') ? '<a href="verificar.html" class="px-3 py-2 text-sm border border-primary/30 text-primary">Verificar</a>' : ''}
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -1250,28 +1251,48 @@
     });
   }
 
-  function v4ConfirmarAccion({ titulo, resumenHtml, peligro, btnOk }) {
+  function v4ConfirmarAccion({ titulo, resumenHtml, peligro, btnOk, requierePin }) {
     return new Promise(resolve => {
       const modal = document.getElementById('modal-confirm-op');
       if (!modal) { resolve(window.confirm(titulo)); return; }
       const titleEl = document.getElementById('confirm-op-title');
       const bodyEl = document.getElementById('confirm-op-body');
       const okBtn = document.getElementById('confirm-op-ok');
+      const pinWrap = document.getElementById('confirm-op-pin-wrap');
+      const pinInp = document.getElementById('confirm-op-pin');
+      const pinErr = document.getElementById('confirm-op-pin-error');
       if (titleEl) titleEl.textContent = titulo;
       if (bodyEl) bodyEl.innerHTML = resumenHtml;
       if (okBtn) {
         okBtn.textContent = btnOk || 'Confirmar';
         okBtn.classList.toggle('danger', !!peligro);
       }
+      if (pinWrap) pinWrap.classList.toggle('hidden', !requierePin);
+      if (pinInp) pinInp.value = '';
+      if (pinErr) { pinErr.textContent = ''; pinErr.classList.add('hidden'); }
+      state._confirmRequierePin = !!requierePin;
       state._confirmResolve = resolve;
       modal.classList.add('open');
     });
   }
 
+  function v4PinFinanciero() {
+    return document.getElementById('confirm-op-pin')?.value?.trim() || '';
+  }
+
   function v4CerrarConfirm(ok) {
+    if (ok && state._confirmRequierePin) {
+      const pin = v4PinFinanciero();
+      if (pin !== '9999') {
+        const pinErr = document.getElementById('confirm-op-pin-error');
+        if (pinErr) { pinErr.textContent = 'PIN incorrecto'; pinErr.classList.remove('hidden'); }
+        return;
+      }
+    }
     document.getElementById('modal-confirm-op')?.classList.remove('open');
     const fn = state._confirmResolve;
     state._confirmResolve = null;
+    state._confirmRequierePin = false;
     if (fn) fn(!!ok);
   }
 
@@ -1495,11 +1516,12 @@
     if (dest) v4RenderReagDest(v.fecha);
     const emailInp = document.getElementById('dv-email-nuevo');
     if (emailInp) emailInp.value = v.email || '';
-    const preview = document.getElementById('dv-preview');
+    const preview = document.getElementById('dv-btn-preview');
     if (preview) {
-      preview.href = `compartir-boleto.html?c=${encodeURIComponent(cert)}`;
+      preview.onclick = () => v4PreviewBoleto(cert);
       preview.style.display = 'block';
     }
+    state.drawerVenta = v;
     const esStripe = v.metodoPago && v.metodoPago !== 'efectivo' && !String(v.sessionId || '').startsWith('manual_');
     v4Toggle('dv-btn-reagenda', perm('reagendar') && !v.usado && v.estado !== 'reembolsada');
     v4Toggle('dv-btn-reenvio', perm('reenviarBoleto') && v.estado !== 'reembolsada' && !!v.email);
@@ -1795,12 +1817,71 @@
 
   function v4ShowView(view) {
     state.view = view;
-    ['hub', 'ops', 'funciones', 'informes', 'equipo', 'auditoria', 'sitio'].forEach(v => {
+    ['hub', 'ops', 'funciones', 'informes', 'equipo', 'auditoria', 'sitio', 'boletera'].forEach(v => {
       v4Toggle(`view-${v}`, v === view);
     });
     document.querySelectorAll('.nav-item[data-nav]').forEach(el => {
       el.classList.toggle('active', el.dataset.nav === view);
     });
+    const main = document.getElementById('admin-app');
+    if (main) main.style.overflow = view === 'boletera' ? 'hidden' : '';
+  }
+
+  function v4CargarIframeBoletera() {
+    const iframe = document.getElementById('iframe-boletera');
+    if (!iframe) return;
+    const src = iframe.getAttribute('data-loaded-src');
+    const want = 'boletera.html?embed=1';
+    if (src !== want) {
+      iframe.src = want;
+      iframe.setAttribute('data-loaded-src', want);
+    }
+  }
+
+  async function v4PreviewBoleto(cert) {
+    const modal = document.getElementById('modal-preview-boleto');
+    const img = document.getElementById('preview-boleto-img');
+    const loading = document.getElementById('preview-boleto-loading');
+    const errEl = document.getElementById('preview-boleto-error');
+    if (!modal || !window.GenerarImagenBoleto) {
+      window.open(`compartir-boleto.html?c=${encodeURIComponent(cert)}`, '_blank', 'noopener');
+      return;
+    }
+    modal.classList.add('open');
+    if (loading) loading.classList.remove('hidden');
+    if (errEl) { errEl.classList.add('hidden'); errEl.textContent = ''; }
+    if (img) img.style.display = 'none';
+    try {
+      const v = state.drawerVenta?.certificado === cert ? state.drawerVenta : await api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}`));
+      const boletos = v.boletos || [];
+      const certificado = v.certificado || cert;
+      const n = v.cantidad || boletos.length || 1;
+      const b0 = boletos[0];
+      const qrCodigo = n === 1 && b0?.cert ? b0.cert : certificado;
+      const qrUrl = window.ElGorilaQr?.codigoQrPayload?.(qrCodigo) || qrCodigo;
+      const canvas = await GenerarImagenBoleto.generar({
+        funcion: v.funcionNombre || v.fecha || '',
+        entradas: n === 1 ? '1 entrada' : `${n} entradas`,
+        modo: 'certificado',
+        codigoLabel: 'Certificado',
+        codigo: certificado,
+        folio: boletos.map(b => b.folio).filter(Boolean).join(' · ') || null,
+        qrUrl,
+        logoUrl: 'img/LOGO/1.jpg',
+        arteUrl: 'img/programa/portada-v4.jpg',
+      });
+      if (img) {
+        img.src = canvas.toDataURL('image/png');
+        img.style.display = 'block';
+      }
+      if (loading) loading.classList.add('hidden');
+    } catch (e) {
+      if (loading) loading.classList.add('hidden');
+      if (errEl) {
+        errEl.textContent = (e.message || 'No se pudo generar.') + ' Abre compartir-boleto.html si persiste.';
+        errEl.classList.remove('hidden');
+      }
+    }
   }
 
   async function v4RenderHub() {
@@ -1861,6 +1942,9 @@
         if (!perm('editarSitio')) { v4ShowView('hub'); return v4PaintView('hub'); }
         await cargarSitio();
         v4RenderSitio();
+      } else if (view === 'boletera') {
+        if (!perm('venderEfectivo')) { v4ShowView('hub'); return v4PaintView('hub'); }
+        v4CargarIframeBoletera();
       }
     } catch (e) {
       alert(e.message);
@@ -1886,6 +1970,7 @@
       equipo: perm('gestionarEquipo'),
       auditoria: perm('verAuditoria'),
       sitio: perm('editarSitio'),
+      boletera: perm('venderEfectivo'),
     };
     let first = null;
     document.querySelectorAll('.nav-item[data-nav]').forEach(el => {
@@ -1906,7 +1991,7 @@
     document.getElementById('btn-export-todo')?.addEventListener('click', () => {
       exportCsv(v4VentasFiltradas(), `ventas_${TID()}_${Date.now()}.csv`);
     });
-    document.getElementById('btn-venta-manual')?.addEventListener('click', () => { window.location.href = 'boletera.html'; });
+    document.getElementById('btn-venta-manual')?.addEventListener('click', () => { abrirBoletera(); });
     document.getElementById('btn-email-post-funcion')?.addEventListener('click', async () => {
       if (!state.chipFuncion) return;
       const fn = state.funciones.find(f => f.fecha_iso === state.chipFuncion);
@@ -2017,11 +2102,15 @@
         titulo: v?.metodoPago && v.metodoPago !== 'efectivo' ? 'Confirmar reembolso' : 'Confirmar anulación',
         resumenHtml: v4HtmlResumenReembolso(v),
         peligro: true,
+        requierePin: true,
         btnOk: v?.metodoPago && v.metodoPago !== 'efectivo' ? 'Reembolsar' : 'Anular',
       });
       if (!ok) return;
       try {
-        const data = await api(window.teatroAdminApi('reembolso'), { method: 'POST', body: JSON.stringify({ codigo: cert }) });
+        const data = await api(window.teatroAdminApi('reembolso'), {
+          method: 'POST',
+          body: JSON.stringify({ codigo: cert, pinFinanciero: v4PinFinanciero() }),
+        });
         v4GuardarInforme(v4InformeReembolso(v, data));
         v4OpsMsg('Reembolso procesado.', 'green');
         if (state.view === 'hub') await v4RenderHub();
@@ -2098,11 +2187,15 @@
         titulo: v?.metodoPago && v.metodoPago !== 'efectivo' ? 'Confirmar reembolso' : 'Confirmar anulación',
         resumenHtml: v4HtmlResumenReembolso(v),
         peligro: true,
+        requierePin: true,
         btnOk: v?.metodoPago && v.metodoPago !== 'efectivo' ? 'Reembolsar' : 'Anular',
       });
       if (!ok) return;
       try {
-        const data = await api(window.teatroAdminApi('reembolso'), { method: 'POST', body: JSON.stringify({ codigo: cert }) });
+        const data = await api(window.teatroAdminApi('reembolso'), {
+          method: 'POST',
+          body: JSON.stringify({ codigo: cert, pinFinanciero: v4PinFinanciero() }),
+        });
         v4GuardarInforme(v4InformeReembolso(v, data));
         v4CerrarDrawer();
         if (state.view === 'hub') await v4RenderHub();
@@ -2114,6 +2207,24 @@
     document.getElementById('confirm-op-ok')?.addEventListener('click', () => v4CerrarConfirm(true));
     document.getElementById('modal-confirm-op')?.addEventListener('click', (e) => {
       if (e.target.id === 'modal-confirm-op') v4CerrarConfirm(false);
+    });
+
+    document.getElementById('modal-enlace-close')?.addEventListener('click', () => {
+      document.getElementById('modal-enlace-taquilla')?.classList.remove('open');
+    });
+    document.getElementById('modal-enlace-cancel')?.addEventListener('click', () => {
+      document.getElementById('modal-enlace-taquilla')?.classList.remove('open');
+    });
+    document.getElementById('modal-enlace-ok')?.addEventListener('click', () => { copiarEnlaceBoletera(); });
+    document.getElementById('modal-enlace-taquilla')?.addEventListener('click', (e) => {
+      if (e.target.id === 'modal-enlace-taquilla') e.currentTarget.classList.remove('open');
+    });
+
+    document.getElementById('modal-preview-close')?.addEventListener('click', () => {
+      document.getElementById('modal-preview-boleto')?.classList.remove('open');
+    });
+    document.getElementById('modal-preview-boleto')?.addEventListener('click', (e) => {
+      if (e.target.id === 'modal-preview-boleto') e.currentTarget.classList.remove('open');
     });
 
     document.getElementById('audit-filtro')?.addEventListener('change', e => {
@@ -2140,11 +2251,15 @@
         titulo: 'Resetear reserva fiscal',
         resumenHtml: `<dl class="confirm-summary"><dt>Acción</dt><dd>Poner la reserva fiscal acumulada (8%) en <strong>$0</strong> tras pago de impuesto.</dd></dl>`,
         peligro: true,
+        requierePin: true,
         btnOk: 'Resetear',
       });
       if (!ok) return;
       try {
-        await api(window.teatroAdminApi('fiscal/reset'), { method: 'POST' });
+        await api(window.teatroAdminApi('fiscal/reset'), {
+          method: 'POST',
+          body: JSON.stringify({ pinFinanciero: v4PinFinanciero() }),
+        });
         await v4PaintView('informes');
       } catch (e) { alert(e.message); }
     });
@@ -2173,6 +2288,43 @@
   };
 
   window.closeDrawer = v4CerrarDrawer;
+
+  function abrirBoletera() {
+    const nav = document.getElementById('nav-boletera') || document.querySelector('[data-nav=boletera]');
+    navGo(nav, 'boletera');
+  }
+
+  function abrirModalEnlaceTaquilla() {
+    document.getElementById('enlace-nombre')?.focus();
+    document.getElementById('enlace-error')?.classList.add('hidden');
+    document.getElementById('modal-enlace-taquilla')?.classList.add('open');
+  }
+
+  async function copiarEnlaceBoletera() {
+    const nombre = document.getElementById('enlace-nombre')?.value?.trim();
+    const telefono = document.getElementById('enlace-telefono')?.value?.trim();
+    const errEl = document.getElementById('enlace-error');
+    if (!nombre || !telefono) {
+      if (errEl) { errEl.textContent = 'Nombre y teléfono son obligatorios.'; errEl.classList.remove('hidden'); }
+      return;
+    }
+    try {
+      const data = await api(`${window.API_BASE}/api/admin/acceso/crear`, {
+        method: 'POST',
+        body: JSON.stringify({ nombre, telefono }),
+      });
+      await navigator.clipboard.writeText(data.url);
+      document.getElementById('modal-enlace-taquilla')?.classList.remove('open');
+      alert(`Enlace copiado para ${data.nombre} (válido 4 h). Envíalo por correo o WhatsApp.`);
+    } catch (e) {
+      if (errEl) { errEl.textContent = e.message || 'No se pudo generar el enlace.'; errEl.classList.remove('hidden'); }
+    }
+  }
+
+  window.abrirBoletera = abrirBoletera;
+  window.abrirModalEnlaceTaquilla = abrirModalEnlaceTaquilla;
+  window.copiarEnlaceBoletera = copiarEnlaceBoletera;
+  window.v4PreviewBoleto = v4PreviewBoleto;
 
   window.switchTab = function switchTab(btn, tabId) {
     btn.parentElement?.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -2245,27 +2397,51 @@
     }
   }
 
+  function v4AplicarUiAcceso(usuario) {
+    const viaEmail = !!usuario.viaEmail;
+    document.querySelectorAll('.nav-item[data-nav]').forEach(el => {
+      const nav = el.dataset.nav;
+      if (!viaEmail) return;
+      const ok = nav === 'boletera';
+      el.classList.toggle('hidden', !ok);
+    });
+    document.querySelectorAll('.sidebar-section').forEach(el => { if (viaEmail) el.classList.add('hidden'); });
+    const topSite = document.querySelector('.topbar-btn[href="index.html"]');
+    if (topSite && viaEmail) topSite.classList.add('hidden');
+    v4Toggle('link-boletera', !viaEmail && perm('venderEfectivo'));
+    v4Toggle('btn-copiar-boletera', !viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente'));
+    v4Toggle('link-verificar', !viaEmail && perm('verificarBoletos'));
+    v4Toggle('nav-boletera', perm('venderEfectivo'));
+  }
+
   window.AdminPanel = {
-    iniciar(usuario) {
-      if (usuario.rol === 'taquilla') { window.location.href = 'boletera.html'; return; }
-      if (usuario.rol === 'validacion') { window.location.href = 'verificar.html'; return; }
-      // reclamos y gerente entran al panel (ventas / reenvíos según rol)
+    iniciar(usuario, viewInicial) {
+      if (usuario.rol === 'validacion' && !usuario.viaEmail) {
+        window.location.href = 'verificar.html';
+        return;
+      }
 
       const elU = document.getElementById('usuario-actual');
       const elR = document.getElementById('rol-actual');
-      if (elU) elU.textContent = usuario.nombre || usuario.usuarioId;
-      if (elR) elR.textContent = (usuario.rol || 'admin').toUpperCase();
-      const lb = document.getElementById('link-boletera');
-      const lv = document.getElementById('link-verificar');
-      if (lb) lb.classList.toggle('hidden', !perm('venderEfectivo'));
-      if (lv) lv.classList.toggle('hidden', !perm('verificarBoletos'));
-      if (!esAdmin()) state.view = 'hub';
-      if (IS_V4()) {
-        if (!perm('verVentas')) {
-          if (perm('verAuditoria')) state.view = 'auditoria';
-          else if (perm('editarSitio')) state.view = 'sitio';
-          else if (perm('gestionarEquipo')) state.view = 'equipo';
-        }
+      const label = usuario.viaEmail && usuario.telefono
+        ? `${usuario.nombre} · ${usuario.telefono}`
+        : (usuario.nombre || usuario.usuarioId);
+      if (elU) elU.textContent = label;
+      if (elR) elR.textContent = usuario.viaEmail ? 'TAQUILLA · ENLACE' : (usuario.rol || 'admin').toUpperCase();
+
+      v4Toggle('link-boletera', !usuario.viaEmail && perm('venderEfectivo'));
+      v4Toggle('btn-copiar-boletera', !usuario.viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente'));
+      v4Toggle('link-verificar', !usuario.viaEmail && perm('verificarBoletos'));
+      v4Toggle('nav-boletera', perm('venderEfectivo'));
+
+      v4AplicarUiAcceso(usuario);
+
+      if (usuario.viaEmail) state.view = 'boletera';
+      else if (viewInicial === 'boletera' && perm('venderEfectivo')) state.view = 'boletera';
+      else if (!perm('verVentas') && IS_V4()) {
+        if (perm('verAuditoria')) state.view = 'auditoria';
+        else if (perm('editarSitio')) state.view = 'sitio';
+        else if (perm('gestionarEquipo')) state.view = 'equipo';
       }
       paint();
     },
@@ -2307,13 +2483,37 @@
     location.reload();
   };
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(location.search);
+    const acceso = params.get('acceso');
+    const viewParam = params.get('view');
+
+    if (acceso) {
+      const r = await AuthManager.validarAccesoEmail(acceso);
+      if (r.ok) {
+        params.delete('acceso');
+        const qs = params.toString();
+        history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : ''));
+        document.getElementById('login-screen')?.classList.add('hidden');
+        document.getElementById('admin-panel')?.classList.remove('hidden');
+        AdminPanel.iniciar(r.usuario, viewParam || 'boletera');
+        return;
+      }
+      const err = document.getElementById('error-login');
+      if (err) {
+        err.textContent = r.error || 'Enlace inválido o expirado.';
+        err.style.display = 'block';
+      }
+    }
+
     const u = AuthManager.obtenerUsuarioActual();
     if (u) {
       document.getElementById('login-screen')?.classList.add('hidden');
       document.getElementById('admin-panel')?.classList.remove('hidden');
-      AdminPanel.iniciar(u);
+      AdminPanel.iniciar(u, viewParam === 'boletera' ? 'boletera' : undefined);
+      return;
     }
+
     document.addEventListener('keypress', e => {
       if (e.key === 'Enter' && !document.getElementById('login-screen')?.classList.contains('hidden')) {
         verificarAcceso();

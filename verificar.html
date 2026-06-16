@@ -21,7 +21,7 @@
     <span class="bol-header-sub">Puerta · Teatro Wilberto Cantón</span>
   </div>
   <div class="bol-header-actions">
-    <a href="boletera.html" class="btn-accion">
+    <a href="admin.html" class="btn-accion" onclick="event.preventDefault(); alert('Abre la boletera desde Admin → Boletera o con el enlace por correo.');">
       <span class="material-symbols-outlined" style="font-size:16px;">confirmation_number</span>
       Boletera
     </a>
@@ -92,7 +92,7 @@
     <div class="bol-card-rule"></div>
     <span class="sec-label">Folios internos · agrupados por certificado · toca para marcar entrada</span>
     <p id="lista-sin-sesion" class="hidden" style="font-size:14px;color:#f87171;margin-bottom:12px;">
-      Inicia sesión en <a href="boletera.html" style="color:var(--gold);">boletera</a> para ver la lista.
+      Abre la boletera desde <a href="admin.html" style="color:var(--gold);">admin</a> (enlace de taquilla).
     </p>
     <label class="form-label" for="lista-funcion">Función</label>
     <select id="lista-funcion" class="form-input" style="margin-bottom:12px;"></select>
@@ -105,7 +105,7 @@
     <div class="bol-card-rule"></div>
     <span class="sec-label">Busca comprador · marca entrada sin escanear cada QR</span>
     <p id="nombre-sin-sesion" class="hidden" style="font-size:14px;color:#f87171;margin-bottom:12px;">
-      Inicia sesión en <a href="boletera.html" style="color:var(--gold);">boletera</a> o admin con usuario de puerta.
+      Abre la boletera desde <a href="admin.html" style="color:var(--gold);">admin</a> o usa verificar con usuario de puerta.
     </p>
     <label class="form-label" for="nombre-funcion">Función</label>
     <select id="nombre-funcion" class="form-input" style="margin-bottom:12px;"></select>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
@@ -7,36 +7,11 @@
 <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
 <title>Boletera — El Gorila</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-<script>
-  tailwind.config = {
-    darkMode: 'class',
-    theme: {
-      extend: {
-        colors: {
-          primary:          '#d99b3a',
-          'background-dark':'#0a0706',
-          'surface-dark':   '#120d0b',
-          'text-dark':      '#f1ead9',
-          'accent-red':     '#D43A1A',
-        },
-        fontFamily: {
-          display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
-          body:    ['"EB Garamond"', 'Georgia', 'serif'],
-          mono:    ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
-        },
-      },
-    },
-  };
-</script>
 <link rel="stylesheet" href="css/operaciones.css">
 <style>
-#panel-boletera { display: none; min-height: 100vh; }
 .form-select {
   display: block; width: 100%; padding: 11px 14px;
   -webkit-appearance: none; appearance: none;
@@ -55,55 +30,42 @@
 .badge-cancelado { color: #f87171; font-size: 11px; }
 </style>
 </head>
-<body class="dark">
+<body>
 
-<!-- ══ PANTALLA DE LOGIN ══════════════════════════════════════ -->
-<div id="login-screen">
+<div id="gate-blocked" class="login-shell">
   <div class="login-card">
     <div class="login-linea-roja"></div>
-    <h1 class="login-titulo">El Gorila</h1>
-    <span class="login-sub">Boletera · Acceso al sistema</span>
-
-    <label class="login-label" for="bol-usuario">Usuario</label>
-    <input type="text" id="bol-usuario" class="login-input"
-           placeholder="Usuario"
-           autocomplete="username">
-
-    <label class="login-label" for="bol-password">Contraseña</label>
-    <input type="password" id="bol-password" class="login-input"
-           placeholder="Contraseña"
-           autocomplete="current-password">
-
-    <button type="button" class="login-btn" onclick="boletaAcceder()">
-      Acceder
-    </button>
-    <div id="login-error" class="login-error" style="display:none;"></div>
+    <h1 class="login-titulo">Boletera</h1>
+    <span class="login-sub">Acceso restringido</span>
+    <p style="font-size:15px;line-height:1.65;color:var(--d-soft);margin:0 0 16px">
+      La boletera está dentro del <a href="admin.html?view=boletera" style="color:var(--gold)">panel de administración</a>.
+      Si eres taquilla, usa el enlace que te enviaron por correo (válido 4 horas).
+    </p>
+    <p id="gate-error" class="login-error" style="display:none"></p>
   </div>
 </div>
 
-<!-- ══ PANEL BOLETERA ════════════════════════════════════════ -->
-<div id="panel-boletera">
+<div id="panel-boletera" class="bol-shell" style="display:none">
 
-  <header class="bol-header">
-    <div>
-      <span class="bol-header-titulo">Boletera</span>
-      <span class="bol-header-sub">Teatro Wilberto Cantón · <span id="boletera-teatro-id">wilberto</span> · <span id="boletera-usuario-nombre">—</span></span>
-    </div>
-    <div class="bol-header-actions">
-      <a href="verificar.html" class="btn-accion">
-        <span class="material-symbols-outlined" style="font-size:16px;">qr_code_scanner</span>
-        Verificar
-      </a>
-      <button type="button" class="btn-accion btn-salir" onclick="boletaSalir()">
-        <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
-        Salir
-      </button>
-    </div>
+  <header class="bol-topbar">
+    <div class="bol-topbar-logo">El Gorila <span>Boletera · taquilla</span></div>
+    <div class="bol-topbar-sep"></div>
+    <a href="admin.html" class="bol-topbar-btn">Admin</a>
+    <a href="verificar.html" class="bol-topbar-btn">Verificar</a>
+    <span class="bol-topbar-user" id="boletera-usuario-nombre">—</span>
+    <button type="button" class="bol-topbar-btn" onclick="boletaSalir()">Salir</button>
   </header>
 
-  <main class="bol-main">
+  <div class="bol-layout">
+    <nav class="bol-sidebar">
+      <button type="button" class="bol-nav active" data-bol-view="venta" onclick="bolNavGo(this,'venta')">Venta efectivo</button>
+      <button type="button" class="bol-nav" data-bol-view="lista" onclick="bolNavGo(this,'lista')">Lista visitantes</button>
+      <button type="button" class="bol-nav" data-bol-view="hoy" onclick="bolNavGo(this,'hoy')">Ventas hoy</button>
+    </nav>
 
-    <!-- 1. VENTA MANUAL (EFECTIVO) -->
+    <main class="bol-main">
+
+    <div id="view-venta" class="bol-view">
     <div class="bol-card">
       <h2 class="bol-card-title">Venta manual — efectivo</h2>
       <div class="bol-card-rule"></div>
@@ -224,7 +186,9 @@
         </div>
       </div>
     </div>
+    </div>
 
+    <div id="view-lista" class="bol-view hidden">
     <!-- 2. LISTA VISITANTES — check-in manual -->
     <div class="bol-card">
       <h2 class="bol-card-title">Lista de visitantes — check-in</h2>
@@ -249,7 +213,9 @@
         <p style="font-family:var(--mono,monospace);font-size:11px;color:var(--d-soft);">Selecciona una función…</p>
       </div>
     </div>
+    </div>
 
+    <div id="view-hoy" class="bol-view hidden">
     <!-- 3. VENTAS MANUALES HOY -->
     <div class="bol-card">
       <h2 class="bol-card-title">Ventas manuales hoy</h2>
@@ -281,13 +247,16 @@
         <p style="font-family:var(--mono,monospace);font-size:11px;color:var(--d-soft);letter-spacing:.1em;">Cargando…</p>
       </div>
     </div>
+    </div>
 
-  </main>
+    </main>
+  </div>
 </div>
 
 <!-- Scripts -->
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/boletera-gate.js"></script>
 <script src="js/selector-funciones.js"></script>
 <script src="js/boletera-venta.js"></script>
 <script src="js/qr-boleto.js"></script>
@@ -295,54 +264,75 @@
 <script src="js/compartir-wa-boleto.js"></script>
 
 <script>
-/* ── AUTENTICACIÓN BOLETERA ─────────────────────────────────
-   Solo taquilla y admin venden en efectivo.
-   Se guarda sesión en localStorage igual que admin.html.
-── */
-const ROLES_BOLETERA = ['taquilla', 'admin'];
+/* ── BOLETERA — pase desde admin o correo ─────────────────── */
 
-async function boletaAcceder() {
-  const id  = (document.getElementById('bol-usuario')?.value || '').trim();
-  const pwd = document.getElementById('bol-password')?.value || '';
-  const err = document.getElementById('login-error');
-  if (err) err.style.display = 'none';
+function bolNavGo(btn, view) {
+  document.querySelectorAll('.bol-nav').forEach(n => n.classList.toggle('active', n === btn));
+  document.querySelectorAll('.bol-view').forEach(v => v.classList.add('hidden'));
+  document.getElementById(`view-${view}`)?.classList.remove('hidden');
+}
 
-  if (!id || !pwd) {
-    _boletaError('Ingresa usuario y contraseña'); return;
+function _boletaToken() {
+  if (typeof AuthManager !== 'undefined') {
+    const t = AuthManager.obtenerAdminToken();
+    if (t) return t;
+  }
+  return window.BoleteraGate?.getToken?.() || null;
+}
+
+function _boletaEsEmbed() {
+  return new URLSearchParams(window.location.search).get('embed') === '1';
+}
+
+async function _boletaIniciarGate() {
+  const err = document.getElementById('gate-error');
+  const embed = _boletaEsEmbed();
+
+  if (embed) {
+    const u = typeof AuthManager !== 'undefined' ? AuthManager.obtenerUsuarioActual() : null;
+    if (u && _boletaToken()) {
+      document.querySelector('.bol-topbar-btn[href="admin.html"]')?.classList.add('hidden');
+      _boletaMostrarPanel(u);
+      return;
+    }
+    if (err) { err.textContent = 'Sesión expirada. Vuelve a entrar al panel o pide un nuevo enlace.'; err.style.display = 'block'; }
+    return;
   }
 
   try {
-    const res = await AuthManager.autenticarAdmin(id, pwd);
-    if (!res.exito) { _boletaError(res.error || 'Credenciales incorrectas'); return; }
-    if (!ROLES_BOLETERA.includes(res.usuario.rol)) {
-      _boletaError('No tienes acceso a la boletera'); return;
+    const r = await BoleteraGate.init();
+    if (!r.ok) {
+      if (err) { err.textContent = r.error || 'Usa admin.html — botón Boletera o enlace por correo.'; err.style.display = 'block'; }
+      return;
     }
-    _boletaMostrarPanel(res.usuario);
-  } catch (e) {
-    _boletaError('Error de conexión');
+    window.location.replace('admin.html?view=boletera');
+  } catch (_) {
+    if (err) { err.textContent = 'Error de conexión.'; err.style.display = 'block'; }
   }
 }
 
-function _boletaError(msg) {
-  const el = document.getElementById('login-error');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
-}
-
-function _boletaMostrarPanel(u) {
-  document.getElementById('login-screen').style.display = 'none';
-  const panel = document.getElementById('panel-boletera');
-  panel.style.display = 'block';
+function _boletaMostrarPanel(sesion) {
+  document.getElementById('gate-blocked').style.display = 'none';
+  document.getElementById('panel-boletera').style.display = 'grid';
   const nom = document.getElementById('boletera-usuario-nombre');
-  if (nom) nom.textContent = u.nombre || u.usuarioId;
+  const label = sesion?.telefono && sesion?.nombre
+    ? `${sesion.nombre} · ${sesion.telefono}`
+    : (sesion?.nombre || sesion?.usuario || sesion?.usuarioId || 'Taquilla');
+  if (nom) nom.textContent = label;
   _boletaIniciar();
 }
 
 function boletaSalir() {
-  if (typeof AuthManager !== 'undefined') AuthManager.cerrarSesion?.();
+  if (_boletaEsEmbed()) {
+    try { window.parent?.cerrarSesion?.(); } catch (_) {}
+    return;
+  }
+  window.BoleteraGate?.limpiar?.();
+  AuthManager?.limpiarAccesoEmail?.();
   document.getElementById('panel-boletera').style.display = 'none';
-  document.getElementById('login-screen').style.display = '';
-  const err = document.getElementById('login-error');
-  if (err) err.style.display = 'none';
+  document.getElementById('gate-blocked').style.display = '';
+  const err = document.getElementById('gate-error');
+  if (err) { err.style.display = 'none'; err.textContent = ''; }
 }
 
 async function _boletaIniciar() {
@@ -403,10 +393,6 @@ function _colorGrupo(cert) {
   let h = 0;
   for (let i = 0; i < (cert || '').length; i++) h = (h + cert.charCodeAt(i) * (i + 1)) % _GRUPO_COLORS.length;
   return _GRUPO_COLORS[h];
-}
-
-function _boletaToken() {
-  return typeof AuthManager !== 'undefined' ? AuthManager.obtenerAdminToken() : null;
 }
 
 async function _boletaCargarListaFunciones() {
@@ -579,7 +565,7 @@ let _ultimaOrdenWa = null;
 async function generarCodigoEfectivo() {
   const errEl    = document.getElementById('venta-error');
   const btn      = document.getElementById('btn-generar');
-  const token    = typeof AuthManager !== 'undefined' ? AuthManager.obtenerAdminToken() : null;
+  const token = _boletaToken();
 
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
   if (!token) { alert('Sesión expirada. Vuelve a entrar.'); boletaSalir(); return; }
@@ -704,7 +690,7 @@ async function generarCodigo() { await generarCodigoEfectivo(); }
 
 async function cargarBoletosHoy() {
   const tbody = document.getElementById('tabla-efectivo');
-  const token = typeof AuthManager !== 'undefined' ? AuthManager.obtenerAdminToken() : null;
+  const token = _boletaToken();
   if (!tbody || !token) return;
 
   const hoyMx = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
@@ -747,19 +733,8 @@ function copiarTextoWa() {
   if (_ultimoWaTexto) navigator.clipboard?.writeText(_ultimoWaTexto).catch(() => {});
 }
 
-/* Tecla Enter en el login */
 document.addEventListener('DOMContentLoaded', function() {
-  ['bol-usuario', 'bol-password'].forEach(id => {
-    document.getElementById(id)?.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') boletaAcceder();
-    });
-  });
-
-  /* Si ya hay sesión activa y es rol boletera, saltar login */
-  try {
-    const u = AuthManager.obtenerUsuarioActual();
-    if (u && ROLES_BOLETERA.includes(u.rol)) _boletaMostrarPanel(u);
-  } catch(e) {}
+  _boletaIniciarGate();
 });
 </script>
 </body>

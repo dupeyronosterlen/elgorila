@@ -113,8 +113,10 @@ const AuthManager = {
             const data = await res.json();
             if (!res.ok || !data.token) return { exito: false, error: data.error || 'Credenciales incorrectas.' };
             localStorage.setItem('elgorila_admin_token', data.token);
+            sessionStorage.setItem('elgorila_admin_token', data.token);
             const sesion = { usuarioId: data.usuario, nombre: data.nombre || data.usuario, rol: data.rol || 'admin', fechaLogin: new Date().toISOString() };
             localStorage.setItem('elgorila_admin_sesion', JSON.stringify(sesion));
+            sessionStorage.setItem('elgorila_admin_sesion', JSON.stringify(sesion));
             return { exito: true, usuario: sesion };
         } catch (err) {
             return { exito: false, error: 'Error de conexión.' };
@@ -123,7 +125,52 @@ const AuthManager = {
 
     // Token admin para llamadas autenticadas al Worker
     obtenerAdminToken() {
-        return localStorage.getItem('elgorila_admin_token') || null;
+        return localStorage.getItem('elgorila_admin_token')
+            || sessionStorage.getItem('elgorila_admin_token')
+            || sessionStorage.getItem('elgorila_acceso_token')
+            || null;
+    },
+
+    esAccesoEmail() {
+        const t = sessionStorage.getItem('elgorila_acceso_token');
+        if (!t) return false;
+        const p = this._decodeJWT(t);
+        return !!(p && p.purpose === 'acceso_email');
+    },
+
+    async validarAccesoEmail(token) {
+        if (!window.API_BASE) return { ok: false, error: 'API no configurada.' };
+        try {
+            const res = await fetch(`${window.API_BASE}/api/admin/acceso/validar?token=${encodeURIComponent(token)}`);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) return { ok: false, error: data.error || 'Enlace inválido o expirado.' };
+            sessionStorage.setItem('elgorila_acceso_token', token);
+            sessionStorage.setItem('elgorila_acceso_sesion', JSON.stringify({
+                usuarioId: data.telefono || data.usuario,
+                telefono:  data.telefono || data.usuario,
+                nombre:    data.nombre,
+                rol:       data.rol || 'taquilla',
+                viaEmail:  true,
+                exp:       data.exp,
+            }));
+            return {
+                ok: true,
+                usuario: {
+                    usuarioId: data.telefono || data.usuario,
+                    telefono:  data.telefono || data.usuario,
+                    nombre:    data.nombre,
+                    rol:       data.rol || 'taquilla',
+                    viaEmail:  true,
+                },
+            };
+        } catch {
+            return { ok: false, error: 'Error de conexión.' };
+        }
+    },
+
+    limpiarAccesoEmail() {
+        sessionStorage.removeItem('elgorila_acceso_token');
+        sessionStorage.removeItem('elgorila_acceso_sesion');
     },
 
     // Decode JWT payload (no verifica firma — el servidor la verifica)
@@ -151,28 +198,68 @@ const AuthManager = {
         };
     },
 
-    // Sesión activa: token admin en localStorage (30 días) o modo sin login
+    // Sesión activa: admin (localStorage 30 d) o taquilla vía enlace (sessionStorage 4 h)
     obtenerUsuarioActual() {
         const local = this._sesionLocalAdmin();
         if (local) return local;
 
-        const adminToken = localStorage.getItem('elgorila_admin_token');
-        if (!adminToken) return null;
-        const p = this._decodeJWT(adminToken);
-        if (p) return { usuarioId: p.usuario, nombre: p.nombre || p.usuario, rol: p.rol || 'admin', fechaLogin: p.iat ? new Date(p.iat * 1000).toISOString() : new Date().toISOString() };
-        // Token expirado — limpiar
-        localStorage.removeItem('elgorila_admin_token');
-        localStorage.removeItem('elgorila_admin_sesion');
+        const adminToken = localStorage.getItem('elgorila_admin_token')
+            || sessionStorage.getItem('elgorila_admin_token');
+        if (adminToken) {
+            const p = this._decodeJWT(adminToken);
+            if (p && (!p.purpose || p.purpose === 'boletera')) {
+                return {
+                    usuarioId: p.usuario,
+                    nombre:    p.nombre || p.usuario,
+                    rol:       p.rol || 'admin',
+                    fechaLogin: p.iat ? new Date(p.iat * 1000).toISOString() : new Date().toISOString(),
+                };
+            }
+            if (!p) {
+                localStorage.removeItem('elgorila_admin_token');
+                localStorage.removeItem('elgorila_admin_sesion');
+                sessionStorage.removeItem('elgorila_admin_token');
+                sessionStorage.removeItem('elgorila_admin_sesion');
+            }
+        }
+
+        const accesoToken = sessionStorage.getItem('elgorila_acceso_token');
+        if (accesoToken) {
+            const p = this._decodeJWT(accesoToken);
+            if (p && p.purpose === 'acceso_email') {
+                return {
+                    usuarioId: p.telefono || p.usuario,
+                    telefono:  p.telefono || p.usuario,
+                    nombre:    p.nombre || p.usuario,
+                    rol:       p.rol || 'taquilla',
+                    viaEmail:  true,
+                    fechaLogin: p.iat ? new Date(p.iat * 1000).toISOString() : new Date().toISOString(),
+                };
+            }
+            this.limpiarAccesoEmail();
+        }
+
+        try {
+            const raw = sessionStorage.getItem('elgorila_acceso_sesion');
+            if (raw) {
+                const s = JSON.parse(raw);
+                if (s?.viaEmail && accesoToken && this._decodeJWT(accesoToken)) return s;
+            }
+        } catch { /* */ }
+
         return null;
     },
 
     cerrarSesion() {
         const usuario = this.obtenerUsuarioActual();
-        if (usuario && !window.ADMIN_SIN_LOGIN) {
+        if (usuario && !window.ADMIN_SIN_LOGIN && !usuario.viaEmail) {
             this.registrarAuditoria({ accion: 'logout', usuario: usuario.nombre, rol: usuario.rol, detalles: 'Cierre de sesión' });
         }
         localStorage.removeItem('elgorila_admin_token');
         localStorage.removeItem('elgorila_admin_sesion');
+        sessionStorage.removeItem('elgorila_admin_token');
+        sessionStorage.removeItem('elgorila_admin_sesion');
+        this.limpiarAccesoEmail();
     },
 
     tienePermiso(permiso) {
