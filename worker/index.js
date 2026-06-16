@@ -207,6 +207,19 @@ async function enviarEmailsVenta(venta, tid, env) {
   return { adminOk, compradorOk };
 }
 
+async function enviarEmailReagendado(venta, tid, env) {
+  if (!venta.email) return { compradorOk: false, sinEmail: true };
+  const config        = await getVenueConfig(tid, env);
+  const funcionNombre = venta.funcionNombre || venta.fecha;
+  const compradorOk   = await enviarEmail(
+    venta.email,
+    `Boleto reagendado — EL GORILA · ${funcionNombre}`,
+    htmlBoleto(venta, funcionNombre, config, { esReagenda: true }),
+    env,
+  );
+  return { compradorOk, sinEmail: false };
+}
+
 function codigoQrPayload(codigo) {
   return (codigo || '').trim().toUpperCase();
 }
@@ -491,7 +504,7 @@ function respuestaBoletoPublica(v, tid, boleto, boletoIdx) {
 
 // ─── EMAIL: BOLETO PARA EL COMPRADOR (estilo programa v3) ─────────────────────
 
-function htmlBoleto(venta, funcionNombre, config) {
+function htmlBoleto(venta, funcionNombre, config, opts = {}) {
   const multiSeccion = config.secciones && config.secciones.length > 1;
   const certificado  = venta.certificado || venta.codigo || 'CERT-—';
   const boletos      = venta.boletos || [];
@@ -502,6 +515,16 @@ function htmlBoleto(venta, funcionNombre, config) {
   const nEntradas    = venta.cantidad || boletos.length || 1;
   const entradasLbl  = nEntradas === 1 ? '1 entrada' : `${nEntradas} entradas`;
   const direccion    = config.direccion || 'José María Velasco 59, San José Insurgentes, CDMX';
+  const esReagenda   = opts.esReagenda || !!venta.reagendado;
+  const funcionAnterior = venta.funcionAnterior || venta.reagendado?.de || null;
+  const reagendaBanner = esReagenda && funcionAnterior ? `
+  <tr><td style="background:#fff8e6;padding:18px 28px;border-left:4px solid #d99b3a;">
+    <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#3a2e26;">
+      <strong>Tu boleto fue reagendado.</strong> La reservación para
+      <em>${funcionAnterior}</em> quedó cancelada.
+      Este correo confirma tu <strong>nueva función</strong> (abajo). El mismo código QR sigue siendo válido en puerta.
+    </p>
+  </td></tr>` : '';
 
   const itemsRows = (venta.items || []).map(item => {
     const tipoNombre = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
@@ -534,7 +557,7 @@ function htmlBoleto(venta, funcionNombre, config) {
   <!-- Portada oscura (v3) -->
   <tr><td style="background:#0a0706;padding:32px 28px 28px;border:1px solid rgba(241,234,217,.12);">
     <p style="margin:0 0 20px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:#d99b3a;">
-      Boleto confirmado · 2026
+      ${esReagenda ? 'Boleto reagendado' : 'Boleto confirmado'} · 2026
     </p>
     <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:42px;line-height:.9;font-weight:500;color:#f1ead9;letter-spacing:-.02em;">
       EL <span style="font-style:italic;color:#D43A1A;">Gorila</span>
@@ -543,6 +566,8 @@ function htmlBoleto(venta, funcionNombre, config) {
       Tus entradas · <span style="font-style:italic;color:#d99b3a;">${entradasLbl}</span>
     </p>
   </td></tr>
+
+  ${reagendaBanner}
 
   <!-- Bloque papel: función -->
   <tr><td style="background:#f1ead9;padding:28px;color:#1a1411;">
@@ -935,6 +960,13 @@ const RESERVA_TTL       = 1800; // 30 minutos
 const VENTA_404_MAX     = 40;  // máx. folios NO encontrados por IP / 15 min (anti-enumeración)
 const CODIGOS_DESCUENTO_KEY   = 'codigos:descuento';
 const STRIPE_MIN_TOTAL_CENTAVOS = 1000; // MXN 10.00 — mínimo Stripe en México
+
+function funcionYaInicio(fechaIso) {
+  if (!fechaIso || !/^\d{4}-\d{2}-\d{2}$/.test(fechaIso)) return true;
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' }));
+  const [y, m, d] = fechaIso.split('-').map(Number);
+  return now >= new Date(y, m - 1, d, 20, 30, 0);
+}
 
 async function getCodigosDescuento(env) {
   const raw = await env.INVENTARIO.get(CODIGOS_DESCUENTO_KEY);
@@ -2860,6 +2892,7 @@ async function handleVentaManual(tid, request, env, ctx) {
   const nombre   = typeof body.nombre === 'string' ? body.nombre.trim() : '';
   const telefono = typeof body.telefono === 'string' ? body.telefono.replace(/\D/g, '') : '';
   const notas    = typeof body.notas === 'string' ? body.notas.trim().substring(0, 300) : '';
+  const codigoCuponRaw = typeof body.codigoCupon === 'string' ? body.codigoCupon.trim() : '';
   const { items, fecha } = body;
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -2899,6 +2932,15 @@ async function handleVentaManual(tid, request, env, ctx) {
 
   if (cantidadTotal > 50) return json({ error: 'Máximo 50 boletos por venta.' }, 400, request);
 
+  let cuponAplicado = null;
+  if (codigoCuponRaw) {
+    const cupon = await validarCuponDescuento(codigoCuponRaw, env);
+    if (!cupon.ok) return json({ error: cupon.error }, 400, request);
+    const reglas = validarCarritoParaCupon(cupon, itemsValidados);
+    if (!reglas.ok) return json({ error: reglas.error }, 400, request);
+    cuponAplicado = cupon;
+  }
+
   const funcionesRaw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
   if (!funcionesRaw) return json({ error: 'No hay funciones activas.' }, 503, request);
 
@@ -2924,11 +2966,10 @@ async function handleVentaManual(tid, request, env, ctx) {
   const ventaAplicada = await aplicarVentaDirecta(tid, fecha, seccionCantidades, env, ctx);
   if (!ventaAplicada.ok) return json({ error: ventaAplicada.error }, ventaAplicada.status, request);
 
-  let total = 0;
-  for (const item of itemsValidados) {
-    total += getPrecio(item.tipo, seccionMap[item.seccion]) * item.cantidad;
-  }
-  total = Math.round(total * 100) / 100;
+  const { totalCentavos } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
+    cupon: cuponAplicado,
+  });
+  const total = totalCentavos / 100;
 
   const gen = await generarBoletosVenta(tid, fecha, itemsValidados, env);
   const sessionId = `manual_${crypto.randomUUID().replace(/-/g, '')}`;
@@ -2958,10 +2999,19 @@ async function handleVentaManual(tid, request, env, ctx) {
     usado:          false,
     metodoPago:     'efectivo',
     registradoPor:  payload.usuario || 'admin',
+    codigoCupon:    cuponAplicado?.codigo || null,
+    cuponPct:       cuponAplicado?.porcentaje != null ? parseInt(cuponAplicado.porcentaje, 10) : null,
     utm:            {},
   };
 
   await env.VENTAS.put(kv(canonical, `venta:${sessionId}`), JSON.stringify(venta));
+
+  if (cuponAplicado) {
+    ctx.waitUntil(
+      incrementarUsoCupon(cuponAplicado.codigo, env, null)
+        .catch(e => console.error('cupon uso manual:', e.message)),
+    );
+  }
   await persistirCertificadosKv(canonical, sessionId, gen.certificado, gen.boletos, env);
   await env.VENTAS.put(kv(canonical, `ventaIdx:${fecha}:${sessionId}`), sessionId);
   await env.VENTAS.put(kv(canonical, `ventaIdxContable:${fecha}:${sessionId}`), sessionId);
@@ -3001,7 +3051,7 @@ async function handleVentaManual(tid, request, env, ctx) {
     usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
     rol: payload.rol, accion: 'venta_manual', teatroId: canonical,
     detalles: `Venta efectivo ${gen.certificado} — ${cantidadTotal} boleto(s) — ${funcion.nombre}`,
-    meta: { codigo: gen.certificado, fecha, total, email: email || null },
+    meta: { codigo: gen.certificado, fecha, total, email: email || null, codigoCupon: cuponAplicado?.codigo || null },
   });
 
   return json({
@@ -3101,6 +3151,7 @@ async function handleReagendar(tid, request, env) {
   const { ventaKey, venta } = resolved;
 
   if (venta.usado) return json({ error: 'No se puede reagendar un boleto ya canjeado.' }, 409, request);
+  if (venta.estado === 'reembolsada') return json({ error: 'No se puede reagendar un boleto reembolsado.' }, 409, request);
   if (venta.fecha === fechaDestino) return json({ error: 'Ya está en esa función.' }, 400, request);
 
   const funcionesRaw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
@@ -3109,6 +3160,9 @@ async function handleReagendar(tid, request, env) {
     funcionDest = JSON.parse(funcionesRaw || '[]').find(f => f.fecha_iso === fechaDestino && f.activa !== false);
   } catch { return json({ error: 'Error al leer funciones.' }, 500, request); }
   if (!funcionDest) return json({ error: 'Función destino no válida.' }, 400, request);
+  if (funcionYaInicio(fechaDestino)) {
+    return json({ error: 'La función destino ya comenzó o pasó.' }, 400, request);
+  }
 
   const seccionCantidades = venta.seccionCantidades || {};
   if (!Object.keys(seccionCantidades).length && venta.items?.length) {
@@ -3152,19 +3206,37 @@ async function handleReagendar(tid, request, env) {
   await env.VENTAS.put(ventaKey, JSON.stringify(venta));
   await env.VENTAS.put(kv(canonical, `ventaIdx:${fechaDestino}:${venta.sessionId}`), venta.sessionId);
 
+  let emailEnviado = false;
+  let sinEmail     = !venta.email;
+  if (venta.email) {
+    const emailResult = await enviarEmailReagendado(venta, canonical, env);
+    emailEnviado = !!emailResult.compradorOk;
+    sinEmail     = !!emailResult.sinEmail;
+    venta.emailsEnviados = {
+      ...(venta.emailsEnviados || {}),
+      reagenda: emailEnviado,
+      reagendaEn: new Date().toISOString(),
+    };
+    await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+  }
+
   const audit = await registrarAuditoria(env, {
     usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
     rol: payload.rol, accion: 'reagenda', teatroId: canonical,
-    detalles: `${codigo}: cancelado en ${fechaOrigen} → activo en ${fechaDestino}. Monto contable en ${venta.fechaContable}.`,
+    detalles: `${codigo}: cancelado en ${fechaOrigen} → activo en ${fechaDestino}. Monto contable en ${venta.fechaContable}.${emailEnviado ? ' Correo enviado al comprador.' : ''}`,
     meta: {
       tipo: 'reagenda', codigo,
       de: fechaOrigen, a: fechaDestino,
       fechaContable: venta.fechaContable,
       total: venta.total, cancelacionOrigen: true,
+      emailEnviado,
     },
   });
 
-  return json({ ok: true, venta: _formatVenta(venta), auditId: audit.id }, 200, request);
+  return json({
+    ok: true, venta: _formatVenta(venta), auditId: audit.id,
+    emailEnviado, sinEmail,
+  }, 200, request);
 }
 
 async function handleReembolso(tid, request, env, ctx) {

@@ -4,6 +4,13 @@
 
   const TID = () => window.TEATRO_ID || 'wilberto';
 
+  function msgReagendarOk(data) {
+    if (!data || typeof data !== 'object') return 'Reagendado — registrado en auditoría.';
+    if (data.sinEmail) return 'Reagendado. Sin correo en la venta — usa «Reenviar email» si hace falta.';
+    if (data.emailEnviado) return 'Reagendado. Correo enviado al comprador con la nueva función y QR.';
+    return 'Reagendado. No se pudo enviar el correo — usa «Reenviar email».';
+  }
+
   const state = {
     view: 'hub',
     funcion: null,
@@ -21,7 +28,13 @@
     informeVentas: [],
     opsVenta: null,
     auditFilter: '',
+    chipFuncion: null,
+    ventasEstado: '',
+    drawerVenta: null,
+    v4Bound: false,
   };
+
+  const IS_V4 = () => !!document.getElementById('view-hub');
 
   function token() { return AuthManager.obtenerAdminToken(); }
 
@@ -191,7 +204,9 @@
 
   async function cargarFunciones() {
     const data = await api(window.teatroApi('funciones'));
-    state.funciones = data.funciones || [];
+    state.funciones = typeof SelectorFunciones !== 'undefined'
+      ? SelectorFunciones.normalizarLista(data)
+      : (Array.isArray(data) ? data : (data.funciones || []));
   }
 
   async function cargarFiscal() {
@@ -450,8 +465,11 @@
       el.onclick = (e) => {
         e.stopPropagation();
         reagendarCodigo = el.dataset.reagendar;
+        const v = state.ventas.find(x => certVenta(x) === reagendarCodigo);
+        reagendarExcluirFecha = v?.fecha || state.funcion || null;
         document.getElementById('reag-codigo').textContent = reagendarCodigo;
         document.getElementById('reagendar-panel')?.classList.remove('hidden');
+        v4RenderReagDest(reagendarExcluirFecha);
       };
     });
     document.querySelectorAll('[data-reembolso]').forEach(el => {
@@ -474,8 +492,7 @@
     const nombre = f ? f.nombre : state.funcion;
     const rows = state.ventas.map(renderVentaRow).join('');
 
-    const opts = state.funciones.filter(x => x.fecha_iso !== state.funcion)
-      .map(x => `<option value="${esc(x.fecha_iso)}">${esc(x.nombre)}</option>`).join('');
+    const opts = state.funciones.filter(x => x.fecha_iso !== state.funcion);
 
     return `${navHtml('hub')}
       <div class="flex flex-wrap items-center gap-3 mb-4">
@@ -502,7 +519,8 @@
       ${perm('reagendar') ? `<div id="reagendar-panel" class="hidden mt-6 p-4 border border-primary/30 bg-surface-dark/80">
         <p class="text-sm mb-2">Reagendar <strong id="reag-codigo"></strong></p>
         <p class="text-xs text-text-dark/60 mb-3">El boleto se <strong>cancela en la función actual</strong> (libera cupo) y queda <strong>activo en la nueva</strong>. El monto contable permanece en la función original — no se mueve el dinero.</p>
-        <select id="reag-destino" class="px-3 py-2 bg-background-dark border border-primary/30 mr-2">${opts}</select>
+        <div id="reag-destino-grid" class="mb-3"></div>
+        <input type="hidden" id="reag-destino" value="">
         <button type="button" id="btn-reagendar-ok" class="px-4 py-2 bg-primary text-background-dark font-semibold">Confirmar cambio</button>
         <button type="button" id="btn-reagendar-cancel" class="px-4 py-2 ml-2 border border-primary/30">Cancelar</button>
       </div>` : ''}
@@ -599,8 +617,6 @@
     }
     const cert = certVenta(v);
     const esStripe = v.metodoPago && v.metodoPago !== 'efectivo' && !String(v.sessionId || '').startsWith('manual_');
-    const optsReag = state.funciones.filter(x => x.fecha_iso !== v.fecha)
-      .map(x => `<option value="${esc(x.fecha_iso)}">${esc(x.nombre)}</option>`).join('');
     return `<div class="p-4 border border-primary/30 bg-background-dark/50 text-sm space-y-2">
       <div class="flex flex-wrap gap-x-4 gap-y-1">
         <span class="font-mono text-primary">${esc(cert)}</span>
@@ -612,8 +628,9 @@
       </div>
       <div class="flex flex-wrap gap-2 pt-2">
         ${perm('reagendar') && !v.usado && v.estado !== 'reembolsada' ? `
-          <select id="ops-reag-dest" class="px-2 py-1 bg-background-dark border border-primary/30 text-xs">${optsReag}</select>
-          <button type="button" id="ops-reagendar" data-cert="${esc(cert)}" class="px-3 py-1 text-xs border border-blue-400/40 text-blue-400">Reagendar</button>` : ''}
+          <div id="ops-reag-dest-grid" style="width:100%;margin-bottom:6px"></div>
+          <input type="hidden" id="ops-reag-dest" value="">
+          <button type="button" id="ops-reagendar" data-cert="${esc(cert)}" data-fecha-actual="${esc(v.fecha)}" class="px-3 py-1 text-xs border border-blue-400/40 text-blue-400">Reagendar</button>` : ''}
         ${perm('reembolsar') && v.estado === 'completada' && !v.usado ? `
           <button type="button" id="ops-reembolso" data-cert="${esc(cert)}" class="px-3 py-1 text-xs border border-red-400/40 text-red-400">${esStripe ? 'Reembolsar' : 'Anular venta'}</button>` : ''}
         ${perm('reenviarBoleto') && v.estado !== 'reembolsada' && v.email ? `
@@ -798,6 +815,7 @@
   }
 
   function bindInformesOps() {
+    if (state.opsVenta?.fecha) v4RenderReagDest(state.opsVenta.fecha);
     const btnBuscar = document.getElementById('ops-buscar-btn');
     if (btnBuscar) btnBuscar.onclick = () => opsBuscarVenta();
     const inpCert = document.getElementById('ops-buscar-cert');
@@ -828,8 +846,8 @@
       const dest = document.getElementById('ops-reag-dest')?.value;
       if (!cert || !dest || !confirm(`¿Reagendar ${cert} a otra función?`)) return;
       try {
-        await api(window.teatroAdminApi('reagendar'), { method: 'POST', body: JSON.stringify({ codigo: cert, fechaDestino: dest }) });
-        await opsAfterAction('Reagendado — registrado en acciones.');
+        const data = await api(window.teatroAdminApi('reagendar'), { method: 'POST', body: JSON.stringify({ codigo: cert, fechaDestino: dest }) });
+        await opsAfterAction(msgReagendarOk(data));
       } catch (e) { alert(e.message); }
     };
     const btnReemb = document.getElementById('ops-reembolso');
@@ -863,8 +881,10 @@
   }
 
   let reagendarCodigo = null;
+  let reagendarExcluirFecha = null;
 
   async function paint() {
+    if (IS_V4()) return v4Paint();
     const app = document.getElementById('admin-app');
     if (!app) return;
     app.innerHTML = '<p class="text-text-dark/50">Cargando…</p>';
@@ -961,10 +981,10 @@
       const dest = document.getElementById('reag-destino')?.value;
       if (!reagendarCodigo || !dest) return;
       try {
-        await api(window.teatroAdminApi('reagendar'), {
+        const data = await api(window.teatroAdminApi('reagendar'), {
           method: 'POST', body: JSON.stringify({ codigo: reagendarCodigo, fechaDestino: dest }),
         });
-        alert('Boleto reagendado. Registrado en auditoría.');
+        alert(msgReagendarOk(data));
         paint();
       } catch (e) { alert(e.message); }
     });
@@ -1078,11 +1098,753 @@
     a.click();
   }
 
+  /* ─── Panel v4 (admin-panel-v4.html) ─────────────────────────────────────── */
+
+  function v4SetText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text ?? '—';
+  }
+
+  function v4Toggle(id, show) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', !show);
+  }
+
+  function v4EstadoBadge(v) {
+    if (v.estado === 'reembolsada') return '<span class="badge badge-refund">reembolsado</span>';
+    if (v.usado) return '<span class="badge badge-audit">canjeado</span>';
+    if (v.reagendado) return '<span class="badge badge-reagend">reagendado</span>';
+    return '<span class="badge badge-ok">activo</span>';
+  }
+
+  function v4EstadoCoincide(v, filtro) {
+    if (!filtro) return true;
+    if (filtro === 'reembolsada') return v.estado === 'reembolsada';
+    if (filtro === 'reagendada') return !!v.reagendado;
+    if (filtro === 'activa') return v.estado !== 'reembolsada' && !v.reagendado;
+    return true;
+  }
+
+  function v4VentasFiltradas() {
+    const q = (document.getElementById('ventas-search')?.value || '').trim().toLowerCase();
+    const est = document.getElementById('ventas-estado-filter')?.value || state.ventasEstado || '';
+    return state.ventas.filter(v => {
+      if (state.chipFuncion && v.fecha !== state.chipFuncion && v.fechaContable !== state.chipFuncion) {
+        const fc = v.fechaContable || (v.reagendado && v.reagendado.de) || v.fecha;
+        if (fc !== state.chipFuncion && v.fecha !== state.chipFuncion) return false;
+      }
+      if (!v4EstadoCoincide(v, est)) return false;
+      if (!q) return true;
+      const cert = certVenta(v).toLowerCase();
+      const nombre = (v.nombre || '').toLowerCase();
+      const email = (v.email || '').toLowerCase();
+      const cupon = (v.codigoCupon || '').toLowerCase();
+      return cert.includes(q) || nombre.includes(q) || email.includes(q) || cupon.includes(q);
+    });
+  }
+
+  function v4CalcStats(ventas) {
+    let entradas = 0;
+    let revenue = 0;
+    let refunds = 0;
+    let refundMxn = 0;
+    for (const v of ventas) {
+      if (v.estado === 'reembolsada') {
+        refunds += 1;
+        refundMxn += Number(v.total) || 0;
+        continue;
+      }
+      entradas += v.cantidad || 0;
+      revenue += Number(v.total) || 0;
+    }
+    return { entradas, revenue, tx: ventas.length, refunds, refundMxn };
+  }
+
+  function v4RenderStats() {
+    const filtradas = v4VentasFiltradas();
+    const all = state.chipFuncion
+      ? state.ventas.filter(v => {
+          const fc = v.fechaContable || (v.reagendado && v.reagendado.de) || v.fecha;
+          return fc === state.chipFuncion || v.fecha === state.chipFuncion;
+        })
+      : state.ventas;
+    const s = v4CalcStats(all);
+    v4SetText('stat-entradas', String(s.entradas));
+    v4SetText('stat-revenue', fmtMXN(s.revenue));
+    v4SetText('stat-tx', String(s.tx));
+    v4SetText('stat-refunds', String(s.refunds));
+    const sub = document.getElementById('stat-entradas-sub');
+    if (sub) {
+      sub.textContent = state.chipFuncion
+        ? (state.funciones.find(f => f.fecha_iso === state.chipFuncion)?.nombre || state.chipFuncion)
+        : `${state.funciones.length} funciones · temporada`;
+    }
+    const refSub = document.getElementById('stat-refunds-sub');
+    if (refSub) refSub.textContent = s.refunds ? fmtMXN(s.refundMxn) + ' devueltos' : 'en la temporada';
+    v4SetText('ventas-count', `${filtradas.length} resultado${filtradas.length === 1 ? '' : 's'}`);
+  }
+
+  function v4RenderFnChips() {
+    const wrap = document.getElementById('fn-chips');
+    if (!wrap) return;
+    const counts = {};
+    for (const v of state.ventas) {
+      if (v.estado === 'reembolsada') continue;
+      const fc = v.fechaContable || v.fecha;
+      if (fc) counts[fc] = (counts[fc] || 0) + 1;
+    }
+    const chips = [`<button type="button" class="fn-chip${!state.chipFuncion ? ' active' : ''}" data-chip="">Todas<span class="fn-chip-count">${state.ventas.length}</span></button>`];
+    for (const f of state.funciones) {
+      const n = counts[f.fecha_iso] || 0;
+      const act = state.chipFuncion === f.fecha_iso ? ' active' : '';
+      chips.push(`<button type="button" class="fn-chip${act}" data-chip="${esc(f.fecha_iso)}">${esc(f.nombre)}<span class="fn-chip-count">${n}</span></button>`);
+    }
+    wrap.innerHTML = chips.join('');
+    wrap.querySelectorAll('[data-chip]').forEach(btn => {
+      btn.onclick = async () => {
+        state.chipFuncion = btn.dataset.chip || null;
+        await cargarVentas(state.chipFuncion || undefined);
+        v4RenderFnChips();
+        v4RenderVentasTable();
+        v4RenderStats();
+        v4Toggle('btn-email-post-funcion', !!state.chipFuncion && perm('reenviarBoleto'));
+      };
+    });
+    v4Toggle('btn-email-post-funcion', !!state.chipFuncion && perm('reenviarBoleto'));
+  }
+
+  function v4RenderVentasTable() {
+    const tbody = document.getElementById('tabla-ventas');
+    if (!tbody) return;
+    const rows = v4VentasFiltradas();
+    tbody.innerHTML = rows.map(v => {
+      const cert = certVenta(v);
+      const metodo = v.metodoPago === 'efectivo' ? 'taquilla' : (v.metodoPago || 'online');
+      return `<tr data-venta="${esc(cert)}">
+        <td class="td-mono">${esc(cert)}</td>
+        <td>${esc(v.nombre || '—')}</td>
+        <td class="td-email">${esc(v.email || '—')}</td>
+        <td class="td-num">${v.cantidad || 0}</td>
+        <td class="td-num">${fmtMXN(v.total)}</td>
+        <td>${v4EstadoBadge(v)}</td>
+        <td style="font-family:var(--mono);font-size:10px;color:var(--soft)">${esc(metodo)}</td>
+        <td class="td-actions"><button type="button" class="td-btn" data-open="${esc(cert)}">Ver</button></td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--soft)">Sin ventas</td></tr>';
+    tbody.querySelectorAll('[data-open]').forEach(btn => {
+      btn.onclick = (e) => { e.stopPropagation(); v4AbrirDrawer(btn.dataset.open); };
+    });
+    tbody.querySelectorAll('[data-venta]').forEach(row => {
+      row.onclick = () => v4AbrirDrawer(row.dataset.venta);
+    });
+    v4RenderStats();
+  }
+
+  function v4RenderReagDest(excluirFecha) {
+    if (typeof SelectorFunciones === 'undefined') return;
+    const list = SelectorFunciones.filtrarFunciones(state.funciones, { excluir: excluirFecha, futuras: true });
+    [
+      { grid: 'ops-reag-dest-grid', hidden: 'ops-reag-dest' },
+      { grid: 'dv-reag-dest-grid', hidden: 'dv-reag-dest' },
+      { grid: 'reag-destino-grid', hidden: 'reag-destino' },
+    ].forEach(({ grid, hidden }) => {
+      const gridEl = document.getElementById(grid);
+      const hiddenEl = document.getElementById(hidden);
+      if (!gridEl) return;
+      SelectorFunciones.wireHidden(gridEl, hiddenEl, state.funciones, {
+        excluir: excluirFecha,
+        futuras: true,
+        showDisponibles: true,
+      });
+    });
+  }
+
+  function v4PoblarDrawer(v) {
+    state.drawerVenta = v;
+    const cert = certVenta(v);
+    v4SetText('dv-cert', cert);
+    const sub = document.getElementById('dv-sub');
+    if (sub) sub.textContent = fmtFecha(v.fechaCompra) + (v.funcionNombre ? ` · ${v.funcionNombre}` : '');
+    v4SetText('dv-nombre', v.nombre || '—');
+    v4SetText('dv-email', v.email || '—');
+    v4SetText('dv-tel', v.telefono || '—');
+    const items = (v.items || []).map(it => `${it.cantidad || 1}× ${it.nombre || it.seccion || 'entrada'}`).join(', ');
+    v4SetText('dv-cant', items || String(v.cantidad || 0));
+    v4SetText('dv-total', fmtMXN(v.total));
+    v4SetText('dv-metodo', v.metodoPago || '—');
+    const cup = v.codigoCupon ? `${v.codigoCupon}${v.cuponPct != null ? ` (−${v.cuponPct}%)` : ''}` : '—';
+    v4SetText('dv-cupon', cup);
+    v4SetText('dv-utm', utmResumen(v.utm));
+    v4SetText('dv-estado', v.estado === 'reembolsada' ? 'Reembolsada' : v.usado ? 'Canjeada' : v.reagendado ? 'Reagendada' : 'Activa');
+    const fn = state.funciones.find(f => f.fecha_iso === v.fecha);
+    v4SetText('dv-fecha', fn ? fn.nombre : (v.fecha || '—'));
+    v4SetText('dv-usado', v.usado ? 'Sí' : 'No');
+    v4SetText('dv-referido', v.referidoDe || '—');
+    const bol = document.getElementById('dv-boletos');
+    if (bol) {
+      const lines = (v.boletos || []).map(b =>
+        `${esc(b.cert)} · folio ${esc(b.folio || '—')} · ${esc(b.tipo || '—')} · ${b.usado ? 'canjeado' : 'pendiente'}`
+      );
+      bol.innerHTML = lines.length ? lines.join('<br>') : 'Sin desglose por boleto';
+    }
+    const dest = document.getElementById('dv-reag-dest-grid');
+    if (dest) v4RenderReagDest(v.fecha);
+    const emailInp = document.getElementById('dv-email-nuevo');
+    if (emailInp) emailInp.value = v.email || '';
+    const preview = document.getElementById('dv-preview');
+    if (preview) {
+      preview.href = `compartir-boleto.html?c=${encodeURIComponent(cert)}`;
+      preview.style.display = 'block';
+    }
+    const esStripe = v.metodoPago && v.metodoPago !== 'efectivo' && !String(v.sessionId || '').startsWith('manual_');
+    v4Toggle('dv-btn-reagenda', perm('reagendar') && !v.usado && v.estado !== 'reembolsada');
+    v4Toggle('dv-btn-reenvio', perm('reenviarBoleto') && v.estado !== 'reembolsada' && !!v.email);
+    v4Toggle('dv-btn-email', perm('corregirEmail') && v.estado !== 'reembolsada');
+    v4Toggle('dv-btn-reembolso', perm('reembolsar') && v.estado === 'completada' && !v.usado);
+    const btnReemb = document.getElementById('dv-btn-reembolso');
+    if (btnReemb) btnReemb.textContent = esStripe ? 'Reembolso' : 'Anular venta';
+    v4Toggle('dv-reag-panel', false);
+    v4Toggle('dv-email-panel', false);
+    v4Toggle('dv-msg', false);
+  }
+
+  async function v4AbrirDrawer(cert) {
+    try {
+      const v = await api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}`));
+      v4PoblarDrawer(v);
+      document.getElementById('drawer-overlay')?.classList.add('open');
+      document.getElementById('drawer-venta')?.classList.add('open');
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  function v4CerrarDrawer() {
+    document.getElementById('drawer-overlay')?.classList.remove('open');
+    document.getElementById('drawer-venta')?.classList.remove('open');
+    state.drawerVenta = null;
+  }
+
+  function v4PoblarOps(v) {
+    state.opsVenta = v;
+    const cert = certVenta(v);
+    v4SetText('ops-res-name', v.nombre || '—');
+    v4SetText('ops-res-cert', cert);
+    const fn = state.funciones.find(f => f.fecha_iso === v.fecha);
+    v4SetText('ops-res-fecha', fn ? fn.nombre : (v.fecha || '—'));
+    v4SetText('ops-res-cant', `${v.cantidad || 0} entrada(s)`);
+    v4SetText('ops-res-total', fmtMXN(v.total));
+    const estEl = document.getElementById('ops-res-estado');
+    if (estEl) estEl.innerHTML = v4EstadoBadge(v);
+    v4Toggle('ops-result-wrap', true);
+    const dest = document.getElementById('ops-reag-dest-grid');
+    if (dest) v4RenderReagDest(v.fecha);
+    const emailInp = document.getElementById('ops-email-nuevo');
+    if (emailInp) emailInp.value = v.email || '';
+    const esStripe = v.metodoPago && v.metodoPago !== 'efectivo' && !String(v.sessionId || '').startsWith('manual_');
+    v4Toggle('ops-btn-reagenda', perm('reagendar') && !v.usado && v.estado !== 'reembolsada');
+    v4Toggle('ops-btn-reenvio', perm('reenviarBoleto') && v.estado !== 'reembolsada' && !!v.email);
+    v4Toggle('ops-btn-email', perm('corregirEmail') && v.estado !== 'reembolsada');
+    v4Toggle('ops-btn-reembolso', perm('reembolsar') && v.estado === 'completada' && !v.usado);
+    const btnReemb = document.getElementById('ops-btn-reembolso');
+    if (btnReemb) btnReemb.textContent = esStripe ? 'Reembolso' : 'Anular venta';
+    v4Toggle('ops-reag-panel', false);
+    v4Toggle('ops-email-panel', false);
+    v4Toggle('ops-msg', false);
+  }
+
+  async function v4BuscarVenta(q) {
+    const term = (q ?? document.getElementById('ops-input')?.value ?? '').trim();
+    if (!term) return;
+    try {
+      try {
+        const v = await api(window.teatroAdminApi(`venta/${encodeURIComponent(term)}`));
+        v4PoblarOps(v);
+        return;
+      } catch { /* buscar en listado */ }
+      await cargarVentas(null, term);
+      if (!state.ventas.length) throw new Error('Sin resultados para esa búsqueda.');
+      if (state.ventas.length > 1) {
+        const cert = state.ventas[0] && certVenta(state.ventas[0]);
+        const v = await api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}`));
+        v4PoblarOps(v);
+        v4OpsMsg(`${state.ventas.length} coincidencias — mostrando la primera.`, 'soft');
+      } else {
+        const v = await api(window.teatroAdminApi(`venta/${encodeURIComponent(certVenta(state.ventas[0]))}`));
+        v4PoblarOps(v);
+      }
+    } catch (e) {
+      v4Toggle('ops-result-wrap', false);
+      v4OpsMsg(e.message, 'red');
+    }
+  }
+
+  function v4OpsMsg(text, tone) {
+    const m = document.getElementById('ops-msg');
+    if (!m) return;
+    m.textContent = text;
+    m.style.color = tone === 'red' ? '#f87171' : tone === 'green' ? 'var(--green)' : 'var(--soft)';
+    m.classList.remove('hidden');
+  }
+
+  function v4DrawerMsg(text, tone) {
+    const m = document.getElementById('dv-msg');
+    if (!m) return;
+    m.textContent = text;
+    m.style.color = tone === 'red' ? '#f87171' : 'var(--green)';
+    m.classList.remove('hidden');
+  }
+
+  function v4RenderFunciones() {
+    const wrap = document.getElementById('fn-cards');
+    if (!wrap) return;
+    wrap.innerHTML = state.funciones.map(f => {
+      const inv = state.inv[f.fecha_iso] || {};
+      const disp = typeof window.disponiblesAforoTotal === 'function'
+        ? window.disponiblesAforoTotal(inv)
+        : (inv.disponibles ?? '—');
+      return `<button type="button" class="fn-card" data-fn="${esc(f.fecha_iso)}">
+        <span class="fn-date">${esc(f.fecha_iso)}</span>
+        <span class="fn-name">${esc(f.nombre)}</span>
+        <span class="fn-avail">~${disp} disponibles</span>
+      </button>`;
+    }).join('') || '<p style="color:var(--soft)">Sin funciones en KV.</p>';
+    wrap.querySelectorAll('[data-fn]').forEach(btn => {
+      btn.onclick = async () => {
+        state.chipFuncion = btn.dataset.fn;
+        state.view = 'hub';
+        v4ShowView('hub');
+        await v4RenderHub();
+      };
+    });
+  }
+
+  function v4RenderInformeFn() {
+    const tbody = document.getElementById('informe-fn-tbody');
+    if (!tbody) return;
+    const fnRows = (state.informeFunciones || []).map(f => {
+      const sel = state.informeFuncionSel === f.fecha_iso ? ' sel' : '';
+      return `<tr class="informe-row${sel}" data-informe-fn="${esc(f.fecha_iso)}">
+        <td class="td-mono">${esc(f.fecha_iso)}</td>
+        <td>${esc(f.nombre)}</td>
+        <td class="td-num">${f.entradasVendidas}</td>
+        <td class="td-num">${f.asisten}</td>
+        <td class="td-num">${fmtMXN(f.revenue)}</td>
+        <td class="td-num" style="font-size:11px;color:var(--soft)">${f.reembolsos ? `${f.reembolsos} reemb.` : '—'}</td>
+      </tr>`;
+    }).join('');
+    const tot = state.informeTotales || {};
+    tbody.innerHTML = fnRows
+      ? fnRows + `<tr class="total-row"><td colspan="2">Total temporada</td>
+          <td class="td-num">${tot.entradas || 0}</td><td class="td-num">—</td>
+          <td class="td-num">${fmtMXN(tot.revenue)}</td><td></td></tr>`
+      : '<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--soft)">Sin ventas registradas</td></tr>';
+    tbody.querySelectorAll('[data-informe-fn]').forEach(row => {
+      row.onclick = async () => {
+        state.informeFuncionSel = row.dataset.informeFn;
+        await cargarVentasFuncion(state.informeFuncionSel);
+        v4RenderInformeFn();
+        v4RenderInformeVentas();
+      };
+    });
+  }
+
+  function v4RenderInformeVentas() {
+    const wrap = document.getElementById('informe-ventas-wrap');
+    if (!wrap) return;
+    if (!state.informeFuncionSel) { wrap.innerHTML = ''; return; }
+    const fn = state.funciones.find(x => x.fecha_iso === state.informeFuncionSel);
+    const nombre = fn ? fn.nombre : state.informeFuncionSel;
+    const rows = (state.informeVentas || []).map(v => {
+      const cert = certVenta(v);
+      return `<tr>
+        <td class="td-mono"><button type="button" class="td-btn ops-pick-venta" data-cert="${esc(cert)}">${esc(cert)}</button></td>
+        <td>${esc(v.nombre || '—')}</td>
+        <td class="td-email">${esc(v.email || '—')}</td>
+        <td class="td-num">${v.cantidad || 0}</td>
+        <td class="td-num">${fmtMXN(v.total)}</td>
+        <td>${v4EstadoBadge(v)}</td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<div class="page-hd" style="border:none;padding-bottom:8px;margin-top:8px">
+        <h2 style="font-family:var(--display);font-size:22px;color:var(--fg)">Ventas — ${esc(nombre)}</h2>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th>Certificado</th><th>Nombre</th><th>Email</th>
+          <th style="text-align:right">Cant.</th><th style="text-align:right">Total</th><th>Estado</th>
+        </tr></thead>
+        <tbody>${rows || '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--soft)">Sin ventas</td></tr>'}</tbody>
+      </table></div>`;
+    wrap.querySelectorAll('.ops-pick-venta').forEach(btn => {
+      btn.onclick = () => {
+        state.view = 'ops';
+        v4ShowView('ops');
+        v4BuscarVenta(btn.dataset.cert);
+      };
+    });
+  }
+
+  function v4BadgeAccion(a) {
+    const t = accionTipo(a);
+    const map = {
+      'text-blue-400': 'badge-reagend',
+      'text-red-400': 'badge-refund',
+      'text-green-400': 'badge-ok',
+      'text-yellow-400': 'badge-audit',
+      'text-primary': 'badge-ok',
+    };
+    let cls = 'badge-audit';
+    for (const [k, v] of Object.entries(map)) { if (t.cls.includes(k)) { cls = v; break; } }
+    return `<span class="badge ${cls}">${esc(t.label)}</span>`;
+  }
+
+  function v4RenderAuditoriaFixed(targetId, countId, filtro) {
+    const tbody = document.getElementById(targetId);
+    if (!tbody) return;
+    const filtradas = state.auditoria.filter(a => accionCoincideFiltro(a, filtro));
+    tbody.innerHTML = filtradas.map(a => `<tr>
+      <td class="td-mono">${esc(a.id)}</td>
+      <td style="font-family:var(--mono);font-size:10px;white-space:nowrap">${fmtFecha(a.ts)}</td>
+      <td>${esc(a.usuario)} <span style="opacity:.45;font-size:10px">(${esc(a.rol)})</span></td>
+      <td>${v4BadgeAccion(a)}</td>
+      <td style="font-size:13px;color:var(--soft)">${esc(a.detalles)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--soft)">Sin registros</td></tr>';
+    const cnt = document.getElementById(countId);
+    if (cnt) cnt.textContent = `${filtradas.length} registro${filtradas.length === 1 ? '' : 's'}`;
+  }
+
+  function v4RenderEquipo() {
+    const wrap = document.getElementById('equipo-list');
+    if (!wrap) return;
+    if (!esAdmin()) {
+      wrap.innerHTML = '<p style="color:#f87171">Solo el administrador gestiona el equipo.</p>';
+      return;
+    }
+    wrap.innerHTML = state.usuarios.map(u => {
+      const ini = (u.nombre || u.id || '?').charAt(0).toUpperCase();
+      const rolCls = u.rol === 'admin' ? ' admin' : '';
+      return `<div class="user-card">
+        <div class="user-avatar">${esc(ini)}</div>
+        <div><div class="user-name">${esc(u.nombre)}</div><div class="user-id">${esc(u.id)} · ${u.activo !== false ? 'activo' : 'inactivo'}</div></div>
+        <span class="user-role${rolCls}">${esc(u.rol)}</span>
+        <button type="button" class="td-btn" data-edit-user="${esc(u.id)}" style="margin-left:8px">Editar</button>
+      </div>`;
+    }).join('') || '<p style="color:var(--soft)">Sin usuarios — crea el primero</p>';
+    wrap.querySelectorAll('[data-edit-user]').forEach(btn => {
+      btn.onclick = () => openUserModal(btn.dataset.editUser);
+    });
+  }
+
+  function v4RenderSitio() {
+    const s = state.sitio;
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+    setVal('sitio-instagram', s.instagram);
+    setVal('sitio-whatsapp', s.whatsapp);
+    setVal('sitio-email', s.email);
+    setVal('sitio-sinopsis', s.sinopsis);
+    const foot = document.getElementById('sitio-footer-admin');
+    if (foot) foot.checked = !!s.mostrarAdminFooter;
+  }
+
+  function v4ShowView(view) {
+    state.view = view;
+    ['hub', 'ops', 'funciones', 'informes', 'equipo', 'auditoria', 'sitio'].forEach(v => {
+      v4Toggle(`view-${v}`, v === view);
+    });
+    document.querySelectorAll('.nav-item[data-nav]').forEach(el => {
+      el.classList.toggle('active', el.dataset.nav === view);
+    });
+  }
+
+  async function v4RenderHub() {
+    if (!perm('verVentas')) return;
+    const jobs = [cargarFunciones(), cargarVentas(state.chipFuncion || undefined)];
+    await Promise.all(jobs);
+    v4RenderFnChips();
+    v4RenderVentasTable();
+    v4Toggle('btn-export-todo', perm('exportarDatos'));
+    v4Toggle('btn-venta-manual', perm('venderEfectivo'));
+  }
+
+  async function v4PaintView(view) {
+    try {
+      if (view === 'hub') await v4RenderHub();
+      else if (view === 'ops') { /* búsqueda bajo demanda */ }
+      else if (view === 'funciones') {
+        await cargarFunciones();
+        for (const f of state.funciones) {
+          try {
+            const d = await api(window.teatroApi(`disponibilidad?fecha=${f.fecha_iso}`));
+            state.inv[f.fecha_iso] = d;
+          } catch { /* */ }
+        }
+        v4RenderFunciones();
+      } else if (view === 'informes') {
+        const jobs = [];
+        if (perm('verFiscal')) jobs.push(cargarFiscal().catch(() => { state.fiscal = 0; }));
+        if (perm('verVentas')) jobs.push(cargarFunciones(), cargarInformeFunciones());
+        if (perm('verAuditoria')) jobs.push(cargarAuditoria().catch(() => { state.auditoria = []; }));
+        if (state.informeFuncionSel && perm('verVentas')) {
+          jobs.push(cargarVentasFuncion(state.informeFuncionSel).catch(() => { state.informeVentas = []; }));
+        }
+        await Promise.allSettled(jobs);
+        v4Toggle('informes-fiscal-wrap', perm('verFiscal'));
+        v4SetText('stat-fiscal', fmtMXN(state.fiscal));
+        v4Toggle('btn-fiscal-reset', perm('fiscalReset'));
+        v4Toggle('btn-export-todo-inf', perm('exportarDatos'));
+        v4Toggle('btn-refrescar-informes', true);
+        const err = document.getElementById('informe-error-msg');
+        if (err) {
+          if (state.informeError) { err.textContent = state.informeError; err.classList.remove('hidden'); }
+          else err.classList.add('hidden');
+        }
+        v4RenderInformeFn();
+        v4RenderInformeVentas();
+        v4RenderAuditoriaFixed('audit-tbody-inf', 'audit-count-inf', document.getElementById('audit-filtro-inf')?.value || '');
+      } else if (view === 'equipo') {
+        if (!perm('gestionarEquipo')) { v4ShowView('hub'); return v4PaintView('hub'); }
+        await cargarUsuarios();
+        v4RenderEquipo();
+      } else if (view === 'auditoria') {
+        if (!perm('verAuditoria')) { v4ShowView('hub'); return v4PaintView('hub'); }
+        await cargarAuditoria().catch(() => { state.auditoria = []; });
+        v4RenderAuditoriaFixed('audit-tbody', 'audit-count', document.getElementById('audit-filtro')?.value || state.auditFilter);
+      } else if (view === 'sitio') {
+        if (!perm('editarSitio')) { v4ShowView('hub'); return v4PaintView('hub'); }
+        await cargarSitio();
+        v4RenderSitio();
+      }
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  async function v4Paint() {
+    v4SetupNav();
+    v4ShowView(state.view);
+    await v4PaintView(state.view);
+    if (!state.v4Bound) {
+      v4BindEvents();
+      state.v4Bound = true;
+    }
+  }
+
+  function v4SetupNav() {
+    const map = {
+      hub: perm('verVentas'),
+      ops: perm('verVentas'),
+      funciones: perm('verInventario') || perm('verVentas'),
+      informes: perm('verVentas') || perm('verAuditoria') || perm('verFiscal') || perm('exportarDatos'),
+      equipo: perm('gestionarEquipo'),
+      auditoria: perm('verAuditoria'),
+      sitio: perm('editarSitio'),
+    };
+    let first = null;
+    document.querySelectorAll('.nav-item[data-nav]').forEach(el => {
+      const ok = !!map[el.dataset.nav];
+      el.style.display = ok ? '' : 'none';
+      if (ok && !first) first = el.dataset.nav;
+    });
+    if (!map[state.view]) state.view = first || 'hub';
+  }
+
+  function v4BindEvents() {
+    document.getElementById('ventas-search')?.addEventListener('input', () => v4RenderVentasTable());
+    document.getElementById('ventas-estado-filter')?.addEventListener('change', (e) => {
+      state.ventasEstado = e.target.value;
+      v4RenderVentasTable();
+    });
+    document.getElementById('btn-export-todo')?.addEventListener('click', () => {
+      exportCsv(v4VentasFiltradas(), `ventas_${TID()}_${Date.now()}.csv`);
+    });
+    document.getElementById('btn-venta-manual')?.addEventListener('click', () => { window.location.href = 'boletera.html'; });
+    document.getElementById('btn-email-post-funcion')?.addEventListener('click', async () => {
+      if (!state.chipFuncion) return;
+      const fn = state.funciones.find(f => f.fecha_iso === state.chipFuncion);
+      const conEmail = state.ventas.filter(v => v.email && v.estado !== 'reembolsada' && (v.fecha === state.chipFuncion || v.fechaContable === state.chipFuncion)).length;
+      if (!confirm(`¿Enviar «Te dejamos un sobre» a ${conEmail} asistente(s) de ${fn?.nombre || state.chipFuncion}?`)) return;
+      try {
+        const r = await api(window.teatroAdminApi('email-post-funcion'), { method: 'POST', body: JSON.stringify({ fecha: state.chipFuncion }) });
+        alert(`Post-función: ${r.enviados} enviados${r.fallidos ? `, ${r.fallidos} fallidos` : ''}${r.omitidos ? `, ${r.omitidos} omitidos` : ''}.`);
+      } catch (e) { alert(e.message); }
+    });
+
+    document.getElementById('ops-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') v4BuscarVenta(); });
+    document.getElementById('ops-btn-reagenda')?.addEventListener('click', () => {
+      if (state.opsVenta?.fecha) v4RenderReagDest(state.opsVenta.fecha);
+      v4Toggle('ops-reag-panel', true);
+    });
+    document.getElementById('ops-reag-cancel')?.addEventListener('click', () => v4Toggle('ops-reag-panel', false));
+    document.getElementById('ops-reag-ok')?.addEventListener('click', async () => {
+      const v = state.opsVenta;
+      const cert = v && certVenta(v);
+      const dest = document.getElementById('ops-reag-dest')?.value;
+      if (!cert || !dest || !confirm(`¿Reagendar ${cert}?`)) return;
+      try {
+        const data = await api(window.teatroAdminApi('reagendar'), { method: 'POST', body: JSON.stringify({ codigo: cert, fechaDestino: dest }) });
+        await v4BuscarVenta(cert);
+        v4OpsMsg(msgReagendarOk(data), 'green');
+        if (state.view === 'hub') await v4RenderHub();
+      } catch (e) { v4OpsMsg(e.message, 'red'); }
+    });
+    document.getElementById('ops-btn-reenvio')?.addEventListener('click', async () => {
+      const cert = state.opsVenta && certVenta(state.opsVenta);
+      if (!cert) return;
+      try {
+        await reenviarEmailVenta(cert);
+        v4OpsMsg('Boleto reenviado.', 'green');
+      } catch (e) { v4OpsMsg(e.message, 'red'); }
+    });
+    document.getElementById('ops-btn-email')?.addEventListener('click', () => v4Toggle('ops-email-panel', true));
+    document.getElementById('ops-corregir-ok')?.addEventListener('click', async () => {
+      const cert = state.opsVenta && certVenta(state.opsVenta);
+      const email = document.getElementById('ops-email-nuevo')?.value?.trim();
+      if (!cert || !email) return;
+      try {
+        await reenviarEmailVenta(cert, email);
+        v4OpsMsg('Correo corregido y boleto enviado.', 'green');
+        await v4BuscarVenta(cert);
+      } catch (e) { v4OpsMsg(e.message, 'red'); }
+    });
+    document.getElementById('ops-btn-reembolso')?.addEventListener('click', async () => {
+      const v = state.opsVenta;
+      const cert = v && certVenta(v);
+      const esStripe = v?.metodoPago && v.metodoPago !== 'efectivo';
+      if (!cert || !confirm(esStripe ? `¿Reembolsar ${cert} vía Stripe?` : `¿Anular venta ${cert}?`)) return;
+      try {
+        await api(window.teatroAdminApi('reembolso'), { method: 'POST', body: JSON.stringify({ codigo: cert }) });
+        v4OpsMsg('Reembolso procesado.', 'green');
+        if (state.view === 'hub') await v4RenderHub();
+        await cargarAuditoria().catch(() => {});
+      } catch (e) { v4OpsMsg(e.message, 'red'); }
+    });
+
+    document.getElementById('dv-btn-reagenda')?.addEventListener('click', () => {
+      if (state.drawerVenta?.fecha) v4RenderReagDest(state.drawerVenta.fecha);
+      v4Toggle('dv-reag-panel', true);
+    });
+    document.getElementById('dv-reag-cancel')?.addEventListener('click', () => v4Toggle('dv-reag-panel', false));
+    document.getElementById('dv-reag-ok')?.addEventListener('click', async () => {
+      const v = state.drawerVenta;
+      const cert = v && certVenta(v);
+      const dest = document.getElementById('dv-reag-dest')?.value;
+      if (!cert || !dest || !confirm(`¿Reagendar ${cert}?`)) return;
+      try {
+        const data = await api(window.teatroAdminApi('reagendar'), { method: 'POST', body: JSON.stringify({ codigo: cert, fechaDestino: dest }) });
+        const fresh = await api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}`));
+        v4PoblarDrawer(fresh);
+        v4Toggle('dv-reag-panel', false);
+        v4DrawerMsg(msgReagendarOk(data), 'green');
+        if (state.view === 'hub') await v4RenderHub();
+      } catch (e) { v4DrawerMsg(e.message, 'red'); }
+    });
+    document.getElementById('dv-btn-reenvio')?.addEventListener('click', async () => {
+      const cert = state.drawerVenta && certVenta(state.drawerVenta);
+      if (!cert) return;
+      try {
+        await reenviarEmailVenta(cert);
+        v4DrawerMsg('Boleto reenviado.', 'green');
+      } catch (e) { v4DrawerMsg(e.message, 'red'); }
+    });
+    document.getElementById('dv-btn-email')?.addEventListener('click', () => v4Toggle('dv-email-panel', true));
+    document.getElementById('dv-corregir-ok')?.addEventListener('click', async () => {
+      const cert = state.drawerVenta && certVenta(state.drawerVenta);
+      const email = document.getElementById('dv-email-nuevo')?.value?.trim();
+      if (!cert || !email) return;
+      try {
+        const r = await reenviarEmailVenta(cert, email);
+        v4SetText('dv-email', r.emailEnviado || email);
+        v4DrawerMsg('Correo actualizado y boleto enviado.', 'green');
+        if (state.view === 'hub') await v4RenderHub();
+      } catch (e) { v4DrawerMsg(e.message, 'red'); }
+    });
+    document.getElementById('dv-btn-reembolso')?.addEventListener('click', async () => {
+      const v = state.drawerVenta;
+      const cert = v && certVenta(v);
+      const esStripe = v?.metodoPago && v.metodoPago !== 'efectivo';
+      if (!cert || !confirm(esStripe ? `¿Reembolsar ${cert} vía Stripe?` : `¿Anular venta ${cert}?`)) return;
+      try {
+        await api(window.teatroAdminApi('reembolso'), { method: 'POST', body: JSON.stringify({ codigo: cert }) });
+        v4CerrarDrawer();
+        if (state.view === 'hub') await v4RenderHub();
+      } catch (e) { v4DrawerMsg(e.message, 'red'); }
+    });
+
+    document.getElementById('audit-filtro')?.addEventListener('change', e => {
+      state.auditFilter = e.target.value;
+      v4RenderAuditoriaFixed('audit-tbody', 'audit-count', state.auditFilter);
+    });
+    document.getElementById('audit-filtro-inf')?.addEventListener('change', e => {
+      v4RenderAuditoriaFixed('audit-tbody-inf', 'audit-count-inf', e.target.value);
+    });
+
+    document.getElementById('btn-export-todo-inf')?.addEventListener('click', async () => {
+      await cargarVentas();
+      const blob = new Blob([JSON.stringify(state.ventas, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `ventas_${TID()}_${Date.now()}.json`;
+      a.click();
+    });
+    document.getElementById('btn-refrescar-informes')?.addEventListener('click', async () => {
+      await v4PaintView('informes');
+    });
+    document.getElementById('btn-fiscal-reset')?.addEventListener('click', async () => {
+      if (!confirm('¿Resetear reserva fiscal a $0?')) return;
+      try {
+        await api(window.teatroAdminApi('fiscal/reset'), { method: 'POST' });
+        await v4PaintView('informes');
+      } catch (e) { alert(e.message); }
+    });
+
+    document.getElementById('btn-nuevo-usuario')?.addEventListener('click', () => openUserModal());
+    document.getElementById('mu-guardar')?.addEventListener('click', guardarUsuario);
+    document.getElementById('btn-guardar-sitio')?.addEventListener('click', async () => {
+      const config = {
+        instagram: document.getElementById('sitio-instagram')?.value?.trim(),
+        whatsapp: document.getElementById('sitio-whatsapp')?.value?.trim(),
+        email: document.getElementById('sitio-email')?.value?.trim(),
+        sinopsis: document.getElementById('sitio-sinopsis')?.value?.trim(),
+        mostrarAdminFooter: document.getElementById('sitio-footer-admin')?.checked,
+      };
+      try {
+        await api(window.teatroAdminSistemaApi('sitio'), { method: 'PUT', body: JSON.stringify({ config }) });
+        alert('Sitio guardado en servidor.');
+      } catch (e) { alert(e.message); }
+    });
+  }
+
+  window.navGo = function navGo(el, view) {
+    if (el?.dataset?.nav) view = el.dataset.nav;
+    v4ShowView(view);
+    v4PaintView(view);
+  };
+
+  window.closeDrawer = v4CerrarDrawer;
+
+  window.switchTab = function switchTab(btn, tabId) {
+    btn.parentElement?.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    v4Toggle('tab-resumen', tabId === 'tab-resumen');
+    v4Toggle('tab-audit2', tabId === 'tab-audit2');
+  };
+
+  window.opsBuscarVenta = function opsBuscarVenta(q) {
+    return v4BuscarVenta(q);
+  };
+
   function openUserModal(editId) {
     const m = document.getElementById('modal-user');
     if (!m) return;
-    m.classList.remove('hidden');
-    document.getElementById('mu-error')?.classList.add('hidden');
+    if (IS_V4()) m.classList.add('open');
+    else m.classList.remove('hidden');
+    const errEl = document.getElementById('mu-error');
+    if (errEl) {
+      errEl.textContent = '';
+      if (IS_V4()) errEl.style.display = 'none';
+      else errEl.classList.add('hidden');
+    }
     const u = editId ? state.usuarios.find(x => x.id === editId) : null;
     document.getElementById('modal-user-title').textContent = u ? 'Editar usuario' : 'Nuevo usuario';
     document.getElementById('mu-edit-id').value = u?.id || '';
@@ -1118,10 +1880,15 @@
           }),
         });
       }
-      document.getElementById('modal-user')?.classList.add('hidden');
+      if (IS_V4()) document.getElementById('modal-user')?.classList.remove('open');
+      else document.getElementById('modal-user')?.classList.add('hidden');
       paint();
     } catch (e) {
-      if (err) { err.textContent = e.message; err.classList.remove('hidden'); }
+      if (err) {
+        err.textContent = e.message;
+        if (IS_V4()) err.style.display = 'block';
+        else err.classList.remove('hidden');
+      }
     }
   }
 
@@ -1140,6 +1907,13 @@
       if (lb) lb.classList.toggle('hidden', !perm('venderEfectivo'));
       if (lv) lv.classList.toggle('hidden', !perm('verificarBoletos'));
       if (!esAdmin()) state.view = 'hub';
+      if (IS_V4()) {
+        if (!perm('verVentas')) {
+          if (perm('verAuditoria')) state.view = 'auditoria';
+          else if (perm('editarSitio')) state.view = 'sitio';
+          else if (perm('gestionarEquipo')) state.view = 'equipo';
+        }
+      }
       paint();
     },
   };
@@ -1148,16 +1922,28 @@
     const usuarioId = document.getElementById('usuario-input')?.value?.trim();
     const password  = document.getElementById('password-input')?.value;
     const errorDiv  = document.getElementById('error-login');
-    if (errorDiv) errorDiv.classList.add('hidden');
+    if (errorDiv) {
+      if (IS_V4()) errorDiv.style.display = 'none';
+      else errorDiv.classList.add('hidden');
+    }
     if (!usuarioId || !password) {
-      if (errorDiv) { errorDiv.textContent = 'Ingresa usuario y contraseña'; errorDiv.classList.remove('hidden'); }
+    if (errorDiv) {
+      errorDiv.textContent = 'Ingresa usuario y contraseña';
+      if (IS_V4()) { errorDiv.style.display = 'block'; errorDiv.classList.remove('hidden'); }
+      else errorDiv.classList.remove('hidden');
+    }
       return;
     }
     const resultado = await AuthManager.autenticarAdmin(usuarioId, password);
     if (!resultado.exito) {
-      if (errorDiv) { errorDiv.textContent = resultado.error || 'Credenciales incorrectas'; errorDiv.classList.remove('hidden'); }
+      if (errorDiv) {
+        errorDiv.textContent = resultado.error || 'Credenciales incorrectas';
+        if (IS_V4()) { errorDiv.style.display = 'block'; errorDiv.classList.remove('hidden'); }
+        else errorDiv.classList.remove('hidden');
+      }
       return;
     }
+    if (errorDiv && IS_V4()) errorDiv.style.display = 'none';
     document.getElementById('login-screen')?.classList.add('hidden');
     document.getElementById('admin-panel')?.classList.remove('hidden');
     AdminPanel.iniciar(resultado.usuario);

@@ -111,58 +111,92 @@
 
       <form id="form-efectivo" onsubmit="event.preventDefault(); generarCodigo();">
         <div class="form-grid">
-          <div>
-            <label class="form-label" for="fecha-efectivo">Función</label>
-            <select id="fecha-efectivo" class="form-select" required>
-              <option value="">Selecciona función…</option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label" for="cantidad-efectivo">Cantidad</label>
-            <input type="number" id="cantidad-efectivo" min="1" max="10"
-                   class="form-input" placeholder="1-10" required>
+          <div style="grid-column:1/-1;">
+            <span class="sec-label" style="display:block;margin-bottom:10px;">Función</span>
+            <div id="bol-venta-funciones-grid"></div>
+            <input type="hidden" id="fecha-efectivo" value="" required>
+            <p id="bol-funcion-seleccionada" class="bol-funcion-seleccionada">Selecciona una función</p>
           </div>
         </div>
 
-        <div class="form-grid">
+        <span class="sec-label" style="display:block;margin-bottom:10px;">Boletos — combina general y credencial</span>
+
+        <div class="bol-ticket-fila">
           <div>
-            <label class="form-label" for="tipo-efectivo">Tipo de boleto</label>
-            <select id="tipo-efectivo" class="form-select">
-              <option value="general">General — $350</option>
-              <option value="inapam">INAPAM — $245</option>
-              <option value="estudiante">Estudiante — $245</option>
-              <option value="maestro">Maestro — $245</option>
-            </select>
+            <div class="bol-ticket-nombre">General</div>
+            <div class="bol-ticket-precio">$350 MXN</div>
+            <div class="bol-ticket-nota">Código <strong>ESPEJO</strong>: 2 generales = $600</div>
           </div>
+          <div class="bol-qty-controls">
+            <button type="button" class="bol-qty-btn" onclick="BoleteraVenta.cambiarCantidad('general', -1)" aria-label="Menos general">−</button>
+            <span id="bol-cant-general" class="bol-qty-count">0</span>
+            <button type="button" class="bol-qty-btn" onclick="BoleteraVenta.cambiarCantidad('general', 1)" aria-label="Más general">+</button>
+          </div>
+        </div>
+
+        <div class="bol-ticket-fila">
+          <div>
+            <div class="bol-ticket-nombre">INAPAM · Estudiante · Maestro</div>
+            <div class="bol-ticket-precio">
+              <span style="text-decoration:line-through;opacity:.45;">$350</span>
+              <span> → </span>
+              <span class="bol-ticket-promo">$245 MXN</span>
+              <span style="opacity:.55;"> · −30%</span>
+            </div>
+            <div class="bol-ticket-nota">Credencial al ingresar</div>
+          </div>
+          <div class="bol-qty-controls">
+            <button type="button" class="bol-qty-btn" onclick="BoleteraVenta.cambiarCantidad('estudiante', -1)" aria-label="Menos credencial">−</button>
+            <span id="bol-cant-estudiante" class="bol-qty-count">0</span>
+            <button type="button" class="bol-qty-btn" onclick="BoleteraVenta.cambiarCantidad('estudiante', 1)" aria-label="Más credencial">+</button>
+          </div>
+        </div>
+
+        <div class="bol-resumen-wrap">
+          <div id="bol-items-resumen"></div>
+          <div id="bol-promo-hint" class="bol-promo-hint" style="display:none;"></div>
+          <div id="bol-descuento-fila" class="bol-resumen-linea bol-descuento" style="display:none;">
+            <span>Descuento</span>
+            <span id="bol-descuento-monto">—</span>
+          </div>
+          <div class="bol-total-fila">
+            <span class="bol-total-label">Total efectivo</span>
+            <span id="bol-total-precio" class="bol-total-precio">$0.00 MXN</span>
+          </div>
+        </div>
+
+        <div class="bol-cupon-wrap">
+          <label class="form-label" for="bol-cupon-input">Cupón / promo (opcional)</label>
+          <div class="bol-cupon-fila">
+            <input type="text" id="bol-cupon-input" class="form-input" placeholder="ESPEJO, GRUPO20, PRENSA30…" autocomplete="off" spellcheck="false" maxlength="32">
+            <button type="button" id="bol-btn-cupon" class="btn-copiar" onclick="BoleteraVenta.aplicarCupon()">Aplicar</button>
+          </div>
+          <div id="bol-cupon-msg" class="bol-cupon-msg" aria-live="polite"></div>
+        </div>
+
+        <div class="form-grid">
           <div>
             <label class="form-label" for="nombre-efectivo">Nombre comprador</label>
-            <input type="text" id="nombre-efectivo" class="form-input"
-                   placeholder="Opcional">
+            <input type="text" id="nombre-efectivo" class="form-input" placeholder="Opcional">
           </div>
-        </div>
-
-        <div class="form-grid">
           <div>
             <label class="form-label" for="email-efectivo">Correo (envía boleto)</label>
-            <input type="email" id="email-efectivo" class="form-input"
-                   placeholder="correo@ejemplo.com" autocomplete="email">
-          </div>
-          <div>
-            <label class="form-label" for="telefono-efectivo">WhatsApp (solo números)</label>
-            <input type="tel" id="telefono-efectivo" class="form-input"
-                   placeholder="52… (código país + número)">
+            <input type="email" id="email-efectivo" class="form-input" placeholder="correo@ejemplo.com" autocomplete="email">
           </div>
         </div>
 
         <div class="form-grid">
-          <div style="grid-column:1/-1;">
+          <div>
+            <label class="form-label" for="telefono-efectivo">WhatsApp (solo números)</label>
+            <input type="tel" id="telefono-efectivo" class="form-input" placeholder="52… (código país + número)">
+          </div>
+          <div>
             <label class="form-label" for="notas-efectivo">Notas (opcional)</label>
-            <input type="text" id="notas-efectivo" class="form-input"
-                   placeholder="Observaciones internas…">
+            <input type="text" id="notas-efectivo" class="form-input" placeholder="Observaciones internas…">
           </div>
         </div>
 
-        <button type="submit" class="btn-generar" id="btn-generar">
+        <button type="submit" class="btn-generar" id="btn-generar" disabled>
           <span class="material-symbols-outlined" style="font-size:20px;">confirmation_number</span>
           Registrar venta y generar folio
         </button>
@@ -197,14 +231,13 @@
       <div class="bol-card-rule"></div>
       <span class="sec-label">Por función · valida por nombre o folio · entrada individual si no llegan juntos</span>
 
+      <div style="margin-bottom:14px;">
+        <span class="sec-label" style="display:block;margin-bottom:10px;">Función</span>
+        <div id="bol-lista-funciones-grid"></div>
+        <input type="hidden" id="lista-funcion" value="">
+      </div>
       <div class="form-grid" style="margin-bottom:14px;">
-        <div>
-          <label class="form-label" for="lista-funcion">Función</label>
-          <select id="lista-funcion" class="form-select">
-            <option value="">Cargando…</option>
-          </select>
-        </div>
-        <div>
+        <div style="grid-column:1/-1;">
           <label class="form-label" for="lista-buscar">Buscar nombre o folio</label>
           <input type="search" id="lista-buscar" class="form-input"
                  placeholder="Nombre, CERT o folio interno…">
@@ -255,6 +288,8 @@
 <!-- Scripts -->
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/selector-funciones.js"></script>
+<script src="js/boletera-venta.js"></script>
 
 <script>
 /* ── AUTENTICACIÓN BOLETERA ─────────────────────────────────
@@ -311,11 +346,50 @@ async function _boletaIniciar() {
   await Promise.all([
     _boletaCargarDisponibilidad(),
     _boletaCargarTablaDia(),
-    _boletaLlenarSelectFunciones(),
-    _boletaCargarListaFunciones(),
+    _boletaCargarFuncionesGrids(),
   ]);
-  document.getElementById('lista-funcion')?.addEventListener('change', () => _boletaCargarListaPuerta());
   document.getElementById('lista-buscar')?.addEventListener('input', () => _boletaFiltrarLista());
+}
+
+let _bolFuncionesCache = [];
+
+function _bolActualizarEtiquetaFuncion(iso) {
+  const el = document.getElementById('bol-funcion-seleccionada');
+  if (!el) return;
+  const f = _bolFuncionesCache.find(x => x.fecha_iso === iso);
+  el.textContent = f ? (f.nombre || iso) : (iso ? iso : 'Selecciona una función');
+}
+
+async function _boletaCargarFuncionesGrids() {
+  if (typeof SelectorFunciones === 'undefined') return;
+  try {
+    const res = await fetch(window.teatroApi('funciones'));
+    if (!res.ok) return;
+    _bolFuncionesCache = SelectorFunciones.normalizarLista(await res.json());
+
+    const ventaIso = SelectorFunciones.wireHidden(
+      document.getElementById('bol-venta-funciones-grid'),
+      document.getElementById('fecha-efectivo'),
+      _bolFuncionesCache,
+      {
+        futuras: true,
+        showDisponibles: true,
+        onSelect: iso => {
+          _bolActualizarEtiquetaFuncion(iso);
+          BoleteraVenta?.onFechaChange?.();
+        },
+      },
+    );
+    _bolActualizarEtiquetaFuncion(ventaIso);
+
+    SelectorFunciones.wireHidden(
+      document.getElementById('bol-lista-funciones-grid'),
+      document.getElementById('lista-funcion'),
+      _bolFuncionesCache,
+      { modoLista: true, onSelect: () => _boletaCargarListaPuerta() },
+    );
+    if (document.getElementById('lista-funcion')?.value) await _boletaCargarListaPuerta();
+  } catch (_) {}
 }
 
 /* ── Lista visitantes / check-in ─────────────────────────── */
@@ -333,17 +407,7 @@ function _boletaToken() {
 }
 
 async function _boletaCargarListaFunciones() {
-  const sel = document.getElementById('lista-funcion');
-  if (!sel) return;
-  try {
-    const res = await fetch(window.teatroApi('funciones'));
-    if (!res.ok) return;
-    const fns = await res.json();
-    sel.innerHTML = fns.map(f =>
-      `<option value="${f.fecha_iso}">${f.nombre || f.fecha_iso}</option>`
-    ).join('');
-    if (fns.length) await _boletaCargarListaPuerta();
-  } catch { sel.innerHTML = '<option value="">—</option>'; }
+  await _boletaCargarFuncionesGrids();
 }
 
 function _boletaRenderGrupos(grupos) {
@@ -494,21 +558,9 @@ async function _boletaCargarDisponibilidad() {
   } catch (e) { cont.innerHTML = '<p style="font-size:13px;color:#f87171;">Error de conexión</p>'; }
 }
 
-/* Llenar select de funciones */
+/* Llenar grids de funciones — ver _boletaCargarFuncionesGrids */
 async function _boletaLlenarSelectFunciones() {
-  const sel = document.getElementById('fecha-efectivo');
-  if (!sel) return;
-  try {
-    const res = await fetch(window.teatroApi('funciones'));
-    if (!res.ok) return;
-    const fns = await res.json();
-    fns.forEach(f => {
-      const opt = document.createElement('option');
-      opt.value       = f.fecha_iso;
-      opt.textContent = f.nombre || f.fecha_iso;
-      sel.appendChild(opt);
-    });
-  } catch (e) {}
+  await _boletaCargarFuncionesGrids();
 }
 
 /* Tabla de boletos del día */
@@ -529,15 +581,14 @@ async function generarCodigoEfectivo() {
   if (!token) { alert('Sesión expirada. Vuelve a entrar.'); boletaSalir(); return; }
 
   const fechaIso = document.getElementById('fecha-efectivo')?.value;
-  const cantidad = parseInt(document.getElementById('cantidad-efectivo')?.value, 10);
-  const tipo     = document.getElementById('tipo-efectivo')?.value || 'general';
   const email    = (document.getElementById('email-efectivo')?.value || '').trim();
   const nombre   = (document.getElementById('nombre-efectivo')?.value || '').trim();
   const telefono = (document.getElementById('telefono-efectivo')?.value || '').trim();
   const notas    = (document.getElementById('notas-efectivo')?.value || '').trim();
+  const cupon    = typeof BoleteraVenta !== 'undefined' ? BoleteraVenta.getCupon() : null;
 
-  if (!fechaIso || !cantidad || cantidad < 1) {
-    if (errEl) { errEl.textContent = 'Selecciona función y cantidad.'; errEl.style.display = 'block'; }
+  if (!fechaIso || !BoleteraVenta || BoleteraVenta.totalCantidad() < 1) {
+    if (errEl) { errEl.textContent = 'Selecciona función y al menos un boleto.'; errEl.style.display = 'block'; }
     return;
   }
 
@@ -550,6 +601,8 @@ async function generarCodigoEfectivo() {
     }
   } catch (_) {}
 
+  const items = BoleteraVenta.itemsParaApi(seccion);
+
   if (btn) { btn.disabled = true; btn.textContent = 'Registrando…'; }
 
   try {
@@ -561,7 +614,8 @@ async function generarCodigoEfectivo() {
       },
       body: JSON.stringify({
         fecha: fechaIso,
-        items: [{ tipo, cantidad, seccion }],
+        items,
+        codigoCupon: cupon?.codigo || undefined,
         email: email || undefined,
         nombre: nombre || undefined,
         telefono: telefono || undefined,
@@ -585,7 +639,9 @@ async function generarCodigoEfectivo() {
     if (txt) txt.textContent = data.codigo;
     if (inf) {
       const mailNote = data.emailEnviado ? ' · correo enviado' : (email ? ' · correo en cola' : '');
-      inf.innerHTML = `${data.funcionNombre}<br>${cantidad} × ${tipo} (${seccion}) · $${data.total} MXN${mailNote}`;
+      const resumen = BoleteraVenta.resumenVentaTexto(data.venta) || `${data.venta?.cantidad || ''} boleto(s)`;
+      const cuponNote = data.venta?.codigoCupon ? ` · ${data.venta.codigoCupon}` : '';
+      inf.innerHTML = `${data.funcionNombre}<br>${resumen} (${seccion}) · $${data.total} MXN${cuponNote}${mailNote}`;
     }
     if (wa && data.waUrl) wa.href = data.waUrl;
     if (qr && typeof QRCode !== 'undefined') {
@@ -596,7 +652,11 @@ async function generarCodigoEfectivo() {
       if (qrCodigo) QRCode.toCanvas(qr, qrCodigo.trim().toUpperCase(), { width: 180, margin: 1 });
     }
 
-    document.getElementById('form-efectivo')?.reset();
+    ['nombre-efectivo', 'email-efectivo', 'telefono-efectivo', 'notas-efectivo'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    BoleteraVenta?.limpiarCarrito?.();
     await Promise.all([_boletaCargarDisponibilidad(), _boletaCargarTablaDia(), _boletaCargarListaPuerta()]);
   } catch (_) {
     if (errEl) { errEl.textContent = 'Error de conexión.'; errEl.style.display = 'block'; }

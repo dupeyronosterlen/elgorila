@@ -159,6 +159,105 @@ button { font-family: var(--cuerpo); border-radius: 0 !important; }
 }
 .btn-generar:hover, .btn-primario:hover { opacity: .88; }
 .btn-generar:disabled, .btn-primario:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Selector de funciones (grid fn-card) */
+.fn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+}
+.fn-card {
+  border: 1px solid var(--d-faint);
+  background: var(--d-surface, #120d0b);
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .12s, background .12s;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+.fn-card:hover, .fn-card.active {
+  border-color: var(--gold);
+  background: rgba(217,155,58,.08);
+}
+.fn-date {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: .07em;
+  line-height: 1.3;
+}
+.fn-name {
+  font-family: var(--display, var(--cuerpo));
+  font-size: 17px;
+  color: var(--d-fg);
+  line-height: 1.2;
+}
+.fn-avail {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--d-soft);
+  letter-spacing: .1em;
+  margin-top: 2px;
+}
+.fn-avail-warn { color: #f87171; }
+.sel-fn-vacio {
+  font-family: var(--cuerpo);
+  font-size: 15px;
+  color: var(--d-soft);
+  padding: 8px 0;
+}
+.bol-funcion-seleccionada {
+  font-family: var(--cuerpo);
+  font-size: 16px;
+  color: var(--d-soft);
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+.bol-ticket-fila {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--d-faint);
+}
+.bol-ticket-nombre { font-family: var(--cuerpo); font-size: 18px; color: var(--d-fg); line-height: 1.2; }
+.bol-ticket-precio { font-family: var(--cuerpo); font-size: 16px; color: var(--d-soft); margin-top: 4px; }
+.bol-ticket-promo { color: #4ade80; }
+.bol-ticket-nota { font-size: 14px; color: var(--d-soft); margin-top: 5px; line-height: 1.35; }
+.bol-qty-controls { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.bol-qty-btn {
+  width: 40px; height: 40px; background: transparent;
+  border: 1px solid var(--d-faint); color: var(--gold);
+  font-family: var(--mono); font-size: 22px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.bol-qty-btn:hover { background: rgba(217,155,58,.1); border-color: var(--gold-dim); }
+.bol-qty-count { width: 28px; text-align: center; font-family: var(--mono); font-size: 20px; color: var(--d-fg); }
+.bol-resumen-wrap { border-top: 1px solid var(--d-faint); padding-top: 12px; margin: 4px 0 16px; }
+.bol-resumen-linea, .bol-descuento {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-family: var(--cuerpo); font-size: 16px; color: var(--d-fg); padding: 3px 0;
+}
+.bol-descuento { color: #4ade80; }
+.bol-resumen-vacio { font-size: 15px; color: var(--d-soft); padding: 4px 0; }
+.bol-total-fila {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--d-faint);
+}
+.bol-total-label {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--gold);
+}
+.bol-total-precio { font-family: var(--display); font-size: 28px; color: var(--d-fg); line-height: 1; }
+.bol-total-promo { color: #4ade80; }
+.bol-promo-hint { font-size: 14px; color: rgba(217,155,58,.85); margin: 8px 0 4px; line-height: 1.4; }
+.bol-cupon-wrap { margin-bottom: 16px; }
+.bol-cupon-fila { display: flex; gap: 8px; margin-top: 6px; }
+.bol-cupon-fila .form-input { flex: 1; }
+.bol-cupon-msg { font-size: 14px; margin-top: 6px; min-height: 1.2em; }
+.bol-cupon-msg.ok { color: #4ade80; }
+.bol-cupon-msg.err { color: #f87171; }
 .btn-link {
   background: none; border: none; color: var(--gold-dim);
   font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
