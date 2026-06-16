@@ -178,27 +178,81 @@ function obtenerTokenAdmin() {
 // ── Cámara QR ──────────────────────────────────────────────────────────────────
 
 let _scannerStream = null;
+let _scannerActivo = false;
+
+/** Extrae CERT-… de texto crudo, URL de boleto o enlace de verificación. */
+function extraerCodigoDeQr(raw) {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+
+    const certInline = s.match(/CERT-[A-Z0-9-]+/i);
+    if (certInline) return certInline[0].toUpperCase();
+
+    try {
+        const url = s.startsWith('http') ? new URL(s) : new URL(s, location.origin);
+        for (const key of ['codigo', 'c', 'cert', 'certificado']) {
+            const v = url.searchParams.get(key);
+            if (v) return v.trim().toUpperCase();
+        }
+        const pathCert = url.pathname.match(/\/(CERT-[A-Z0-9-]+)/i);
+        if (pathCert) return pathCert[1].toUpperCase();
+    } catch { /* no es URL */ }
+
+    return s.toUpperCase();
+}
 
 function abrirScanner() {
-    const modal = v$('modal-scanner');
-    if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
+    if (!window.isSecureContext) {
+        alert('La cámara requiere HTTPS. Abre el panel desde https://elgorilateatro.com.mx');
+        return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+        alert('Este navegador no soporta acceso a la cámara.');
+        return;
+    }
+    const modal = document.getElementById('modal-scanner') || v$('modal-scanner');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('open');
+        modal.style.display = 'flex';
+    }
+    _scannerActivo = true;
     iniciarCamara();
 }
 
 function cerrarScanner() {
+    _scannerActivo = false;
     pararCamara();
-    const modal = v$('modal-scanner');
-    if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+    const modal = document.getElementById('modal-scanner') || v$('modal-scanner');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('open');
+        modal.style.display = 'none';
+    }
 }
 
 async function iniciarCamara() {
     try {
-        _scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        const video = v$('scanner-video');
-        if (video) { video.srcObject = _scannerStream; video.play(); }
+        pararCamara();
+        _scannerStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: { ideal: 'environment' },
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+            },
+            audio: false,
+        });
+        const video = document.getElementById('scanner-video') || v$('scanner-video');
+        if (video) {
+            video.setAttribute('playsinline', '');
+            video.setAttribute('webkit-playsinline', '');
+            video.srcObject = _scannerStream;
+            await video.play();
+        }
         requestAnimationFrame(escanearFrame);
-    } catch {
-        alert('No se pudo acceder a la cámara. Verifica los permisos.');
+    } catch (err) {
+        console.error('Scanner:', err);
+        alert('No se pudo acceder a la cámara. Revisa permisos del navegador.');
         cerrarScanner();
     }
 }
@@ -208,35 +262,39 @@ function pararCamara() {
 }
 
 function escanearFrame() {
-    if (!_scannerStream) return;
-    const video  = v$('scanner-video');
-    const canvas = v$('scanner-canvas');
+    if (!_scannerStream || !_scannerActivo) return;
+    const video  = document.getElementById('scanner-video') || v$('scanner-video');
+    const canvas = document.getElementById('scanner-canvas') || v$('scanner-canvas');
     if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) {
         requestAnimationFrame(escanearFrame);
         return;
     }
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     canvas.width  = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
     if (typeof jsQR !== 'undefined') {
-        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-        if (code && code.data) {
-            // Extraer código del URL si es una URL de verificación
-            let codigo = code.data;
-            const urlMatch = codigo.match(/[?&]codigo=([^&]+)/);
-            if (urlMatch) codigo = decodeURIComponent(urlMatch[1]);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        if (code?.data) {
+            const codigo = extraerCodigoDeQr(code.data);
+            if (!codigo || !/^CERT-/i.test(codigo)) {
+                requestAnimationFrame(escanearFrame);
+                return;
+            }
             cerrarScanner();
             const input = v$('codigo-qr-input');
-            if (input) { input.value = codigo.toUpperCase(); }
+            if (input) input.value = codigo;
             verificarBoleto();
             return;
         }
     }
     requestAnimationFrame(escanearFrame);
 }
+
+window.abrirScanner = abrirScanner;
+window.cerrarScanner = cerrarScanner;
 
 function _puedeVerListaPuerta() {
     return _puedeCanjear();
@@ -503,6 +561,7 @@ function _bindVerificarUI() {
     const btnV = v$('btn-verificar');
     const btnU = v$('btn-marcar-usado');
     const btnS = v$('btn-escanear');
+    const btnSTop = document.getElementById('btn-escanear-top');
     const input = v$('codigo-qr-input');
 
     if (btnV) btnV.addEventListener('click', verificarBoleto);
@@ -510,6 +569,9 @@ function _bindVerificarUI() {
     if (btnS) {
         btnS.disabled = false;
         btnS.addEventListener('click', abrirScanner);
+    }
+    if (btnSTop) {
+        btnSTop.addEventListener('click', abrirScanner);
     }
     if (input) {
         input.addEventListener('keypress', e => { if (e.key === 'Enter') verificarBoleto(); });
@@ -520,12 +582,14 @@ function _bindVerificarUI() {
         input.focus();
     }
 
-    // Auto-verificar si hay ?codigo= en la URL
+    // Auto-verificar si hay ?codigo= en la URL (desde admin o enlace legacy)
     const params = new URLSearchParams(window.location.search);
     const codigoURL = params.get('codigo');
     if (codigoURL && input) {
         input.value = codigoURL.toUpperCase();
         setTimeout(verificarBoleto, 300);
+    } else if (params.get('scan') === '1' && btnS) {
+        setTimeout(abrirScanner, 400);
     }
 
     _aplicarUIPermisos();

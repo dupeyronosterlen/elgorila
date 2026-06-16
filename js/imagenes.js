@@ -176,6 +176,17 @@ function getCartelRotatorioRuta(numeroFormateado) {
     return 'img/CARTEL ROTATORIO/mobile/' + numeroFormateado + '.webp';
 }
 
+function syncCartelVisual(cartelEl, ruta) {
+    if (!cartelEl) return;
+    var url = "url('" + ruta + "')";
+    cartelEl.style.backgroundImage = url;
+    cartelEl.style.setProperty('--cartel-url', url);
+    var container = cartelEl.closest('.cartel-rotatorio-container');
+    if (container) container.style.setProperty('--cartel-url', url);
+    var halo = document.getElementById('cartel-rotatorio-halo');
+    if (halo) halo.style.setProperty('--cartel-url', url);
+}
+
 function cambiarCartelRotatorio(direccion) {
     // Obtener elemento una sola vez y cachearlo
     if (!cartelRotatorioElement) {
@@ -203,12 +214,12 @@ function cambiarCartelRotatorio(direccion) {
     requestAnimationFrame(function () {
         const img = new Image();
         img.onload = function () {
-            cartelRotatorioElement.style.backgroundImage = "url('" + ruta + "')";
+            syncCartelVisual(cartelRotatorioElement, ruta);
             cartelRotatorioElement.style.opacity = '1';
         };
         img.onerror = function () {
             cartelRotatorioActual = prevIndex < 1 ? 9 : prevIndex > 9 ? 1 : prevIndex;
-            cartelRotatorioElement.style.backgroundImage = "url('" + rutaPrev + "')";
+            syncCartelVisual(cartelRotatorioElement, rutaPrev);
             cartelRotatorioElement.style.opacity = '1';
         };
         img.src = ruta;
@@ -235,7 +246,7 @@ function inicializarCartelRotatorio() {
     const ruta01 = getCartelRotatorioRuta('01');
     const img = new Image();
     img.onload = function () {
-        cartelRotatorio.style.backgroundImage = "url('" + ruta01 + "')";
+        syncCartelVisual(cartelRotatorio, ruta01);
         cartelRotatorio.style.opacity = '1';
         cartelRotatorio.setAttribute('data-cartel-loaded', '1');
     };

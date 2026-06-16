@@ -1,10 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /admin.html
-Disallow: /boletera.html
-Disallow: /verificar.html
-Disallow: /taquilla.html
-Disallow: /acomodadores.html
+Disallow: /admin-panel-v4.html
 Disallow: /checkout.html
 Disallow: /confirmacion.html
 Disallow: /gracias.html

@@ -11,9 +11,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate"/>
-<meta name="description" content="Obra de teatro con Humberto Dupeyrón, basada en Franz Kafka. 37 años en escena. Temporada julio y agosto 2026 en Teatro Wilberto Cantón, CDMX — estreno 8 de julio, todos los miércoles 20:30."/>
+<meta name="description" content="Obra de teatro con Humberto Dupeyrón, basada en Franz Kafka. 37 años en escena. 8 funciones en Teatro Wilberto Cantón, CDMX — estreno 8 de julio, miércoles 20:30."/>
 <meta property="og:title" content="EL GORILA — El monólogo sobre la domesticación del hombre"/>
-<meta property="og:description" content="Obra teatral con Humberto Dupeyrón, basada en Franz Kafka. Temporada julio y agosto 2026 en Teatro Wilberto Cantón, CDMX."/>
+<meta property="og:description" content="Obra teatral con Humberto Dupeyrón, basada en Franz Kafka. 8 funciones en Teatro Wilberto Cantón, CDMX. Miércoles 20:30."/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://elgorilateatro.com.mx/"/>
 <meta property="og:image" content="https://elgorilateatro.com.mx/img/LOGO/1.jpg"/>
@@ -103,7 +103,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="preload" as="font" type="font/woff2" href="fonts/lora-latin.woff2?v=2" crossorigin/>
 <link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin/>
 <!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
-<link rel="preload" as="image" href="img/CARTEL ROTATORIO/mobile/01.webp" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/programa/portada-v1.jpg" fetchpriority="high"/>
 <style type="text/tailwindcss">
     body {
       padding-top: 0;
@@ -141,13 +141,36 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .logo-gorila-sello:hover img { opacity: 1; transform: scale(1.05); }
     @media (max-width: 767px) {
-      .logo-gorila-column { left: max(0.5rem, env(safe-area-inset-left)) !important; }
-      .logo-gorila-sello img { height: clamp(2.5rem, 7vw, 3.5rem) !important; }
+      .logo-gorila-column {
+        left: max(0.5rem, env(safe-area-inset-left)) !important;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.12rem;
+        max-width: calc(100vw - 4.5rem);
+      }
+      .logo-gorila-sello img { height: clamp(2.25rem, 6.8vw, 3.15rem) !important; }
+      .btn-presskit-sello {
+        margin-top: 0 !important;
+        font-size: 8px;
+        letter-spacing: 0.14em;
+        padding: 1px 0 2px;
+      }
+      .logo-37-sello {
+        top: max(0.35rem, env(safe-area-inset-top)) !important;
+        right: max(0.4rem, env(safe-area-inset-right)) !important;
+      }
+      .logo-37-sello img {
+        height: clamp(2.35rem, 10vw, 3rem) !important;
+      }
     }
-    /* Móvil ancho: logos un poco más contenidos para alinear con marco proporcional */
+    @media (max-width: 390px) {
+      .logo-gorila-sello img { height: clamp(2rem, 6.2vw, 2.65rem) !important; }
+      .logo-37-sello img { height: clamp(1.85rem, 8.5vw, 2.45rem) !important; }
+      .btn-presskit-sello { font-size: 7px; letter-spacing: 0.12em; }
+    }
+    /* Móvil ancho: logo Gorila proporcional (37 ya definido arriba en ≤767) */
     @media (min-width: 391px) and (max-width: 767px) {
-      .logo-gorila-sello img { height: clamp(2.4rem, 6.2vw, 3.15rem) !important; }
-      .logo-37-sello img { height: 6.4rem !important; }
+      .logo-gorila-sello img { height: clamp(2.2rem, 6.2vw, 3rem) !important; }
     }
     /* Hero cartel: dos vistas — móvil ≤1023px · desktop ≥1024px (sin tier intermedio) */
     #cartel-rotatorio {
@@ -421,8 +444,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       background-size: 150% 150%;
       background-position: center center;
       background-repeat: no-repeat;
-      filter: blur(60px) brightness(0.3) contrast(0.8) saturate(0.45);
-      opacity: 0.7;
+      filter: blur(60px) brightness(0.32) contrast(0.82) saturate(0.42);
+      opacity: 0.55;
       z-index: 0;
       transform: scale(1.3);
       pointer-events: none;
@@ -458,7 +481,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       border-radius: inherit;
     }
     .obra-fondo-kafka #obra-imagen {
-      filter: brightness(0.86) contrast(1.55) saturate(0.8) sepia(0.06);
+      filter: grayscale(22%) brightness(0.92) contrast(1.08) saturate(0.88);
     }
     /* Mejorar contraste de texto sobre fondos blurry - máximo contraste */
     .section-with-bg .text-text-dark,
@@ -535,7 +558,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     /* Nombre del actor en la portada: debe vencer la regla de 17px de arriba */
     .cartel-texto-block .portada-nombre-actor {
-      font-family: 'Lora', Georgia, serif !important;
+      font-family: 'Cormorant Garamond', Georgia, serif !important;
       font-size: clamp(19.2px, 4.29vw, 35px) !important;
       line-height: 1.05 !important;
       font-weight: 400 !important;
@@ -566,17 +589,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       letter-spacing: 0.18em;
       text-transform: uppercase;
     }
-    /* Citas editoriales entre secciones — dorado v4 */
+    /* Citas editoriales entre secciones — ver .narrativa-cita */
+    .narrativa-cita,
     .text-center p[style*="color:#cd7f32"],
     .text-center p[style*="color: #cd7f32"] {
       font-family: 'Cormorant Garamond', Georgia, serif !important;
-      font-size: clamp(18px, 3.8vw, 26px) !important;
-      font-weight: 300 !important;
+      font-size: clamp(17px, 3.5vw, 24px) !important;
+      font-weight: 400 !important;
       font-style: italic !important;
-      letter-spacing: 0.04em;
-      line-height: 1.45;
-      color: #d99b3a !important;
-      text-shadow: 0 2px 8px rgba(0,0,0,.9), 0 0 18px rgba(217,155,58,.3) !important;
+      letter-spacing: 0.02em;
+      line-height: 1.42;
+      color: rgba(241, 234, 217, 0.88) !important;
+      text-shadow: none !important;
     }
     /* Botones / navegación: preservar legibilidad (no serifa) */
     button, a.btn, nav, .font-mono-override {
@@ -783,7 +807,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         order: 1 !important;
         opacity: 1 !important;
       }
-      #cartel-rotatorio {
+      #cartel-rotatorio,
+      #cartel-rotatorio.cartel-rotatorio-sharp {
         width: 100% !important;
         min-width: 0 !important;
         height: 100% !important;
@@ -793,11 +818,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         opacity: 1 !important;
         display: block !important;
         transform: none !important;
+        position: relative !important;
+        z-index: 2 !important;
+      }
+      .cartel-rotatorio-halo {
+        z-index: 0 !important;
       }
       /* Cartel informativo: superpuesto sobre imagen, sube con pantalla, tope en badge 37 */
       .cartel-informativo-container {
         position: absolute !important;
-        top: max(8rem, 60%) !important;
+        top: max(6.25rem, 56%) !important;
         bottom: 0 !important;
         left: 0 !important;
         right: 0 !important;
@@ -998,6 +1028,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       #cartel-informativo,
       .cartel-informativo-container img,
       .cartel-informativo-container picture { pointer-events: none !important; }
+      .hero-portada--foto #cartel-container {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        overflow: hidden !important;
+      }
     }
     /* Cursor lupa grande sobre periódico (cartel informativo) y fotos de galería - solo desktop */
     @media (min-width: 1230px) {
@@ -1095,7 +1130,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       pointer-events: auto;
       position: relative;
       z-index: 1;
-      margin-top: 20vh;          /* 1/5 de página por debajo del logo */
+      margin-top: 0.35rem;
       transition: color 0.2s ease, border-color 0.2s ease;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
@@ -1117,8 +1152,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       overflow: visible;
     }
     .logo-37-sello img {
-      height: 7.2rem !important; /* 50% más que 4.8rem (desktop y móvil) */
+      height: 5.5rem !important;
       max-height: none;
+    }
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .logo-37-sello img { height: 4.5rem !important; }
     }
     /* 37 años: visible solo cuando la imagen ya cargó (evita parpadeo/hueco) */
     .logo-37-sello.logo-37-cargando {
@@ -1180,10 +1218,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     @media (min-width: 1024px) and (max-height: 700px) {
       #cartel-container { min-height: 380px !important; }
       .cartel-texto-block { gap: 8px !important; padding: 0.5rem 1rem 0.75rem !important; }
-    }
-    /* Stroke dorado en EL GORILA (mismo tono que Descubre la obra) */
-    .titulo-el-gorila {
-      -webkit-text-stroke: 1px #c9a84b;
     }
     /* Móvil: textos siempre en una línea, se achican con clamp/vw — nunca saltan de renglón */
     /* Saltar al contenido: oculto hasta foco (accesibilidad) */
@@ -1511,10 +1545,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       text-shadow: none;
       -webkit-tap-highlight-color: transparent;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
       justify-content: center;
-      gap: 0.2rem;
+      gap: 0.35rem 0.65rem;
       width: 100%;
       text-align: center;
       line-height: 1.2;
@@ -1544,23 +1579,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .barra-compra-fija .barra-compra-precio-tachado {
       display: inline;
-      font-family: Lora, Georgia, 'Times New Roman', serif;
-      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
       font-weight: 400;
-      letter-spacing: 0.08em;
-      color: rgba(232, 215, 175, 0.5);
+      letter-spacing: 0.06em;
+      color: rgba(232, 215, 175, 0.55);
       text-decoration: line-through;
       font-variant-numeric: tabular-nums;
-      margin-right: 0.3em;
     }
     .barra-compra-fija .barra-compra-precio-promo {
       display: inline;
-      font-family: Lora, Georgia, 'Times New Roman', serif;
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      color: #f0c060;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: #f1ead9;
       font-variant-numeric: tabular-nums;
     }
     .barra-compra-fija .barra-compra-aforo {
@@ -1723,12 +1756,401 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
 </style>
 <style>
-  /* ══ INDEX v3 — marcos editoriales (cartel principal sin cambios) ══ */
-  .cartel-texto-block .titulo-el-gorila {
-    font-family: 'IM Fell English', Lora, Georgia, serif !important;
-    font-weight: 700 !important;
-    -webkit-text-stroke: 0.82px #c9a84b;
+  /* ══ INDEX — pulido formal V1 (estructura y narrativa intactas) ══ */
+
+  /* Cartel rotatorio: halo difuminado + poster nítido (portada v1) */
+  .cartel-rotatorio-container {
+    --cartel-url: none;
+    overflow: visible !important;
   }
+  .cartel-rotatorio-halo {
+    position: absolute;
+    inset: -18%;
+    z-index: 0;
+    pointer-events: none;
+    background-image: var(--cartel-url);
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    filter: blur(56px) brightness(1.18) saturate(0.92);
+    opacity: 0.34;
+    transition: opacity 0.35s ease;
+  }
+  .cartel-rotatorio-container::after {
+    content: '';
+    position: absolute;
+    inset: -8%;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 42%, rgba(10,7,6,0) 0%, rgba(10,7,6,0.45) 68%, rgba(10,7,6,0.88) 100%);
+  }
+  #cartel-rotatorio.cartel-rotatorio-sharp {
+    position: relative;
+    z-index: 2;
+    filter: brightness(1.08) contrast(1.06) saturate(0.98);
+  }
+  #cartel-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 38% 48%, rgba(10,7,6,0) 0%, rgba(10,7,6,0.2) 58%, rgba(10,7,6,0.55) 100%);
+  }
+  .hero-portada #cartel-container::before { display: none; }
+
+  /* Hero foto — imagen real de fondo + texto encima (sin cartel rotatorio) */
+  .hero-portada--foto #cartel-container {
+    position: relative;
+    overflow: hidden !important;
+    border-radius: 0;
+    width: 100%;
+    min-height: min(74svh, 640px);
+    height: min(78svh, 680px);
+    max-height: 680px;
+    padding: 0 !important;
+  }
+  .hero-portada__cartel-oculto {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    clip: rect(0, 0, 0, 0) !important;
+    z-index: -1 !important;
+  }
+  .hero-portada__ambiente {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .hero-portada__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 22%;
+    display: block;
+    filter: contrast(1.04) saturate(0.92);
+  }
+  .hero-portada__overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(10,7,6,0.35) 0%, rgba(10,7,6,0.2) 40%, rgba(10,7,6,0.72) 100%);
+  }
+  .hero-portada__panel {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 10 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1.25rem 1rem 1.5rem !important;
+    pointer-events: none !important;
+    background: none !important;
+  }
+  .hero-portada__text {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: clamp(8px, 2vw, 14px) !important;
+    max-width: min(22rem, 92vw) !important;
+    padding: 0 !important;
+  }
+  .hero-portada--foto .portada-nombre-actor,
+  .hero-portada--foto .titulo-el-gorila,
+  .hero-portada--foto .portada-kafka {
+    text-shadow:
+      0 2px 18px rgba(0,0,0,0.95),
+      0 1px 4px rgba(0,0,0,1),
+      0 0 48px rgba(0,0,0,0.6) !important;
+  }
+  .hero-portada__actor {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-size: clamp(18px, 4.8vw, 35px) !important;
+    line-height: 1.05 !important;
+    font-weight: 400 !important;
+    font-style: italic !important;
+    color: rgba(242, 237, 228, 0.98) !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+  .hero-portada__titulo {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-size: clamp(40px, 12.5vw, 85px) !important;
+    line-height: 0.9 !important;
+    letter-spacing: -0.02em !important;
+    font-weight: 500 !important;
+    color: #f1ead9 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+  .hero-portada__kafka {
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+  .hero-portada__meta {
+    align-items: center !important;
+  }
+  .hero-portada .texto-portada-horario,
+  .hero-portada .texto-portada-direccion {
+    text-shadow: 0 1px 12px rgba(0,0,0,0.9) !important;
+  }
+
+  @media (max-width: 1023px) {
+    .hero-portada--foto #cartel-container {
+      min-height: min(70svh, 560px);
+      height: min(74svh, 600px);
+      max-height: 600px;
+    }
+    .hero-portada--foto .hero-portada__img {
+      object-position: center 18%;
+    }
+    .hero-portada--foto .hero-portada__overlay {
+      background:
+        linear-gradient(180deg, rgba(10,7,6,0.4) 0%, rgba(10,7,6,0.15) 35%, rgba(10,7,6,0.82) 100%);
+    }
+    .hero-portada--foto .hero-portada__panel {
+      align-items: flex-end !important;
+      justify-content: center !important;
+      padding: 0 1rem 1.75rem !important;
+    }
+    .hero-portada--foto .hero-portada__text {
+      gap: clamp(6px, 1.8vw, 11px) !important;
+    }
+    .hero-portada--foto .hero-portada__actor {
+      font-size: clamp(17px, 4.6vw, 28px) !important;
+    }
+    .hero-portada--foto .hero-portada__titulo {
+      font-size: clamp(36px, 11.5vw, 68px) !important;
+    }
+  }
+  @media (max-width: 390px) {
+    .hero-portada--foto #cartel-container {
+      min-height: min(68svh, 520px);
+      height: min(72svh, 540px);
+    }
+    .hero-portada--foto .hero-portada__titulo {
+      font-size: clamp(34px, 10.8vw, 58px) !important;
+    }
+  }
+  @media (max-width: 1023px) and (max-height: 700px) {
+    .hero-portada--foto #cartel-container {
+      min-height: min(64svh, 480px);
+      height: min(68svh, 500px);
+    }
+    .hero-portada--foto .hero-portada__panel {
+      padding-bottom: 1.25rem !important;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero-portada--foto #cartel-container {
+      min-height: 420px !important;
+      height: min(62vh, 640px) !important;
+      max-height: 640px !important;
+    }
+    .hero-portada--foto .hero-portada__img {
+      object-position: 58% 22%;
+    }
+    .hero-portada--foto .hero-portada__overlay {
+      background:
+        linear-gradient(90deg, rgba(10,7,6,0.88) 0%, rgba(10,7,6,0.62) 34%, rgba(10,7,6,0.18) 58%, rgba(10,7,6,0.08) 100%);
+    }
+    .hero-portada--foto .hero-portada__panel {
+      align-items: center !important;
+      justify-content: flex-start !important;
+      padding: 2rem 8% 2rem 10% !important;
+    }
+    .hero-portada--foto .hero-portada__text {
+      align-items: flex-start !important;
+      text-align: left !important;
+      max-width: 20rem !important;
+    }
+    .hero-portada--foto .hero-portada__meta {
+      align-items: flex-start !important;
+    }
+    .hero-portada--foto .portada-separador {
+      margin-left: 0 !important;
+      margin-right: auto !important;
+    }
+  }
+
+  /* Portada — tipografía v1 */
+  .cartel-texto-block {
+    font-family: 'EB Garamond', Georgia, serif !important;
+  }
+  .cartel-texto-block .portada-nombre-actor {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.75) !important;
+  }
+  .hero-portada--foto .cartel-texto-block .portada-nombre-actor {
+    white-space: nowrap !important;
+  }
+  .cartel-texto-block .titulo-el-gorila {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-weight: 500 !important;
+    color: #f1ead9 !important;
+    -webkit-text-stroke: 0 !important;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.85) !important;
+  }
+  .cartel-texto-block .portada-kafka {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(10px, 2.2vw, 12px) !important;
+    letter-spacing: 0.22em !important;
+    text-transform: uppercase !important;
+    color: #d6c7a3 !important;
+    text-shadow: none !important;
+  }
+  .cartel-texto-block .portada-separador {
+    width: 48px !important;
+    height: 1px !important;
+    background: #D43A1A !important;
+    opacity: 0.65 !important;
+    margin: 4px auto !important;
+  }
+  .texto-portada-horario {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(10px, 2.2vw, 11px) !important;
+    letter-spacing: 0.22em !important;
+    text-transform: uppercase !important;
+    color: #d6c7a3 !important;
+  }
+  .texto-portada-direccion {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(9px, 2vw, 10px) !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+    color: rgba(214, 199, 163, 0.82) !important;
+    line-height: 1.65 !important;
+  }
+  .portada-info-movil-estreno {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(10px, 2.4vw, 11px) !important;
+    letter-spacing: 0.22em !important;
+    color: #d6c7a3 !important;
+  }
+  .portada-info-movil-detalle {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(9px, 2.1vw, 10px) !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+    color: rgba(214, 199, 163, 0.78) !important;
+  }
+
+  /* Encabezados — línea roja v1 */
+  .seccion-heading-v4::before {
+    width: 32px !important;
+    height: 1.5px !important;
+    background: #D43A1A !important;
+    opacity: 0.85;
+    margin-bottom: 12px !important;
+  }
+  .text-center .seccion-heading-v4::before {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .seccion-heading-v4 {
+    text-shadow: 0 1px 6px rgba(0,0,0,0.6) !important;
+  }
+
+  /* Citas narrativas — tono seco, no tarjeta decorativa */
+  .narrativa-cita {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-size: clamp(17px, 3.5vw, 24px) !important;
+    font-weight: 400 !important;
+    font-style: italic !important;
+    letter-spacing: 0.02em;
+    line-height: 1.42;
+    color: rgba(241, 234, 217, 0.88) !important;
+    text-shadow: none !important;
+    border: none;
+    border-left: 2px solid rgba(212, 58, 26, 0.55);
+    padding: 0.35rem 0 0.35rem 0.85rem;
+    max-width: 30rem;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+  }
+
+  /* Fondos tipo programa de mano — foto difuminada bajo secciones clave */
+  #sinopsis.section-with-bg::before {
+    background-image: url('img/programa/portada-v1.jpg') !important;
+    filter: blur(48px) brightness(0.38) contrast(1.05) saturate(0.55) !important;
+    opacity: 0.45 !important;
+  }
+  #la-obra.section-with-bg::before {
+    background-image: url('img/OBRA/2.jpg') !important;
+    filter: blur(52px) brightness(0.28) contrast(1.08) saturate(0.45) !important;
+    opacity: 0.5 !important;
+  }
+  #actor.section-with-bg::before {
+    background-image: url('img/HUMBERTO DUPEYRON/01.jpg') !important;
+    filter: blur(52px) brightness(0.32) contrast(1.06) saturate(0.5) !important;
+    opacity: 0.48 !important;
+  }
+  #comentarios {
+    position: relative;
+    overflow: hidden;
+  }
+  #comentarios::before {
+    content: '';
+    position: absolute;
+    inset: -15%;
+    background: url('img/programa/portada-v1.jpg') center / cover no-repeat;
+    filter: blur(56px) brightness(0.3) saturate(0.5);
+    opacity: 0.35;
+    z-index: 0;
+    pointer-events: none;
+  }
+  #comentarios > * { position: relative; z-index: 1; }
+
+  /* Marcos — bordes finos v1 */
+  .contenedor-texto-scroll.bg-black\/30,
+  #sinopsis .rounded-lg,
+  #faq .rounded-lg,
+  #contacto .rounded-lg,
+  .comentarios-seccion-frame,
+  .seccion-obra-actor .bg-black\/30 {
+    border-color: rgba(241, 234, 217, 0.18) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+
+  /* Fotos obra / actor — filtro editorial v1 */
+  #actor-imagen {
+    filter: grayscale(18%) contrast(1.06) saturate(0.92);
+  }
+
+  /* FAQ — separadores finos */
+  #faq details {
+    border-bottom: 1px solid rgba(168, 149, 120, 0.22);
+  }
+  #faq details:last-of-type {
+    border-bottom: none;
+  }
+
+  /* Equipo — rol mono */
+  .seccion-equipo-rol {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 9px !important;
+    letter-spacing: 0.2em !important;
+    text-transform: uppercase !important;
+    color: rgba(217, 155, 58, 0.75) !important;
+    font-style: normal !important;
+  }
+
+  /* Barra compra — Cormorant + mono */
+  .barra-compra-fija .barra-compra-titulo {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-weight: 500 !important;
+    font-size: 1.2rem !important;
+    letter-spacing: 0.02em;
+  }
+
   .font-display, .preview-fellenglish.font-display {
     font-family: 'Cormorant Garamond', Georgia, serif !important;
     font-weight: 500 !important;
@@ -1737,7 +2159,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     text-shadow: none;
     color: rgba(241,234,217,.94);
   }
-  /* Legibilidad: slides obra/actor y FAQ sin texto mini */
   .obra-texto-slide, .actor-texto-slide {
     font-size: 16px !important;
     line-height: 1.65 !important;
@@ -1755,6 +2176,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   #contacto .rounded-lg,
   .comentarios-seccion-frame {
     border-radius: 0 !important;
+  }
+
+  /* Text-shadow global más sobrio */
+  h1, h2, h3, h4, h5, h6 {
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65), 0 0 12px rgba(217, 155, 58, 0.08) !important;
+  }
+  .section-with-bg .text-text-dark,
+  .section-with-bg p {
+    text-shadow: none !important;
+  }
+  .section-with-bg .text-white,
+  .section-with-bg h2,
+  .section-with-bg h3 {
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7) !important;
   }
 </style>
 <script>
@@ -1883,7 +2318,7 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
       "name": "¿Hay funciones en este momento?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Sí: temporada julio y agosto 2026 en Teatro Wilberto Cantón, CDMX, miércoles 20:30. Estreno 8 de julio. Compra en elgorilateatro.com.mx/boletos.html."
+        "text": "Sí: 8 funciones en Teatro Wilberto Cantón, CDMX, miércoles 20:30. Estreno 8 de julio. Compra en elgorilateatro.com.mx/boletos.html."
       }
     },
     {
@@ -1899,7 +2334,7 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
       "name": "¿Dónde se presenta la obra?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Temporada julio y agosto 2026 en Teatro Wilberto Cantón (José María Velasco 59, San José Insurgentes, CDMX), miércoles 20:30, del 8 de julio al 26 de agosto."
+        "text": "Teatro Wilberto Cantón (José María Velasco 59, San José Insurgentes, CDMX), miércoles 20:30. 8 funciones; estreno 8 de julio."
       }
     },
     {
@@ -2050,7 +2485,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="w-auto object-contain flex-shrink-0 pointer-events-none" loading="eager" decoding="async">
     </button>
   </div>
-  <a href="presskit/presskit2026.html" class="btn-presskit-sello" id="link-presskit">presskit 2026</a>
+  <a href="presskit/presskit2026.html" class="btn-presskit-sello" id="link-presskit">presskit</a>
 </div>
 <div class="logo-37-sello logo-37-cargando" id="logo-37-wrap">
   <button type="button" id="abrir-popup-37" class="logo-37-btn flex items-center justify-center p-0 rounded transition-transform duration-200 hover:scale-110 focus:scale-110 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Ver 37 aniversario">
@@ -2094,56 +2529,44 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 <div class="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
 <main id="main-content" class="pt-6 sm:pt-8 md:pt-10 pb-12">
-<!-- Cartel Rotatorio - Primero después del header -->
-<section class="mb-2 sm:mb-5 lg:mb-8 text-center scroll-mt-24 hero-cartel-desktop" id="hero-cartel">
-<div class="relative min-h-[680px] h-[135vw] max-h-[800px] flex items-center justify-center overflow-visible pt-2.5 sm:pt-4 pb-4 sm:pb-6 lg:min-h-[450px] lg:h-[65vw] lg:max-h-[960px] lg:pt-10 lg:pb-8" id="cartel-container">
-<div class="absolute inset-0 flex flex-col lg:flex-row items-center justify-center gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 relative">
-<!-- Lado Izquierdo: Imagen Rotatoria (prioridad en móvil, izquierda en desktop). En reading mode se oculta. -->
-<div class="cartel-rotatorio-container reading-mode-hidden w-full lg:w-1/2 h-full flex items-center justify-center relative group order-1">
-<div class="w-full h-full flex items-center justify-center" id="cartel-rotatorio" style="background-size: contain; background-position: center center; background-repeat: no-repeat; transition: opacity 0.15s ease-in-out; display: block; min-height: 200px; will-change: opacity;" data-cartel-loaded="0">
+<!-- Hero — foto de escena + texto (sin cartel rotatorio por ahora) -->
+<section class="mb-2 sm:mb-5 lg:mb-8 text-center scroll-mt-24 hero-cartel-desktop hero-portada hero-portada--foto" id="hero-cartel">
+<div class="relative flex items-center justify-center overflow-hidden" id="cartel-container">
+<div class="hero-portada__ambiente" aria-hidden="true">
+<img class="hero-portada__img" src="img/programa/portada-v1.jpg" alt="" width="1600" height="900" decoding="async" fetchpriority="high"/>
+<div class="hero-portada__overlay"></div>
 </div>
-<!-- Flechas ocultas: cartel fijo por ahora -->
-<button onclick="cambiarCartelRotatorio(-1)" class="hidden absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white p-2 sm:p-3 rounded-full transition-all opacity-70 md:opacity-0 md:group-hover:opacity-100 touch-manipulation" aria-hidden="true" style="-webkit-tap-highlight-color: transparent;">
-<svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-<path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
-</svg>
-</button>
-<button onclick="cambiarCartelRotatorio(1)" class="hidden absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 active:bg-black/90 text-white p-2 sm:p-3 rounded-full transition-all opacity-70 md:opacity-0 md:group-hover:opacity-100 touch-manipulation" aria-hidden="true" style="-webkit-tap-highlight-color: transparent;">
-<svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
-</svg>
-</button>
+<div class="cartel-rotatorio-container reading-mode-hidden hero-portada__cartel-oculto" aria-hidden="true">
+<div id="cartel-rotatorio-halo" class="cartel-rotatorio-halo"></div>
+<div class="cartel-rotatorio-sharp" id="cartel-rotatorio" style="background-size: contain; background-position: center center; background-repeat: no-repeat;" data-cartel-loaded="0"></div>
 </div>
-<!-- Lado Derecho: Solo bloque de texto (cartel informativo sustituido por texto). -->
-<div class="cartel-informativo-container reading-mode-solo w-full lg:w-1/2 h-full flex items-center justify-center relative order-1 lg:order-2" id="cartel-informativo-wrap">
-    <div class="cartel-texto-block" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:clamp(11px,2.2vw,18px); max-width:400px; padding:1rem 1rem 1.5rem; font-family: Lora, Georgia, serif;">
-      <p class="portada-nombre-actor" style="font-size:clamp(19.2px,4.29vw,35px); color:rgba(242,237,228,0.88); font-style:italic; letter-spacing:0.05em; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">Humberto Dupeyron en</p>
-      <h1 class="titulo-el-gorila" style="font-size:clamp(40px, 13.3vw, 85px); color:#B85C38; line-height:0.9; letter-spacing:-0.02em; margin:0; font-weight:700; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">EL GORILA</h1>
-      <p style="font-size:clamp(15px,3.6vw,26px); color:rgba(242,237,228,0.82); letter-spacing:0.12em; text-transform:uppercase; margin:0; white-space:nowrap; text-shadow: 0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,1);">de Franz Kafka</p>
-      <div class="portada-info-temporada" id="portada-info-desktop">
-        <div style="width:60px; height:1.5px; background:#B85C38; opacity:0.6; margin:6px 0;"></div>
-        <div class="hidden lg:flex" style="flex-direction:column; align-items:center; gap:6px; margin-top:6px;">
-          <span class="texto-portada-horario" style="white-space:nowrap; opacity:0.9; letter-spacing:0.14em; text-transform:uppercase;">Estreno 8 de julio</span>
-          <span class="texto-portada-direccion" style="margin-top:0; max-width:min(320px, 90vw); white-space:normal; line-height:1.45;">Miércoles 20:30 · Jul–Ago 2026 · Teatro Wilberto Cantón</span>
-        </div>
-      </div>
-    </div>
+<div class="cartel-informativo-container reading-mode-solo hero-portada__panel" id="cartel-informativo-wrap">
+<div class="cartel-texto-block hero-portada__text">
+<p class="portada-nombre-actor hero-portada__actor">Humberto Dupeyron en</p>
+<h1 class="titulo-el-gorila hero-portada__titulo">EL GORILA</h1>
+<p class="portada-kafka hero-portada__kafka">de Franz Kafka</p>
+<div class="portada-info-temporada" id="portada-info-desktop">
+<div class="portada-separador"></div>
+<div class="hidden lg:flex hero-portada__meta" style="flex-direction:column; align-items:center; gap:6px; margin-top:6px;">
+<span class="texto-portada-horario">Miércoles 20:30</span>
+<span class="texto-portada-direccion" style="margin-top:0; max-width:min(320px, 90vw); white-space:normal;">8 funciones · Teatro Wilberto Cantón</span>
 </div>
-    </div>
+</div>
+</div>
+</div>
 </div>
 </section>
 <section id="portada-venta-boletos" class="portada-info-temporada portada-info-movil flex flex-col items-center justify-center px-4 lg:hidden" aria-label="Información de función">
   <div class="portada-info-movil-inner">
-    <p class="portada-info-movil-estreno">Estreno 8 de julio</p>
-    <p class="portada-info-movil-detalle">Miércoles 20:30 · Jul–Ago 2026</p>
+    <p class="portada-info-movil-detalle">Miércoles 20:30 · 8 funciones</p>
     <p class="portada-info-movil-detalle">Teatro Wilberto Cantón · San José Insurgentes</p>
   </div>
 </section>
 <!-- Contenido de la obra (siempre visible, sobre eliminado) -->
 <div id="sobre-contenido" style="max-height:none; opacity:1; overflow:visible; padding-top:0;">
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-1 sm:mt-2 md:mt-4">
-<div class="text-center mb-6 sm:mb-8 px-4">
-<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">37 años esperándote. Llegó tu turno.</p>
+<div class="text-center mb-4 sm:mb-5 px-4">
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Treinta y siete años aprendiendo a hablar como nosotros. El informe ya está listo.</p>
 </div>
 <div class="max-w-5xl galeria-reducida mx-auto galeria-wrap">
 <div class="galeria-hilo galeria-hilo-1 hidden md:block" aria-hidden="true"></div>
@@ -2225,7 +2648,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </div>
 </section>
-<section id="sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-4 sm:mt-6 section-with-bg" data-bg-sinopsis="img/SINOPSIS/mobile/1.webp">
+<section id="sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-4 sm:mt-6 section-with-bg">
 <h2 class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
             <div class="mx-auto max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left break-words bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 relative contenedor-texto-scroll">
                 <div id="sinopsis-texto" class="w-full space-y-4">
@@ -2238,15 +2661,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Ancla para scroll al widget -->
 <div id="venta-boletos" class="scroll-mt-24"></div>
 <div class="indicador-mas indicador-mas-izquierda" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
-<div class="text-center my-6 sm:my-8 px-4">
-<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">La pieza que no envejece.</p>
+<div class="text-center my-4 sm:my-5 px-4">
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Kafka escribió una parábola. Aquí alguien la declama — y mira de reojo al público.</p>
 </div>
 <!-- Sección La Obra (fondo Kafka más oscuro y desaturado) -->
 <section id="la-obra" class="seccion-obra-actor obra-fondo-kafka mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" data-bg="img/SINOPSIS/mobile/2.webp">
     <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
         <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
             <div class="flex-1 w-full min-w-0 order-2 md:order-1 flex flex-col min-h-0 bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
-                <h2 class="seccion-heading-v4 preview-fellenglish mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">La Obra</h2>
+                <h2 class="seccion-heading-v4 mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">La Obra</h2>
                 <div class="flex-1 min-h-0 flex flex-col">
                 <div id="obra-texto-carrusel" class="relative flex-1 min-h-0 cursor-pointer select-none text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (3 en total)">
                     <div class="obra-texto-slide texto-slide-activo absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-center" data-index="0">
@@ -2271,8 +2694,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 </section>
 
-<div class="text-center my-6 sm:my-8 px-4">
-<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Un actor. Un personaje.</p>
+<div class="text-center my-4 sm:my-5 px-4">
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Un simio, un auditorio, y la sospecha de que la jaula también es nuestra.</p>
 </div>
 <!-- Sección El Actor -->
 <section id="actor" class="seccion-obra-actor mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" data-bg="img/SINOPSIS/mobile/3.webp">
@@ -2327,8 +2750,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 
 <div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
-<div class="text-center my-6 sm:my-8 px-4">
-<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Ambiente y atmósfera.</p>
+<div class="text-center my-4 sm:my-5 px-4">
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Música, escultura, luz tenue: lo que no se dice también ocupa butaca.</p>
 </div>
 <!-- Sección Equipo -->
     <section class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-6 sm:mt-8 section-with-bg" data-bg="img/SINOPSIS/mobile/4.webp">
@@ -2341,7 +2764,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
                 <div class="flex-1 text-center md:text-left">
                     <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Odila Dupeyron</h3>
-                    <p class="text-sm sm:text-base text-accent-gold/80 font-medium italic">Música Original</p>
+                    <p class="seccion-equipo-rol text-sm sm:text-base text-accent-gold/80 font-medium italic">Música Original</p>
                 </div>
             </div>
             <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative">
@@ -2364,7 +2787,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
                 <div class="flex-1 text-center md:text-left">
                     <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Ariel de la Peña</h3>
-                    <p class="text-sm sm:text-base text-accent-gold/80 font-medium italic">Escultor</p>
+                    <p class="seccion-equipo-rol text-sm sm:text-base text-accent-gold/80 font-medium italic">Escultor</p>
                 </div>
             </div>
             <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative">
@@ -2390,7 +2813,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
                 <div class="flex-1 text-center md:text-left">
                     <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Osterlen Dupeyron</h3>
-                    <p class="text-sm sm:text-base text-accent-gold/80 font-medium italic">Producción y Dirección de Arte</p>
+                    <p class="seccion-equipo-rol text-sm sm:text-base text-accent-gold/80 font-medium italic">Producción y Dirección de Arte</p>
                 </div>
             </div>
             <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative">
@@ -2421,8 +2844,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 </section>
 
-<div class="text-center my-6 sm:my-8 px-4">
-<p class="text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto" style="color:#cd7f32;">Ven a descubrirlo...</p>
+<div class="text-center my-4 sm:my-5 px-4">
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Si el gorila miente, miente con la cortesía de quien ya aprendió las reglas.</p>
 </div>
 
 <section class="scroll-mt-24 mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 mt-6 sm:mt-8 section-with-bg" id="faq" data-bg="img/SINOPSIS/mobile/5.webp">
@@ -2442,7 +2865,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </summary>
 <div class="mt-3 pl-4 border-l-2 border-accent-gold/40 bg-black/40 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/25">
 <p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
-                Sí: <strong>temporada julio y agosto 2026</strong> en <strong>Teatro Wilberto Cantón</strong>, <strong>miércoles 20:30</strong>. Estreno <strong>8 de julio</strong>; funciones hasta el <strong>26 de agosto</strong>. Boletos en línea <strong>próximamente</strong>; avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">Instagram</a>.
+                Sí: <strong>8 funciones</strong> en <strong>Teatro Wilberto Cantón</strong>, <strong>miércoles 20:30</strong>. Estreno <strong>8 de julio</strong>. Boletos en <a href="boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a> o avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">Instagram</a>.
               </p>
 </div>
 </details>
@@ -2466,7 +2889,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </summary>
 <div class="mt-3 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
 <p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
-                La <strong class="text-accent-gold/95">temporada julio y agosto 2026</strong> es en <strong>Teatro Wilberto Cantón</strong> (José María Velasco 59, San José Insurgentes, CDMX): todos los miércoles a las 20:30, del 8 de julio al 26 de agosto.
+                En <strong>Teatro Wilberto Cantón</strong> (José María Velasco 59, San José Insurgentes, CDMX): <strong>8 funciones</strong>, todos los miércoles a las 20:30. Estreno 8 de julio.
               </p>
 </div>
 </details>
@@ -2750,10 +3173,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 <!-- Barra fija de compra -->
 <div class="barra-compra-fija">
-  <a class="link-venta-boletos" href="boletos.html" aria-label="Comprar boletos para El Gorila — temporada julio y agosto 2026">
-    <span class="barra-compra-titulo">Adquiere tus boletos</span>
+  <a class="link-venta-boletos" href="boletos.html" aria-label="Adquiere tus entradas — desde $350">
+    <span class="barra-compra-titulo">Adquiere tus entradas</span>
     <span class="barra-compra-meta" aria-hidden="true">
-      <span class="barra-compra-precio">Estreno 8 jul · Miércoles 20:30</span>
+      <span class="barra-compra-precio-tachado">$400</span>
+      <span class="barra-compra-precio-promo">$350</span>
     </span>
   </a>
 </div>
@@ -2793,27 +3217,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       obs.observe(track.closest('section') || track);
     } else {
       track.classList.add('running');
-    }
-  })();
-  (function() {
-    var sec = document.getElementById('sinopsis');
-    var bg = sec && sec.getAttribute('data-bg-sinopsis');
-    if (!sec || !bg) return;
-    function aplicarFondo() {
-      sec.style.backgroundImage = "url('" + bg + "')";
-      sec.removeAttribute('data-bg-sinopsis');
-    }
-    if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function(entries) {
-        if (entries[0].isIntersecting) {
-          aplicarFondo();
-          io.disconnect();
-        }
-      }, { rootMargin: '150px', threshold: 0 });
-      io.observe(sec);
-      setTimeout(function() { if (sec.hasAttribute('data-bg-sinopsis')) aplicarFondo(); }, 2500);
-    } else {
-      requestIdleCallback ? requestIdleCallback(aplicarFondo, { timeout: 600 }) : setTimeout(aplicarFondo, 400);
     }
   })();
   (function() {
@@ -2928,8 +3331,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           a.setAttribute('aria-label', 'Próximamente — síguenos en Instagram para avisos de boletos');
           var tit = a.querySelector('.barra-compra-titulo');
           if (tit) tit.textContent = 'Próximamente';
-          var precio = a.querySelector('.barra-compra-precio');
-          if (precio) precio.textContent = '@elgorilateatro';
+          var meta = a.querySelector('.barra-compra-meta');
+          if (meta) meta.innerHTML = '<span class="barra-compra-precio">@elgorilateatro</span>';
         });
         return;
       }
@@ -2937,12 +3340,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       var urlVenta = URL_VENTA_DEFAULT;
       if (urlVenta) links.forEach(function(a) {
         a.href = urlVenta;
-        a.setAttribute('aria-label', 'Comprar boletos para El Gorila — temporada julio y agosto 2026');
+        a.setAttribute('aria-label', 'Adquiere tus entradas — desde $350');
         a.removeAttribute('data-fuera-temporada');
         var tit = a.querySelector('.barra-compra-titulo');
-        if (tit) tit.textContent = 'Adquiere tus boletos';
-        var precio = a.querySelector('.barra-compra-precio');
-        if (precio) precio.textContent = 'Estreno 8 jul · Miércoles 20:30';
+        if (tit) tit.textContent = 'Adquiere tus entradas';
+        var meta = a.querySelector('.barra-compra-meta');
+        if (meta && !meta.querySelector('.barra-compra-precio-promo')) {
+          meta.innerHTML = '<span class="barra-compra-precio-tachado">$400</span><span class="barra-compra-precio-promo">$350</span>';
+        }
         if (urlVenta.indexOf('http') === 0) {
           a.setAttribute('target', '_blank');
           a.setAttribute('rel', 'noopener');

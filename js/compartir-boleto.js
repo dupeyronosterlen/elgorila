@@ -19,7 +19,7 @@
   }
 
   function urlVerificar(codigo) {
-    return `${baseUrl()}verificar.html?codigo=${encodeURIComponent(codigo)}`;
+    return `${baseUrl()}admin.html?view=verificar&codigo=${encodeURIComponent(codigo)}`;
   }
 
   function qrPayload(codigo) {

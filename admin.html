@@ -888,6 +888,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <span class="page-kicker">Puerta</span>
           <h1 class="page-title">Verificar entrada</h1>
         </div>
+        <div class="page-hd-actions">
+          <button type="button" class="btn-primary" id="btn-escanear-top" onclick="abrirScanner()">
+            <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px">qr_code_scanner</span>
+            Escanear QR
+          </button>
+        </div>
       </div>
       <div class="admin-ops-wrap">
 <div class="bol-card">
@@ -1010,15 +1016,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </button>
 </nav>
 
-<div id="modal-scanner" class="modal-scanner hidden" style="display:none;">
-  <div style="width:100%;max-width:360px;position:relative;">
-    <button type="button" onclick="cerrarScanner()" class="btn-accion" style="position:absolute;top:0;right:0;z-index:10;">
-      <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+<div id="modal-scanner" class="modal-scanner hidden" aria-label="Escáner QR">
+  <div class="modal-scanner-inner">
+    <button type="button" onclick="cerrarScanner()" class="btn-accion modal-scanner-close" aria-label="Cerrar escáner">
+      <span class="material-symbols-outlined" style="font-size:18px">close</span>
       Cerrar
     </button>
-    <video id="scanner-video" playsinline autoplay muted></video>
-    <canvas id="scanner-canvas" class="hidden"></canvas>
-    <p style="text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--soft);margin-top:12px;">Apunta al QR del boleto</p>
+    <video id="scanner-video" playsinline webkit-playsinline autoplay muted></video>
+    <canvas id="scanner-canvas" class="hidden" aria-hidden="true"></canvas>
+    <p class="modal-scanner-hint">Apunta al QR del boleto (CERT-…)</p>
   </div>
 </div>
 

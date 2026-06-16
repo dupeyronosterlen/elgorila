@@ -232,7 +232,7 @@ function codigoQrOficialVenta(venta) {
 }
 
 function urlVerificarBoleto(codigo) {
-  return `https://elgorilateatro.com.mx/verificar.html?codigo=${encodeURIComponent(codigo)}`;
+  return `${SITIO_BASE}/admin.html?view=verificar&codigo=${encodeURIComponent(codigo)}`;
 }
 
 const SITIO_BASE = 'https://elgorilateatro.com.mx';

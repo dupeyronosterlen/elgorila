@@ -2299,9 +2299,12 @@
     navGo(nav, 'boletera');
   }
 
-  function abrirVerificar() {
+  function abrirVerificar(abrirScan) {
     const nav = document.getElementById('nav-verificar') || document.querySelector('[data-nav=verificar]');
     navGo(nav, 'verificar');
+    if (abrirScan || new URLSearchParams(location.search).get('scan') === '1') {
+      setTimeout(() => window.abrirScanner?.(), 500);
+    }
   }
 
   function abrirModalEnlaceTaquilla() {
@@ -2579,6 +2582,9 @@
       document.getElementById('login-screen')?.classList.add('hidden');
       document.getElementById('admin-panel')?.classList.remove('hidden');
       AdminPanel.iniciar(u, viewParam === 'boletera' || viewParam === 'verificar' ? viewParam : undefined);
+      if (viewParam === 'verificar' && params.get('scan') === '1') {
+        setTimeout(() => window.abrirScanner?.(), 700);
+      }
       return;
     }
 

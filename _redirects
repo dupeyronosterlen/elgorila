@@ -11,3 +11,11 @@
 /terminos-y-condiciones/   /terminos.html   200
 /privacidad       /terminos.html#privacidad   200
 /privacidad/      /terminos.html#privacidad   200
+
+# Legacy → panel único admin.html
+/boletera.html              /admin.html?view=boletera     301
+/verificar.html             /admin.html?view=verificar    301
+/taquilla.html              /admin.html?view=boletera     301
+/acomodadores.html          /admin.html?view=verificar    301
+/admin-panel-v4.html        /admin.html                   301
+/admin-panel-v4             /admin.html                   301
