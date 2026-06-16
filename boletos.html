@@ -131,50 +131,6 @@ a   { color: inherit; }
   .logo-37-sello img { height: clamp(4rem, 14vw, 6rem) !important; }
 }
 
-/* ── MODAL CROQUIS (CSS checkbox) ────────────────────────── */
-#modal-croquis { display: none !important; }
-.croquis-modal {
-  display: none;
-  position: fixed; inset: 0; z-index: 100;
-  align-items: center; justify-content: center;
-  padding: 16px; background: rgba(0,0,0,0.90);
-  backdrop-filter: blur(6px);
-}
-#modal-croquis:checked + .croquis-modal { display: flex !important; }
-.croquis-inner {
-  background: var(--d-bg2); width: 100%; max-width: 780px;
-  border: 1px solid var(--d-faint);
-  display: flex; flex-direction: column; max-height: 90vh;
-}
-.croquis-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 18px 22px; border-bottom: 1px solid var(--d-faint);
-}
-.croquis-header h3 {
-  font-family: var(--display); font-size: 28px; font-weight: 500;
-  color: var(--gold); margin: 0; line-height: .98;
-}
-.croquis-header p {
-  font-family: var(--mono); font-size: 13px; letter-spacing: .18em;
-  text-transform: uppercase; color: var(--d-soft); margin: 5px 0 0;
-}
-.croquis-close {
-  font-family: var(--mono); font-size: 20px; color: var(--d-soft);
-  background: none; border: none; cursor: pointer;
-  padding: 4px; line-height: 1; transition: color .15s;
-}
-.croquis-close:hover { color: var(--red); }
-.croquis-body { padding: 20px; overflow: auto; flex-grow: 1; background: #0c0a08; }
-.croquis-legend {
-  display: flex; flex-wrap: wrap; gap: 18px; justify-content: center;
-  margin-top: 16px;
-}
-.croquis-legend-item {
-  display: flex; align-items: center; gap: 8px;
-  font-family: var(--mono); font-size: 12px;
-  letter-spacing: .12em; text-transform: uppercase; color: var(--d-soft);
-}
-.croquis-legend-dot { width: 12px; height: 12px; flex-shrink: 0; }
 
 /* ── SISTEMA DE SECCIONES v3 ─────────────────────────────── */
 .inner {
@@ -539,28 +495,27 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   color: var(--red); background: rgba(212,58,26,.08);
   padding: 3px 8px;
 }
-.map-croquis-trigger {
-  cursor: pointer; display: block; position: relative;
-  border: 1px solid var(--p-rule); overflow: hidden;
-  transition: border-color .15s;
+.mapa-teatro-wrap {
+  display: block; border: 1px solid var(--p-rule);
+  background: #0c0a08; overflow: hidden;
 }
-.map-croquis-trigger:hover { border-color: var(--p-soft); }
-.map-croquis-overlay {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(26,20,17,.45);
-}
-.map-croquis-btn {
-  background: rgba(212,58,26,.82); color: #fff;
-  font-family: var(--mono); font-size: 12px;
-  letter-spacing: .18em; text-transform: uppercase;
-  padding: 8px 14px; display: flex; align-items: center; gap: 6px;
-}
+.mapa-teatro-wrap svg { display: block; width: 100%; height: auto; }
 .mapa-nota {
-  font-family: var(--mono); font-size: 12px;
-  letter-spacing: .12em; text-transform: uppercase;
-  color: var(--p-rule); text-align: center; margin-top: 10px;
+  font-family: var(--cuerpo); font-size: 16px;
+  line-height: 1.55; color: var(--p-soft);
+  text-align: center; margin-top: 12px;
 }
+.mapa-nota strong { font-weight: 600; color: var(--p-ink); }
+.mapa-leyenda {
+  display: flex; flex-wrap: wrap; gap: 14px 18px; justify-content: center;
+  margin-top: 14px;
+}
+.mapa-leyenda-item {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--p-rule);
+}
+.mapa-leyenda-dot { width: 11px; height: 11px; flex-shrink: 0; border: 1px solid rgba(26,20,17,.15); }
 
 /* ── CONTACTO (papel) ────────────────────────────────────── */
 .contacto-items { display: flex; flex-direction: column; gap: 8px; }
@@ -582,6 +537,33 @@ details[open] .faq-chevron { transform: rotate(45deg); }
 .contacto-val {
   font-family: var(--display); font-size: 20px;
   font-weight: 500; color: var(--p-ink);
+}
+.contacto-item--link { text-decoration: none; color: inherit; }
+.contacto-bloque { margin-top: 28px; }
+
+/* WhatsApp flotante (igual que index) */
+.fab-whatsapp {
+  position: fixed;
+  right: max(0.85rem, env(safe-area-inset-right, 0px));
+  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  width: 2.95rem; height: 2.95rem;
+  border-radius: 50%;
+  background: #25d366; color: #fff;
+  box-shadow: 0 3px 14px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.12) inset;
+  transition: transform .2s ease, box-shadow .2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab-whatsapp:hover {
+  transform: scale(1.06);
+  box-shadow: 0 4px 18px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.15) inset;
+}
+.fab-whatsapp:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.fab-whatsapp svg { width: 1.55rem; height: 1.55rem; flex-shrink: 0; }
+@media (min-width: 769px) {
+  .fab-whatsapp { width: 2.8rem; height: 2.8rem; right: max(1rem, env(safe-area-inset-right, 0px)); }
+  .fab-whatsapp svg { width: 1.45rem; height: 1.45rem; }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -922,49 +904,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <a href="#main-content" class="skip-link">Saltar al contenido</a>
 
-<!-- ══ MODAL CROQUIS (CSS checkbox) ═════════════════════════ -->
-<input id="modal-croquis" type="checkbox">
-<div class="croquis-modal">
-  <label for="modal-croquis" style="position:absolute;inset:0;cursor:pointer;"></label>
-  <div class="croquis-inner">
-    <div class="croquis-header">
-      <div>
-        <h3>Plano del Teatro</h3>
-        <p>Distribución de zonas y servicios</p>
-      </div>
-      <label class="croquis-close" for="modal-croquis" aria-label="Cerrar">×</label>
-    </div>
-    <div class="croquis-body">
-      <div style="width:100%;background:#1F1A12;border:1px solid rgba(241,234,217,.05);">
-        <svg viewBox="0 0 800 500" style="width:100%;height:auto;">
-          <defs>
-            <pattern height="20" id="seatPattern" patternUnits="userSpaceOnUse" width="20">
-              <circle cx="10" cy="10" fill="#3a3228" r="2"></circle>
-            </pattern>
-          </defs>
-          <rect fill="#1F1A12" height="500" width="800"/>
-          <path d="M 200 40 L 600 40 L 560 120 L 240 120 Z" fill="#0f0c09" stroke="#A97C22" stroke-width="2"/>
-          <text fill="#A97C22" font-family="Cinzel" font-size="18" font-weight="bold" letter-spacing="2" text-anchor="middle" x="400" y="90">ESCENARIO</text>
-          <rect fill="url(#seatPattern)" height="220" stroke="#333" stroke-width="1" width="440" x="180" y="160"/>
-          <rect fill="rgba(169,124,34,0.05)" height="220" width="440" x="180" y="160"/>
-          <text fill="#6B7280" font-family="sans-serif" font-size="14" opacity="0.7" text-anchor="middle" x="400" y="270">ZONA DE BUTACAS</text>
-          <text fill="#6B7280" font-family="sans-serif" font-size="10" opacity="0.5" text-anchor="middle" x="400" y="290">(Selección no disponible)</text>
-          <g><rect fill="#1C2622" height="150" stroke="#346F63" stroke-width="2" width="100" x="40" y="200"/>
-          <text fill="#5c8f83" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" x="90" y="270">CAFETERÍA</text></g>
-          <g><rect fill="#29181d" height="150" stroke="#A6365F" stroke-width="2" width="100" x="660" y="200"/>
-          <text fill="#A6365F" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle" x="710" y="270">WC</text></g>
-          <text fill="#888" font-family="sans-serif" font-size="10" letter-spacing="1" text-anchor="middle" x="400" y="470">ENTRADA PRINCIPAL</text>
-        </svg>
-      </div>
-      <div class="croquis-legend">
-        <div class="croquis-legend-item"><div class="croquis-legend-dot" style="background:#A97C22;"></div><span>Escenario</span></div>
-        <div class="croquis-legend-item"><div class="croquis-legend-dot" style="background:#346F63;"></div><span>Cafetería</span></div>
-        <div class="croquis-legend-item"><div class="croquis-legend-dot" style="background:#A6365F;"></div><span>Servicios</span></div>
-        <div class="croquis-legend-item"><div class="croquis-legend-dot" style="background:#333;border-radius:50%;"></div><span>Butacas</span></div>
-      </div>
-    </div>
-  </div>
-</div>
+<a class="fab-whatsapp touch-manipulation" href="https://wa.me/5215512037223" target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp" title="WhatsApp">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.883 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
 
 <!-- ══ LOGOS FIJOS ═══════════════════════════════════════════ -->
 <div class="logo-gorila-sello" id="logo-gorila-wrap">
@@ -1258,49 +1200,41 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="rule"></div>
 
     <div class="mapa-titulo">
-      <span>Plano del recinto</span>
-      <span class="mapa-badge">Informativo</span>
+      <span>Distribución del auditorio</span>
+      <span class="mapa-badge">Orientativo</span>
     </div>
-    <label class="map-croquis-trigger" for="modal-croquis">
-      <svg viewBox="0 0 200 120" style="width:100%;height:auto;opacity:0.75;">
-        <rect fill="#1F1A12" height="120" width="200"/>
-        <path d="M 50 10 L 150 10 L 140 30 L 60 30 Z" fill="#221f1a" stroke="#A97C22" stroke-width="1"/>
-        <rect fill="#2A241C" height="50" stroke="#444" stroke-width="0.5" width="120" x="40" y="40"/>
-        <text fill="#666" font-family="sans-serif" font-size="8" text-anchor="middle" x="100" y="65">Butacas</text>
+    <div class="mapa-teatro-wrap" role="img" aria-label="Plano orientativo: escenario, platea y galería">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 270" aria-hidden="true">
+        <path fill="#1a1411" stroke="#a89578" stroke-width="1.2" d="M 12 34 L 384 18 L 384 252 L 12 236 Z"/>
+        <rect fill="#0a0706" stroke="#d99b3a" stroke-width="1.4" x="24" y="52" width="44" height="166" rx="1"/>
+        <text fill="#d99b3a" font-family="JetBrains Mono, ui-monospace, monospace" font-size="9" letter-spacing="1.6" text-anchor="middle" transform="rotate(-90 46 135)" x="46" y="135">ESCENARIO</text>
+        <rect fill="rgba(217,155,58,0.22)" stroke="#d99b3a" stroke-width="1.1" x="78" y="64" width="188" height="142" rx="1"/>
+        <text fill="#d99b3a" font-family="JetBrains Mono, ui-monospace, monospace" font-size="10" letter-spacing="1.8" text-anchor="middle" x="172" y="138">PLATEA</text>
+        <rect fill="rgba(241,234,217,0.08)" stroke="#a89578" stroke-width="1.1" x="258" y="48" width="84" height="18" rx="1"/>
+        <rect fill="rgba(241,234,217,0.08)" stroke="#a89578" stroke-width="1.1" x="318" y="48" width="30" height="174" rx="1"/>
+        <rect fill="rgba(241,234,217,0.08)" stroke="#a89578" stroke-width="1.1" x="258" y="204" width="84" height="18" rx="1"/>
+        <text fill="#f1ead9" font-family="JetBrains Mono, ui-monospace, monospace" font-size="9" letter-spacing="1.6" text-anchor="middle" transform="rotate(90 333 135)" x="333" y="135">GALERÍA</text>
+        <path fill="none" stroke="rgba(168,149,120,0.55)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M 278 48 L 268 64"/>
+        <path fill="none" stroke="rgba(168,149,120,0.55)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M 278 222 L 268 206"/>
       </svg>
-      <div class="map-croquis-overlay">
-        <div class="map-croquis-btn">
-          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 3h6m0 0v6m0-6L10 14M9 3H3v18h18v-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Ver plano detallado
-        </div>
-      </div>
-    </label>
-    <p class="mapa-nota">Consulta escenario, salidas y servicios.</p>
+    </div>
+    <div class="mapa-leyenda" aria-hidden="true">
+      <div class="mapa-leyenda-item"><span class="mapa-leyenda-dot" style="background:#0a0706;border-color:#d99b3a;"></span><span>Escenario</span></div>
+      <div class="mapa-leyenda-item"><span class="mapa-leyenda-dot" style="background:rgba(217,155,58,.35);"></span><span>Platea</span></div>
+      <div class="mapa-leyenda-item"><span class="mapa-leyenda-dot" style="background:rgba(168,149,120,.25);"></span><span>Galería</span></div>
+    </div>
 
-    <div style="margin-top:28px;">
+    <div class="contacto-bloque">
       <div class="sec-head" style="margin-bottom:12px;">
         <span class="sec-num">Contacto</span>
       </div>
-      <p style="font-family:var(--cuerpo);font-size:18px;color:var(--p-soft);margin-bottom:14px;">¿Tienes dudas sobre tus boletos? Estamos disponibles.</p>
       <div class="contacto-items">
-        <div class="contacto-item">
+        <a class="contacto-item contacto-item--link" href="mailto:elgorilateatro@gmail.com">
           <span class="contacto-icon">
             <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
-          <div>
-            <span class="contacto-etiq">Correo</span>
-            <span class="contacto-val">elgorilateatro@gmail.com</span>
-          </div>
-        </div>
-        <div class="contacto-item">
-          <span class="contacto-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6v.75Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </span>
-          <div>
-            <span class="contacto-etiq">Teléfono</span>
-            <span class="contacto-val">+52 55 1203 7223</span>
-          </div>
-        </div>
+          <span class="contacto-val">elgorilateatro@gmail.com</span>
+        </a>
       </div>
     </div>
   </div>
@@ -1374,6 +1308,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       wrap.classList.add('logo-37-loaded');
     }
   }
+  var n = (localStorage.getItem('elgorila_whatsapp') || '').trim().replace(/\D/g, '') || '5215512037223';
+  var waUrl = 'https://wa.me/' + n;
+  document.querySelectorAll('.fab-whatsapp').forEach(function(a) {
+    a.href = waUrl;
+  });
 })();
 </script>
 

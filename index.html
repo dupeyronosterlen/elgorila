@@ -1857,18 +1857,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     pointer-events: none !important;
     background: none !important;
   }
-  .hero-portada__text {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-    text-align: center !important;
-    gap: clamp(9px, 2.2vw, 16px) !important;
-    max-width: min(24rem, 94vw) !important;
-    padding: 0 !important;
+  .hero-portada__bloque-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
   }
   .hero-portada__bloque {
-    transform: scale(1.12);
+    transform: scale(1.29);
     transform-origin: center center;
     display: flex;
     flex-direction: column;
@@ -1956,8 +1953,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .hero-portada--foto .hero-portada__bloque {
       transform-origin: center bottom;
     }
-    .hero-portada--foto .hero-portada__text {
+    .hero-portada--foto .hero-portada__direccion {
+      display: none;
+    }
+    .hero-portada--foto .hero-portada__composicion {
+      display: contents;
+    }
+    .hero-portada--foto .hero-portada__bloque-wrap {
       gap: clamp(7px, 2vw, 13px) !important;
+      max-width: min(24rem, 94vw) !important;
     }
     .hero-portada--foto .hero-portada__actor {
       font-size: clamp(17px, 4.6vw, 28px) !important;
@@ -2001,37 +2005,92 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       max-height: 640px !important;
     }
     .hero-portada--foto .hero-portada__img {
-      object-position: 58% 22%;
+      object-position: 78% 28%;
+      transform: scale(1.04);
     }
     .hero-portada--foto .hero-portada__overlay {
       background:
-        linear-gradient(90deg, rgba(10,7,6,0.88) 0%, rgba(10,7,6,0.62) 34%, rgba(10,7,6,0.18) 58%, rgba(10,7,6,0.08) 100%);
+        linear-gradient(90deg, rgba(10,7,6,0.92) 0%, rgba(10,7,6,0.72) 22%, rgba(10,7,6,0.28) 42%, rgba(10,7,6,0.06) 56%, transparent 66%),
+        linear-gradient(180deg, rgba(10,7,6,0.22) 0%, transparent 38%, rgba(10,7,6,0.38) 72%, rgba(10,7,6,0.78) 100%);
     }
     .hero-portada--foto .hero-portada__panel {
-      align-items: center !important;
-      justify-content: flex-start !important;
-      padding: 2rem 8% 2rem 10% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      justify-content: flex-end !important;
+      padding: 0 !important;
     }
-    .hero-portada--foto .hero-portada__text {
-      align-items: flex-start !important;
-      text-align: left !important;
-      max-width: 22rem !important;
-      padding: 0 0.5rem !important;
+    .hero-portada--foto .hero-portada__composicion {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: clamp(1.25rem, 3vw, 2.75rem);
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 clamp(1.75rem, 5.5%, 3rem) clamp(2rem, 5vh, 3.25rem) clamp(2rem, 6%, 3.5rem);
+    }
+    .hero-portada--foto .hero-portada__bloque-wrap {
+      flex: 0 1 auto;
+      width: auto;
+      max-width: min(24rem, 50%);
+      text-align: left;
+      padding: 0;
+    }
+    .hero-portada--foto .hero-portada__direccion {
+      flex: 0 1 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-self: flex-start;
+      max-width: min(15rem, 34%);
+      margin-top: clamp(0.15rem, 0.45vh, 0.35rem);
+      padding-top: 0.1em;
+    }
+    .hero-portada--foto .hero-portada__meta--desktop {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end !important;
+      gap: 6px;
+      transform: scale(1.1);
+      transform-origin: right top;
+      text-align: right;
     }
     .hero-portada--foto .hero-portada__bloque {
-      transform-origin: left center;
+      transform: scale(1.22);
+      transform-origin: left top;
       align-items: flex-start;
+      max-width: 100%;
+    }
+    .hero-portada--foto .hero-portada__titulo {
+      font-size: clamp(44px, 4.8vw, 68px) !important;
+      white-space: nowrap !important;
+    }
+    .hero-portada--foto .hero-portada__actor {
+      font-size: clamp(20px, 2.2vw, 30px) !important;
     }
     .hero-portada--foto .hero-portada__regla {
       margin-left: 0 !important;
       margin-right: auto !important;
     }
     .hero-portada--foto .hero-portada__meta {
-      align-items: flex-start !important;
+      align-items: flex-end !important;
+      max-width: 100%;
     }
-    .hero-portada--foto .portada-separador {
-      margin-left: 0 !important;
-      margin-right: auto !important;
+  }
+  @media (min-width: 1024px) and (max-width: 1280px) {
+    .hero-portada--foto .hero-portada__composicion {
+      padding-left: clamp(1.5rem, 5%, 2.5rem);
+      padding-right: clamp(1.5rem, 4.5%, 2.25rem);
+    }
+    .hero-portada--foto .hero-portada__bloque-wrap {
+      max-width: min(20rem, 52%) !important;
+    }
+    .hero-portada--foto .hero-portada__direccion {
+      max-width: min(14rem, 36%) !important;
+    }
+    .hero-portada--foto .hero-portada__titulo {
+      font-size: clamp(40px, 4.5vw, 58px) !important;
     }
   }
 
@@ -2638,20 +2697,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="cartel-rotatorio-sharp" id="cartel-rotatorio" style="background-size: contain; background-position: center center; background-repeat: no-repeat;" data-cartel-loaded="0"></div>
 </div>
 <div class="cartel-informativo-container reading-mode-solo hero-portada__panel" id="cartel-informativo-wrap">
-<div class="cartel-texto-block hero-portada__text">
+<div class="hero-portada__composicion">
+<div class="cartel-texto-block hero-portada__bloque-wrap">
 <div class="hero-portada__bloque">
 <p class="portada-nombre-actor hero-portada__actor">Humberto Dupeyron en</p>
 <h1 class="titulo-el-gorila hero-portada__titulo">EL GORILA</h1>
 <p class="portada-kafka hero-portada__kafka">de Franz Kafka</p>
 <div class="portada-separador hero-portada__regla"></div>
 </div>
-<div class="portada-info-temporada" id="portada-info-desktop">
-<div class="hidden lg:flex hero-portada__meta" style="flex-direction:column; align-items:flex-start; gap:5px; margin-top:8px;">
+</div>
+<div class="portada-info-temporada hero-portada__direccion" id="portada-info-desktop">
+<div class="hidden lg:flex hero-portada__meta hero-portada__meta--desktop">
 <span class="texto-portada-sede">Teatro Wilberto Cantón</span>
 <span class="texto-portada-calle">José María Velasco 59</span>
 <span class="texto-portada-calle texto-portada-calle--colonia">San José Insurgentes</span>
 <span class="texto-portada-horario">Miércoles 20:30</span>
-<span class="texto-portada-funciones">13 funciones</span>
 </div>
 </div>
 </div>
@@ -2664,7 +2724,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <p class="portada-info-movil-calle">José María Velasco 59</p>
     <p class="portada-info-movil-calle portada-info-movil-calle--colonia">San José Insurgentes</p>
     <p class="portada-info-movil-horario">Miércoles 20:30</p>
-    <p class="portada-info-movil-funciones">13 funciones</p>
   </div>
 </section>
 <!-- Contenido de la obra (siempre visible, sobre eliminado) -->

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 270" role="img" aria-labelledby="mapa-title mapa-desc">
+  <title id="mapa-title">Plano orientativo del Teatro Wilberto Cantón</title>
+  <desc id="mapa-desc">Escenario a la izquierda; platea y galería a la derecha.</desc>
+  <path fill="#1a1411" stroke="#a89578" stroke-width="1.2" d="M 12 34 L 384 18 L 384 252 L 12 236 Z"/>
+  <rect fill="#0a0706" stroke="#d99b3a" stroke-width="1.4" x="24" y="52" width="44" height="166" rx="1"/>
+  <text fill="#d99b3a" font-family="JetBrains Mono, ui-monospace, monospace" font-size="9" letter-spacing="1.6" text-anchor="middle" transform="rotate(-90 46 135)" x="46" y="135">ESCENARIO</text>
+  <rect fill="rgba(217,155,58,0.22)" stroke="#d99b3a" stroke-width="1.1" x="78" y="64" width="188" height="142" rx="1"/>
+  <text fill="#d99b3a" font-family="JetBrains Mono, ui-monospace, monospace" font-size="10" letter-spacing="1.8" text-anchor="middle" x="172" y="138">PLATEA</text>
+  <rect fill="rgba(241,234,217,0.08)" stroke="#a89578" stroke-width="1.1" x="258" y="48" width="84" height="18" rx="1"/>
+  <rect fill="rgba(241,234,217,0.08)" stroke="#a89578" stroke-width="1.1" x="318" y="48" width="30" height="174" rx="1"/>
+  <rect fill="rgba(241,234,217,0.08)" stroke="#a89578" stroke-width="1.1" x="258" y="204" width="84" height="18" rx="1"/>
+  <text fill="#f1ead9" font-family="JetBrains Mono, ui-monospace, monospace" font-size="9" letter-spacing="1.6" text-anchor="middle" transform="rotate(90 333 135)" x="333" y="135">GALERÍA</text>
+  <path fill="none" stroke="rgba(168,149,120,0.55)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M 278 48 L 268 64"/>
+  <path fill="none" stroke="rgba(168,149,120,0.55)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M 278 222 L 268 206"/>
+</svg>
