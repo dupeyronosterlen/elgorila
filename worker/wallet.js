@@ -98,6 +98,7 @@ export async function googleWalletSaveUrl(venta, config, env, boletoIdx = null) 
     },
     textModulesData: [
       { id: 'venue', header: 'Teatro', body: config.venue || 'Teatro Wilberto Cantón' },
+      { id: 'direccion', header: 'Dónde', body: config.direccion || 'José María Velasco 59, San José Insurgentes, CDMX' },
       { id: 'instrucciones', header: 'Entrada', body: 'Presenta este pase en puerta. Llega 30 min antes.' },
     ].concat(folio ? [{ id: 'folio', header: 'Folio taquilla', body: folio }] : []),
   };

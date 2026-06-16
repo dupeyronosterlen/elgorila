@@ -1,5 +1,6 @@
 (function () {
-  const VENUE = 'Teatro Wilberto Cantón, San José Insurgentes, CDMX';
+  const VENUE = 'Teatro Wilberto Cantón';
+  const DIRECCION = 'José María Velasco 59 · San José Insurgentes';
   let ventaState = null;
   let modos = [];
   let modoActivo = 0;
@@ -197,7 +198,7 @@
       : modo.codigo;
     let texto =
       `Voy a ver EL GORILA — ${ventaState.funcionNombre || ventaState.fecha}. ` +
-      `${modo.entradas}.\n${VENUE}`;
+      `${modo.entradas}.\n${VENUE}\n${DIRECCION}`;
     if (modo.folio) texto += `\nFolio taquilla: ${modo.folio}`;
     if (cert) texto += `\nCertificado: ${cert}`;
     texto += '\n\nPresenta el QR adjunto en la entrada del teatro.';

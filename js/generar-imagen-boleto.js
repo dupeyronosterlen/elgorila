@@ -6,7 +6,9 @@
   const W = 540;
   const H = 960;
   const VENUE = 'Teatro Wilberto Cantón';
-  const DIRECCION = 'San José Insurgentes, CDMX';
+  const CALLE = 'José María Velasco 59';
+  const COLONIA = 'San José Insurgentes';
+  const DIRECCION_BOLETO = `${CALLE} · ${COLONIA}`;
 
   function loadImage(src) {
     return new Promise((resolve, reject) => {
@@ -176,39 +178,44 @@
     wrapText(ctx, opts.funcion || '', 28, 182, W - 56, 26, 3);
 
     ctx.fillStyle = 'rgba(241,234,217,.65)';
-    ctx.font = '400 14px Georgia, serif';
-    ctx.fillText(VENUE, 28, 268);
+    ctx.font = '500 15px Georgia, serif';
+    ctx.fillText(VENUE, 28, 264);
     ctx.font = '400 12px Georgia, serif';
-    ctx.fillStyle = 'rgba(241,234,217,.45)';
-    ctx.fillText(DIRECCION, 28, 286);
+    ctx.fillStyle = 'rgba(241,234,217,.55)';
+    ctx.fillText(CALLE, 28, 282);
+    ctx.fillText(COLONIA, 28, 298);
 
+    let metaY = 316;
     if (opts.tipo || opts.seccion) {
       ctx.font = '500 8px "JetBrains Mono", monospace';
       ctx.fillStyle = '#d99b3a';
       const zona = [opts.tipo, opts.seccion].filter(Boolean).join(' · ').toUpperCase();
-      ctx.fillText(zona, 28, 308);
+      ctx.fillText(zona, 28, metaY);
+      metaY += 14;
     }
 
     // ── Folio taquilla (destacado)
     const folio = (opts.folio || '').trim();
+    let folioTop = metaY + 6;
     if (folio) {
       ctx.fillStyle = 'rgba(217,155,58,0.12)';
-      roundRect(ctx, 28, 322, W - 56, 52, 6);
+      roundRect(ctx, 28, folioTop, W - 56, 52, 6);
       ctx.fill();
       ctx.strokeStyle = 'rgba(217,155,58,0.45)';
       ctx.lineWidth = 1;
-      roundRect(ctx, 28, 322, W - 56, 52, 6);
+      roundRect(ctx, 28, folioTop, W - 56, 52, 6);
       ctx.stroke();
       ctx.font = '500 8px "JetBrains Mono", monospace';
       ctx.fillStyle = '#d99b3a';
-      ctx.fillText('FOLIO TAQUILLA', 40, 342);
+      ctx.fillText('FOLIO TAQUILLA', 40, folioTop + 20);
       ctx.font = '600 20px "JetBrains Mono", monospace';
       ctx.fillStyle = '#f1ead9';
-      ctx.fillText(folio, 40, 366);
+      ctx.fillText(folio, 40, folioTop + 44);
+      folioTop += 58;
     }
 
     // ── Bloque papel + QR
-    const paperY = folio ? 392 : 320;
+    const paperY = folio ? folioTop + 8 : metaY + 12;
     const paperH = H - paperY - 20;
     ctx.fillStyle = '#f1ead9';
     ctx.fillRect(0, paperY, W, paperH);
@@ -248,9 +255,10 @@
     wrapText(ctx, hint, W / 2 - (W - 80) / 2, ty, W - 80, 18, 2);
 
     ctx.textAlign = 'left';
-    ctx.font = '400 11px Georgia, serif';
+    ctx.font = '400 10px Georgia, serif';
     ctx.fillStyle = '#6b5c4a';
-    ctx.fillText('Llega 30 min antes · elgorilateatro.com.mx', 28, H - 28);
+    ctx.fillText('Llega 30 min antes', 28, H - 40);
+    ctx.fillText(DIRECCION_BOLETO, 28, H - 24);
 
     // Marca de agua sutil
     ctx.save();
@@ -303,7 +311,7 @@
   async function guardarEnDispositivo(canvas, filename, titulo) {
     const blob = await canvasToBlob(canvas);
     const file = new File([blob], filename, { type: 'image/png' });
-    const texto = `${titulo || 'Mi boleto — EL GORILA'}\n${VENUE}`;
+    const texto = `${titulo || 'Mi boleto — EL GORILA'}\n${VENUE}\n${DIRECCION_BOLETO}`;
     if (navigator.share) {
       const payload = { title: titulo || 'EL GORILA', text: texto };
       if (navigator.canShare && navigator.canShare({ files: [file] })) {

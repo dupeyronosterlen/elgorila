@@ -206,8 +206,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         width: 100%;
         max-width: 100%;
         margin: 0 auto;
-        padding: 0 0.35rem;
-        overflow: hidden;
+        padding: 0 0.5rem;
       }
       .portada-info-movil-estreno {
         font-family: Lora, Georgia, serif;
@@ -1974,8 +1973,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .texto-portada-calle,
     .portada-info-movil-calle {
-      font-size: clamp(6px, 1.55vw, 7.5px) !important;
-      letter-spacing: 0.05em !important;
+      font-size: clamp(6.5px, 1.7vw, 7.5px) !important;
+      letter-spacing: 0.04em !important;
+    }
+    .texto-portada-calle--colonia,
+    .portada-info-movil-calle--colonia {
+      font-size: 85% !important;
     }
   }
   @media (max-width: 1023px) and (max-height: 700px) {
@@ -2088,16 +2091,38 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
   .texto-portada-calle {
     font-family: 'JetBrains Mono', monospace !important;
-    font-size: clamp(6.5px, 1.65vw, 8px) !important;
-    letter-spacing: 0.08em !important;
+    font-size: clamp(7px, 1.85vw, 8.5px) !important;
+    letter-spacing: 0.05em !important;
     text-transform: uppercase !important;
     color: rgba(214, 199, 163, 0.72) !important;
     white-space: nowrap !important;
-    line-height: 1.25 !important;
-    max-width: 100%;
+    line-height: 1.28 !important;
+    display: block;
+  }
+  .hero-portada__meta .texto-portada-calle + .texto-portada-calle {
+    margin-top: 1px;
+  }
+  .texto-portada-calle--colonia {
+    font-size: 85% !important;
+    opacity: 0.88;
+  }
+  .texto-portada-funciones {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(9px, 2.1vw, 10px) !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+    color: rgba(214, 199, 163, 0.78) !important;
+    white-space: nowrap !important;
+    line-height: 1.4 !important;
+    display: block;
+  }
+  .portada-info-movil-calle--colonia {
+    font-size: 85% !important;
+    opacity: 0.88;
   }
   .hero-portada .texto-portada-sede,
-  .hero-portada .texto-portada-calle {
+  .hero-portada .texto-portada-calle,
+  .hero-portada .texto-portada-funciones {
     text-shadow: 0 1px 10px rgba(0,0,0,0.85) !important;
   }
   .portada-info-movil-estreno {
@@ -2106,12 +2131,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     letter-spacing: 0.22em !important;
     color: #d6c7a3 !important;
   }
-  .portada-info-movil-detalle {
+  .portada-info-movil-calle--colonia {
+    opacity: 0.88;
+  }
+  .portada-info-movil-horario {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(9px, 2.2vw, 10px) !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+    color: #d6c7a3 !important;
+    margin: 0;
+    white-space: nowrap;
+  }
+  .portada-info-movil-funciones {
     font-family: 'JetBrains Mono', monospace !important;
     font-size: clamp(9px, 2.1vw, 10px) !important;
     letter-spacing: 0.14em !important;
     text-transform: uppercase !important;
     color: rgba(214, 199, 163, 0.78) !important;
+    margin: 0;
+    white-space: nowrap;
   }
   .portada-info-movil-sede {
     font-family: 'JetBrains Mono', monospace !important;
@@ -2124,14 +2163,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
   .portada-info-movil-calle {
     font-family: 'JetBrains Mono', monospace !important;
-    font-size: clamp(6.5px, 1.75vw, 8px) !important;
-    letter-spacing: 0.07em !important;
+    font-size: clamp(7px, 1.9vw, 8.5px) !important;
+    letter-spacing: 0.05em !important;
     text-transform: uppercase !important;
     color: rgba(214, 199, 163, 0.72) !important;
     margin: 0;
     white-space: nowrap;
-    line-height: 1.25;
-    max-width: 100%;
+    line-height: 1.28;
   }
 
   /* Encabezados — línea roja v1 */
@@ -2658,8 +2696,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="portada-info-temporada" id="portada-info-desktop">
 <div class="hidden lg:flex hero-portada__meta" style="flex-direction:column; align-items:flex-start; gap:5px; margin-top:8px;">
 <span class="texto-portada-sede">Teatro Wilberto Cantón</span>
-<span class="texto-portada-calle">José María Velasco 59 · San José Insurgentes</span>
-<span class="texto-portada-horario">Miércoles 20:30 · 13 funciones</span>
+<span class="texto-portada-calle">José María Velasco 59</span>
+<span class="texto-portada-calle texto-portada-calle--colonia">San José Insurgentes</span>
+<span class="texto-portada-horario">Miércoles 20:30</span>
+<span class="texto-portada-funciones">13 funciones</span>
 </div>
 </div>
 </div>
@@ -2669,8 +2709,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section id="portada-venta-boletos" class="portada-info-temporada portada-info-movil flex flex-col items-center justify-center px-4 lg:hidden" aria-label="Información de función">
   <div class="portada-info-movil-inner">
     <p class="portada-info-movil-sede">Teatro Wilberto Cantón</p>
-    <p class="portada-info-movil-calle">José María Velasco 59 · San José Insurgentes</p>
-    <p class="portada-info-movil-detalle">Miércoles 20:30 · 13 funciones</p>
+    <p class="portada-info-movil-calle">José María Velasco 59</p>
+    <p class="portada-info-movil-calle portada-info-movil-calle--colonia">San José Insurgentes</p>
+    <p class="portada-info-movil-horario">Miércoles 20:30</p>
+    <p class="portada-info-movil-funciones">13 funciones</p>
   </div>
 </section>
 <!-- Contenido de la obra (siempre visible, sobre eliminado) -->

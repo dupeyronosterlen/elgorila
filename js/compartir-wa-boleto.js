@@ -1,6 +1,7 @@
 /** Compartir boleto por WhatsApp — imagen PNG del boleto, sin subpágina intermedia. */
 (function (global) {
-  const VENUE = 'Teatro Wilberto Cantón, San José Insurgentes, CDMX';
+  const VENUE = 'Teatro Wilberto Cantón';
+  const DIRECCION = 'José María Velasco 59 · San José Insurgentes';
 
   function qrPayload(codigo) {
     if (global.ElGorilaQr) return global.ElGorilaQr.codigoQrPayload(codigo);
@@ -35,7 +36,7 @@
     const compartirPath = cert
       ? `/enviar-boleto.html?c=${encodeURIComponent(cert)}&wa=1`
       : '';
-    let t = `Voy a ver EL GORILA — ${fn}. ${entradas}.\n${VENUE}`;
+    let t = `Voy a ver EL GORILA — ${fn}. ${entradas}.\n${VENUE}\n${DIRECCION}`;
     if (folio) t += `\nFolio taquilla: ${folio}`;
     if (cert) t += `\nCertificado: ${cert}`;
     t += '\n\nPresenta el QR adjunto en la entrada del teatro.';
