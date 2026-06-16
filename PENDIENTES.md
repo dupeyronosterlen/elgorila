@@ -61,7 +61,7 @@ Ir en orden. Marcar ✅ al desplegar.
 | SEO-08 | Tailwind: CDN → `css/tailwind.css` compilado (`npm run build:css`) | `index`, funnel, `tailwind.config.js` | ✅ |
 | SEO-10 | OG en programas v1–v5 + preload hero `portada-v4` | `programa/`, `index.html` | ✅ |
 | SEO-09 | Validar en producción: Facebook Debugger + Rich Results Test | — | ⬜ post-deploy |
-| SEO-11 | GTM `GTM-P4BDXRN9` en todas las páginas HTML del sitio | 21 archivos | ✅ |
+| SEO-11 | GTM en funnel + público; **excluido** `admin.html` | 20 páginas | ✅ |
 
 **No incluido a propósito:** `mano-v2.html` (noindex impresión), funnel (`boletos`, `checkout`, …), `presskit/` (noindex).
 

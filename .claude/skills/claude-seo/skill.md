@@ -176,11 +176,13 @@ Solo URLs **indexables** y canónicas:
 
 ### 10. Google Tag Manager (GTM-P4BDXRN9)
 
-**Todas las páginas `.html` del sitio** (público, funnel, operativas, programas, redirects) llevan el snippet estándar en `<head>` + `<noscript>` tras abrir `<body>`.
+**GTM en:** páginas públicas, funnel de compra y post-compra (`index`, `boletos`, `checkout`, `confirmacion`, `gracias`, `invitacion`, `acta`, `compartir-boleto`, `enviar-boleto`, `terminos`, programas, etc.) — snippet en `<head>` + `<noscript>` tras `<body>`.
 
-Excepciones: `preview/` (mockups locales), `node_modules/`.
+**Sin GTM en:** `admin.html` (panel staff: no contaminar GA4 ni cargar terceros en operaciones sensibles).
 
-No quitar GTM de páginas `noindex` — el funnel (boletos, confirmación, acta, invitación) debe medirse en GA4 vía contenedor.
+Opcional sin GTM: `preview/`, redirects instantáneos (`encuesta`, `cupon-invitado`), `presskit/`, `mano-v2`.
+
+Los `noindex` del **funnel** sí llevan GTM; los `noindex` **staff** no.
 
 ### 11. Cambios que requieren archivos extra
 
