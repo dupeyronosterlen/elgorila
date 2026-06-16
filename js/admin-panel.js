@@ -32,7 +32,10 @@
     ventasEstado: '',
     drawerVenta: null,
     v4Bound: false,
+    opsInformes: [],
   };
+
+  const OPS_INF_KEY = 'elgorila_ops_informes_v1';
 
   const IS_V4 = () => !!document.getElementById('view-hub');
 
@@ -202,8 +205,11 @@
     </nav>`;
   }
 
-  async function cargarFunciones() {
-    const data = await api(window.teatroApi('funciones'));
+  async function cargarFunciones(soloVenta) {
+    const url = soloVenta
+      ? window.teatroApi('funciones')
+      : window.teatroAdminApi('funciones');
+    const data = await api(url);
     state.funciones = typeof SelectorFunciones !== 'undefined'
       ? SelectorFunciones.normalizarLista(data)
       : (Array.isArray(data) ? data : (data.funciones || []));
@@ -1098,7 +1104,7 @@
     a.click();
   }
 
-  /* ─── Panel v4 (admin-panel-v4.html) ─────────────────────────────────────── */
+  /* ─── Panel v4 (admin.html) ─────────────────────────────────────────────── */
 
   function v4SetText(id, text) {
     const el = document.getElementById(id);
@@ -1110,18 +1116,212 @@
     if (el) el.classList.toggle('hidden', !show);
   }
 
+  function v4EstadoClase(v) {
+    if (v.estado === 'reembolsada') return 'refund';
+    if (v.usado) return 'audit';
+    if (v.reagendado) return 'reagend';
+    return 'ok';
+  }
+
   function v4EstadoBadge(v) {
-    if (v.estado === 'reembolsada') return '<span class="badge badge-refund">reembolsado</span>';
-    if (v.usado) return '<span class="badge badge-audit">canjeado</span>';
-    if (v.reagendado) return '<span class="badge badge-reagend">reagendado</span>';
-    return '<span class="badge badge-ok">activo</span>';
+    const c = v4EstadoClase(v);
+    const labels = { refund: 'reembolsado', audit: 'canjeado', reagend: 'reagendado', ok: 'activo' };
+    const cls = { refund: 'badge-refund', audit: 'badge-audit', reagend: 'badge-reagend', ok: 'badge-ok' };
+    return `<span class="badge ${cls[c]}">${labels[c]}</span>`;
+  }
+
+  function v4BoletoEstadoBadge(usado) {
+    return usado
+      ? '<span class="badge badge-audit">canjeado</span>'
+      : '<span class="badge badge-pend">pendiente</span>';
+  }
+
+  function v4FnLabel(iso) {
+    const f = state.funciones.find(x => x.fecha_iso === iso);
+    return f ? f.nombre : (iso || '—');
+  }
+
+  function v4ResumenComprador(v) {
+    return `<dl class="confirm-summary">
+      <dt>Certificado</dt><dd>${esc(certVenta(v))}</dd>
+      <dt>Comprador</dt><dd>${esc(v.nombre || '—')}</dd>
+      <dt>Email</dt><dd>${esc(v.email || '—')}</dd>
+      <dt>Entradas / total</dt><dd>${v.cantidad || 0} · ${fmtMXN(v.total)}</dd>
+      <dt>Método</dt><dd>${esc(v.metodoPago || '—')}</dd>
+    </dl>`;
+  }
+
+  function v4HtmlResumenReagenda(v, destIso) {
+    const origen = v4FnLabel(v.fecha);
+    const destino = v4FnLabel(destIso);
+    const contable = v.fechaContable || v.fecha;
+    return `${v4ResumenComprador(v)}
+      <dl class="confirm-summary">
+        <dt>Función actual (se cancela)</dt><dd><strong>${esc(origen)}</strong><br><span style="color:var(--soft);font-size:12px">El cupo queda libre en esta fecha.</span></dd>
+        <dt>Nueva función (destino)</dt><dd><strong>${esc(destino)}</strong></dd>
+        <dt>Monto contable</dt><dd>Permanece en ${esc(v4FnLabel(contable))}</dd>
+        <dt>Correo al comprador</dt><dd>Se reenvía boleto con la nueva función (si hay email).</dd>
+      </dl>`;
+  }
+
+  function v4HtmlResumenReembolso(v) {
+    const esStripe = v.metodoPago && v.metodoPago !== 'efectivo';
+    return `${v4ResumenComprador(v)}
+      <dl class="confirm-summary">
+        <dt>Función</dt><dd>${esc(v4FnLabel(v.fecha))}</dd>
+        <dt>Acción</dt><dd>${esStripe ? 'Reembolso vía Stripe + liberación de cupo' : 'Anulación de venta taquilla + liberación de cupo'}</dd>
+        <dt>Monto</dt><dd><strong>${fmtMXN(v.total)}</strong></dd>
+      </dl>`;
+  }
+
+  function v4HtmlResumenEmail(v, emailNuevo) {
+    const dest = emailNuevo || v.email;
+    return `${v4ResumenComprador(v)}
+      <dl class="confirm-summary">
+        <dt>Correo anterior</dt><dd>${esc(v.email || '—')}</dd>
+        <dt>Correo nuevo</dt><dd><strong>${esc(dest)}</strong></dd>
+        <dt>Acción</dt><dd>Actualizar correo y reenviar boleto con QR.</dd>
+      </dl>`;
+  }
+
+  function v4HtmlResumenReenvio(v) {
+    return `${v4ResumenComprador(v)}
+      <dl class="confirm-summary">
+        <dt>Acción</dt><dd>Reenviar boleto al correo registrado.</dd>
+      </dl>`;
+  }
+
+  function v4InformeTexto(informe) {
+    const lines = [
+      'EL GORILA — Informe de operación',
+      '═'.repeat(40),
+      `Tipo: ${informe.tipo}`,
+      `Fecha: ${informe.ts}`,
+      `Operador: ${informe.usuario || '—'}`,
+      '',
+      informe.texto || '',
+    ];
+    if (informe.resultado) {
+      lines.push('', 'Resultado:', informe.resultado);
+    }
+    return lines.join('\n');
+  }
+
+  function v4CargarInformesGuardados() {
+    try {
+      const raw = localStorage.getItem(OPS_INF_KEY);
+      state.opsInformes = raw ? JSON.parse(raw) : [];
+    } catch { state.opsInformes = []; }
+  }
+
+  function v4GuardarInforme(informe) {
+    state.opsInformes = state.opsInformes || [];
+    state.opsInformes.unshift(informe);
+    if (state.opsInformes.length > 80) state.opsInformes.length = 80;
+    try { localStorage.setItem(OPS_INF_KEY, JSON.stringify(state.opsInformes)); } catch { /* */ }
+    v4RenderOpsInformes();
+  }
+
+  function v4DescargarInforme(id) {
+    const inf = (state.opsInformes || []).find(x => x.id === id);
+    if (!inf) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([v4InformeTexto(inf)], { type: 'text/plain;charset=utf-8' }));
+    a.download = `informe-${inf.tipo}-${inf.id}.txt`;
+    a.click();
+  }
+
+  function v4RenderOpsInformes() {
+    const wrap = document.getElementById('ops-informes-list');
+    if (!wrap) return;
+    const list = state.opsInformes || [];
+    wrap.innerHTML = list.length
+      ? list.map(inf => `<div class="ops-informe-row">
+          <div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.08em">${esc(inf.tipo)} · ${esc(new Date(inf.ts).toLocaleString('es-MX'))}</div>
+            <div style="font-size:14px;margin-top:4px">${esc(inf.titulo || inf.tipo)}</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--soft);margin-top:4px">${esc(inf.resumenCorto || '')}</div>
+          </div>
+          <button type="button" class="td-btn" data-dl-inf="${esc(inf.id)}">Descargar</button>
+        </div>`).join('')
+      : '<p style="padding:16px;color:var(--soft);font-family:var(--mono);font-size:11px">Sin informes guardados aún.</p>';
+    wrap.querySelectorAll('[data-dl-inf]').forEach(btn => {
+      btn.onclick = () => v4DescargarInforme(btn.dataset.dlInf);
+    });
+  }
+
+  function v4ConfirmarAccion({ titulo, resumenHtml, peligro, btnOk }) {
+    return new Promise(resolve => {
+      const modal = document.getElementById('modal-confirm-op');
+      if (!modal) { resolve(window.confirm(titulo)); return; }
+      const titleEl = document.getElementById('confirm-op-title');
+      const bodyEl = document.getElementById('confirm-op-body');
+      const okBtn = document.getElementById('confirm-op-ok');
+      if (titleEl) titleEl.textContent = titulo;
+      if (bodyEl) bodyEl.innerHTML = resumenHtml;
+      if (okBtn) {
+        okBtn.textContent = btnOk || 'Confirmar';
+        okBtn.classList.toggle('danger', !!peligro);
+      }
+      state._confirmResolve = resolve;
+      modal.classList.add('open');
+    });
+  }
+
+  function v4CerrarConfirm(ok) {
+    document.getElementById('modal-confirm-op')?.classList.remove('open');
+    const fn = state._confirmResolve;
+    state._confirmResolve = null;
+    if (fn) fn(!!ok);
+  }
+
+  function v4CrearInforme(tipo, titulo, texto, resumenCorto, resultado) {
+    const u = typeof AuthManager !== 'undefined' ? AuthManager.obtenerUsuarioActual() : null;
+    return {
+      id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      ts: new Date().toISOString(),
+      tipo,
+      titulo,
+      texto,
+      resumenCorto,
+      resultado,
+      usuario: u?.nombre || u?.usuario || '—',
+    };
+  }
+
+  function v4InformeReagenda(v, destIso, data) {
+    const origen = v4FnLabel(v.fecha);
+    const destino = v4FnLabel(destIso);
+    const texto = [
+      `Reagendamiento — ${certVenta(v)}`,
+      `Comprador: ${v.nombre || '—'} (${v.email || 'sin email'})`,
+      `Cancelado en: ${origen} (${v.fecha}) — cupo liberado`,
+      `Activo en: ${destino} (${destIso})`,
+      `Monto contable en: ${v.fechaContable || v.fecha}`,
+      `Entradas: ${v.cantidad || 0} · Total: ${fmtMXN(v.total)}`,
+    ].join('\n');
+    const resultado = msgReagendarOk(data) + (data?.auditId ? `\nAuditoría: ${data.auditId}` : '');
+    return v4CrearInforme('reagenda', 'Reagendamiento', texto, `${certVenta(v)}: ${origen} → ${destino}`, resultado);
+  }
+
+  function v4InformeReembolso(v, data) {
+    const esStripe = v.metodoPago && v.metodoPago !== 'efectivo';
+    const texto = [
+      `${esStripe ? 'Reembolso' : 'Anulación'} — ${certVenta(v)}`,
+      `Comprador: ${v.nombre || '—'} (${v.email || 'sin email'})`,
+      `Función: ${v4FnLabel(v.fecha)}`,
+      `Monto: ${fmtMXN(v.total)}`,
+      `Cupo liberado en inventario.`,
+    ].join('\n');
+    return v4CrearInforme('reembolso', esStripe ? 'Reembolso' : 'Anulación', texto, `${certVenta(v)} · ${fmtMXN(v.total)}`, data?.auditId ? `Auditoría: ${data.auditId}` : 'Procesado.');
   }
 
   function v4EstadoCoincide(v, filtro) {
     if (!filtro) return true;
     if (filtro === 'reembolsada') return v.estado === 'reembolsada';
-    if (filtro === 'reagendada') return !!v.reagendado;
-    if (filtro === 'activa') return v.estado !== 'reembolsada' && !v.reagendado;
+    if (filtro === 'canjeada') return !!v.usado && v.estado !== 'reembolsada';
+    if (filtro === 'reagendada') return !!v.reagendado && !v.usado && v.estado !== 'reembolsada';
+    if (filtro === 'activa') return v.estado !== 'reembolsada' && !v.usado && !v.reagendado;
     return true;
   }
 
@@ -1208,9 +1408,11 @@
         v4RenderVentasTable();
         v4RenderStats();
         v4Toggle('btn-email-post-funcion', !!state.chipFuncion && perm('reenviarBoleto'));
+        v4Toggle('btn-email-dia-funcion', !!state.chipFuncion && perm('reenviarBoleto'));
       };
     });
     v4Toggle('btn-email-post-funcion', !!state.chipFuncion && perm('reenviarBoleto'));
+    v4Toggle('btn-email-dia-funcion', !!state.chipFuncion && perm('reenviarBoleto'));
   }
 
   function v4RenderVentasTable() {
@@ -1220,7 +1422,8 @@
     tbody.innerHTML = rows.map(v => {
       const cert = certVenta(v);
       const metodo = v.metodoPago === 'efectivo' ? 'taquilla' : (v.metodoPago || 'online');
-      return `<tr data-venta="${esc(cert)}">
+      const st = v4EstadoClase(v);
+      return `<tr data-venta="${esc(cert)}" class="row-st-${st}">
         <td class="td-mono">${esc(cert)}</td>
         <td>${esc(v.nombre || '—')}</td>
         <td class="td-email">${esc(v.email || '—')}</td>
@@ -1275,7 +1478,8 @@
     const cup = v.codigoCupon ? `${v.codigoCupon}${v.cuponPct != null ? ` (−${v.cuponPct}%)` : ''}` : '—';
     v4SetText('dv-cupon', cup);
     v4SetText('dv-utm', utmResumen(v.utm));
-    v4SetText('dv-estado', v.estado === 'reembolsada' ? 'Reembolsada' : v.usado ? 'Canjeada' : v.reagendado ? 'Reagendada' : 'Activa');
+    const estEl = document.getElementById('dv-estado');
+    if (estEl) estEl.innerHTML = v4EstadoBadge(v);
     const fn = state.funciones.find(f => f.fecha_iso === v.fecha);
     v4SetText('dv-fecha', fn ? fn.nombre : (v.fecha || '—'));
     v4SetText('dv-usado', v.usado ? 'Sí' : 'No');
@@ -1283,9 +1487,9 @@
     const bol = document.getElementById('dv-boletos');
     if (bol) {
       const lines = (v.boletos || []).map(b =>
-        `${esc(b.cert)} · folio ${esc(b.folio || '—')} · ${esc(b.tipo || '—')} · ${b.usado ? 'canjeado' : 'pendiente'}`
+        `<div class="boleto-row"><span>${esc(b.cert)} · folio ${esc(b.folio || '—')} · ${esc(b.tipo || '—')}</span>${v4BoletoEstadoBadge(!!b.usado)}</div>`
       );
-      bol.innerHTML = lines.length ? lines.join('<br>') : 'Sin desglose por boleto';
+      bol.innerHTML = lines.length ? lines.join('') : 'Sin desglose por boleto';
     }
     const dest = document.getElementById('dv-reag-dest-grid');
     if (dest) v4RenderReagDest(v.fecha);
@@ -1398,23 +1602,65 @@
   function v4RenderFunciones() {
     const wrap = document.getElementById('fn-cards');
     if (!wrap) return;
+    const puedeToggle = perm('editarSitio');
     wrap.innerHTML = state.funciones.map(f => {
       const inv = state.inv[f.fecha_iso] || {};
       const disp = typeof window.disponiblesAforoTotal === 'function'
         ? window.disponiblesAforoTotal(inv)
         : (inv.disponibles ?? '—');
-      return `<button type="button" class="fn-card" data-fn="${esc(f.fecha_iso)}">
+      const enVenta = f.activa !== false;
+      const ocultaCls = enVenta ? '' : ' fn-oculta';
+      const toggleBtn = puedeToggle
+        ? `<button type="button" class="fn-toggle ${enVenta ? 'on' : 'off'}" data-fn-toggle="${esc(f.fecha_iso)}" data-activa="${enVenta ? '1' : '0'}">${enVenta ? 'En venta' : 'Oculta'}</button>`
+        : `<span class="badge ${enVenta ? 'badge-ok' : 'badge-pend'}">${enVenta ? 'en venta' : 'oculta'}</span>`;
+      return `<div class="fn-card${ocultaCls}" data-fn="${esc(f.fecha_iso)}">
         <span class="fn-date">${esc(f.fecha_iso)}</span>
         <span class="fn-name">${esc(f.nombre)}</span>
-        <span class="fn-avail">~${disp} disponibles</span>
-      </button>`;
-    }).join('') || '<p style="color:var(--soft)">Sin funciones en KV.</p>';
-    wrap.querySelectorAll('[data-fn]').forEach(btn => {
-      btn.onclick = async () => {
-        state.chipFuncion = btn.dataset.fn;
+        <span class="fn-avail">~${disp} disponibles · ${f.vendidos ?? '—'} vendidos</span>
+        <div class="fn-card-actions">
+          ${toggleBtn}
+          <button type="button" class="fn-toggle" data-fn-ver="${esc(f.fecha_iso)}">Ver ventas</button>
+        </div>
+      </div>`;
+    }).join('') || '<p style="color:var(--soft)">Sin funciones en KV. Ejecuta init-funciones.js y sube a KV.</p>';
+
+    wrap.querySelectorAll('[data-fn-ver]').forEach(btn => {
+      btn.onclick = async (e) => {
+        e.stopPropagation();
+        state.chipFuncion = btn.dataset.fnVer;
         state.view = 'hub';
         v4ShowView('hub');
         await v4RenderHub();
+      };
+    });
+    wrap.querySelectorAll('[data-fn-toggle]').forEach(btn => {
+      btn.onclick = async (e) => {
+        e.stopPropagation();
+        const iso = btn.dataset.fnToggle;
+        const activa = btn.dataset.activa !== '1';
+        const ok = await v4ConfirmarAccion({
+          titulo: activa ? 'Activar función en venta' : 'Ocultar función de la venta',
+          resumenHtml: `<dl class="confirm-summary">
+            <dt>Función</dt><dd><strong>${esc(v4FnLabel(iso))}</strong></dd>
+            <dt>Efecto</dt><dd>${activa ? 'Aparecerá en boletos.html y checkout.' : 'Dejará de mostrarse al público (admin y taquilla siguen viéndola).'}</dd>
+          </dl>`,
+          btnOk: activa ? 'Activar' : 'Ocultar',
+        });
+        if (!ok) return;
+        try {
+          await api(window.teatroAdminApi('funciones/toggle'), {
+            method: 'POST',
+            body: JSON.stringify({ fecha_iso: iso, activa }),
+          });
+          await cargarFunciones(false);
+          for (const f of state.funciones) {
+            try {
+              const d = await api(window.teatroApi(`disponibilidad?fecha=${f.fecha_iso}`));
+              state.inv[f.fecha_iso] = d;
+            } catch { /* */ }
+          }
+          v4RenderFunciones();
+        } catch (err) { alert(err.message); }
       };
     });
   }
@@ -1559,7 +1805,7 @@
 
   async function v4RenderHub() {
     if (!perm('verVentas')) return;
-    const jobs = [cargarFunciones(), cargarVentas(state.chipFuncion || undefined)];
+    const jobs = [cargarFunciones(true), cargarVentas(state.chipFuncion || undefined)];
     await Promise.all(jobs);
     v4RenderFnChips();
     v4RenderVentasTable();
@@ -1572,7 +1818,7 @@
       if (view === 'hub') await v4RenderHub();
       else if (view === 'ops') { /* búsqueda bajo demanda */ }
       else if (view === 'funciones') {
-        await cargarFunciones();
+        await cargarFunciones(false);
         for (const f of state.funciones) {
           try {
             const d = await api(window.teatroApi(`disponibilidad?fecha=${f.fecha_iso}`));
@@ -1583,7 +1829,7 @@
       } else if (view === 'informes') {
         const jobs = [];
         if (perm('verFiscal')) jobs.push(cargarFiscal().catch(() => { state.fiscal = 0; }));
-        if (perm('verVentas')) jobs.push(cargarFunciones(), cargarInformeFunciones());
+        if (perm('verVentas')) jobs.push(cargarFunciones(false), cargarInformeFunciones());
         if (perm('verAuditoria')) jobs.push(cargarAuditoria().catch(() => { state.auditoria = []; }));
         if (state.informeFuncionSel && perm('verVentas')) {
           jobs.push(cargarVentasFuncion(state.informeFuncionSel).catch(() => { state.informeVentas = []; }));
@@ -1602,6 +1848,7 @@
         v4RenderInformeFn();
         v4RenderInformeVentas();
         v4RenderAuditoriaFixed('audit-tbody-inf', 'audit-count-inf', document.getElementById('audit-filtro-inf')?.value || '');
+        v4RenderOpsInformes();
       } else if (view === 'equipo') {
         if (!perm('gestionarEquipo')) { v4ShowView('hub'); return v4PaintView('hub'); }
         await cargarUsuarios();
@@ -1650,6 +1897,7 @@
   }
 
   function v4BindEvents() {
+    v4CargarInformesGuardados();
     document.getElementById('ventas-search')?.addEventListener('input', () => v4RenderVentasTable());
     document.getElementById('ventas-estado-filter')?.addEventListener('change', (e) => {
       state.ventasEstado = e.target.value;
@@ -1663,10 +1911,42 @@
       if (!state.chipFuncion) return;
       const fn = state.funciones.find(f => f.fecha_iso === state.chipFuncion);
       const conEmail = state.ventas.filter(v => v.email && v.estado !== 'reembolsada' && (v.fecha === state.chipFuncion || v.fechaContable === state.chipFuncion)).length;
-      if (!confirm(`¿Enviar «Te dejamos un sobre» a ${conEmail} asistente(s) de ${fn?.nombre || state.chipFuncion}?`)) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: 'Enviar correo post-función',
+        resumenHtml: `<dl class="confirm-summary">
+          <dt>Función</dt><dd>${esc(fn?.nombre || state.chipFuncion)}</dd>
+          <dt>Destinatarios</dt><dd>${conEmail} asistente(s) con email</dd>
+          <dt>Contenido</dt><dd>Encuesta / acta privada tras la función</dd>
+        </dl>`,
+      });
+      if (!ok) return;
       try {
         const r = await api(window.teatroAdminApi('email-post-funcion'), { method: 'POST', body: JSON.stringify({ fecha: state.chipFuncion }) });
+        v4GuardarInforme(v4CrearInforme('email_post', 'Email post-función', `Función: ${fn?.nombre}\nEnviados: ${r.enviados}`, `${r.enviados} enviados`, JSON.stringify(r)));
         alert(`Post-función: ${r.enviados} enviados${r.fallidos ? `, ${r.fallidos} fallidos` : ''}${r.omitidos ? `, ${r.omitidos} omitidos` : ''}.`);
+      } catch (e) { alert(e.message); }
+    });
+
+    document.getElementById('btn-email-dia-funcion')?.addEventListener('click', async () => {
+      if (!state.chipFuncion) return;
+      const fn = state.funciones.find(f => f.fecha_iso === state.chipFuncion);
+      const conEmail = state.ventas.filter(v => v.email && v.estado !== 'reembolsada' && v.fecha === state.chipFuncion).length;
+      const ok = await v4ConfirmarAccion({
+        titulo: 'Enviar correo del día (programa v2)',
+        resumenHtml: `<dl class="confirm-summary">
+          <dt>Función</dt><dd>${esc(fn?.nombre || state.chipFuncion)}</dd>
+          <dt>Destinatarios</dt><dd>${conEmail} comprador(es) con email</dd>
+          <dt>Contenido</dt><dd>Indicaciones de llegada + enlace al programa de mano v2</dd>
+        </dl>`,
+      });
+      if (!ok) return;
+      try {
+        const r = await api(window.teatroAdminApi('email-dia-funcion'), {
+          method: 'POST',
+          body: JSON.stringify({ fecha: state.chipFuncion, forzar: true }),
+        });
+        v4GuardarInforme(v4CrearInforme('email_dia', 'Email día de función', `Función: ${fn?.nombre}\nEnviados: ${r.enviados}`, `${r.enviados} enviados`, JSON.stringify(r)));
+        alert(`Día de función: ${r.enviados} enviados${r.fallidos ? `, ${r.fallidos} fallidos` : ''}${r.omitidos ? `, ${r.omitidos} omitidos` : ''}.`);
       } catch (e) { alert(e.message); }
     });
 
@@ -1680,29 +1960,51 @@
       const v = state.opsVenta;
       const cert = v && certVenta(v);
       const dest = document.getElementById('ops-reag-dest')?.value;
-      if (!cert || !dest || !confirm(`¿Reagendar ${cert}?`)) return;
+      if (!cert || !dest) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: 'Confirmar reagendamiento',
+        resumenHtml: v4HtmlResumenReagenda(v, dest),
+        peligro: true,
+        btnOk: 'Reagendar',
+      });
+      if (!ok) return;
       try {
         const data = await api(window.teatroAdminApi('reagendar'), { method: 'POST', body: JSON.stringify({ codigo: cert, fechaDestino: dest }) });
+        v4GuardarInforme(v4InformeReagenda(v, dest, data));
         await v4BuscarVenta(cert);
         v4OpsMsg(msgReagendarOk(data), 'green');
         if (state.view === 'hub') await v4RenderHub();
       } catch (e) { v4OpsMsg(e.message, 'red'); }
     });
     document.getElementById('ops-btn-reenvio')?.addEventListener('click', async () => {
-      const cert = state.opsVenta && certVenta(state.opsVenta);
+      const v = state.opsVenta;
+      const cert = v && certVenta(v);
       if (!cert) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: 'Reenviar boleto por correo',
+        resumenHtml: v4HtmlResumenReenvio(v),
+      });
+      if (!ok) return;
       try {
         await reenviarEmailVenta(cert);
+        v4GuardarInforme(v4CrearInforme('reenvio', 'Reenvío de boleto', `Certificado: ${cert}\nEmail: ${v.email}`, cert, 'Enviado.'));
         v4OpsMsg('Boleto reenviado.', 'green');
       } catch (e) { v4OpsMsg(e.message, 'red'); }
     });
     document.getElementById('ops-btn-email')?.addEventListener('click', () => v4Toggle('ops-email-panel', true));
     document.getElementById('ops-corregir-ok')?.addEventListener('click', async () => {
-      const cert = state.opsVenta && certVenta(state.opsVenta);
+      const v = state.opsVenta;
+      const cert = v && certVenta(v);
       const email = document.getElementById('ops-email-nuevo')?.value?.trim();
       if (!cert || !email) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: 'Corregir correo y reenviar',
+        resumenHtml: v4HtmlResumenEmail(v, email),
+      });
+      if (!ok) return;
       try {
         await reenviarEmailVenta(cert, email);
+        v4GuardarInforme(v4CrearInforme('email_corregido', 'Correo corregido', `Certificado: ${cert}\nNuevo email: ${email}`, cert, 'Actualizado y enviado.'));
         v4OpsMsg('Correo corregido y boleto enviado.', 'green');
         await v4BuscarVenta(cert);
       } catch (e) { v4OpsMsg(e.message, 'red'); }
@@ -1710,10 +2012,17 @@
     document.getElementById('ops-btn-reembolso')?.addEventListener('click', async () => {
       const v = state.opsVenta;
       const cert = v && certVenta(v);
-      const esStripe = v?.metodoPago && v.metodoPago !== 'efectivo';
-      if (!cert || !confirm(esStripe ? `¿Reembolsar ${cert} vía Stripe?` : `¿Anular venta ${cert}?`)) return;
+      if (!cert) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: v?.metodoPago && v.metodoPago !== 'efectivo' ? 'Confirmar reembolso' : 'Confirmar anulación',
+        resumenHtml: v4HtmlResumenReembolso(v),
+        peligro: true,
+        btnOk: v?.metodoPago && v.metodoPago !== 'efectivo' ? 'Reembolsar' : 'Anular',
+      });
+      if (!ok) return;
       try {
-        await api(window.teatroAdminApi('reembolso'), { method: 'POST', body: JSON.stringify({ codigo: cert }) });
+        const data = await api(window.teatroAdminApi('reembolso'), { method: 'POST', body: JSON.stringify({ codigo: cert }) });
+        v4GuardarInforme(v4InformeReembolso(v, data));
         v4OpsMsg('Reembolso procesado.', 'green');
         if (state.view === 'hub') await v4RenderHub();
         await cargarAuditoria().catch(() => {});
@@ -1729,9 +2038,17 @@
       const v = state.drawerVenta;
       const cert = v && certVenta(v);
       const dest = document.getElementById('dv-reag-dest')?.value;
-      if (!cert || !dest || !confirm(`¿Reagendar ${cert}?`)) return;
+      if (!cert || !dest) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: 'Confirmar reagendamiento',
+        resumenHtml: v4HtmlResumenReagenda(v, dest),
+        peligro: true,
+        btnOk: 'Reagendar',
+      });
+      if (!ok) return;
       try {
         const data = await api(window.teatroAdminApi('reagendar'), { method: 'POST', body: JSON.stringify({ codigo: cert, fechaDestino: dest }) });
+        v4GuardarInforme(v4InformeReagenda(v, dest, data));
         const fresh = await api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}`));
         v4PoblarDrawer(fresh);
         v4Toggle('dv-reag-panel', false);
@@ -1740,20 +2057,34 @@
       } catch (e) { v4DrawerMsg(e.message, 'red'); }
     });
     document.getElementById('dv-btn-reenvio')?.addEventListener('click', async () => {
-      const cert = state.drawerVenta && certVenta(state.drawerVenta);
+      const v = state.drawerVenta;
+      const cert = v && certVenta(v);
       if (!cert) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: 'Reenviar boleto por correo',
+        resumenHtml: v4HtmlResumenReenvio(v),
+      });
+      if (!ok) return;
       try {
         await reenviarEmailVenta(cert);
+        v4GuardarInforme(v4CrearInforme('reenvio', 'Reenvío de boleto', `Certificado: ${cert}`, cert, 'Enviado.'));
         v4DrawerMsg('Boleto reenviado.', 'green');
       } catch (e) { v4DrawerMsg(e.message, 'red'); }
     });
     document.getElementById('dv-btn-email')?.addEventListener('click', () => v4Toggle('dv-email-panel', true));
     document.getElementById('dv-corregir-ok')?.addEventListener('click', async () => {
-      const cert = state.drawerVenta && certVenta(state.drawerVenta);
+      const v = state.drawerVenta;
+      const cert = v && certVenta(v);
       const email = document.getElementById('dv-email-nuevo')?.value?.trim();
       if (!cert || !email) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: 'Corregir correo y reenviar',
+        resumenHtml: v4HtmlResumenEmail(v, email),
+      });
+      if (!ok) return;
       try {
         const r = await reenviarEmailVenta(cert, email);
+        v4GuardarInforme(v4CrearInforme('email_corregido', 'Correo corregido', `Certificado: ${cert}\nNuevo: ${email}`, cert, 'Enviado.'));
         v4SetText('dv-email', r.emailEnviado || email);
         v4DrawerMsg('Correo actualizado y boleto enviado.', 'green');
         if (state.view === 'hub') await v4RenderHub();
@@ -1762,13 +2093,27 @@
     document.getElementById('dv-btn-reembolso')?.addEventListener('click', async () => {
       const v = state.drawerVenta;
       const cert = v && certVenta(v);
-      const esStripe = v?.metodoPago && v.metodoPago !== 'efectivo';
-      if (!cert || !confirm(esStripe ? `¿Reembolsar ${cert} vía Stripe?` : `¿Anular venta ${cert}?`)) return;
+      if (!cert) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: v?.metodoPago && v.metodoPago !== 'efectivo' ? 'Confirmar reembolso' : 'Confirmar anulación',
+        resumenHtml: v4HtmlResumenReembolso(v),
+        peligro: true,
+        btnOk: v?.metodoPago && v.metodoPago !== 'efectivo' ? 'Reembolsar' : 'Anular',
+      });
+      if (!ok) return;
       try {
-        await api(window.teatroAdminApi('reembolso'), { method: 'POST', body: JSON.stringify({ codigo: cert }) });
+        const data = await api(window.teatroAdminApi('reembolso'), { method: 'POST', body: JSON.stringify({ codigo: cert }) });
+        v4GuardarInforme(v4InformeReembolso(v, data));
         v4CerrarDrawer();
         if (state.view === 'hub') await v4RenderHub();
       } catch (e) { v4DrawerMsg(e.message, 'red'); }
+    });
+
+    document.getElementById('confirm-op-cancel')?.addEventListener('click', () => v4CerrarConfirm(false));
+    document.getElementById('confirm-op-cancel2')?.addEventListener('click', () => v4CerrarConfirm(false));
+    document.getElementById('confirm-op-ok')?.addEventListener('click', () => v4CerrarConfirm(true));
+    document.getElementById('modal-confirm-op')?.addEventListener('click', (e) => {
+      if (e.target.id === 'modal-confirm-op') v4CerrarConfirm(false);
     });
 
     document.getElementById('audit-filtro')?.addEventListener('change', e => {
@@ -1791,7 +2136,13 @@
       await v4PaintView('informes');
     });
     document.getElementById('btn-fiscal-reset')?.addEventListener('click', async () => {
-      if (!confirm('¿Resetear reserva fiscal a $0?')) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: 'Resetear reserva fiscal',
+        resumenHtml: `<dl class="confirm-summary"><dt>Acción</dt><dd>Poner la reserva fiscal acumulada (8%) en <strong>$0</strong> tras pago de impuesto.</dd></dl>`,
+        peligro: true,
+        btnOk: 'Resetear',
+      });
+      if (!ok) return;
       try {
         await api(window.teatroAdminApi('fiscal/reset'), { method: 'POST' });
         await v4PaintView('informes');
@@ -1828,6 +2179,8 @@
     btn.classList.add('active');
     v4Toggle('tab-resumen', tabId === 'tab-resumen');
     v4Toggle('tab-audit2', tabId === 'tab-audit2');
+    v4Toggle('tab-informes-ops', tabId === 'tab-informes-ops');
+    if (tabId === 'tab-informes-ops') v4RenderOpsInformes();
   };
 
   window.opsBuscarVenta = function opsBuscarVenta(q) {

@@ -214,10 +214,10 @@
             <span class="material-symbols-outlined" style="font-size:14px;">content_copy</span>
             Copiar folio
           </button>
-          <a id="btn-wa-enviar" class="btn-copiar" href="#" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(37,211,102,.15);border-color:rgba(37,211,102,.4);">
+          <button type="button" class="btn-copiar" id="btn-wa-enviar" style="background:rgba(37,211,102,.15);border-color:rgba(37,211,102,.4);">
             <span class="material-symbols-outlined" style="font-size:14px;">chat</span>
-            Enviar por WhatsApp
-          </a>
+            Enviar boleto por WhatsApp
+          </button>
           <button type="button" class="btn-copiar" onclick="copiarTextoWa()">
             Copiar texto WA
           </button>
@@ -290,6 +290,9 @@
 <script src="js/auth.js"></script>
 <script src="js/selector-funciones.js"></script>
 <script src="js/boletera-venta.js"></script>
+<script src="js/qr-boleto.js"></script>
+<script src="js/generar-imagen-boleto.js"></script>
+<script src="js/compartir-wa-boleto.js"></script>
 
 <script>
 /* ── AUTENTICACIÓN BOLETERA ─────────────────────────────────
@@ -571,6 +574,7 @@ async function _boletaCargarTablaDia() {
 }
 
 let _ultimoWaTexto = '';
+let _ultimaOrdenWa = null;
 
 async function generarCodigoEfectivo() {
   const errEl    = document.getElementById('venta-error');
@@ -629,6 +633,17 @@ async function generarCodigoEfectivo() {
     }
 
     _ultimoWaTexto = data.waTexto || '';
+    _ultimaOrdenWa = {
+      ...(data.venta || {}),
+      certificado: data.codigo || data.certificado,
+      numeroOrden: data.codigo || data.certificado,
+      codigo: data.codigo,
+      funcionNombre: data.funcionNombre,
+      fecha: data.funcionNombre,
+      boletos: data.boletos || data.venta?.boletos || [],
+      cantidad: data.venta?.cantidad,
+      cantidadTotal: data.venta?.cantidad,
+    };
     const box = document.getElementById('codigo-generado');
     const txt = document.getElementById('codigo-texto');
     const inf = document.getElementById('codigo-info');
@@ -643,7 +658,24 @@ async function generarCodigoEfectivo() {
       const cuponNote = data.venta?.codigoCupon ? ` · ${data.venta.codigoCupon}` : '';
       inf.innerHTML = `${data.funcionNombre}<br>${resumen} (${seccion}) · $${data.total} MXN${cuponNote}${mailNote}`;
     }
-    if (wa && data.waUrl) wa.href = data.waUrl;
+    const wa  = document.getElementById('btn-wa-enviar');
+    if (wa) {
+      wa.disabled = false;
+      wa.onclick = async () => {
+        if (!window.ElGorilaCompartirWa || !_ultimaOrdenWa) {
+          if (data.waUrl) window.open(data.waUrl, '_blank', 'noopener');
+          return;
+        }
+        wa.disabled = true;
+        try {
+          await ElGorilaCompartirWa.compartirPorWhatsApp(_ultimaOrdenWa);
+        } catch (e) {
+          if (e.name !== 'AbortError') alert('No se pudo compartir. Usa «Copiar texto WA» o envía el enlace del boleto.');
+        } finally {
+          wa.disabled = false;
+        }
+      };
+    }
     if (qr && typeof QRCode !== 'undefined') {
       qr.innerHTML = '';
       const qrCodigo = (data.boletos?.length === 1 && data.boletos[0]?.cert)

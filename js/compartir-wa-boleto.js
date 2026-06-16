@@ -31,10 +31,16 @@
     const entradas = entradasLabel(orden);
     const folio = folioTaquilla(orden);
     const cert = orden.certificado || orden.numeroOrden || orden.codigo || '';
+    const origin = (typeof location !== 'undefined' && location.origin) ? location.origin : 'https://elgorilateatro.com.mx';
+    const compartirPath = cert
+      ? `/enviar-boleto.html?c=${encodeURIComponent(cert)}&wa=1`
+      : '';
     let t = `Voy a ver EL GORILA — ${fn}. ${entradas}.\n${VENUE}`;
     if (folio) t += `\nFolio taquilla: ${folio}`;
     if (cert) t += `\nCertificado: ${cert}`;
     t += '\n\nPresenta el QR adjunto en la entrada del teatro.';
+    if (compartirPath) t += `\n\nBoleto con QR:\n${origin}${compartirPath}`;
+    t += `\n\nPrograma de mano:\n${origin}/programa/v2.html`;
     return t;
   }
 

@@ -707,6 +707,173 @@ function htmlEmailPostFuncion(venta, funcionNombre, config, opts = {}) {
 </body></html>`;
 }
 
+// ─── EMAIL: DÍA DE LA FUNCIÓN (mañana — programa v2 + indicaciones) ───────────
+
+const URL_PROGRAMA_V2 = `${SITIO_BASE}/programa/v2.html`;
+const URL_INDICACIONES = `${SITIO_BASE}/gracias.html`;
+
+function htmlEmailDiaFuncion(venta, funcionNombre, config) {
+  const certificado = venta.certificado || venta.codigo || '';
+  const direccion   = config.direccion || 'José María Velasco 59, San José Insurgentes, CDMX';
+  const nEntradas   = venta.cantidad || (venta.boletos || []).length || 1;
+  const entradasLbl = nEntradas === 1 ? '1 entrada' : `${nEntradas} entradas`;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hoy nos vemos — EL GORILA</title>
+</head>
+<body style="margin:0;padding:0;background:#0a0706;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0706;padding:28px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+  <tr><td style="background:#0a0706;padding:32px 28px 24px;border:1px solid rgba(241,234,217,.12);">
+    <p style="margin:0 0 16px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:#d99b3a;">
+      Hoy · ${funcionNombre}
+    </p>
+    <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:36px;line-height:.95;font-weight:500;color:#f1ead9;letter-spacing:-.02em;">
+      Nos vemos <span style="font-style:italic;color:#D43A1A;">esta noche</span>
+    </h1>
+    <p style="margin:16px 0 0;font-family:Georgia,serif;font-size:18px;line-height:1.45;color:rgba(241,234,217,.85);">
+      ${venta.nombre ? `${venta.nombre}, ` : ''}aquí van las indicaciones para llegar preparado y tu programa de mano digital.
+    </p>
+  </td></tr>
+
+  <tr><td style="background:#f1ead9;padding:26px 28px;color:#1a1411;">
+    <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#D43A1A;">Tu reservación</p>
+    <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:20px;font-weight:500;">${funcionNombre}</p>
+    <p style="margin:0;font-family:Georgia,serif;font-size:15px;line-height:1.5;color:#3a2e26;">
+      ${entradasLbl}${certificado ? ` · certificado <strong>${certificado}</strong>` : ''}
+    </p>
+  </td></tr>
+
+  <tr><td style="background:#e8dfc8;padding:24px 28px;border-top:1px solid #c9b896;">
+    <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a7760;">Acceso</p>
+    <ul style="margin:0;padding:0 0 0 18px;font-family:Georgia,serif;font-size:15px;line-height:1.65;color:#3a2e26;">
+      <li><strong>${config.venue || 'Teatro Wilberto Cantón'}</strong><br>${direccion}</li>
+      <li style="margin-top:10px;">Llega al menos <strong>30 minutos antes</strong> (recomendado 20:00 hrs).</li>
+      <li>Inicio de función: <strong>20:30 hrs</strong>.</li>
+      <li>Presenta tu boleto con QR (correo de confirmación o imagen guardada).</li>
+      <li>Tarifas con descuento: lleva credencial vigente (estudiante, INAPAM, maestro).</li>
+    </ul>
+  </td></tr>
+
+  <tr><td style="background:#f1ead9;padding:28px;text-align:center;border-top:1px solid #d4c4a8;">
+    <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:17px;line-height:1.5;color:#1a1411;">
+      Lee el programa de mano antes de entrar — contexto, elenco y notas de la función.
+    </p>
+    <a href="${URL_PROGRAMA_V2}" style="display:inline-block;background:#D43A1A;color:#fff;padding:14px 26px;text-decoration:none;font-family:Georgia,serif;font-size:17px;margin:0 6px 10px;border-radius:2px;">
+      Programa de mano (v2) →
+    </a>
+    <br>
+    <a href="${URL_INDICACIONES}" style="display:inline-block;margin-top:12px;font-family:Georgia,serif;font-size:14px;color:#6b5c4a;">
+      Más indicaciones para el día →
+    </a>
+  </td></tr>
+
+  <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
+    <p style="margin:0;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.55);">
+      ¿Dudas? <a href="mailto:${EMAIL_OPERATIVO}" style="color:#d99b3a;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+async function enviarEmailsDiaFuncion(env, opts = {}) {
+  const { fecha = null, dryRun = false, forzar = false } = opts;
+  const hoyMx = fecha || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+  const resumen = { fecha: hoyMx, dryRun, teatros: [], enviados: 0, fallidos: 0, omitidos: 0 };
+
+  for (const tid of VALID_TEATROS) {
+    const config = await getVenueConfig(tid, env);
+    const idxResult  = await env.VENTAS.list({ prefix: kv(tid, `ventaIdx:${hoyMx}:`) });
+    const sessionIds = (await Promise.all(idxResult.keys.map(k => env.VENTAS.get(k.name)))).filter(Boolean);
+    const ventasRaw  = await Promise.all(sessionIds.map(sid => env.VENTAS.get(kv(tid, `venta:${sid}`))));
+    const ventas     = ventasRaw
+      .filter(Boolean)
+      .map(r => { try { return JSON.parse(r); } catch { return null; } })
+      .filter(v => v && v.estado !== 'reembolsada' && v.email);
+
+    const teatroRes = { teatroId: tid, total: ventas.length, enviados: 0, fallidos: 0, omitidos: 0 };
+
+    for (const venta of ventas) {
+      if (!forzar && venta.emailDiaFuncionEnviado) {
+        teatroRes.omitidos += 1;
+        resumen.omitidos += 1;
+        continue;
+      }
+      const funcionNombre = venta.funcionNombre || venta.fecha || hoyMx;
+      if (dryRun) {
+        teatroRes.enviados += 1;
+        resumen.enviados += 1;
+        continue;
+      }
+      const html = htmlEmailDiaFuncion(venta, funcionNombre, config);
+      const ok   = await enviarEmail(
+        venta.email,
+        `Hoy: ${funcionNombre} · programa e indicaciones — EL GORILA`,
+        html,
+        env,
+      );
+      if (ok) {
+        venta.emailDiaFuncionEnviado = new Date().toISOString();
+        const sid = venta.sessionId;
+        if (sid) await env.VENTAS.put(kv(tid, `venta:${sid}`), JSON.stringify(venta));
+        teatroRes.enviados += 1;
+        resumen.enviados += 1;
+      } else {
+        teatroRes.fallidos += 1;
+        resumen.fallidos += 1;
+      }
+    }
+    resumen.teatros.push(teatroRes);
+  }
+  return resumen;
+}
+
+async function handleEmailDiaFuncion(tid, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_REENVIAR.has(payload.rol)) {
+    return json({ error: 'Sin permiso para enviar correos.' }, 403, request);
+  }
+
+  let body = {};
+  try { body = await request.json(); } catch { /* vacío = hoy */ }
+
+  const hoyMx = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+  const fecha = typeof body.fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.fecha.trim())
+    ? body.fecha.trim()
+    : hoyMx;
+  const dryRun = !!body.dryRun;
+  const forzar = !!body.forzar;
+
+  if (!dryRun && !forzar && fecha !== hoyMx) {
+    return json({
+      error: `El envío automático es para el día de la función. Hoy (CDMX): ${hoyMx}. Usa forzar:true si es intencional.`,
+    }, 400, request);
+  }
+
+  const resumen = await enviarEmailsDiaFuncion(env, { fecha, dryRun, forzar });
+
+  await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: dryRun ? 'email.dia_funcion.dry_run' : 'email.dia_funcion',
+    teatroId: resolveTid(tid),
+    detalles: `Día función ${fecha}: ${resumen.enviados} enviados, ${resumen.fallidos} fallidos, ${resumen.omitidos} omitidos`,
+    meta: { fecha, ...resumen },
+  });
+
+  return json({ ok: true, ...resumen }, 200, request);
+}
+
 // ─── EMAIL: AVISO ADMIN ───────────────────────────────────────────────────────
 
 function htmlAvisoAdmin(venta, funcionNombre, config) {
@@ -1550,6 +1717,50 @@ async function handleValidarCupon(tid, request, env) {
 
 // ─── HANDLER: FUNCIONES ACTIVAS (público) ────────────────────────────────────
 
+async function enrichFuncionesList(canonical, funciones, config, env) {
+  const capacidad = (config.secciones || []).reduce((s, x) => s + (x.total || 0), 0);
+  return Promise.all(funciones.map(async f => {
+    const invRaw = await env.INVENTARIO.get(kv(canonical, `funcion:${f.fecha_iso}`));
+    const inv    = recalcReservadosDesdeHolds(
+      purgarHoldsVencidos(normalizeInventario(invRaw, config)),
+      config,
+    );
+    let vendidos = 0, reservados = 0;
+    const secciones = {};
+    for (const s of config.secciones) {
+      const sInv = inv.secciones[s.id] || { total: s.total, vendidos: 0, reservados: 0 };
+      vendidos   += sInv.vendidos   || 0;
+      reservados += sInv.reservados || 0;
+      secciones[s.id] = {
+        nombre:      s.nombre,
+        total:       sInv.total,
+        vendidos:    sInv.vendidos   || 0,
+        reservados:  sInv.reservados || 0,
+        disponibles: disponiblesSeccion(inv, s.id, config),
+      };
+    }
+    const plateaDisp  = secciones.platea?.disponibles ?? 0;
+    const galeriaDisp = secciones.galeria?.disponibles ?? 0;
+    const galeriaAbierta = !!secciones.galeria && plateaDisp === 0 && galeriaDisp > 0;
+    const disponibles_total = sumDisponiblesSecciones(secciones);
+    const disponibles = galeriaAbierta
+      ? galeriaDisp
+      : (plateaDisp || Math.max(0, capacidad - vendidos - reservados));
+
+    return {
+      ...f,
+      teatroId:        canonical,
+      capacidad,
+      vendidos,
+      reservados,
+      disponibles,
+      disponibles_total,
+      galeria_abierta: galeriaAbierta,
+      secciones,
+    };
+  }));
+}
+
 async function handleFunciones(tid, request, env) {
   const canonical = resolveTid(tid);
   const config    = await getVenueConfig(canonical, env);
@@ -1557,52 +1768,59 @@ async function handleFunciones(tid, request, env) {
   if (!raw) return json([], 200, request);
   try {
     const funciones = JSON.parse(raw).filter(f => f.activa !== false);
-    const capacidad = (config.secciones || []).reduce((s, x) => s + (x.total || 0), 0);
-
-    const enriched = await Promise.all(funciones.map(async f => {
-      const invRaw = await env.INVENTARIO.get(kv(canonical, `funcion:${f.fecha_iso}`));
-      const inv    = recalcReservadosDesdeHolds(
-        purgarHoldsVencidos(normalizeInventario(invRaw, config)),
-        config,
-      );
-      let vendidos = 0, reservados = 0;
-      const secciones = {};
-      for (const s of config.secciones) {
-        const sInv = inv.secciones[s.id] || { total: s.total, vendidos: 0, reservados: 0 };
-        vendidos   += sInv.vendidos   || 0;
-        reservados += sInv.reservados || 0;
-        secciones[s.id] = {
-          nombre:      s.nombre,
-          total:       sInv.total,
-          vendidos:    sInv.vendidos   || 0,
-          reservados:  sInv.reservados || 0,
-          disponibles: disponiblesSeccion(inv, s.id, config),
-        };
-      }
-      const plateaDisp  = secciones.platea?.disponibles ?? 0;
-      const galeriaDisp = secciones.galeria?.disponibles ?? 0;
-      const galeriaAbierta = !!secciones.galeria && plateaDisp === 0 && galeriaDisp > 0;
-      const disponibles_total = sumDisponiblesSecciones(secciones);
-      // comprables_ahora: solo la zona en venta (platea hasta agotar, luego galería)
-      const disponibles = galeriaAbierta
-        ? galeriaDisp
-        : (plateaDisp || Math.max(0, capacidad - vendidos - reservados));
-
-      return {
-        ...f,
-        teatroId:        canonical,
-        capacidad,
-        vendidos,
-        reservados,
-        disponibles,
-        disponibles_total,
-        galeria_abierta: galeriaAbierta,
-        secciones,
-      };
-    }));
-
+    const enriched  = await enrichFuncionesList(canonical, funciones, config, env);
     return json(enriched, 200, request);
   } catch { return json([], 200, request); }
+}
+
+async function handleFuncionesAdmin(tid, request, env) {
+  const payload = await requireRolAdmin(request, env);
+  if (!payload) return json({ error: 'Solo el administrador.' }, 403, request);
+
+  const canonical = resolveTid(tid);
+  const config    = await getVenueConfig(canonical, env);
+  const raw       = await env.INVENTARIO.get(kv(canonical, 'funciones:activas'));
+  if (!raw) return json([], 200, request);
+  try {
+    const funciones = JSON.parse(raw);
+    const enriched  = await enrichFuncionesList(canonical, funciones, config, env);
+    return json(enriched, 200, request);
+  } catch { return json([], 200, request); }
+}
+
+async function handleFuncionesToggle(tid, request, env) {
+  const payload = await requireRolAdmin(request, env);
+  if (!payload) return json({ error: 'Solo el administrador.' }, 403, request);
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+
+  const fechaIso = (body.fecha_iso || body.fecha || '').trim();
+  if (!fechaIso || !/^\d{4}-\d{2}-\d{2}$/.test(fechaIso)) {
+    return json({ error: 'Indica fecha_iso válida.' }, 400, request);
+  }
+  if (typeof body.activa !== 'boolean') {
+    return json({ error: 'Indica activa: true|false.' }, 400, request);
+  }
+
+  const canonical = resolveTid(tid);
+  const raw       = await env.INVENTARIO.get(kv(canonical, 'funciones:activas'));
+  const list      = raw ? JSON.parse(raw) : [];
+  const idx       = list.findIndex(f => f.fecha_iso === fechaIso);
+  if (idx < 0) return json({ error: 'Función no encontrada en KV.' }, 404, request);
+
+  const antes = list[idx].activa !== false;
+  list[idx].activa = body.activa;
+  await env.INVENTARIO.put(kv(canonical, 'funciones:activas'), JSON.stringify(list));
+
+  await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'funcion_toggle', teatroId: canonical,
+    detalles: `${fechaIso} · venta pública: ${antes ? 'activa' : 'oculta'} → ${body.activa ? 'activa' : 'oculta'}`,
+    meta: { fecha_iso: fechaIso, activa: body.activa, nombre: list[idx].nombre },
+  });
+
+  return json({ ok: true, funcion: list[idx] }, 200, request);
 }
 
 // ─── HANDLER: DISPONIBILIDAD ──────────────────────────────────────────────────
@@ -3041,7 +3259,15 @@ async function handleVentaManual(tid, request, env, ctx) {
     `🎭 *EL GORILA* — ${funcion.nombre}`,
     `📍 ${config.venue}`,
     `🎟 ${cantidadTotal} boleto(s)${folioPuerta ? ` · Folio ${folioPuerta}` : ''}`,
-    `Presenta el QR en la entrada. El boleto también llegó por correo.`,
+    `Certificado: ${gen.certificado}`,
+    '',
+    `Tu boleto con QR (imagen):`,
+    compartirUrl,
+    '',
+    `Programa de mano:`,
+    URL_PROGRAMA_V2,
+    '',
+    `Presenta el QR en la entrada del teatro.`,
   ].join('\n');
   const waUrl = telefono
     ? `https://wa.me/${telefono}?text=${encodeURIComponent(waTexto)}`
@@ -3958,6 +4184,8 @@ export default {
 
       if (method === 'GET'  && sub === 'ventas')         return handleVentas(tid, request, env);
       if (method === 'GET'  && sub === 'informe-funciones') return handleInformeFunciones(tid, request, env);
+      if (method === 'GET'  && sub === 'funciones')        return handleFuncionesAdmin(tid, request, env);
+      if (method === 'POST' && sub === 'funciones/toggle') return handleFuncionesToggle(tid, request, env);
       if (method === 'GET'  && sub === 'lista-puerta') return handleListaPuerta(tid, request, env);
       if (method === 'POST' && sub === 'venta-manual')   return handleVentaManual(tid, request, env, ctx);
       if (method === 'GET'  && sub === 'fiscal')         return handleFiscalReserva(tid, request, env);
@@ -3972,6 +4200,8 @@ export default {
 
       if (method === 'POST' && sub === 'email-post-funcion')
         return handleEmailPostFuncion(tid, request, env);
+      if (method === 'POST' && sub === 'email-dia-funcion')
+        return handleEmailDiaFuncion(tid, request, env);
 
       const reenviarMatch = sub.match(/^venta\/([^/]+)\/reenviar-email$/);
       if (method === 'POST' && reenviarMatch)
@@ -4027,5 +4257,16 @@ export default {
     }
 
     return json({ error: 'Not found.' }, 404, request);
+  },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil((async () => {
+      try {
+        const res = await enviarEmailsDiaFuncion(env);
+        console.log('email-dia-funcion cron:', JSON.stringify(res));
+      } catch (e) {
+        console.error('email-dia-funcion cron error:', e.message);
+      }
+    })());
   },
 };
