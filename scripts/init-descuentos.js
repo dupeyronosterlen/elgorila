@@ -5,7 +5,7 @@
  * REGLAS (sincronizadas con Worker + boletos.html):
  * - INAPAM / estudiante / maestro: NO son cupones — tarifa $245 en su fila de la boletera.
  * - Todos los cupones activos aplican solo a boletos GENERALES (sin mezclar credenciales).
- * - No hay descuentos automáticos: todo pasa por código al pagar.
+ * - GRUPO20 se activa sola con 5+ generales (sin credencial). ESPEJO y demás van manual al pagar.
  *
  * Guía para agencia: CUPONES-AGENCIA.template.txt
  *

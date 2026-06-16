@@ -307,25 +307,8 @@ a   { color: inherit; }
 @media (min-width: 420px) {
   #botones-fecha { grid-template-columns: 1fr 1fr 1fr; }
 }
-/* Despliegue progresivo de fechas por mes */
+/* Despliegue progresivo: 3 fechas visibles, botón «Ver más» (sin letreros de mes) */
 #fechas-progressive-ui { margin-top: 10px; }
-.fechas-mes-nota {
-  margin: 14px 0 8px; padding: 12px 14px;
-  border-left: 2px solid var(--gold-dim);
-  background: rgba(217,155,58,.06);
-}
-.fechas-mes-nota--extension {
-  border-left-color: var(--red-dim);
-  background: rgba(212,58,26,.08);
-}
-.fechas-mes-nota__titulo {
-  font-family: var(--display); font-size: 20px; font-weight: 500;
-  color: var(--d-fg); margin: 0 0 4px;
-}
-.fechas-mes-nota__sub {
-  font-family: var(--cuerpo); font-size: 16px; color: var(--d-soft);
-  margin: 0; font-style: italic;
-}
 .btn-fechas-toggle {
   display: block; width: 100%; margin-top: 8px;
   padding: 14px 16px; background: transparent;
@@ -375,9 +358,10 @@ a   { color: inherit; }
 #fecha-seleccionada-texto {
   font-family: var(--cuerpo); font-size: 18px;
   letter-spacing: .01em;
-  color: var(--d-fg); margin-top: 14px;
+  color: var(--gold); margin-top: 10px;
   line-height: 1.4;
 }
+#fecha-seleccionada-texto[hidden] { display: none; }
 
 /* ── ETIQUETA ESTRENO EN BOTÓN DE FECHA ──────────────────── */
 .fecha-estreno-tag {
@@ -463,6 +447,15 @@ a   { color: inherit; }
   font-family: var(--display); font-size: 34px;
   font-weight: 500; color: var(--d-fg); line-height: .88;
 }
+.promo-grupo-banner {
+  width: 100%;
+  margin-top: 10px;
+  font-family: var(--cuerpo);
+  font-size: 15px;
+  line-height: 1.45;
+  text-align: left;
+}
+.promo-grupo-banner.hidden { display: none; }
 
 /* Mensajes de disponibilidad */
 #disponibilidad-info { margin-top: 10px; }
@@ -1022,10 +1015,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="banner-invitacion" class="invitacion-banner hidden" aria-live="polite"></div>
 
     <!-- Fechas -->
-    <span class="fecha-sub-label">Selecciona la fecha</span>
+    <span class="fecha-sub-label">Selecciona una fecha</span>
     <div id="botones-fecha"><!-- JS --></div>
     <div id="fechas-progressive-ui" aria-live="polite"></div>
-    <p id="fecha-seleccionada-texto">Selecciona una fecha</p>
+    <p id="fecha-seleccionada-texto" hidden aria-live="polite"></p>
     <div id="mensaje-agotado" class="hidden" aria-live="polite">Esta función está agotada.</div>
 
     <!-- Tipos de boleto -->
@@ -1036,9 +1029,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div>
         <div class="ticket-nombre">General</div>
         <div class="ticket-precio" id="precio-general-display">$350 MXN</div>
-        <div style="font-family:var(--cuerpo);font-size:16px;color:var(--d-soft);margin-top:5px;line-height:1.4;">
-          Código <strong>ESPEJO</strong>: 2 generales por <strong>$600</strong> (al pagar)
-        </div>
       </div>
       <div class="ticket-controls">
         <button type="button" class="qty-btn" onclick="cambiarCantidad('general', -1)" aria-label="Menos general">−</button>
@@ -1079,6 +1069,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span class="total-label">Total</span>
         <span id="total-precio">$0.00 MXN</span>
       </div>
+      <div id="promo-grupo-banner" class="promo-grupo-banner hidden" aria-live="polite"></div>
     </div>
 
     <button id="btn-continuar" type="button" onclick="irAConfirmacion()" disabled>
@@ -1254,7 +1245,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <li><strong>Con credencial</strong> (INAPAM, estudiante o maestro): tarifa fija <strong>$245</strong> — elige esa fila; no usa cupón.</li>
         <li><strong>ESPEJO</strong> (pareja): exactamente <strong>2 generales = $600</strong> — código al pagar. Ideal para ads de pareja.</li>
         <li><strong>GRUPO20</strong>: <strong>5+ generales</strong>, todos generales → −20% con código al pagar.</li>
-        <li><strong>PRENSA30</strong>: hasta 4 generales → −30% (prensa, influencers).</li>
         <li><strong>Invitación</strong> (−25%): enlace personal de quien ya vio la obra — no es cupón de campaña.</li>
       </ul>
     </details>
@@ -1414,24 +1404,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 function _validarEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
 function _actualizarResumenCupon(orden) {
-  const cuponWrap = document.getElementById('ichk-cupon-wrap');
-  const cuponMonto = document.getElementById('ichk-cupon-monto');
-  const cuponEtiq = document.getElementById('ichk-cupon-etiq');
-  const descWrap = document.getElementById('ichk-descuento-wrap');
-  const totalEl = document.getElementById('ichk-total');
-  if (descWrap) descWrap.style.display = 'none';
-
-  const cuponDesc = orden.cuponDescuentoMonto || 0;
-  if (cuponWrap) {
-    if (orden.codigoCupon && cuponDesc > 0) {
-      cuponWrap.style.display = '';
-      if (cuponMonto) cuponMonto.textContent = `−$${cuponDesc.toFixed(2)}`;
-      if (cuponEtiq) cuponEtiq.textContent = orden.codigoCupon;
-    } else {
-      cuponWrap.style.display = 'none';
-    }
+  if (typeof renderResumenDescuentoOrden === 'function') {
+    renderResumenDescuentoOrden(orden);
+    return;
   }
-
+  const totalEl = document.getElementById('ichk-total');
   if (totalEl) totalEl.textContent = `$${(orden.total || 0).toFixed(2)} MXN`;
 }
 
@@ -1476,7 +1453,11 @@ async function aplicarCuponInline() {
     orden.cuponPorcentaje = data.porcentaje || 0;
     orden.cuponTotalMxn = data.totalMxn || null;
     orden.cuponDescuentoMonto = data.descuentoMonto;
+    orden.descuentoMonto = data.descuentoMonto;
+    orden.subtotal = data.subtotal;
     orden.total = data.total;
+    orden.promoAutomatica = false;
+    orden.promoManual = true;
     if (data.codigo === 'INVITADO25') {
       try {
         const de = sessionStorage.getItem('elgorila_invitacion_de');
@@ -1608,16 +1589,9 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script src="js/invitacion-boletos.js"></script>
 
-<!-- Fechas: 3 iniciales → resto del mes → siguiente mes (3) → … -->
+<!-- Fechas: 3 visibles → «Ver más fechas» (sin letreros de mes) -->
 <script>
 (function() {
-  var MESES_ES = ['','enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-
-  function nombreMes(mesIso) {
-    var n = parseInt((mesIso || '').split('-')[1], 10);
-    return MESES_ES[n] || mesIso;
-  }
-
   function flattenItems(container) {
     var out = [];
     Array.from(container.children).forEach(function(el) {
@@ -1632,68 +1606,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function buildSteps(items) {
     if (!items.length) return [];
-    var months = [];
-    items.forEach(function(it) {
-      if (months.indexOf(it.mes) === -1) months.push(it.mes);
-    });
-    months.sort();
-
     var steps = [];
-    months.forEach(function(mes, mi) {
-      var idxs = items.filter(function(it) { return it.mes === mes; }).map(function(it) { return it.idx; });
-      var nom = nombreMes(mes);
-      var nomCap = nom.charAt(0).toUpperCase() + nom.slice(1);
-      var nextMes = mi < months.length - 1 ? months[mi + 1] : null;
-      var nextNom = nextMes ? nombreMes(nextMes) : null;
-      var isExtension = mi === months.length - 1 && months.length >= 3;
-      var firstBatch = mi === 0 ? Math.min(3, idxs.length) : Math.min(3, idxs.length);
-
-      if (mi === 0) {
-        steps.push({
-          maxIdx: idxs[firstBatch - 1],
-          btn: idxs.length > firstBatch
-            ? 'Ver más fechas de ' + nom + ' \u2192'
-            : (nextNom ? 'Ver funciones de ' + nextNom + ' \u2192' : null)
-        });
-        if (idxs.length > firstBatch) {
-          steps.push({
-            maxIdx: idxs[idxs.length - 1],
-            btn: nextNom ? 'Ver funciones de ' + nextNom + ' \u2192' : null
-          });
-        }
-      } else {
-        var endFirst = idxs[firstBatch - 1];
-        steps.push({
-          maxIdx: endFirst,
-          monthLabel: isExtension
-            ? { title: 'Temporada alargada', sub: 'Porque ustedes lo pidieron — ' + nom + ' ' + mes.split('-')[0], extension: true }
-            : { title: nomCap },
-          btn: idxs.length > firstBatch
-            ? 'Ver más fechas de ' + nom + ' \u2192'
-            : (nextNom ? 'Ver funciones de ' + nextNom + ' \u2192' : null)
-        });
-        if (idxs.length > firstBatch) {
-          steps.push({
-            maxIdx: idxs[idxs.length - 1],
-            btn: nextNom ? 'Ver funciones de ' + nextNom + ' \u2192' : null
-          });
-        }
-      }
-    });
-    return steps;
-  }
-
-  function renderNotas(ui, stepIndex, steps) {
-    ui.querySelectorAll('.fechas-mes-nota').forEach(function(n) { n.remove(); });
-    for (var s = 1; s <= stepIndex && s < steps.length; s++) {
-      var lbl = steps[s].monthLabel;
-      if (!lbl) continue;
-      var box = document.createElement('div');
-      box.className = 'fechas-mes-nota' + (lbl.extension ? ' fechas-mes-nota--extension' : '');
-      box.innerHTML = '<p class="fechas-mes-nota__titulo">' + lbl.title + '</p>'
-        + (lbl.sub ? '<p class="fechas-mes-nota__sub">' + lbl.sub + '</p>' : '');
-      ui.insertBefore(box, ui.firstChild);
+    var batch = 3;
+    for (var i = 0; i < items.length; i += batch) {
+      var maxIdx = Math.min(i + batch - 1, items.length - 1);
+      steps.push({
+        maxIdx: maxIdx,
+        btn: maxIdx < items.length - 1 ? 'Ver más fechas \u2192' : null
+      });
     }
+    return steps;
   }
 
   function applyStep(items, stepIndex, steps, ui) {
@@ -1701,7 +1623,6 @@ document.addEventListener('DOMContentLoaded', function() {
     items.forEach(function(it, i) {
       it.el.style.display = i <= maxIdx ? '' : 'none';
     });
-    renderNotas(ui, stepIndex, steps);
     ui.querySelectorAll('.btn-fechas-toggle').forEach(function(b) { b.remove(); });
     var btnText = steps[stepIndex].btn;
     if (btnText && stepIndex < steps.length - 1) {
@@ -1731,11 +1652,10 @@ document.addEventListener('DOMContentLoaded', function() {
     applyStep(items, 0, steps, ui);
   }
 
-  var observer = new MutationObserver(procesarFechas);
   document.addEventListener('DOMContentLoaded', function() {
     var c = document.getElementById('botones-fecha');
     if (!c) return;
-    observer.observe(c, { childList: true });
+    new MutationObserver(procesarFechas).observe(c, { childList: true });
     if (c.children.length > 0) procesarFechas();
   });
 })();

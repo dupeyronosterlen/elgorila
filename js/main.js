@@ -37,11 +37,80 @@ function totalCantidad() {
 // Credenciales: tarifa fija $245 en su fila (no son cupones).
 const NOMBRE_CREDENCIAL     = 'INAPAM · Estudiante · Maestro';
 const TIPOS_CREDENCIAL      = ['inapam', 'estudiante', 'maestro'];
-const CUPON_ESPEJO_GENERALES = 2;
-const CUPON_ESPEJO_TOTAL     = 600;
+const CUPON_GRUPO20_MIN      = 5;
+const CUPON_GRUPO20_HINT_MIN = 3;
+const CUPON_GRUPO20_PCT      = 0.20;
 
 function tieneBoletosCredencial() {
     return TIPOS_CREDENCIAL.some(t => (cantidades[t] || 0) > 0);
+}
+
+// Promo automática: solo GRUPO20 (5+ generales, sin credencial). ESPEJO va manual al pagar.
+function detectarPromoAutomatica() {
+    if (tieneBoletosCredencial()) return null;
+    const gen   = cantidades.general || 0;
+    const total = totalCantidad();
+    if (gen >= CUPON_GRUPO20_MIN && gen === total) {
+        return {
+            codigo:     'GRUPO20',
+            nombre:     'Grupo 20%',
+            tipo:       'porcentaje',
+            porcentaje: Math.round(CUPON_GRUPO20_PCT * 100),
+        };
+    }
+    return null;
+}
+
+function calcularSubtotalBruto() {
+    return TIPOS_BOLETO.reduce((s, t) => s + precioUnitario(t.tipo) * (cantidades[t.tipo] || 0), 0);
+}
+
+function calcularPreciosConPromo(promo) {
+    const subtotal = calcularSubtotalBruto();
+    if (!promo) {
+        return { subtotal, total: subtotal, descuentoMonto: 0, promo: null };
+    }
+    let total = subtotal;
+    if (promo.tipo === 'par_fijo') {
+        total = promo.totalMxn;
+    } else if (promo.tipo === 'porcentaje') {
+        total = subtotal * (1 - promo.porcentaje / 100);
+    }
+    const descuentoMonto = Math.max(0, Math.round((subtotal - total) * 100) / 100);
+    total = Math.round(total * 100) / 100;
+    return { subtotal, total, descuentoMonto, promo };
+}
+
+function renderResumenDescuentoOrden(orden) {
+    const autoDesc  = (!orden.promoManual && orden.promoAutomatica) ? (orden.descuentoMonto || 0) : 0;
+    const cuponDesc = orden.promoManual ? (orden.cuponDescuentoMonto || 0) : 0;
+
+    const descWrap = document.getElementById('ichk-descuento-wrap');
+    const descMonto = document.getElementById('ichk-descuento-monto');
+    if (descWrap) {
+        if (autoDesc > 0.01 && orden.codigoCupon) {
+            descWrap.style.display = '';
+            if (descMonto) descMonto.textContent = `−$${autoDesc.toFixed(2)} (${orden.codigoCupon})`;
+        } else {
+            descWrap.style.display = 'none';
+        }
+    }
+
+    const cuponWrap = document.getElementById('ichk-cupon-wrap');
+    const cuponMonto = document.getElementById('ichk-cupon-monto');
+    const cuponEtiq = document.getElementById('ichk-cupon-etiq');
+    if (cuponWrap) {
+        if (cuponDesc > 0.01 && orden.codigoCupon && orden.promoManual) {
+            cuponWrap.style.display = '';
+            if (cuponMonto) cuponMonto.textContent = `−$${cuponDesc.toFixed(2)}`;
+            if (cuponEtiq) cuponEtiq.textContent = orden.codigoCupon;
+        } else {
+            cuponWrap.style.display = 'none';
+        }
+    }
+
+    const totalEl = document.getElementById('ichk-total');
+    if (totalEl) totalEl.textContent = `$${(orden.total || 0).toFixed(2)} MXN`;
 }
 
 function nombreBoletoEnResumen(tipo) {
@@ -51,7 +120,8 @@ function nombreBoletoEnResumen(tipo) {
 }
 
 function calcularTotal() {
-    return TIPOS_BOLETO.reduce((s, t) => s + precioUnitario(t.tipo) * (cantidades[t.tipo] || 0), 0);
+    const promo = detectarPromoAutomatica();
+    return calcularPreciosConPromo(promo).total;
 }
 
 // --- FUNCIÓN 1: CAMBIAR CANTIDAD POR TIPO ---
@@ -206,9 +276,8 @@ function refrescarDisponibilidadWorker() {
 
 // --- FUNCIÓN 3: ACTUALIZAR PANTALLA ---
 function actualizarPantalla() {
-    const espejoListo = cantidades.general === CUPON_ESPEJO_GENERALES
-        && totalCantidad() === CUPON_ESPEJO_GENERALES
-        && !tieneBoletosCredencial();
+    const promoAuto = detectarPromoAutomatica();
+    const precios   = calcularPreciosConPromo(promoAuto);
 
     // Cantidad por tipo
     TIPOS_BOLETO.forEach(t => {
@@ -218,7 +287,15 @@ function actualizarPantalla() {
 
     // Fecha seleccionada
     const cajitaFecha = document.getElementById('fecha-seleccionada-texto');
-    if (cajitaFecha) cajitaFecha.innerText = nombreFecha || 'Selecciona una fecha';
+    if (cajitaFecha) {
+        if (fechaSeleccionada && nombreFecha) {
+            cajitaFecha.textContent = nombreFecha;
+            cajitaFecha.hidden = false;
+        } else {
+            cajitaFecha.textContent = '';
+            cajitaFecha.hidden = true;
+        }
+    }
 
     const secCfg = seccionVentaConfig();
     const precioGeneralEl = document.getElementById('precio-general-display');
@@ -239,34 +316,53 @@ function actualizarPantalla() {
             </div>`;
         }).join('');
 
+        if (precios.descuentoMonto > 0.01 && promoAuto) {
+            html += `<div class="flex justify-between text-sm" style="color:#4ade80;border-top:0.5px solid rgba(241,234,217,0.10);padding-top:6px;margin-top:4px;">
+                <span>Promo ${promoAuto.codigo}</span>
+                <span>−$${precios.descuentoMonto.toFixed(2)}</span>
+            </div>`;
+        }
+
         resumenEl.innerHTML = html;
     }
 
     // Total
-    const total = calcularTotal();
+    const total = precios.total;
     const totalEl = document.getElementById('total-precio');
     if (totalEl) totalEl.textContent = `$${total.toFixed(2)} MXN`;
 
-    // Banner cupones (solo pistas; el descuento se aplica al ingresar código al pagar)
     let promoBanner = document.getElementById('promo-grupo-banner');
-    if (!promoBanner && totalEl && totalEl.parentNode) {
+    if (!promoBanner && totalEl) {
         promoBanner = document.createElement('div');
         promoBanner.id = 'promo-grupo-banner';
-        totalEl.parentNode.insertBefore(promoBanner, totalEl);
+        promoBanner.className = 'promo-grupo-banner hidden';
+        const totalFila = totalEl.closest('.total-fila');
+        if (totalFila && totalFila.parentNode) {
+            totalFila.parentNode.insertBefore(promoBanner, totalFila.nextSibling);
+        }
     }
     if (promoBanner) {
-        if (espejoListo) {
-            promoBanner.className = 'text-xs my-1';
-            promoBanner.style.color = 'rgba(217,155,58,.85)';
+        if (promoAuto?.codigo === 'GRUPO20') {
+            promoBanner.className = 'promo-grupo-banner';
+            promoBanner.style.color = '#4ade80';
             promoBanner.innerHTML =
-                `¿Código <strong>ESPEJO</strong>? 2 generales por <strong>$${CUPON_ESPEJO_TOTAL}</strong> — ingrésalo al confirmar y pagar.`;
-        } else if (cantidades.general >= 5 && !tieneBoletosCredencial()) {
-            promoBanner.className = 'text-xs my-1';
+                `✓ Promo <strong>GRUPO20</strong> activa — −${Math.round(CUPON_GRUPO20_PCT * 100)}% en ${cantidades.general} generales`;
+        } else if (
+            cantidades.general >= CUPON_GRUPO20_HINT_MIN
+            && cantidades.general < CUPON_GRUPO20_MIN
+            && !tieneBoletosCredencial()
+        ) {
+            promoBanner.className = 'promo-grupo-banner';
             promoBanner.style.color = 'rgba(217,155,58,.6)';
             promoBanner.innerHTML =
-                '¿Grupo grande? Código <strong>GRUPO20</strong> (−20% con 5+ generales) al pagar.';
+                `Agrega ${CUPON_GRUPO20_MIN - cantidades.general} general(es) más para activar <strong>GRUPO20</strong> (−20%)`;
+        } else if (cantidades.general >= CUPON_GRUPO20_MIN && tieneBoletosCredencial()) {
+            promoBanner.className = 'promo-grupo-banner';
+            promoBanner.style.color = 'rgba(217,155,58,.6)';
+            promoBanner.innerHTML =
+                '<strong>GRUPO20</strong> aplica solo cuando todos los boletos son generales. Las credenciales van en tarifa aparte ($245).';
         } else {
-            promoBanner.className = 'hidden';
+            promoBanner.className = 'promo-grupo-banner hidden';
             promoBanner.innerHTML = '';
             promoBanner.style.color = '';
         }
@@ -350,7 +446,8 @@ function irAConfirmacion() {
         }
     }
 
-    const subtotalSinDescuento = calcularTotal();
+    const promoAuto = detectarPromoAutomatica();
+    const precios   = calcularPreciosConPromo(promoAuto);
 
     const orden = {
         fecha:          nombreFecha,
@@ -358,11 +455,23 @@ function irAConfirmacion() {
         clave:          fechaSeleccionada,
         items,
         cantidadTotal:  cantTotal,
-        subtotal:       subtotalSinDescuento,
-        total:          subtotalSinDescuento,
+        subtotal:       precios.subtotal,
+        total:          precios.total,
+        descuentoMonto: precios.descuentoMonto > 0 ? precios.descuentoMonto : 0,
         reservaId,
         timestamp:      Date.now(),
     };
+
+    if (promoAuto) {
+        orden.codigoCupon          = promoAuto.codigo;
+        orden.cuponNombre          = promoAuto.nombre;
+        orden.cuponTipo            = promoAuto.tipo;
+        orden.cuponPorcentaje      = promoAuto.porcentaje || 0;
+        orden.cuponTotalMxn        = promoAuto.totalMxn || null;
+        orden.cuponDescuentoMonto  = precios.descuentoMonto;
+        orden.promoAutomatica      = true;
+        orden.promoManual          = false;
+    }
 
     try {
         localStorage.setItem('orden_compra', JSON.stringify(orden));
@@ -411,32 +520,12 @@ function mostrarCheckoutInline(orden) {
         }).join('');
     }
 
-    // Descuento automático desactivado — solo cupones al pagar
-    const descEl = document.getElementById('ichk-descuento-wrap');
-    if (descEl) descEl.style.display = 'none';
-
-    const cuponWrap = document.getElementById('ichk-cupon-wrap');
-    if (cuponWrap) {
-        const cuponDesc = orden.cuponDescuentoMonto || 0;
-        if (orden.codigoCupon && cuponDesc > 0) {
-            cuponWrap.style.display = '';
-            const cm = document.getElementById('ichk-cupon-monto');
-            const ce = document.getElementById('ichk-cupon-etiq');
-            if (cm) cm.textContent = `−$${cuponDesc.toFixed(2)}`;
-            if (ce) ce.textContent = orden.codigoCupon;
-        } else {
-            cuponWrap.style.display = 'none';
-        }
-    }
+    renderResumenDescuentoOrden(orden);
 
     const cuponInput = document.getElementById('ichk-cupon-input');
     const cuponMsg   = document.getElementById('ichk-cupon-msg');
-    if (cuponInput) cuponInput.value = orden.codigoCupon || '';
+    if (cuponInput) cuponInput.value = orden.promoManual ? (orden.codigoCupon || '') : '';
     if (cuponMsg) { cuponMsg.textContent = ''; cuponMsg.className = ''; }
-
-    // Total
-    const totalEl = document.getElementById('ichk-total');
-    if (totalEl) totalEl.textContent = `$${orden.total.toFixed(2)} MXN`;
 
     // Mostrar panel y desplazar
     panel.style.display = '';
@@ -628,6 +717,9 @@ async function enviarListaEspera() {
 window.irAConfirmacion  = irAConfirmacion;
 window.cambiarCantidad  = cambiarCantidad;
 window.seleccionarFecha = seleccionarFecha;
+window.renderResumenDescuentoOrden = renderResumenDescuentoOrden;
+window.mostrarCheckoutInline = mostrarCheckoutInline;
+window.editarPedido = editarPedido;
 window.abrirListaEspera   = abrirListaEspera;
 window.cerrarListaEspera  = cerrarListaEspera;
 window.enviarListaEspera  = enviarListaEspera;

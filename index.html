@@ -11,9 +11,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate"/>
-<meta name="description" content="Obra de teatro con Humberto Dupeyrón, basada en Franz Kafka. 37 años en escena. 8 funciones en Teatro Wilberto Cantón, CDMX — estreno 8 de julio, miércoles 20:30."/>
+<meta name="description" content="Obra de teatro con Humberto Dupeyrón, basada en Franz Kafka. 37 años en escena. Temporada de tres meses. 13 funciones en Teatro Wilberto Cantón, CDMX — miércoles 20:30."/>
 <meta property="og:title" content="EL GORILA — El monólogo sobre la domesticación del hombre"/>
-<meta property="og:description" content="Obra teatral con Humberto Dupeyrón, basada en Franz Kafka. 8 funciones en Teatro Wilberto Cantón, CDMX. Miércoles 20:30."/>
+<meta property="og:description" content="Obra teatral con Humberto Dupeyrón, basada en Franz Kafka. Temporada de tres meses. 13 funciones en Teatro Wilberto Cantón, CDMX. Miércoles 20:30."/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://elgorilateatro.com.mx/"/>
 <meta property="og:image" content="https://elgorilateatro.com.mx/img/LOGO/1.jpg"/>
@@ -22,7 +22,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:locale" content="es_MX"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="EL GORILA — El monólogo sobre la domesticación del hombre"/>
-<meta name="twitter:description" content="Obra teatral con Humberto Dupeyrón, basada en Franz Kafka. 37 años en escena."/>
+<meta name="twitter:description" content="Obra teatral con Humberto Dupeyrón, basada en Franz Kafka. 13 funciones, tres meses en Teatro Wilberto Cantón, CDMX."/>
 <meta name="twitter:image" content="https://elgorilateatro.com.mx/img/LOGO/1.jpg"/>
 <title>EL GORILA — El monólogo sobre la domesticación del hombre</title>
 <link rel="canonical" href="https://elgorilateatro.com.mx/"/>
@@ -201,11 +201,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 0.35rem;
+        gap: 0.28rem;
         text-align: center;
         width: 100%;
-        max-width: 22rem;
+        max-width: 100%;
         margin: 0 auto;
+        padding: 0 0.35rem;
+        overflow: hidden;
       }
       .portada-info-movil-estreno {
         font-family: Lora, Georgia, serif;
@@ -437,17 +439,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .section-with-bg::before {
       content: '';
       position: absolute;
-      top: -20%;
-      left: -20%;
-      right: -20%;
-      bottom: -20%;
-      background-size: 150% 150%;
+      top: -30%;
+      left: -30%;
+      right: -30%;
+      bottom: -30%;
+      background-image: var(--section-bg-url, none);
+      background-size: cover;
       background-position: center center;
       background-repeat: no-repeat;
       filter: blur(60px) brightness(0.32) contrast(0.82) saturate(0.42);
       opacity: 0.55;
       z-index: 0;
-      transform: scale(1.3);
+      transform: scale(1.85);
       pointer-events: none;
     }
     .section-with-bg > * {
@@ -589,7 +592,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       letter-spacing: 0.18em;
       text-transform: uppercase;
     }
-    /* Citas editoriales entre secciones — ver .narrativa-cita */
+    /* Citas editoriales entre secciones — líneas completas centradas */
     .narrativa-cita,
     .text-center p[style*="color:#cd7f32"],
     .text-center p[style*="color: #cd7f32"] {
@@ -598,9 +601,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       font-weight: 400 !important;
       font-style: italic !important;
       letter-spacing: 0.02em;
-      line-height: 1.42;
-      color: rgba(241, 234, 217, 0.88) !important;
-      text-shadow: none !important;
+      line-height: 1.45;
+      color: rgba(217, 155, 58, 0.92) !important;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.75) !important;
+      text-align: center;
     }
     /* Botones / navegación: preservar legibilidad (no serifa) */
     button, a.btn, nav, .font-mono-override {
@@ -1805,9 +1809,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     overflow: hidden !important;
     border-radius: 0;
     width: 100%;
-    min-height: min(74svh, 640px);
-    height: min(78svh, 680px);
-    max-height: 680px;
+    min-height: min(74svh, 640px) !important;
+    height: min(78svh, 680px) !important;
+    max-height: 680px !important;
     padding: 0 !important;
   }
   .hero-portada__cartel-oculto {
@@ -1832,6 +1836,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     object-position: center 22%;
     display: block;
     filter: contrast(1.04) saturate(0.92);
+    transform: scale(1.08);
   }
   .hero-portada__overlay {
     position: absolute;
@@ -1856,9 +1861,25 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     justify-content: center !important;
     align-items: center !important;
     text-align: center !important;
-    gap: clamp(8px, 2vw, 14px) !important;
-    max-width: min(22rem, 92vw) !important;
+    gap: clamp(9px, 2.2vw, 16px) !important;
+    max-width: min(24rem, 94vw) !important;
     padding: 0 !important;
+  }
+  .hero-portada__bloque {
+    transform: scale(1.12);
+    transform-origin: center center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: inherit;
+    width: 100%;
+  }
+  .hero-portada__regla {
+    width: 52px !important;
+    height: 1.5px !important;
+    background: #D43A1A !important;
+    opacity: 0.85 !important;
+    margin: 2px auto 0 !important;
   }
   .hero-portada--foto .portada-nombre-actor,
   .hero-portada--foto .titulo-el-gorila,
@@ -1902,9 +1923,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   @media (max-width: 1023px) {
     .hero-portada--foto #cartel-container {
-      min-height: min(70svh, 560px);
-      height: min(74svh, 600px);
-      max-height: 600px;
+      min-height: min(70svh, 560px) !important;
+      height: min(74svh, 600px) !important;
+      max-height: 600px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    .hero-portada--foto .cartel-informativo-container {
+      position: absolute !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-height: none !important;
     }
     .hero-portada--foto .hero-portada__img {
       object-position: center 18%;
@@ -1918,8 +1951,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       justify-content: center !important;
       padding: 0 1rem 1.75rem !important;
     }
+    .hero-portada--foto .hero-portada__bloque {
+      transform-origin: center bottom;
+    }
     .hero-portada--foto .hero-portada__text {
-      gap: clamp(6px, 1.8vw, 11px) !important;
+      gap: clamp(7px, 2vw, 13px) !important;
     }
     .hero-portada--foto .hero-portada__actor {
       font-size: clamp(17px, 4.6vw, 28px) !important;
@@ -1930,17 +1966,22 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
   @media (max-width: 390px) {
     .hero-portada--foto #cartel-container {
-      min-height: min(68svh, 520px);
-      height: min(72svh, 540px);
+      min-height: min(68svh, 520px) !important;
+      height: min(72svh, 540px) !important;
     }
     .hero-portada--foto .hero-portada__titulo {
       font-size: clamp(34px, 10.8vw, 58px) !important;
     }
+    .texto-portada-calle,
+    .portada-info-movil-calle {
+      font-size: clamp(6px, 1.55vw, 7.5px) !important;
+      letter-spacing: 0.05em !important;
+    }
   }
   @media (max-width: 1023px) and (max-height: 700px) {
     .hero-portada--foto #cartel-container {
-      min-height: min(64svh, 480px);
-      height: min(68svh, 500px);
+      min-height: min(64svh, 480px) !important;
+      height: min(68svh, 500px) !important;
     }
     .hero-portada--foto .hero-portada__panel {
       padding-bottom: 1.25rem !important;
@@ -1968,7 +2009,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .hero-portada--foto .hero-portada__text {
       align-items: flex-start !important;
       text-align: left !important;
-      max-width: 20rem !important;
+      max-width: 22rem !important;
+      padding: 0 0.5rem !important;
+    }
+    .hero-portada--foto .hero-portada__bloque {
+      transform-origin: left center;
+      align-items: flex-start;
+    }
+    .hero-portada--foto .hero-portada__regla {
+      margin-left: 0 !important;
+      margin-right: auto !important;
     }
     .hero-portada--foto .hero-portada__meta {
       align-items: flex-start !important;
@@ -2027,6 +2077,29 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     color: rgba(214, 199, 163, 0.82) !important;
     line-height: 1.65 !important;
   }
+  .texto-portada-sede {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(9px, 2.1vw, 10px) !important;
+    letter-spacing: 0.18em !important;
+    text-transform: uppercase !important;
+    color: #d6c7a3 !important;
+    white-space: nowrap !important;
+    line-height: 1.4 !important;
+  }
+  .texto-portada-calle {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(6.5px, 1.65vw, 8px) !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: rgba(214, 199, 163, 0.72) !important;
+    white-space: nowrap !important;
+    line-height: 1.25 !important;
+    max-width: 100%;
+  }
+  .hero-portada .texto-portada-sede,
+  .hero-portada .texto-portada-calle {
+    text-shadow: 0 1px 10px rgba(0,0,0,0.85) !important;
+  }
   .portada-info-movil-estreno {
     font-family: 'JetBrains Mono', monospace !important;
     font-size: clamp(10px, 2.4vw, 11px) !important;
@@ -2039,6 +2112,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     letter-spacing: 0.14em !important;
     text-transform: uppercase !important;
     color: rgba(214, 199, 163, 0.78) !important;
+  }
+  .portada-info-movil-sede {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(9px, 2.2vw, 10px) !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+    color: #d6c7a3 !important;
+    margin: 0;
+    white-space: nowrap;
+  }
+  .portada-info-movil-calle {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: clamp(6.5px, 1.75vw, 8px) !important;
+    letter-spacing: 0.07em !important;
+    text-transform: uppercase !important;
+    color: rgba(214, 199, 163, 0.72) !important;
+    margin: 0;
+    white-space: nowrap;
+    line-height: 1.25;
+    max-width: 100%;
   }
 
   /* Encabezados — línea roja v1 */
@@ -2057,54 +2150,68 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     text-shadow: 0 1px 6px rgba(0,0,0,0.6) !important;
   }
 
-  /* Citas narrativas — tono seco, no tarjeta decorativa */
+  /* Citas narrativas — líneas completas centradas */
   .narrativa-cita {
     font-family: 'Cormorant Garamond', Georgia, serif !important;
     font-size: clamp(17px, 3.5vw, 24px) !important;
     font-weight: 400 !important;
     font-style: italic !important;
     letter-spacing: 0.02em;
-    line-height: 1.42;
-    color: rgba(241, 234, 217, 0.88) !important;
-    text-shadow: none !important;
+    line-height: 1.45;
+    color: rgba(217, 155, 58, 0.92) !important;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.75) !important;
     border: none;
-    border-left: 2px solid rgba(212, 58, 26, 0.55);
-    padding: 0.35rem 0 0.35rem 0.85rem;
-    max-width: 30rem;
+    padding: 0.25rem 0.5rem;
+    max-width: 32rem;
     margin-left: auto;
     margin-right: auto;
-    text-align: left;
+    text-align: center;
   }
 
-  /* Fondos tipo programa de mano — foto difuminada bajo secciones clave */
+  /* Fondos — una sola imagen ampliada por sección (sin repetir la del hero) */
+  #sinopsis.section-with-bg {
+    --section-bg-url: url('img/SINOPSIS/mobile/1.webp');
+  }
   #sinopsis.section-with-bg::before {
-    background-image: url('img/programa/portada-v1.jpg') !important;
     filter: blur(48px) brightness(0.38) contrast(1.05) saturate(0.55) !important;
     opacity: 0.45 !important;
+    transform: scale(2) !important;
+  }
+  #la-obra.section-with-bg {
+    --section-bg-url: url('img/OBRA/2.jpg');
   }
   #la-obra.section-with-bg::before {
-    background-image: url('img/OBRA/2.jpg') !important;
     filter: blur(52px) brightness(0.28) contrast(1.08) saturate(0.45) !important;
     opacity: 0.5 !important;
+    transform: scale(2) !important;
+  }
+  #actor.section-with-bg {
+    --section-bg-url: url('img/HUMBERTO DUPEYRON/03.jpg');
   }
   #actor.section-with-bg::before {
-    background-image: url('img/HUMBERTO DUPEYRON/01.jpg') !important;
     filter: blur(52px) brightness(0.32) contrast(1.06) saturate(0.5) !important;
     opacity: 0.48 !important;
+    transform: scale(2) !important;
+    background-position: center 30% !important;
   }
   #comentarios {
     position: relative;
     overflow: hidden;
+    --section-bg-url: url('img/HUMBERTO DUPEYRON/04.jpg');
   }
   #comentarios::before {
     content: '';
     position: absolute;
-    inset: -15%;
-    background: url('img/programa/portada-v1.jpg') center / cover no-repeat;
+    top: -30%;
+    left: -30%;
+    right: -30%;
+    bottom: -30%;
+    background: var(--section-bg-url) center / cover no-repeat;
     filter: blur(56px) brightness(0.3) saturate(0.5);
     opacity: 0.35;
     z-index: 0;
     pointer-events: none;
+    transform: scale(1.9);
   }
   #comentarios > * { position: relative; z-index: 1; }
 
@@ -2318,7 +2425,7 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
       "name": "¿Hay funciones en este momento?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Sí: 8 funciones en Teatro Wilberto Cantón, CDMX, miércoles 20:30. Estreno 8 de julio. Compra en elgorilateatro.com.mx/boletos.html."
+        "text": "Sí: 13 funciones en Teatro Wilberto Cantón, CDMX, miércoles 20:30. Temporada de tres meses (julio–septiembre). Compra en elgorilateatro.com.mx/boletos.html."
       }
     },
     {
@@ -2334,7 +2441,7 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
       "name": "¿Dónde se presenta la obra?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Teatro Wilberto Cantón (José María Velasco 59, San José Insurgentes, CDMX), miércoles 20:30. 8 funciones; estreno 8 de julio."
+        "text": "Teatro Wilberto Cantón · José María Velasco 59 · San José Insurgentes. 13 funciones, miércoles 20:30. Temporada de tres meses (julio–septiembre)."
       }
     },
     {
@@ -2390,7 +2497,7 @@ src="https://www.facebook.com/tr?id=24471801772518505&ev=PageView&noscript=1"
       "name": "¿Hay descuentos?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "INAPAM, estudiante y maestro: $245 con credencial. Cupones de campaña: ESPEJO (2 generales $600), GRUPO20 (5+ generales −20%), PRENSA30 (hasta 4 generales −30%)."
+        "text": "INAPAM, estudiante y maestro: $245 con credencial. Cupones de campaña: ESPEJO (2 generales $600), GRUPO20 (5+ generales −20%)."
       }
     },
     {
@@ -2542,14 +2649,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 <div class="cartel-informativo-container reading-mode-solo hero-portada__panel" id="cartel-informativo-wrap">
 <div class="cartel-texto-block hero-portada__text">
+<div class="hero-portada__bloque">
 <p class="portada-nombre-actor hero-portada__actor">Humberto Dupeyron en</p>
 <h1 class="titulo-el-gorila hero-portada__titulo">EL GORILA</h1>
 <p class="portada-kafka hero-portada__kafka">de Franz Kafka</p>
+<div class="portada-separador hero-portada__regla"></div>
+</div>
 <div class="portada-info-temporada" id="portada-info-desktop">
-<div class="portada-separador"></div>
-<div class="hidden lg:flex hero-portada__meta" style="flex-direction:column; align-items:center; gap:6px; margin-top:6px;">
-<span class="texto-portada-horario">Miércoles 20:30</span>
-<span class="texto-portada-direccion" style="margin-top:0; max-width:min(320px, 90vw); white-space:normal;">8 funciones · Teatro Wilberto Cantón</span>
+<div class="hidden lg:flex hero-portada__meta" style="flex-direction:column; align-items:flex-start; gap:5px; margin-top:8px;">
+<span class="texto-portada-sede">Teatro Wilberto Cantón</span>
+<span class="texto-portada-calle">José María Velasco 59 · San José Insurgentes</span>
+<span class="texto-portada-horario">Miércoles 20:30 · 13 funciones</span>
 </div>
 </div>
 </div>
@@ -2558,15 +2668,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 <section id="portada-venta-boletos" class="portada-info-temporada portada-info-movil flex flex-col items-center justify-center px-4 lg:hidden" aria-label="Información de función">
   <div class="portada-info-movil-inner">
-    <p class="portada-info-movil-detalle">Miércoles 20:30 · 8 funciones</p>
-    <p class="portada-info-movil-detalle">Teatro Wilberto Cantón · San José Insurgentes</p>
+    <p class="portada-info-movil-sede">Teatro Wilberto Cantón</p>
+    <p class="portada-info-movil-calle">José María Velasco 59 · San José Insurgentes</p>
+    <p class="portada-info-movil-detalle">Miércoles 20:30 · 13 funciones</p>
   </div>
 </section>
 <!-- Contenido de la obra (siempre visible, sobre eliminado) -->
 <div id="sobre-contenido" style="max-height:none; opacity:1; overflow:visible; padding-top:0;">
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-1 sm:mt-2 md:mt-4">
 <div class="text-center mb-4 sm:mb-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Treinta y siete años aprendiendo a hablar como nosotros. El informe ya está listo.</p>
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">37 años esperándote. Llegó tu turno.</p>
 </div>
 <div class="max-w-5xl galeria-reducida mx-auto galeria-wrap">
 <div class="galeria-hilo galeria-hilo-1 hidden md:block" aria-hidden="true"></div>
@@ -2662,10 +2773,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div id="venta-boletos" class="scroll-mt-24"></div>
 <div class="indicador-mas indicador-mas-izquierda" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
 <div class="text-center my-4 sm:my-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Kafka escribió una parábola. Aquí alguien la declama — y mira de reojo al público.</p>
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">La pieza que no envejece.</p>
 </div>
 <!-- Sección La Obra (fondo Kafka más oscuro y desaturado) -->
-<section id="la-obra" class="seccion-obra-actor obra-fondo-kafka mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" data-bg="img/SINOPSIS/mobile/2.webp">
+<section id="la-obra" class="seccion-obra-actor obra-fondo-kafka mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8">
     <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
         <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
             <div class="flex-1 w-full min-w-0 order-2 md:order-1 flex flex-col min-h-0 bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
@@ -2695,10 +2806,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 
 <div class="text-center my-4 sm:my-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Un simio, un auditorio, y la sospecha de que la jaula también es nuestra.</p>
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Un actor. Un personaje.</p>
 </div>
 <!-- Sección El Actor -->
-<section id="actor" class="seccion-obra-actor mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8" data-bg="img/SINOPSIS/mobile/3.webp">
+<section id="actor" class="seccion-obra-actor mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8">
     <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
         <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
             <div class="imagen-obra-actor w-full md:w-[500px] lg:w-[600px] flex-shrink-0 order-1 md:order-1">
@@ -2751,10 +2862,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
 <div class="text-center my-4 sm:my-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Música, escultura, luz tenue: lo que no se dice también ocupa butaca.</p>
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Ambiente y atmósfera.</p>
 </div>
 <!-- Sección Equipo -->
-    <section class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-6 sm:mt-8 section-with-bg" data-bg="img/SINOPSIS/mobile/4.webp">
+    <section class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-6 sm:mt-8 section-with-bg" data-bg="img/SINOPSIS/mobile/2.webp">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
         <!-- Columna Izquierda: Odila Dupeyron -->
         <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
@@ -2845,10 +2956,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 
 <div class="text-center my-4 sm:my-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Si el gorila miente, miente con la cortesía de quien ya aprendió las reglas.</p>
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Ven a descubrirlo...</p>
 </div>
 
-<section class="scroll-mt-24 mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 mt-6 sm:mt-8 section-with-bg" id="faq" data-bg="img/SINOPSIS/mobile/5.webp">
+<section class="scroll-mt-24 mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 mt-6 sm:mt-8 section-with-bg" id="faq" data-bg="img/SINOPSIS/mobile/4.webp">
 <div class="flex flex-col items-center justify-center">
 <svg class="h-8 w-8 sm:h-10 sm:w-10 text-accent-gold mb-3 sm:mb-4 opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -2865,7 +2976,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </summary>
 <div class="mt-3 pl-4 border-l-2 border-accent-gold/40 bg-black/40 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/25">
 <p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
-                Sí: <strong>8 funciones</strong> en <strong>Teatro Wilberto Cantón</strong>, <strong>miércoles 20:30</strong>. Estreno <strong>8 de julio</strong>. Boletos en <a href="boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a> o avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">Instagram</a>.
+                Sí: en <strong>Teatro Wilberto Cantón</strong>, <strong>13 funciones</strong> los <strong>miércoles a las 20:30</strong>. Temporada de <strong>tres meses</strong> (julio–septiembre). Boletos en <a href="boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a> o avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">Instagram</a>.
               </p>
 </div>
 </details>
@@ -2877,7 +2988,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </span>
 </summary>
 <p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
-                Venta en línea <strong>próximamente</strong>. Sigue <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">@elgorilateatro</a> en Instagram para la fecha de apertura y novedades.
+                La venta en línea ya está abierta en <a href="boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a>: elige fecha, tipo de boleto y paga en el sitio. También puedes seguir <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">@elgorilateatro</a> en Instagram para novedades y avisos de temporada.
               </p>
 </details>
 <details class="group py-3 sm:py-4">
@@ -2889,7 +3000,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </summary>
 <div class="mt-3 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
 <p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
-                En <strong>Teatro Wilberto Cantón</strong> (José María Velasco 59, San José Insurgentes, CDMX): <strong>8 funciones</strong>, todos los miércoles a las 20:30. Estreno 8 de julio.
+                En <strong>Teatro Wilberto Cantón · José María Velasco 59 · San José Insurgentes</strong>: <strong>13 funciones</strong>, todos los miércoles a las 20:30. Temporada de tres meses (julio–septiembre).
               </p>
 </div>
 </details>
@@ -2971,7 +3082,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </span>
 </summary>
 <p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
-                Hay boletos <strong>generales</strong> ($350) y con <strong>tarifa credencial</strong> ($245) para INAPAM, estudiante y maestro. Los descuentos de campaña usan <strong>código al pagar</strong>: <strong>ESPEJO</strong> (2 generales $600), <strong>GRUPO20</strong> (5+ generales), <strong>PRENSA30</strong> (prensa/influencers).
+                Hay boletos <strong>generales</strong> ($350) y con <strong>tarifa credencial</strong> ($245) para INAPAM, estudiante y maestro. Los descuentos de campaña usan <strong>código al pagar</strong>: <strong>ESPEJO</strong> (2 generales $600), <strong>GRUPO20</strong> (5+ generales).
               </p>
 </details>
 <details class="group py-3 sm:py-4">
@@ -3045,7 +3156,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
 <!-- Contacto -->
-<section class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg p-4 sm:p-6 md:p-8 section-with-bg seccion-contacto-wide overflow-visible" id="contacto" data-bg="img/SINOPSIS/mobile/5.webp">
+<section class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg p-4 sm:p-6 md:p-8 section-with-bg seccion-contacto-wide overflow-visible" id="contacto" data-bg="img/programa/kafka-1923.webp">
 <div class="relative z-10 rounded-lg bg-rich-dark/90 backdrop-blur-md border-2 border-accent-gold/40 p-5 sm:p-6 md:p-8 mx-auto max-w-4xl overflow-visible">
 <div class="flex flex-col items-center text-center">
 <div class="contacto-grupo-1 mb-6">
@@ -3225,7 +3336,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     function aplicarFondoSeccion(sec) {
       var url = urlFondoSeccion(sec);
-      if (url) sec.style.backgroundImage = "url('" + url + "')";
+      if (url) sec.style.setProperty('--section-bg-url', "url('" + url + "')");
     }
     var sections = document.querySelectorAll('.section-with-bg[data-bg]');
     function reaplicarFondosYaCargados() {

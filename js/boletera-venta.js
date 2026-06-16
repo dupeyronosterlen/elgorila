@@ -5,11 +5,12 @@
 (function (global) {
   const PRECIOS = { general: 350, credencial: 245 };
   const NOMBRE_CREDENCIAL = 'INAPAM · Estudiante · Maestro';
-  const CUPON_ESPEJO_GENERALES = 2;
-  const CUPON_ESPEJO_TOTAL = 600;
+  const CUPON_GRUPO20_MIN = 5;
+  const CUPON_GRUPO20_HINT_MIN = 3;
 
   let cantidades = { general: 0, estudiante: 0 };
   let cuponAplicado = null;
+  let cuponManual = false;
 
   function totalCantidad() {
     return (cantidades.general || 0) + (cantidades.estudiante || 0);
@@ -38,12 +39,52 @@
     return tipo;
   }
 
+  function detectarPromoAutomatica() {
+    if (tieneCredencial()) return null;
+    const gen = cantidades.general || 0;
+    const total = totalCantidad();
+    if (gen >= CUPON_GRUPO20_MIN && gen === total) {
+      return { codigo: 'GRUPO20', nombre: 'Grupo 20%', tipo: 'porcentaje', porcentaje: 20 };
+    }
+    return null;
+  }
+
+  function calcularTotalesPromo(promo) {
+    const subtotal = subtotalSinCupon();
+    if (!promo) return { subtotal, total: subtotal, descuentoMonto: 0 };
+    let total = subtotal;
+    if (promo.tipo === 'par_fijo') total = promo.totalMxn;
+    else if (promo.tipo === 'porcentaje') total = subtotal * (1 - promo.porcentaje / 100);
+    const descuentoMonto = Math.max(0, Math.round((subtotal - total) * 100) / 100);
+    total = Math.round(total * 100) / 100;
+    return { subtotal, total, descuentoMonto };
+  }
+
+  function aplicarPromoAutomaticaSiCorresponde() {
+    if (cuponManual) return;
+    const promo = detectarPromoAutomatica();
+    if (!promo) {
+      cuponAplicado = null;
+      return;
+    }
+    const { total, descuentoMonto } = calcularTotalesPromo(promo);
+    cuponAplicado = {
+      codigo: promo.codigo,
+      nombre: promo.nombre,
+      tipo: promo.tipo,
+      total,
+      descuentoMonto,
+      automatica: true,
+    };
+  }
+
   function totalMostrado() {
     if (cuponAplicado && typeof cuponAplicado.total === 'number') return cuponAplicado.total;
     return subtotalSinCupon();
   }
 
   function limpiarCuponUi() {
+    cuponManual = false;
     cuponAplicado = null;
     const input = document.getElementById('bol-cupon-input');
     const msg = document.getElementById('bol-cupon-msg');
@@ -54,6 +95,8 @@
   }
 
   function actualizarUi() {
+    aplicarPromoAutomaticaSiCorresponde();
+
     ['general', 'estudiante'].forEach(t => {
       const el = document.getElementById(`bol-cant-${t}`);
       if (el) el.textContent = String(cantidades[t] || 0);
@@ -94,15 +137,20 @@
 
     const hint = document.getElementById('bol-promo-hint');
     if (hint) {
-      const espejoListo = cantidades.general === CUPON_ESPEJO_GENERALES
-        && totalCantidad() === CUPON_ESPEJO_GENERALES
-        && !tieneCredencial();
-      if (espejoListo && !cuponAplicado) {
+      const promo = detectarPromoAutomatica();
+      if (promo?.codigo === 'GRUPO20' && cuponAplicado?.automatica) {
         hint.style.display = '';
-        hint.innerHTML = `Código <strong>ESPEJO</strong>: 2 generales por <strong>$${CUPON_ESPEJO_TOTAL}</strong>`;
-      } else if (cantidades.general >= 5 && !tieneCredencial() && !cuponAplicado) {
+        hint.innerHTML = `✓ Promo <strong>GRUPO20</strong> activa — −20% en ${cantidades.general} generales`;
+      } else if (
+        cantidades.general >= CUPON_GRUPO20_HINT_MIN
+        && cantidades.general < CUPON_GRUPO20_MIN
+        && !tieneCredencial()
+      ) {
         hint.style.display = '';
-        hint.innerHTML = 'Grupo: código <strong>GRUPO20</strong> (−20% con 5+ generales)';
+        hint.innerHTML = `Agrega ${CUPON_GRUPO20_MIN - cantidades.general} general(es) más para <strong>GRUPO20</strong> (−20%)`;
+      } else if (cantidades.general >= CUPON_GRUPO20_MIN && tieneCredencial()) {
+        hint.style.display = '';
+        hint.innerHTML = '<strong>GRUPO20</strong> aplica solo cuando todos los boletos son generales.';
       } else {
         hint.style.display = 'none';
         hint.innerHTML = '';
@@ -128,7 +176,7 @@
     }
 
     cantidades[tipo] = nueva;
-    if (cuponAplicado) limpiarCuponUi();
+    if (cuponManual) limpiarCuponUi();
     actualizarUi();
   }
 
@@ -188,7 +236,9 @@
         tipo: data.tipo,
         total: data.total,
         descuentoMonto: data.descuentoMonto,
+        automatica: false,
       };
+      cuponManual = true;
       if (input) input.value = data.codigo;
       const okMsg = data.tipo === 'par_fijo'
         ? `✓ ${data.nombre} — $${data.totalMxn} total`

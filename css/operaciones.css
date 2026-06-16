@@ -366,7 +366,10 @@ button { font-family: var(--cuerpo); border-radius: 0 !important; }
 }
 .bol-total-precio { font-family: var(--display); font-size: 28px; color: var(--d-fg); line-height: 1; }
 .bol-total-promo { color: #4ade80; }
-.bol-promo-hint { font-size: 14px; color: rgba(217,155,58,.85); margin: 8px 0 4px; line-height: 1.4; }
+.bol-promo-hint {
+  font-size: 14px; color: rgba(217,155,58,.85);
+  margin: 10px 0 0; line-height: 1.4; width: 100%;
+}
 .bol-cupon-wrap { margin-bottom: 16px; }
 .bol-cupon-fila { display: flex; gap: 8px; margin-top: 6px; }
 .bol-cupon-fila .form-input { flex: 1; }

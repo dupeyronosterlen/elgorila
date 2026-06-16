@@ -60,7 +60,7 @@ CLOUDFLARE — QUÉ REVISAR (checklist operativo)
   C) KV — INVENTARIO (namespace 5c1712aba9…)
      Claves importantes:
        wilberto:config ............... platea 250 + galeria 75 (325)
-       wilberto:funciones:activas .... fechas jul–ago (y sep inactivas)
+       wilberto:funciones:activas .... 13 fechas jul–sep (todas en venta)
        wilberto:funcion:2026-07-08 ... inventario de ESA fecha (vendidos/reservados)
 
      Actualizar config si cambian butacas:
