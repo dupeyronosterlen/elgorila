@@ -159,8 +159,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <p class="meta" id="texto-entradas">—</p>
     </div>
 
-    <a class="btn" id="btn-boletos" href="boletos.html">Elegir entradas con invitación</a>
-    <a class="btn btn-ghost" href="index.html">Conocer la obra</a>
+    <a class="btn" id="btn-boletos" href="/boletos.html">Elegir entradas con invitación</a>
+    <a class="btn btn-ghost" href="/">Conocer la obra</a>
 
     <p class="nota">
       El descuento de invitado (−25%) se activa solo cuando tú lo confirmes en la boletera.
@@ -215,7 +215,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         'Certificado origen: <span class="ref">' + (data.certificadoRef || '—') + '</span>';
       document.getElementById('texto-entradas').textContent = entradasLabel(data.entradas);
 
-      const boletosUrl = new URL('boletos.html', window.location.href);
+      const boletosUrl = new URL('/boletos.html', window.location.origin);
       boletosUrl.searchParams.set('invita', data.referidoDe || de);
       document.getElementById('btn-boletos').href = boletosUrl.pathname + boletosUrl.search;
 

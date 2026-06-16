@@ -910,14 +910,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <!-- ══ LOGOS FIJOS ═══════════════════════════════════════════ -->
 <div class="logo-gorila-sello" id="logo-gorila-wrap">
-  <a href="index.html" aria-label="Ir al inicio">
+  <a href="/" aria-label="Ir al inicio">
     <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA"
          style="width:auto;object-fit:contain;flex-shrink:0;pointer-events:none;"
          loading="eager" decoding="async">
   </a>
 </div>
 <div class="logo-37-sello logo-37-cargando" id="logo-37-wrap">
-  <a href="index.html" aria-label="37 aniversario">
+  <a href="/" aria-label="37 aniversario">
     <img src="img/LOGO DOS/Artboard 11.webp?v=2" alt="37 años"
          style="width:auto;object-fit:contain;opacity:0.9;flex-shrink:0;pointer-events:none;"
          loading="eager" decoding="async" fetchpriority="high"
@@ -1077,7 +1077,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="ichk-input-wrap">
       <label class="ichk-label" for="ichk-nombre-input">
         Tu nombre
-        <span class="ichk-hint">Para la lista de entrada en taquilla</span>
+        <span class="ichk-hint">Opcional — para la lista de entrada en taquilla</span>
       </label>
       <input
         type="text"
@@ -1121,7 +1121,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <p class="ichk-seguridad" aria-label="Pago seguro">
       🔒 Pago con tarjeta · Procesado por Stripe · Conexión cifrada
     </p>
-    <p class="ichk-terminos">Al continuar, aceptas los <a href="terminos.html" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a> y la <a href="terminos.html#privacidad" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.</p>
+    <p class="ichk-terminos">Al continuar, aceptas los <a href="/terminos.html" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a> y la <a href="/terminos.html#privacidad" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.</p>
 
   </div>
 </section>
@@ -1284,6 +1284,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </div>
 
+<script src="js/rutas.js"></script>
 <script src="js/utm.js"></script>
 <script src="js/config.js"></script>
 <script>
@@ -1478,7 +1479,7 @@ async function procesarPagoInline() {
   orden.estado      = 'completada';
   localStorage.setItem('orden_compra',    JSON.stringify(orden));
   localStorage.setItem('ultima_compra',   JSON.stringify(orden));
-  window.location.href = 'confirmacion.html';
+  window.location.href = (typeof window.rutaAbsoluta === 'function' ? window.rutaAbsoluta('/confirmacion.html') : '/confirmacion.html');
 }
 
 /* ── Si Stripe regresa con ?cancelado=1, reabrir el panel ── */
@@ -1487,7 +1488,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Limpiar ?cancelado=1 de la barra de direcciones sin recargar la página.
     // El usuario solo ve "boletos.html" — es un cambio cosmético, nada más.
-    history.replaceState(null, '', 'boletos.html');
+    history.replaceState(null, '', '/boletos.html');
 
     const ordenRaw = localStorage.getItem('orden_compra');
     if (ordenRaw) {

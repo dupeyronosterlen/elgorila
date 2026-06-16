@@ -10,7 +10,7 @@ function cargarOrden() {
     if (!ordenGuardada) {
         // Si no hay orden, redirigir a boletos
         alert('No hay una orden de compra. Redirigiendo a la página de boletos...');
-        window.location.href = 'boletos.html';
+        window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
         return;
     }
     
@@ -21,7 +21,7 @@ function cargarOrden() {
     } catch (error) {
         console.error('Error al cargar la orden:', error);
         alert('Error al cargar los datos de la orden. Por favor, intenta de nuevo.');
-        window.location.href = 'boletos.html';
+        window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
     }
 }
 
@@ -76,19 +76,19 @@ function mostrarDatosOrden() {
 async function procesarPago() {
     if (!ordenCompra) {
         alert('Error: No se encontró la orden de compra');
-        window.location.href = 'boletos.html';
+        window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
         return;
     }
 
     // Validar que haya items y fecha ISO
     if (!Array.isArray(ordenCompra.items) || ordenCompra.items.length === 0) {
         alert('El carrito está vacío. Regresa y selecciona boletos.');
-        window.location.href = 'boletos.html';
+        window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
         return;
     }
     if (!ordenCompra.fechaIso) {
         alert('Error: selecciona una fecha desde la página de boletos.');
-        window.location.href = 'boletos.html';
+        window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
         return;
     }
 
@@ -109,7 +109,7 @@ async function procesarPago() {
         try {
             if (!ordenCompra.fechaIso || !/^\d{4}-\d{2}-\d{2}$/.test(ordenCompra.fechaIso)) {
                 alert('Falta la fecha de la función. Regresa a boletos y elige el día otra vez.');
-                window.location.href = 'boletos.html';
+                window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
                 return;
             }
             const res = await fetch(window.teatroApi('checkout'), {
@@ -168,7 +168,7 @@ async function procesarPago() {
         }
     }
 
-    window.location.href = 'confirmacion.html';
+    window.irA ? window.irA('/confirmacion.html') : (window.location.href = '/confirmacion.html');
 }
 
 // Validar email

@@ -485,7 +485,7 @@ function irAConfirmacion() {
             mostrarCheckoutInline(orden);
         } else {
             navegandoACheckout = true;
-            window.location.href = 'checkout.html';
+            window.irA ? window.irA('/checkout.html') : (window.location.href = '/checkout.html');
         }
         return true;
     } catch (error) {
@@ -498,7 +498,7 @@ function irAConfirmacion() {
 // --- FUNCIÓN 5: MOSTRAR CHECKOUT INLINE ---
 function mostrarCheckoutInline(orden) {
     const panel = document.getElementById('inline-checkout');
-    if (!panel) { window.location.href = 'checkout.html'; return; }
+    if (!panel) { window.irA ? window.irA('/checkout.html') : (window.location.href = '/checkout.html'); return; }
 
     // Fecha
     const fechaEl = document.getElementById('ichk-fecha');

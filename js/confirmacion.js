@@ -108,7 +108,7 @@ async function cargarConfirmacion() {
         } else {
             alert('No hay una orden de compra. Redirigiendo a la página de boletos...');
         }
-        window.location.href = 'boletos.html';
+        window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
         return;
     }
 
@@ -122,7 +122,7 @@ async function cargarConfirmacion() {
     } catch (error) {
         console.error('Error al cargar la confirmación:', error);
         alert('Error al cargar los datos. Por favor, intenta de nuevo.');
-        window.location.href = 'boletos.html';
+        window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
     }
 }
 
@@ -190,7 +190,7 @@ function procesarPago() {
         const disponibilidad = InventarioManager.obtenerDisponibilidad(ordenCompra.clave);
         if (disponibilidad.disponible < ordenCompra.cantidad) {
             alert('Lo sentimos, ya no hay suficientes boletos disponibles para esta función.');
-            window.location.href = 'boletos.html';
+            window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
             return;
         }
 

@@ -62,7 +62,7 @@
     p.delete('de');
     p.delete('cupon');
     const q = p.toString();
-    history.replaceState(null, '', 'boletos.html' + (q ? '?' + q : ''));
+    history.replaceState(null, '', '/boletos.html' + (q ? '?' + q : ''));
   }
 
   function bannerEl() {
@@ -228,7 +228,7 @@
         <div class="invitacion-banner-inner error">
           <p class="invitacion-kicker">Invitación</p>
           <p class="invitacion-texto">${e.message || 'Enlace de invitación no válido.'}</p>
-          <a href="boletos.html" class="invitacion-link">Comprar boletos sin invitación</a>
+          <a href="/boletos.html" class="invitacion-link">Comprar boletos sin invitación</a>
         </div>`);
     }
   }

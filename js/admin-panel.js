@@ -2424,7 +2424,7 @@
       el.classList.toggle('hidden', !ok);
     });
     document.querySelectorAll('.sidebar-section').forEach(el => { if (viaEmail) el.classList.add('hidden'); });
-    const topSite = document.querySelector('.topbar-btn[href="index.html"]');
+    const topSite = document.querySelector('.topbar-btn[href="/"], .topbar-btn[href="index.html"]');
     if (topSite && viaEmail) topSite.classList.add('hidden');
     v4Toggle('link-boletera', !viaEmail && perm('venderEfectivo'));
     v4Toggle('btn-copiar-boletera', !viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente'));

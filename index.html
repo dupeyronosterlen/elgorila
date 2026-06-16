@@ -2641,7 +2641,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" class="w-auto object-contain flex-shrink-0 pointer-events-none" loading="eager" decoding="async">
     </button>
   </div>
-  <a href="presskit/presskit2026.html" class="btn-presskit-sello" id="link-presskit">presskit</a>
+  <a href="/presskit/presskit2026.html" class="btn-presskit-sello" id="link-presskit">presskit</a>
 </div>
 <div class="logo-37-sello logo-37-cargando" id="logo-37-wrap">
   <button type="button" id="abrir-popup-37" class="logo-37-btn flex items-center justify-center p-0 rounded transition-transform duration-200 hover:scale-110 focus:scale-110 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Ver 37 aniversario">
@@ -3310,7 +3310,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <a class="block transition-colors hover:text-accent-gold" href="mailto:elgorilateatro@gmail.com">elgorilateatro@gmail.com</a>
 </div>
 <div class="flex flex-col items-center space-y-2">
-<a class="flex items-center gap-2 transition-colors hover:text-accent-gold" href="funciones.html">
+<a class="flex items-center gap-2 transition-colors hover:text-accent-gold" href="/funciones.html">
 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" stroke-linecap="round" stroke-linejoin="round"></path>
 </svg>
@@ -3326,7 +3326,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="md:text-right">
 <p class="font-display text-lg text-accent-gold">EL GORILA</p>
 <p class="text-text-dark/60 mt-2">© 2026. Todos los derechos reservados.</p>
-<a id="footer-admin-link" href="admin.html" class="inline-block mt-3 text-xs text-text-dark/50 hover:text-accent-gold transition-colors">Administrador</a>
+<a id="footer-admin-link" href="/admin.html" class="inline-block mt-3 text-xs text-text-dark/50 hover:text-accent-gold transition-colors">Administrador</a>
 </div>
 </div>
 <div class="flex items-center justify-center gap-5 mt-8 pt-6 border-t border-accent-gold/10">
@@ -3351,6 +3351,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </span>
   </a>
 </div>
+<script src="js/rutas.js"></script>
+<script>
+  (function () {
+    function hrefBoletosVenta() {
+      if (typeof window.rutaAbsoluta === 'function') return window.rutaAbsoluta('/boletos.html');
+      try {
+        if (location.protocol === 'file:') return 'boletos.html';
+        return new URL('/boletos.html', location.origin).href;
+      } catch (e) {
+        return '/boletos.html';
+      }
+    }
+    document.querySelectorAll('.link-venta-boletos').forEach(function (a) {
+      a.href = hrefBoletosVenta();
+    });
+  })();
+</script>
 <script src="js/utm.js"></script>
 <script src="js/imagenes.js" defer></script>
 <script>
@@ -3425,7 +3442,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   (function() {
     /** false = «Próximamente» → Instagram. true = venta oficial en boletos.html */
     var VENTA_PUBLICA_ABIERTA = true;
-    var URL_VENTA_DEFAULT = '/boletos.html';
+    function hrefBoletosVenta() {
+      if (typeof window.rutaAbsoluta === 'function') return window.rutaAbsoluta('/boletos.html');
+      try {
+        if (location.protocol === 'file:') return 'boletos.html';
+        return new URL('/boletos.html', location.origin).href;
+      } catch (e) {
+        return '/boletos.html';
+      }
+    }
     function getLocalConfig() {
       var c = {};
       try {
@@ -3506,8 +3531,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         });
         return;
       }
-      /* Venta abierta: boletos.html (ignora url_venta dinámica para evitar enlaces externos). */
-      var urlVenta = URL_VENTA_DEFAULT;
+      /* Venta abierta: siempre /boletos.html en la raíz del sitio (nunca ruta relativa). */
+      var urlVenta = hrefBoletosVenta();
       if (urlVenta) links.forEach(function(a) {
         a.href = urlVenta;
         a.setAttribute('aria-label', 'Adquiere tus entradas — desde $350');
