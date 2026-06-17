@@ -39,19 +39,35 @@ async function _boletaCargarFuncionesGrids() {
     if (!res.ok) return;
     _bolFuncionesCache = SelectorFunciones.normalizarLista(await res.json());
 
-    const ventaIso = SelectorFunciones.wireHidden(
-      document.getElementById('bol-venta-funciones-grid'),
-      document.getElementById('fecha-efectivo'),
-      _bolFuncionesCache,
-      {
-        futuras: true,
-        showDisponibles: true,
-        onSelect: iso => {
-          _bolActualizarEtiquetaFuncion(iso);
-          BoleteraVenta?.onFechaChange?.();
+    const ventaIso = SelectorFunciones.wireHiddenProgressive
+      ? SelectorFunciones.wireHiddenProgressive(
+        document.getElementById('bol-venta-funciones-grid'),
+        document.getElementById('bol-venta-funciones-ui'),
+        document.getElementById('fecha-efectivo'),
+        _bolFuncionesCache,
+        {
+          futuras: true,
+          showDisponibles: true,
+          batchSize: 3,
+          onSelect: iso => {
+            _bolActualizarEtiquetaFuncion(iso);
+            BoleteraVenta?.onFechaChange?.();
+          },
         },
-      },
-    );
+      )
+      : SelectorFunciones.wireHidden(
+        document.getElementById('bol-venta-funciones-grid'),
+        document.getElementById('fecha-efectivo'),
+        _bolFuncionesCache,
+        {
+          futuras: true,
+          showDisponibles: true,
+          onSelect: iso => {
+            _bolActualizarEtiquetaFuncion(iso);
+            BoleteraVenta?.onFechaChange?.();
+          },
+        },
+      );
     _bolActualizarEtiquetaFuncion(ventaIso);
 
     SelectorFunciones.wireHidden(
@@ -244,9 +260,6 @@ async function _boletaCargarTablaDia() {
   }
 }
 
-let _ultimoWaTexto = '';
-let _ultimaOrdenWa = null;
-
 async function generarCodigoEfectivo() {
   const errEl    = document.getElementById('venta-error');
   const btn      = document.getElementById('btn-generar');
@@ -258,12 +271,16 @@ async function generarCodigoEfectivo() {
   const fechaIso = document.getElementById('fecha-efectivo')?.value;
   const email    = (document.getElementById('email-efectivo')?.value || '').trim();
   const nombre   = (document.getElementById('nombre-efectivo')?.value || '').trim();
-  const telefono = (document.getElementById('telefono-efectivo')?.value || '').trim();
   const notas    = (document.getElementById('notas-efectivo')?.value || '').trim();
+  const metodoPago = (document.getElementById('metodo-pago-efectivo')?.value || 'efectivo').trim();
   const cupon    = typeof BoleteraVenta !== 'undefined' ? BoleteraVenta.getCupon() : null;
 
   if (!fechaIso || !BoleteraVenta || BoleteraVenta.totalCantidad() < 1) {
     if (errEl) { errEl.textContent = 'Selecciona función y al menos un boleto.'; errEl.style.display = 'block'; }
+    return;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (errEl) { errEl.textContent = 'Indica un correo válido — ahí se envía el boleto con QR.'; errEl.style.display = 'block'; }
     return;
   }
 
@@ -280,71 +297,68 @@ async function generarCodigoEfectivo() {
 
   if (btn) { btn.disabled = true; btn.textContent = 'Registrando…'; }
 
+  const idemKey = window.ElGorilaApi?.crearIdempotencyKey?.() || null;
+
   try {
-    const res = await fetch(window.teatroAdminApi('venta-manual'), {
-      method:  'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization:  `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        fecha: fechaIso,
-        items,
-        codigoCupon: cupon?.codigo || undefined,
-        email: email || undefined,
-        nombre: nombre || undefined,
-        telefono: telefono || undefined,
-        notas: notas || undefined,
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      if (errEl) { errEl.textContent = data.error || 'No se pudo registrar la venta.'; errEl.style.display = 'block'; }
-      return;
+    let data;
+    if (window.ElGorilaApi?.fetchJson) {
+      const out = await ElGorilaApi.fetchJson(window.teatroAdminApi('venta-manual'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          fecha: fechaIso,
+          items,
+          codigoCupon: cupon?.codigo || undefined,
+          email,
+          nombre: nombre || undefined,
+          metodoPago,
+          notas: notas || undefined,
+        }),
+      }, { idempotencyKey: idemKey, retries: 3 });
+      data = out.data;
+    } else {
+      const res = await fetch(window.teatroAdminApi('venta-manual'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          ...(idemKey ? { 'Idempotency-Key': idemKey } : {}),
+        },
+        body: JSON.stringify({
+          fecha: fechaIso,
+          items,
+          codigoCupon: cupon?.codigo || undefined,
+          email,
+          nombre: nombre || undefined,
+          metodoPago,
+          notas: notas || undefined,
+        }),
+      });
+      data = await res.json();
+      if (!res.ok) {
+        if (errEl) { errEl.textContent = data.error || 'No se pudo registrar la venta.'; errEl.style.display = 'block'; }
+        return;
+      }
     }
 
-    _ultimoWaTexto = data.waTexto || '';
-    _ultimaOrdenWa = {
-      ...(data.venta || {}),
-      certificado: data.codigo || data.certificado,
-      numeroOrden: data.codigo || data.certificado,
-      codigo: data.codigo,
-      funcionNombre: data.funcionNombre,
-      fecha: data.funcionNombre,
-      boletos: data.boletos || data.venta?.boletos || [],
-      cantidad: data.venta?.cantidad,
-      cantidadTotal: data.venta?.cantidad,
-    };
     const box = document.getElementById('codigo-generado');
     const txt = document.getElementById('codigo-texto');
     const inf = document.getElementById('codigo-info');
     const qr  = document.getElementById('qr-codigo-efectivo');
-    const wa  = document.getElementById('btn-wa-enviar');
 
     if (box) box.style.display = 'block';
     if (txt) txt.textContent = data.codigo;
     if (inf) {
-      const mailNote = data.emailEnviado ? ' · correo enviado' : (email ? ' · correo en cola' : '');
+      const metodoLbl = metodoPago === 'tarjeta_taquilla' ? 'Tarjeta en taquilla' : 'Efectivo';
+      const mailNote = data.emailEnviado
+        ? ` · boleto enviado a ${email}${data.idempotentReplay ? ' (recuperado tras fallo de red)' : ''}`
+        : ` · error al enviar correo a ${email}`;
       const resumen = BoleteraVenta.resumenVentaTexto(data.venta) || `${data.venta?.cantidad || ''} boleto(s)`;
       const cuponNote = data.venta?.codigoCupon ? ` · ${data.venta.codigoCupon}` : '';
-      inf.innerHTML = `${data.funcionNombre}<br>${resumen} (${seccion}) · $${data.total} MXN${cuponNote}${mailNote}`;
-    }
-    if (wa) {
-      wa.disabled = false;
-      wa.onclick = async () => {
-        if (!window.ElGorilaCompartirWa || !_ultimaOrdenWa) {
-          if (data.waUrl) window.open(data.waUrl, '_blank', 'noopener');
-          return;
-        }
-        wa.disabled = true;
-        try {
-          await ElGorilaCompartirWa.compartirPorWhatsApp(_ultimaOrdenWa);
-        } catch (e) {
-          if (e.name !== 'AbortError') alert('No se pudo compartir. Usa «Copiar texto WA» o envía el enlace del boleto.');
-        } finally {
-          wa.disabled = false;
-        }
-      };
+      inf.innerHTML = `${data.funcionNombre}<br>${resumen} (${seccion}) · $${data.total} MXN · ${metodoLbl}${cuponNote}${mailNote}`;
     }
     if (qr && typeof QRCode !== 'undefined') {
       qr.innerHTML = '';
@@ -354,23 +368,35 @@ async function generarCodigoEfectivo() {
       if (qrCodigo) QRCode.toCanvas(qr, qrCodigo.trim().toUpperCase(), { width: 180, margin: 1 });
     }
 
-    ['nombre-efectivo', 'email-efectivo', 'telefono-efectivo', 'notas-efectivo'].forEach(id => {
+    ['nombre-efectivo', 'email-efectivo', 'notas-efectivo'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
     BoleteraVenta?.limpiarCarrito?.();
+
     await Promise.all([_boletaCargarDisponibilidad(), _boletaCargarTablaDia(), _boletaCargarListaPuerta()]);
-  } catch (_) {
-    if (errEl) { errEl.textContent = 'Error de conexión.'; errEl.style.display = 'block'; }
+  } catch (e) {
+    const msg = window.ElGorilaApi?.mensajeError?.(e, null, e.data) || e.message || 'Error de conexión.';
+    if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;">confirmation_number</span> Registrar venta y generar folio';
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;">mail</span> Agendar y enviar entrada';
     }
   }
 }
 
 async function generarCodigo() { await generarCodigoEfectivo(); }
+
+function _esVentaTaquilla(v) {
+  const m = (v.metodoPago || '').toLowerCase();
+  if (m === 'efectivo' || m === 'tarjeta_taquilla') return true;
+  return String(v.sessionId || '').startsWith('manual_') || v.metodoPago === 'efectivo';
+}
+
+function _fmtMxn(n) {
+  return '$' + (Number(n) || 0).toFixed(2);
+}
 
 async function cargarBoletosHoy() {
   const tbody = document.getElementById('tabla-efectivo');
@@ -386,23 +412,36 @@ async function cargarBoletosHoy() {
     if (!res.ok) return;
     const { ventas } = await res.json();
     const hoy = (ventas || [])
-      .filter(v => v.metodoPago === 'efectivo' && (v.fechaCompra || '').slice(0, 10) === hoyMx)
+      .filter(v => _esVentaTaquilla(v) && v.estado !== 'reembolsada' && (v.fechaCompra || '').slice(0, 10) === hoyMx)
       .sort((a, b) => new Date(b.fechaCompra) - new Date(a.fechaCompra));
 
+    let efectivo = 0;
+    let tarjeta = 0;
+    hoy.forEach(v => {
+      const t = Number(v.total) || 0;
+      if ((v.metodoPago || '').toLowerCase() === 'tarjeta_taquilla') tarjeta += t;
+      else efectivo += t;
+    });
+    const elEf = document.getElementById('bol-caja-efectivo');
+    const elTa = document.getElementById('bol-caja-tarjeta');
+    if (elEf) elEf.textContent = `Efectivo: ${_fmtMxn(efectivo)} MXN`;
+    if (elTa) elTa.textContent = `Tarjeta en taquilla: ${_fmtMxn(tarjeta)} MXN`;
+
     if (!hoy.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--d-faint);font-family:var(--mono);font-size:10px;letter-spacing:.18em;">Sin ventas manuales hoy</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--d-faint);font-family:var(--mono);font-size:10px;letter-spacing:.18em;">Sin ventas taquilla hoy</td></tr>';
       return;
     }
     tbody.innerHTML = hoy.map(v => {
       const st = v.usado ? 'badge-cancelado' : 'badge-activo';
       const lb = v.usado ? 'Canjeado' : 'Válido';
       const info = [v.nombre, v.email].filter(Boolean).join(' · ') || '—';
+      const pago = (v.metodoPago || '').toLowerCase() === 'tarjeta_taquilla' ? 'Tarjeta' : 'Efectivo';
       return `<tr>
         <td class="td-code">${v.codigo}</td>
         <td>${v.funcionNombre || v.fecha}</td>
         <td>${v.cantidad}</td>
         <td class="${st}">${lb}</td>
-        <td style="font-size:14px;">${info}</td>
+        <td style="font-size:14px;">${pago} · ${info}</td>
       </tr>`;
     }).join('');
   } catch (_) {}
@@ -413,14 +452,11 @@ function copiarCodigo() {
   if (txt && txt !== '—') navigator.clipboard?.writeText(txt).catch(() => {});
 }
 
-function copiarTextoWa() {
-  if (_ultimoWaTexto) navigator.clipboard?.writeText(_ultimoWaTexto).catch(() => {});
-}
-
 
   async function init() {
     if (_inited || !document.getElementById('view-boletera')) return;
     _inited = true;
+    if (window.ElGorilaApi?.iniciarMonitorRed) ElGorilaApi.iniciarMonitorRed();
     await _boletaIniciar();
   }
 
@@ -428,5 +464,4 @@ function copiarTextoWa() {
   global.bolNavGo = bolNavGo;
   global.generarCodigo = generarCodigo;
   global.copiarCodigo = copiarCodigo;
-  global.copiarTextoWa = copiarTextoWa;
 })(window);

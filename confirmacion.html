@@ -262,6 +262,16 @@ body::before {
 }
 .btn-guardar-boleto:hover { border-color: var(--gold-dim); background: rgba(212,175,55,0.06); }
 .btn-guardar-boleto .material-symbols-outlined { font-size: 20px; }
+.btn-programa-mano {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px 18px; margin-bottom: 10px;
+  background: rgba(217,155,58,0.08); border: 1px solid var(--gold-dim);
+  color: var(--ink) !important; font-family: var(--cuerpo); font-size: 17px;
+  font-weight: 500; text-decoration: none; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.btn-programa-mano:hover { border-color: var(--gold); background: rgba(217,155,58,0.14); }
+.btn-programa-mano .material-symbols-outlined { font-size: 20px; color: var(--gold); }
 .boleto-hint {
   font-family: var(--cuerpo); font-size: 16px; line-height: 1.65;
   color: var(--ink-dim); text-align: center; margin: 0;

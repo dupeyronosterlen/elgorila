@@ -331,6 +331,50 @@ button { font-family: var(--cuerpo); border-radius: 0 !important; }
   margin-top: 10px;
   line-height: 1.4;
 }
+.sel-fn-ver-mas {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: transparent;
+  border: 1px solid var(--d-faint);
+  color: var(--gold);
+  font-family: var(--cuerpo);
+  font-size: 16px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .15s, background .15s;
+}
+.sel-fn-ver-mas:hover {
+  border-color: var(--gold-dim);
+  background: rgba(217,155,58,.06);
+}
+.bol-caja-resumen {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(217,155,58,.25);
+  background: rgba(217,155,58,.06);
+  display: grid;
+  gap: 6px;
+}
+.bol-caja-resumen p {
+  margin: 0;
+  font-family: var(--cuerpo);
+  font-size: 15px;
+  color: var(--d-fg);
+  line-height: 1.45;
+}
+.bol-caja-resumen .bol-caja-nota {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: var(--d-soft);
+}
+.bol-seccion-comprador {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--d-faint);
+}
 
 .bol-ticket-fila {
   display: flex; align-items: center; justify-content: space-between;

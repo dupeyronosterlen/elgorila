@@ -4,17 +4,18 @@
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0a0706">
+<meta name="theme-color" content="#f4f1ea">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
 <title>Panel de Administración — El Gorila</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/operaciones.css">
 <link rel="stylesheet" href="css/admin-mobile.css">
+<link rel="stylesheet" href="css/admin-legible.css">
 <style>
 :root {
   --bg:    #0a0706;
@@ -57,7 +58,7 @@ a{color:inherit;text-decoration:none}
 .topbar-sep{flex:1}
 .topbar-user{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
 .topbar-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
-.topbar-btn{padding:5px 12px;border:1px solid var(--faint2);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);transition:border-color .15s,color .15s}
+.topbar-btn{display:inline-flex;align-items:center;justify-content:center;padding:5px 12px;border:1px solid var(--faint2);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);transition:border-color .15s,color .15s;-webkit-tap-highlight-color:transparent}
 .topbar-btn:hover{border-color:var(--red);color:var(--red)}
 
 /* SIDEBAR */
@@ -88,7 +89,7 @@ a{color:inherit;text-decoration:none}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
 
 /* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .stat-card{background:var(--bg2);border:1px solid var(--faint);padding:16px 18px;display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden}
 .stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
 .stat-card.gold::after{background:var(--gold)}
@@ -234,12 +235,20 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
 .login-sub{font-family:var(--mono);font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:var(--soft);text-align:center}
 .login-btn{width:100%;padding:11px;background:var(--gold);color:var(--bg);font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;margin-top:4px;transition:opacity .15s}
 .login-btn:hover{opacity:.88}
-.login-error{background:rgba(212,58,26,.1);border:1px solid rgba(212,58,26,.28);color:#f87171;padding:7px 11px;font-family:var(--mono);font-size:11px;letter-spacing:.05em;display:none}
+.login-error.hidden{display:none!important}
 
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-thumb{background:var(--faint2)}
 .bol-tab.active{border-color:var(--gold)!important;color:var(--gold)!important}
 .admin-ops-wrap .bol-card{background:var(--bg2);border:1px solid var(--faint);padding:24px;margin-bottom:20px}
+#red-estado-banner{
+  position:sticky;top:0;z-index:90;
+  padding:10px 16px;text-align:center;
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  background:rgba(212,58,26,.92);color:#fff;
+  border-bottom:1px solid rgba(0,0,0,.2);
+}
+#red-estado-banner.hidden{display:none!important}
 </style>
 </head>
 <body>
@@ -272,7 +281,7 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
         <input type="email" id="taquilla-email-input" placeholder="nombre@correo.com" autocomplete="email">
       </div>
     </div>
-    <div class="login-error" id="error-login"></div>
+    <div class="login-error hidden" id="error-login" role="alert"></div>
     <button class="login-btn" id="login-submit-btn" onclick="verificarAcceso()">Entrar</button>
     <button type="button" class="login-btn" id="login-toggle-taquilla" style="margin-top:10px;background:transparent;border:1px solid rgba(241,234,217,.2);color:var(--soft);font-size:12px" onclick="toggleLoginTaquilla()">Acceso taquilla (nombre + correo)</button>
   </div>
@@ -280,6 +289,9 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
 
 <!-- SHELL -->
 <div id="admin-panel" class="shell hidden">
+  <div id="red-estado-banner" class="hidden" role="status" aria-live="polite">
+    Sin conexión — las ventas no se enviarán hasta recuperar internet. El QR en puerta sigue funcionando con el folio impreso o en correo.
+  </div>
 
   <header class="topbar">
     <button type="button" id="btn-mobile-menu" class="mobile-menu-btn" aria-label="Menú">
@@ -287,7 +299,7 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
     </button>
     <div class="topbar-logo">El Gorila <span>Panel de operaciones</span></div>
     <div class="topbar-sep"></div>
-    <a href="/" class="topbar-btn">Sitio</a>
+    <a href="/" id="link-sitio" class="topbar-btn topbar-btn-sitio">Sitio</a>
     <a href="/admin.html" id="link-boletera" class="topbar-btn hidden" onclick="event.preventDefault(); abrirBoletera();">Boletera</a>
     <button type="button" id="btn-copiar-boletera" class="topbar-btn hidden" onclick="abrirModalEnlaceTaquilla();">Enlace taquilla</button>
     <a href="/admin.html" id="link-verificar" class="topbar-btn hidden" onclick="event.preventDefault(); abrirVerificar();">Verificar</a>
@@ -373,9 +385,14 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
           <div class="stat-sub" id="stat-entradas-sub">cargando…</div>
         </div>
         <div class="stat-card green">
-          <div class="stat-label">Revenue</div>
+          <div class="stat-label">Revenue Stripe</div>
           <div class="stat-value" id="stat-revenue">—</div>
-          <div class="stat-sub">MXN temporada</div>
+          <div class="stat-sub" id="stat-revenue-sub">MXN en línea · sin taquilla</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-label">Caja taquilla</div>
+          <div class="stat-value" id="stat-taquilla">—</div>
+          <div class="stat-sub" id="stat-taquilla-sub">efectivo + tarjeta en puerta</div>
         </div>
         <div class="stat-card blue">
           <div class="stat-label">Transacciones</div>
@@ -402,10 +419,10 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
             <option value="reembolsada">Reembolsadas</option>
           </select>
           <div class="status-legend" aria-hidden="true">
-            <span class="badge badge-ok">activo</span>
-            <span class="badge badge-reagend">reagendado</span>
-            <span class="badge badge-audit">canjeado</span>
-            <span class="badge badge-refund">reembolsado</span>
+            <span class="badge badge-ok">Activo</span>
+            <span class="badge badge-reagend">Reagendado</span>
+            <span class="badge badge-audit">Canjeado</span>
+            <span class="badge badge-refund">Reembolsado</span>
           </div>
           <span class="table-count" id="ventas-count">—</span>
         </div>
@@ -515,6 +532,7 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
       <p class="hidden" id="informe-error-msg" style="font-family:var(--mono);font-size:11px;color:#facc15;margin-bottom:12px"></p>
       <div class="tabs">
         <button class="tab active" onclick="switchTab(this,'tab-resumen')">Por función</button>
+        <button class="tab" onclick="switchTab(this,'tab-compradores')">Compradores</button>
         <button class="tab" onclick="switchTab(this,'tab-informes-ops')">Informes ops</button>
         <button class="tab" onclick="switchTab(this,'tab-audit2')">Auditoría</button>
       </div>
@@ -534,6 +552,72 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
           </table>
         </div>
         <div id="informe-ventas-wrap" style="margin-top:16px"></div>
+      </div>
+      <div id="tab-compradores" class="hidden">
+        <p style="font-family:var(--mono);font-size:11px;color:var(--soft);margin-bottom:14px;max-width:640px">
+          Lista de compradores por <strong>fecha de compra</strong> (hora CDMX) y por <strong>canal / organización</strong>
+          (cupón, UTM, referido o taquilla). Exporta CSV para nutrir tu base de contactos o revisar convenios con agencias.
+        </p>
+        <div class="table-toolbar" style="flex-wrap:wrap;gap:10px;margin-bottom:12px">
+          <label style="font-family:var(--mono);font-size:10px;color:var(--soft)">Desde
+            <input type="date" class="table-filter" id="comp-desde" style="margin-left:6px">
+          </label>
+          <label style="font-family:var(--mono);font-size:10px;color:var(--soft)">Hasta
+            <input type="date" class="table-filter" id="comp-hasta" style="margin-left:6px">
+          </label>
+          <label style="font-family:var(--mono);font-size:10px;color:var(--soft)">Organización
+            <select class="table-filter" id="comp-organizacion" style="margin-left:6px;min-width:160px">
+              <option value="">Todas</option>
+            </select>
+          </label>
+          <label style="font-family:var(--mono);font-size:10px;color:var(--soft)">Función
+            <select class="table-filter" id="comp-funcion" style="margin-left:6px;min-width:180px">
+              <option value="">Cualquier fecha</option>
+            </select>
+          </label>
+          <input type="search" class="table-filter" id="comp-buscar" placeholder="Nombre, email o certificado" style="min-width:200px">
+          <label style="font-family:var(--mono);font-size:10px;color:var(--soft);display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="comp-solo-activas" checked> Solo activas
+          </label>
+          <button type="button" class="btn-ghost" id="btn-comp-buscar">Buscar</button>
+          <button type="button" class="btn-ghost hidden" id="btn-comp-export">Exportar CSV</button>
+        </div>
+        <div class="stats-grid" id="comp-resumen-wrap" style="margin-bottom:14px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));max-width:720px">
+          <div class="stat-card">
+            <div class="stat-label">Ventas</div>
+            <div class="stat-value" id="comp-stat-ventas">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Entradas</div>
+            <div class="stat-value" id="comp-stat-entradas">—</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-label">Ingresos</div>
+            <div class="stat-value" id="comp-stat-revenue">—</div>
+          </div>
+        </div>
+        <div id="comp-org-wrap" style="margin-bottom:16px"></div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span class="table-count" id="comp-count">—</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha compra</th>
+                <th>Certificado</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Organización</th>
+                <th>Función</th>
+                <th style="text-align:right">Cant.</th>
+                <th style="text-align:right">Total</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="comp-tbody"></tbody>
+          </table>
+        </div>
       </div>
       <div id="tab-informes-ops" class="hidden">
         <p style="font-family:var(--mono);font-size:11px;color:var(--soft);margin-bottom:12px;max-width:520px">
@@ -679,27 +763,24 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
         </div>
       </div>
       <div class="bol-tabs" style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
-        <button type="button" class="btn-ghost bol-tab active" onclick="BoleteraPanel.bolNavGo(this,'venta')">Venta efectivo</button>
+        <button type="button" class="btn-ghost bol-tab active" onclick="BoleteraPanel.bolNavGo(this,'venta')">Venta taquilla</button>
         <button type="button" class="btn-ghost bol-tab" onclick="BoleteraPanel.bolNavGo(this,'lista')">Lista visitantes</button>
         <button type="button" class="btn-ghost bol-tab" onclick="BoleteraPanel.bolNavGo(this,'hoy')">Ventas hoy</button>
       </div>
 <div id="view-bol-venta" class="bol-admin-view">
     <div class="bol-card">
-      <h2 class="bol-card-title">Venta manual — efectivo</h2>
+      <h2 class="bol-card-title">Venta manual — taquilla</h2>
       <div class="bol-card-rule"></div>
-      <span class="sec-label">Registra en el servidor · CERT por boleto · folio interno puerta</span>
+      <span class="sec-label">El boleto con QR se envía al correo del comprador · entra a la lista del día</span>
 
       <form id="form-efectivo" onsubmit="event.preventDefault(); generarCodigo();">
-        <div class="form-grid">
-          <div style="grid-column:1/-1;">
-            <span class="sec-label" style="display:block;margin-bottom:10px;">Función</span>
-            <div id="bol-venta-funciones-grid"></div>
-            <input type="hidden" id="fecha-efectivo" value="" required>
-            <p id="bol-funcion-seleccionada" class="bol-funcion-seleccionada">Selecciona una función</p>
-          </div>
-        </div>
+        <span class="sec-label" style="display:block;margin-bottom:10px;">1 · Función</span>
+        <div id="bol-venta-funciones-grid"></div>
+        <div id="bol-venta-funciones-ui"></div>
+        <input type="hidden" id="fecha-efectivo" value="" required>
+        <p id="bol-funcion-seleccionada" class="bol-funcion-seleccionada">Selecciona una función</p>
 
-        <span class="sec-label" style="display:block;margin-bottom:10px;">Boletos — combina general y credencial</span>
+        <span class="sec-label" style="display:block;margin:18px 0 10px;">2 · Entradas</span>
 
         <div class="bol-ticket-fila">
           <div>
@@ -739,12 +820,13 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
             <span id="bol-descuento-monto">—</span>
           </div>
           <div class="bol-total-fila">
-            <span class="bol-total-label">Total efectivo</span>
+            <span class="bol-total-label">Total</span>
             <span id="bol-total-precio" class="bol-total-precio">$0.00 MXN</span>
           </div>
           <div id="bol-promo-hint" class="bol-promo-hint" style="display:none;"></div>
         </div>
 
+        <span class="sec-label" style="display:block;margin-bottom:10px;">3 · Cupón (opcional)</span>
         <div class="bol-cupon-wrap">
           <label class="form-label" for="bol-cupon-input">Cupón / promo (opcional)</label>
           <div class="bol-cupon-fila">
@@ -754,32 +836,36 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
           <div id="bol-cupon-msg" class="bol-cupon-msg" aria-live="polite"></div>
         </div>
 
-        <div class="form-grid">
-          <div>
-            <label class="form-label" for="nombre-efectivo">Nombre comprador</label>
-            <input type="text" id="nombre-efectivo" class="form-input" placeholder="Opcional">
-          </div>
-          <div>
-            <label class="form-label" for="email-efectivo">Correo (envía boleto)</label>
-            <input type="email" id="email-efectivo" class="form-input" placeholder="correo@ejemplo.com" autocomplete="email">
+        <div class="bol-seccion-comprador">
+          <span class="sec-label" style="display:block;margin-bottom:10px;">4 · Comprador y pago</span>
+          <div class="form-grid">
+            <div style="grid-column:1/-1;">
+              <label class="form-label" for="email-efectivo">Correo * — ahí llega el boleto con QR</label>
+              <input type="email" id="email-efectivo" class="form-input" placeholder="correo@ejemplo.com" autocomplete="email" required>
+            </div>
+            <div>
+              <label class="form-label" for="metodo-pago-efectivo">Forma de pago</label>
+              <select id="metodo-pago-efectivo" class="form-input" required>
+                <option value="efectivo">Efectivo</option>
+                <option value="tarjeta_taquilla">Tarjeta en taquilla</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="nombre-efectivo">Nombre (opcional)</label>
+              <input type="text" id="nombre-efectivo" class="form-input" placeholder="Para la lista de puerta">
+            </div>
+            <div style="grid-column:1/-1;">
+              <label class="form-label" for="notas-efectivo">Notas internas (opcional)</label>
+              <input type="text" id="notas-efectivo" class="form-input" placeholder="Observaciones de taquilla…">
+            </div>
           </div>
         </div>
 
-        <div class="form-grid">
-          <div>
-            <label class="form-label" for="telefono-efectivo">WhatsApp (solo números)</label>
-            <input type="tel" id="telefono-efectivo" class="form-input" placeholder="52… (código país + número)">
-          </div>
-          <div>
-            <label class="form-label" for="notas-efectivo">Notas (opcional)</label>
-            <input type="text" id="notas-efectivo" class="form-input" placeholder="Observaciones internas…">
-          </div>
-        </div>
-
-        <button type="submit" class="btn-generar" id="btn-generar" disabled>
-          <span class="material-symbols-outlined" style="font-size:20px;">confirmation_number</span>
-          Registrar venta y generar folio
+        <button type="submit" class="btn-generar" id="btn-generar" disabled style="margin-top:18px;">
+          <span class="material-symbols-outlined" style="font-size:20px;">mail</span>
+          Agendar y enviar entrada
         </button>
+        <p class="bol-cupon-msg" style="margin-top:10px;">Se registra la venta, se suma a la lista del día y el comprador recibe su QR por correo.</p>
       </form>
 
       <div id="venta-error" style="display:none;margin-top:10px;color:#f87171;font-size:15px;"></div>
@@ -793,13 +879,6 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
           <button type="button" class="btn-copiar" onclick="copiarCodigo()">
             <span class="material-symbols-outlined" style="font-size:14px;">content_copy</span>
             Copiar folio
-          </button>
-          <button type="button" class="btn-copiar" id="btn-wa-enviar" style="background:rgba(37,211,102,.15);border-color:rgba(37,211,102,.4);">
-            <span class="material-symbols-outlined" style="font-size:14px;">chat</span>
-            Enviar boleto por WhatsApp
-          </button>
-          <button type="button" class="btn-copiar" onclick="copiarTextoWa()">
-            Copiar texto WA
           </button>
         </div>
       </div>
@@ -834,9 +913,18 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
     </div>
 
     <div id="view-bol-hoy" class="bol-admin-view hidden">
-    <!-- 3. VENTAS MANUALES HOY -->
+    <!-- 3. VENTAS MANUALES HOY + CAJA -->
     <div class="bol-card">
-      <h2 class="bol-card-title">Ventas manuales hoy</h2>
+      <h2 class="bol-card-title">Caja taquilla hoy</h2>
+      <div class="bol-card-rule"></div>
+      <div id="bol-caja-resumen" class="bol-caja-resumen">
+        <p id="bol-caja-efectivo">Efectivo: —</p>
+        <p id="bol-caja-tarjeta">Tarjeta en taquilla: —</p>
+        <p class="bol-caja-nota">Referencia de caja — no incluye pagos Stripe en línea</p>
+      </div>
+    </div>
+    <div class="bol-card">
+      <h2 class="bol-card-title">Ventas taquilla hoy</h2>
       <div class="bol-card-rule"></div>
       <div class="tabla-wrap">
         <table>
@@ -942,7 +1030,7 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
     <h2 class="bol-card-title">Lista de llamado</h2>
     <div class="bol-card-rule"></div>
     <span class="sec-label">Folios internos · agrupados por certificado · toca para marcar entrada</span>
-    <p id="lista-sin-sesion" style="display:none" class="hidden" style="font-size:14px;color:#f87171;margin-bottom:12px;">
+    <p id="lista-sin-sesion" class="hidden" style="font-size:15px;color:#b5280f;margin-bottom:12px;">
       Abre la boletera desde <a href="/admin.html" style="color:var(--gold);">admin</a> (enlace de taquilla).
     </p>
     <label class="form-label" for="lista-funcion">Función</label>
@@ -955,7 +1043,7 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
     <h2 class="bol-card-title">Por nombre (cola rápida)</h2>
     <div class="bol-card-rule"></div>
     <span class="sec-label">Busca comprador · marca entrada sin escanear cada QR</span>
-    <p id="nombre-sin-sesion" style="display:none" class="hidden" style="font-size:14px;color:#f87171;margin-bottom:12px;">
+    <p id="nombre-sin-sesion" class="hidden" style="font-size:15px;color:#b5280f;margin-bottom:12px;">
       Abre la boletera desde <a href="/admin.html" style="color:var(--gold);">admin</a> o usa verificar con usuario de puerta.
     </p>
     <label class="form-label" for="nombre-funcion">Función</label>
@@ -1128,7 +1216,10 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
   </div>
 </div>
 
+<script src="js/rutas.js"></script>
 <script src="js/config.js"></script>
+<script src="js/api-config.js"></script>
+<script src="js/api-resiliente.js"></script>
 <script src="js/auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>

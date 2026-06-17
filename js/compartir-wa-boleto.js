@@ -34,7 +34,7 @@
     const cert = orden.certificado || orden.numeroOrden || orden.codigo || '';
     const origin = (typeof location !== 'undefined' && location.origin) ? location.origin : 'https://elgorilateatro.com.mx';
     const compartirPath = cert
-      ? `/enviar-boleto.html?c=${encodeURIComponent(cert)}&wa=1`
+      ? `/enviar-boleto.html?c=${encodeURIComponent(cert)}`
       : '';
     let t = `Voy a ver EL GORILA — ${fn}. ${entradas}.\n${VENUE}\n${DIRECCION}`;
     if (folio) t += `\nFolio taquilla: ${folio}`;
@@ -68,8 +68,21 @@
     });
   }
 
-  function waMeUrl(texto) {
-    return `https://wa.me/?text=${encodeURIComponent(texto)}`;
+  /** Número para wa.me (México: 521 + 10 dígitos). */
+  function normalizarTelefonoWa(raw) {
+    let d = String(raw || '').replace(/\D/g, '');
+    if (!d) return '';
+    if (d.length === 10) return '521' + d;
+    if (d.length === 12 && d.startsWith('52')) return '521' + d.slice(2);
+    if (d.length === 13 && d.startsWith('521')) return d;
+    if (d.startsWith('52')) return d;
+    return d;
+  }
+
+  function waMeUrl(texto, telefono) {
+    const tel = normalizarTelefonoWa(telefono);
+    const q = `?text=${encodeURIComponent(texto)}`;
+    return tel ? `https://wa.me/${tel}${q}` : `https://wa.me/${q}`;
   }
 
   async function compartirArchivoNativo(file, texto) {
@@ -85,20 +98,24 @@
     }
   }
 
-  async function compartirPorWhatsApp(orden) {
+  async function compartirPorWhatsApp(orden, opts) {
+    const telefono = opts && opts.telefono;
     const texto = textoWhatsApp(orden);
     const canvas = await generarCanvas(orden);
     const blob = await GenerarImagenBoleto.canvasToBlob(canvas);
     const file = new File([blob], 'el-gorila-boleto.png', { type: 'image/png' });
 
-    if (await compartirArchivoNativo(file, texto)) return;
+    // Con teléfono del comprador (taquilla): abrir chat directo — el share nativo no elige contacto.
+    if (!telefono && await compartirArchivoNativo(file, texto)) return;
 
     await GenerarImagenBoleto.descargar(canvas, 'el-gorila-boleto.png');
-    const hint = 'Adjunta la imagen *el-gorila-boleto.png* (acaba de descargarse) en este chat de WhatsApp.';
-    window.open(waMeUrl(`${texto}\n\n${hint}`), '_blank', 'noopener');
+    const hint = telefono
+      ? 'Adjunta la imagen *el-gorila-boleto.png* (acaba de descargarse) y envía.'
+      : 'Adjunta la imagen *el-gorila-boleto.png* (acaba de descargarse) en este chat de WhatsApp.';
+    window.open(waMeUrl(`${texto}\n\n${hint}`, telefono), '_blank', 'noopener');
   }
 
   global.ElGorilaCompartirWa = {
-    textoWhatsApp, compartirPorWhatsApp, generarCanvas, waMeUrl,
+    textoWhatsApp, compartirPorWhatsApp, generarCanvas, waMeUrl, normalizarTelefonoWa,
   };
 })(window);

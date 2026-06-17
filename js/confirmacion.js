@@ -8,6 +8,19 @@ function baseUrlSitio() {
     return window.location.origin + p;
 }
 
+function urlProgramaMano() {
+    const path = '/programa/v2.html';
+    return typeof window.rutaAbsoluta === 'function' ? window.rutaAbsoluta(path) : path;
+}
+
+function htmlBtnProgramaMano() {
+    const href = urlProgramaMano();
+    return `<a href="${href}" class="btn-programa-mano" target="_blank" rel="noopener noreferrer">
+            <span class="material-symbols-outlined">menu_book</span>
+            Ver programa de mano
+        </a>`;
+}
+
 function codigoQrBoleto(orden) {
     const boletos = orden.boletos || [];
     if (window.ElGorilaQr) return window.ElGorilaQr.codigoQrOficial(orden);
@@ -368,6 +381,7 @@ function htmlVistaBoleto(orden, opts) {
             <span class="material-symbols-outlined">download</span>
             Guardar imagen del boleto
         </button>
+        ${htmlBtnProgramaMano()}
         <p class="boleto-hint">Presenta este QR en la entrada. Al compartir por WhatsApp se envía la imagen del boleto.</p>`;
 }
 
@@ -425,7 +439,8 @@ function pintarQrFallback(container, orden, cant, folio, cert) {
                 ${cert ? `<p class="boleto-cert" style="text-align:left;">${cert}</p>` : ''}
                 <p class="boleto-hint" style="text-align:left;margin-top:10px;">Presenta el QR en la entrada. También lo tienes en tu correo.</p>
             </div>
-        </div>`;
+        </div>
+        ${htmlBtnProgramaMano()}`;
     pintarQR(document.getElementById('qr-folio-fallback'), qrData, 84);
 }
 

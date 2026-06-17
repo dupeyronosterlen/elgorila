@@ -144,6 +144,48 @@
     return selected;
   }
 
+  /** Muestra 3 funciones; «Ver más» abre de 3 en 3 (como boletos.html). */
+  function wireHiddenProgressive(gridEl, uiEl, hiddenEl, funciones, opts = {}) {
+    const batch = opts.batchSize || 3;
+    const prev = hiddenEl?.value;
+    const list = filtrarFunciones(funciones, opts);
+    const selected = prev && list.some(f => f.fecha_iso === prev) ? prev : (list[0]?.fecha_iso || '');
+    const userOnSelect = opts.onSelect;
+    const onSelect = iso => {
+      if (hiddenEl) hiddenEl.value = iso;
+      if (userOnSelect) userOnSelect(iso);
+    };
+
+    renderEn(gridEl, list, { ...opts, selected, onSelect });
+    if (hiddenEl) hiddenEl.value = selected;
+    if (selected && userOnSelect) userOnSelect(selected);
+
+    const cards = gridEl ? Array.from(gridEl.querySelectorAll('.sel-fn-card')) : [];
+    let visibleMax = Math.min(batch - 1, cards.length - 1);
+
+    function applyStep() {
+      cards.forEach((card, i) => {
+        card.style.display = i <= visibleMax ? '' : 'none';
+      });
+      if (!uiEl) return;
+      uiEl.innerHTML = '';
+      if (visibleMax < cards.length - 1) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'sel-fn-ver-mas';
+        btn.textContent = 'Ver más fechas \u2192';
+        btn.addEventListener('click', () => {
+          visibleMax = Math.min(visibleMax + batch, cards.length - 1);
+          applyStep();
+        });
+        uiEl.appendChild(btn);
+      }
+    }
+
+    applyStep();
+    return selected;
+  }
+
   global.SelectorFunciones = {
     filtrarFunciones,
     funcionYaPaso,
@@ -153,6 +195,7 @@
     bindGrid,
     renderEn,
     wireHidden,
+    wireHiddenProgressive,
     partesNombre,
   };
 })(window);

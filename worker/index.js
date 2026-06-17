@@ -43,7 +43,7 @@ function corsHeaders(request) {
   return {
     'Access-Control-Allow-Origin':  allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Idempotency-Key',
     'Access-Control-Max-Age':       '86400',
     'Vary':                         'Origin',
   };
@@ -134,9 +134,17 @@ function adminNotifyEmail(env) {
 
 function formatMetodoPago(venta) {
   const m = (venta.metodoPago || '').toLowerCase();
-  if (m === 'efectivo' || venta.sessionId?.startsWith('manual_')) return 'Efectivo / taquilla';
+  if (m === 'efectivo') return 'Efectivo en taquilla';
+  if (m === 'tarjeta_taquilla') return 'Tarjeta en taquilla';
+  if (venta.sessionId?.startsWith('manual_') && !m) return 'Efectivo en taquilla';
   if (m.includes('card') || m.includes('link')) return 'Stripe (tarjeta en línea)';
   return m || '—';
+}
+
+function esVentaTaquilla(venta) {
+  const m = (venta?.metodoPago || '').toLowerCase();
+  if (m === 'efectivo' || m === 'tarjeta_taquilla') return true;
+  return String(venta?.sessionId || '').startsWith('manual_');
 }
 
 function formatFechaCompra(iso) {
@@ -245,7 +253,7 @@ function urlCompartirBoleto(codigo) {
 }
 
 function urlEnviarBoletoWa(codigo) {
-  return `${SITIO_BASE}/enviar-boleto.html?c=${encodeURIComponent(codigo)}&wa=1`;
+  return `${SITIO_BASE}/enviar-boleto.html?c=${encodeURIComponent(codigo)}`;
 }
 
 function urlInvitacionRegalo(certificado, cupon = 'REGALO25') {
@@ -543,6 +551,9 @@ function htmlBoleto(venta, funcionNombre, config, opts = {}) {
        <td style="padding:10px 0;text-align:right;font-family:Georgia,serif;font-size:16px;color:#1a1411;">${nEntradas}</td></tr>`
     : itemsRows;
 
+  const metodoPagoLbl = formatMetodoPago(venta);
+  const fechaCompraLbl = formatFechaCompra(venta.fechaCompra);
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -592,6 +603,14 @@ function htmlBoleto(venta, funcionNombre, config, opts = {}) {
         <td style="padding-top:14px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8a7760;">Total pagado</td>
         <td style="padding-top:14px;text-align:right;font-family:Georgia,serif;font-size:20px;font-weight:600;color:#1a1411;">$${(venta.total ?? 0).toFixed(2)} MXN</td>
       </tr>
+      <tr>
+        <td style="padding-top:12px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8a7760;">Forma de pago</td>
+        <td style="padding-top:12px;text-align:right;font-family:Georgia,serif;font-size:16px;color:#1a1411;">${metodoPagoLbl}</td>
+      </tr>
+      <tr>
+        <td style="padding-top:8px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8a7760;">Fecha de compra</td>
+        <td style="padding-top:8px;text-align:right;font-family:Georgia,serif;font-size:15px;color:#3a2e26;">${fechaCompraLbl}</td>
+      </tr>
     </table>
   </td></tr>
 
@@ -628,16 +647,16 @@ function htmlBoleto(venta, funcionNombre, config, opts = {}) {
     </ul>
   </td></tr>
 
-  <!-- WhatsApp: guardar boleto en el teléfono -->
+  <!-- Guardar / compartir boleto (misma página que post-compra) -->
   <tr><td style="background:#e8dfc8;padding:22px 28px;border-top:1px solid #c9b896;text-align:center;">
     <p style="margin:0 0 14px;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#3a2e26;">
-      ¿Quieres tenerlo a la mano? Guárdalo en WhatsApp para el día de la función.
+      ¿Quieres tenerlo a la mano? Abre tu boleto digital para <strong>guardarlo</strong> o <strong>compartirlo por WhatsApp</strong>.
     </p>
     <a href="${waPaginaUrl}" style="display:inline-block;background:#128C7E;color:#fff;padding:14px 22px;text-decoration:none;font-family:Georgia,serif;font-size:16px;margin:0 6px 10px;border-radius:2px;">
-      Compartir boleto (imagen QR) por WhatsApp →
+      Ver mi boleto · guardar o compartir →
     </a>
     <p style="margin:12px 0 0;font-family:Georgia,serif;font-size:13px;line-height:1.5;color:#6b5c4a;">
-      Se abre WhatsApp con la <strong>imagen del boleto</strong> (en el celular elige WhatsApp al compartir). El QR también está arriba en este correo.
+      Misma pantalla que al terminar tu compra: imagen del boleto con QR, botón para guardar y para WhatsApp. El QR también está arriba en este correo.
     </p>
   </td></tr>
 
@@ -3377,6 +3396,28 @@ function _fechaContableVenta(v) {
   return v?.fecha || null;
 }
 
+function _fechaCompraDiaMx(iso) {
+  if (!iso) return null;
+  try {
+    return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+  } catch { return null; }
+}
+
+/** Canal u organización inferida (cupón, UTM, referido, taquilla). */
+function _organizacionVenta(v) {
+  const explicit = typeof v?.organizacion === 'string' ? v.organizacion.trim() : '';
+  if (explicit) return explicit;
+  const cupon = (v?.codigoCupon || '').trim();
+  if (cupon) return `Cupón: ${cupon}`;
+  const camp = (v?.utm?.campaign || '').trim();
+  if (camp) return camp;
+  const src = (v?.utm?.source || '').trim();
+  if (src) return src;
+  if (v?.referidoDe) return 'Referido';
+  if (esVentaTaquilla(v)) return 'Taquilla';
+  return 'Web directo';
+}
+
 function _formatVenta(v) {
   const certificado = _certificadoVenta(v);
   const fc = _fechaContableVenta(v);
@@ -3406,6 +3447,9 @@ function _formatVenta(v) {
     total:            v.total,
     metodoPago:       v.metodoPago     || 'card',
     fechaCompra:      v.fechaCompra,
+    fechaCompraDia:   _fechaCompraDiaMx(v.fechaCompra),
+    organizacion:     _organizacionVenta(v),
+    notas:            v.notas          || null,
     usado:            v.usado          || false,
     usadoEn:          v.usadoEn        || null,
     reagendado:       v.reagendado     || null,
@@ -3417,6 +3461,22 @@ function _formatVenta(v) {
     utm:              v.utm            || null,
     reembolso:        v.reembolso      || null,
   };
+}
+
+// ─── Idempotencia (evita doble venta si la red corta y taquilla reintenta) ───
+
+async function leerIdempotencia(tid, key, env) {
+  const k = String(key || '').trim().slice(0, 80);
+  if (!k) return null;
+  const raw = await env.INVENTARIO.get(kv(tid, `idempotency:${k}`));
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+async function guardarIdempotencia(tid, key, payload, env) {
+  const k = String(key || '').trim().slice(0, 80);
+  if (!k || !payload) return;
+  await env.INVENTARIO.put(kv(tid, `idempotency:${k}`), JSON.stringify(payload), { expirationTtl: 86400 });
 }
 
 // ─── HANDLER: VENTA MANUAL (efectivo / taquilla) ─────────────────────────────
@@ -3433,9 +3493,11 @@ async function handleVentaManual(tid, request, env, ctx) {
 
   const email    = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const nombre   = typeof body.nombre === 'string' ? body.nombre.trim() : '';
-  const telefono = typeof body.telefono === 'string' ? body.telefono.replace(/\D/g, '') : '';
   const notas    = typeof body.notas === 'string' ? body.notas.trim().substring(0, 300) : '';
   const codigoCuponRaw = typeof body.codigoCupon === 'string' ? body.codigoCupon.trim() : '';
+  const METODOS_TAQUILLA = new Set(['efectivo', 'tarjeta_taquilla']);
+  let metodoPago = typeof body.metodoPago === 'string' ? body.metodoPago.trim().toLowerCase() : 'efectivo';
+  if (!METODOS_TAQUILLA.has(metodoPago)) metodoPago = 'efectivo';
   const { items, fecha } = body;
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -3444,8 +3506,20 @@ async function handleVentaManual(tid, request, env, ctx) {
   if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
     return json({ error: 'Fecha inválida.' }, 400, request);
   }
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email) {
+    return json({ error: 'Indica el correo del comprador — ahí se envía el boleto.' }, 400, request);
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return json({ error: 'Correo inválido.' }, 400, request);
+  }
+
+  const canonical = resolveTid(tid);
+  const idemKey   = (request.headers.get('Idempotency-Key') || body.idempotencyKey || '').trim().slice(0, 80);
+  if (idemKey) {
+    const prev = await leerIdempotencia(canonical, idemKey, env);
+    if (prev?.body) {
+      return json({ ...prev.body, idempotentReplay: true }, prev.status || 200, request);
+    }
   }
 
   const config         = await getVenueConfig(tid, env);
@@ -3516,7 +3590,6 @@ async function handleVentaManual(tid, request, env, ctx) {
 
   const gen = await generarBoletosVenta(tid, fecha, itemsValidados, env);
   const sessionId = `manual_${crypto.randomUUID().replace(/-/g, '')}`;
-  const canonical = resolveTid(tid);
 
   const venta = {
     teatroId:       canonical,
@@ -3532,15 +3605,14 @@ async function handleVentaManual(tid, request, env, ctx) {
     cantidad:       cantidadTotal,
     items:          itemsValidados,
     seccionCantidades,
-    email:          email || null,
+    email:          email,
     nombre:         nombre || null,
-    telefono:       telefono || null,
     notas:          notas || null,
     total,
     fechaCompra:    new Date().toISOString(),
     estado:         'completada',
     usado:          false,
-    metodoPago:     'efectivo',
+    metodoPago,
     registradoPor:  payload.usuario || 'admin',
     codigoCupon:    cuponAplicado?.codigo || null,
     cuponPct:       cuponAplicado?.porcentaje != null ? parseInt(cuponAplicado.porcentaje, 10) : null,
@@ -3559,44 +3631,13 @@ async function handleVentaManual(tid, request, env, ctx) {
   await env.VENTAS.put(kv(canonical, `ventaIdx:${fecha}:${sessionId}`), sessionId);
   await env.VENTAS.put(kv(canonical, `ventaIdxContable:${fecha}:${sessionId}`), sessionId);
 
-  let emailEnviado = false;
-  let adminOk      = false;
-  if (email) {
-    const emailResult = await enviarEmailsVenta(venta, canonical, env);
-    emailEnviado = emailResult.compradorOk;
-    adminOk      = emailResult.adminOk;
-    venta.emailsEnviados = {
-      admin: adminOk, comprador: emailEnviado, en: new Date().toISOString(),
-    };
-    await env.VENTAS.put(kv(canonical, `venta:${sessionId}`), JSON.stringify(venta));
-  } else {
-    adminOk = await enviarEmail(
-      adminNotifyEmail(env),
-      `${gen.certificado} : Nueva orden — EL GORILA`,
-      htmlAvisoAdmin(venta, funcion.nombre, config),
-      env,
-    );
-  }
-
-  const compartirUrl = urlEnviarBoletoWa(gen.certificado);
-  const folioPuerta = gen.boletos.map(b => b.folio).filter(Boolean).join(' · ') || null;
-  const waTexto = [
-    `🎭 *EL GORILA* — ${funcion.nombre}`,
-    `📍 ${config.venue}`,
-    `🎟 ${cantidadTotal} boleto(s)${folioPuerta ? ` · Folio ${folioPuerta}` : ''}`,
-    `Certificado: ${gen.certificado}`,
-    '',
-    `Tu boleto con QR (imagen):`,
-    compartirUrl,
-    '',
-    `Programa de mano:`,
-    URL_PROGRAMA_V2,
-    '',
-    `Presenta el QR en la entrada del teatro.`,
-  ].join('\n');
-  const waUrl = telefono
-    ? `https://wa.me/${telefono}?text=${encodeURIComponent(waTexto)}`
-    : `https://wa.me/?text=${encodeURIComponent(waTexto)}`;
+  const emailResult = await enviarEmailsVenta(venta, canonical, env);
+  const emailEnviado = emailResult.compradorOk;
+  const adminOk      = emailResult.adminOk;
+  venta.emailsEnviados = {
+    admin: adminOk, comprador: emailEnviado, en: new Date().toISOString(),
+  };
+  await env.VENTAS.put(kv(canonical, `venta:${sessionId}`), JSON.stringify(venta));
 
   await registrarAuditoria(env, {
     usuarioId: payload.telefono || payload.usuario,
@@ -3608,19 +3649,20 @@ async function handleVentaManual(tid, request, env, ctx) {
     meta:      { codigo: gen.certificado, fecha, total, email: email || null, codigoCupon: cuponAplicado?.codigo || null, via: payload.purpose || 'admin' },
   });
 
-  return json({
+  const respBody = {
     ok:           true,
     codigo:       gen.certificado,
     certificado:  gen.certificado,
     boletos:      gen.boletos.map(b => ({ cert: b.cert, folio: b.folio, numero: b.numero })),
-    compartirUrl,
-    waUrl,
-    waTexto,
-    emailEnviado: !!email,
+    emailEnviado,
     total,
     funcionNombre: funcion.nombre,
     venta:         _formatVenta(venta),
-  }, 200, request);
+  };
+  if (idemKey) {
+    await guardarIdempotencia(canonical, idemKey, { status: 200, body: respBody }, env);
+  }
+  return json(respBody, 200, request);
 }
 
 /** Libera cupo vendido (reagendamiento). */
@@ -3818,7 +3860,7 @@ async function handleReembolso(tid, request, env, ctx) {
   if (venta.usado) return json({ error: 'No se puede reembolsar un boleto ya canjeado.' }, 409, request);
 
   const sessionId = venta.sessionId || '';
-  const esManual  = sessionId.startsWith('manual_') || venta.metodoPago === 'efectivo';
+  const esManual  = esVentaTaquilla(venta);
   if (!esManual && !env.STRIPE_SECRET_KEY) {
     return json({ error: 'Stripe no configurado.' }, 503, request);
   }
@@ -4122,6 +4164,99 @@ async function handleVentas(tid, request, env) {
 
   ventas.sort((a, b) => new Date(b.fechaCompra) - new Date(a.fechaCompra));
   return json({ ventas, cursor: nextCursor || null }, 200, request);
+}
+
+async function handleCompradores(tid, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_VENTAS.has(payload.rol)) {
+    return json({ error: 'Sin permiso para ver compradores.' }, 403, request);
+  }
+
+  const url = new URL(request.url);
+  const desde = url.searchParams.get('desde') || '';
+  const hasta = url.searchParams.get('hasta') || '';
+  const orgFiltro = (url.searchParams.get('organizacion') || '').trim().toLowerCase();
+  const funcionFiltro = url.searchParams.get('funcion') || '';
+  const q = (url.searchParams.get('q') || '').trim().toLowerCase();
+  const soloActivas = url.searchParams.get('soloActivas') !== '0';
+
+  if (desde && !/^\d{4}-\d{2}-\d{2}$/.test(desde)) {
+    return json({ error: 'Parámetro desde inválido (YYYY-MM-DD).' }, 400, request);
+  }
+  if (hasta && !/^\d{4}-\d{2}-\d{2}$/.test(hasta)) {
+    return json({ error: 'Parámetro hasta inválido (YYYY-MM-DD).' }, 400, request);
+  }
+
+  const ventasRaw = await listAllVentasRaw(tid, env);
+  let ventas = ventasRaw.map(v => _formatVenta(v));
+
+  if (soloActivas) {
+    ventas = ventas.filter(v => v.estado !== 'reembolsada');
+  }
+
+  if (desde || hasta) {
+    ventas = ventas.filter(v => {
+      const dia = v.fechaCompraDia || _fechaCompraDiaMx(v.fechaCompra);
+      if (!dia) return false;
+      if (desde && dia < desde) return false;
+      if (hasta && dia > hasta) return false;
+      return true;
+    });
+  }
+
+  if (funcionFiltro && /^\d{4}-\d{2}-\d{2}$/.test(funcionFiltro)) {
+    ventas = ventas.filter(v => v.fecha === funcionFiltro);
+  }
+
+  if (orgFiltro) {
+    ventas = ventas.filter(v => (v.organizacion || '').toLowerCase().includes(orgFiltro));
+  }
+
+  if (q) {
+    ventas = ventas.filter(v => {
+      const nombre = (v.nombre || '').toLowerCase();
+      const email = (v.email || '').toLowerCase();
+      const codigo = (v.codigo || v.certificado || '').toLowerCase();
+      const tel = (v.telefono || '').toLowerCase();
+      return nombre.includes(q) || email.includes(q) || codigo.includes(q) || tel.includes(q);
+    });
+  }
+
+  ventas.sort((a, b) => new Date(b.fechaCompra || 0) - new Date(a.fechaCompra || 0));
+
+  const porOrgMap = {};
+  let entradas = 0;
+  let revenue = 0;
+  for (const v of ventas) {
+    entradas += v.cantidad || 0;
+    revenue += Number(v.total) || 0;
+    const org = v.organizacion || '—';
+    if (!porOrgMap[org]) {
+      porOrgMap[org] = { organizacion: org, ventas: 0, entradas: 0, revenue: 0 };
+    }
+    porOrgMap[org].ventas += 1;
+    porOrgMap[org].entradas += v.cantidad || 0;
+    porOrgMap[org].revenue += Number(v.total) || 0;
+  }
+
+  const porOrganizacion = Object.values(porOrgMap)
+    .sort((a, b) => b.entradas - a.entradas || b.revenue - a.revenue);
+
+  const organizaciones = [...new Set(ventasRaw.map(v => _organizacionVenta(v)))].sort((a, b) =>
+    a.localeCompare(b, 'es'),
+  );
+
+  return json({
+    compradores: ventas,
+    resumen: {
+      ventas: ventas.length,
+      entradas,
+      revenue,
+      porOrganizacion,
+    },
+    organizaciones,
+  }, 200, request);
 }
 
 async function listAllVentasRaw(tid, env) {
@@ -4541,6 +4676,7 @@ export default {
       const sub = parts.slice(3).join('/');
 
       if (method === 'GET'  && sub === 'ventas')         return handleVentas(tid, request, env);
+      if (method === 'GET'  && sub === 'compradores')    return handleCompradores(tid, request, env);
       if (method === 'GET'  && sub === 'informe-funciones') return handleInformeFunciones(tid, request, env);
       if (method === 'GET'  && sub === 'funciones')        return handleFuncionesAdmin(tid, request, env);
       if (method === 'POST' && sub === 'funciones/toggle') return handleFuncionesToggle(tid, request, env);

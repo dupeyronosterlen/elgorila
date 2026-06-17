@@ -26,6 +26,9 @@
     informeError: null,
     informeFuncionSel: null,
     informeVentas: [],
+    compradores: [],
+    compradoresResumen: null,
+    compradoresOrgs: [],
     opsVenta: null,
     auditFilter: '',
     chipFuncion: null,
@@ -606,6 +609,138 @@
     state.informeFuncionSel = fecha;
   }
 
+  function compQueryParams() {
+    const desde = document.getElementById('comp-desde')?.value || '';
+    const hasta = document.getElementById('comp-hasta')?.value || '';
+    const organizacion = document.getElementById('comp-organizacion')?.value || '';
+    const funcion = document.getElementById('comp-funcion')?.value || '';
+    const q = document.getElementById('comp-buscar')?.value?.trim() || '';
+    const soloActivas = document.getElementById('comp-solo-activas')?.checked !== false;
+    const p = new URLSearchParams();
+    if (desde) p.set('desde', desde);
+    if (hasta) p.set('hasta', hasta);
+    if (organizacion) p.set('organizacion', organizacion);
+    if (funcion) p.set('funcion', funcion);
+    if (q) p.set('q', q);
+    if (!soloActivas) p.set('soloActivas', '0');
+    return p.toString();
+  }
+
+  async function cargarCompradores() {
+    const qs = compQueryParams();
+    const d = await api(window.teatroAdminApi(`compradores${qs ? `?${qs}` : ''}`));
+    state.compradores = d.compradores || [];
+    state.compradoresResumen = d.resumen || null;
+    state.compradoresOrgs = d.organizaciones || [];
+  }
+
+  function v4FillCompFuncionesSelect() {
+    const sel = document.getElementById('comp-funcion');
+    if (!sel) return;
+    const prev = sel.value;
+    const opts = ['<option value="">Cualquier fecha</option>'].concat(
+      (state.funciones || []).map(f =>
+        `<option value="${esc(f.fecha_iso)}"${prev === f.fecha_iso ? ' selected' : ''}>${esc(f.nombre || f.fecha_iso)}</option>`,
+      ),
+    );
+    sel.innerHTML = opts.join('');
+  }
+
+  function v4FillCompOrgSelect() {
+    const sel = document.getElementById('comp-organizacion');
+    if (!sel) return;
+    const prev = sel.value;
+    const orgs = state.compradoresOrgs.length
+      ? state.compradoresOrgs
+      : [...new Set((state.compradores || []).map(v => v.organizacion).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b, 'es'),
+      );
+    const opts = ['<option value="">Todas</option>'].concat(
+      orgs.map(o => `<option value="${esc(o)}"${prev === o ? ' selected' : ''}>${esc(o)}</option>`),
+    );
+    sel.innerHTML = opts.join('');
+  }
+
+  function v4RenderCompradoresResumen() {
+    const r = state.compradoresResumen;
+    v4SetText('comp-stat-ventas', r ? String(r.ventas ?? 0) : '—');
+    v4SetText('comp-stat-entradas', r ? String(r.entradas ?? 0) : '—');
+    v4SetText('comp-stat-revenue', r ? fmtMXN(r.revenue) : '—');
+    const countEl = document.getElementById('comp-count');
+    if (countEl) countEl.textContent = r ? `${r.ventas} compra(s) · ${r.entradas} entrada(s)` : '—';
+
+    const orgWrap = document.getElementById('comp-org-wrap');
+    if (!orgWrap) return;
+    const rows = (r?.porOrganizacion || []).slice(0, 12);
+    if (!rows.length) {
+      orgWrap.innerHTML = '';
+      return;
+    }
+    orgWrap.innerHTML = `<div class="page-hd" style="border:none;padding:0 0 8px">
+        <h2 style="font-family:var(--display);font-size:18px;color:var(--fg)">Por organización / canal</h2>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th>Organización</th>
+          <th style="text-align:right">Ventas</th>
+          <th style="text-align:right">Entradas</th>
+          <th style="text-align:right">Ingresos</th>
+        </tr></thead>
+        <tbody>${rows.map(o => `<tr>
+          <td>${esc(o.organizacion)}</td>
+          <td class="td-num">${o.ventas}</td>
+          <td class="td-num">${o.entradas}</td>
+          <td class="td-num">${fmtMXN(o.revenue)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+  }
+
+  function v4RenderCompradoresTable() {
+    const tbody = document.getElementById('comp-tbody');
+    if (!tbody) return;
+    const rows = (state.compradores || []).map(v => {
+      const cert = certVenta(v);
+      return `<tr>
+        <td style="font-family:var(--mono);font-size:10px;white-space:nowrap">${fmtFecha(v.fechaCompra)}</td>
+        <td class="td-mono"><button type="button" class="td-btn ops-pick-comp" data-cert="${esc(cert)}">${esc(cert)}</button></td>
+        <td>${esc(v.nombre || '—')}</td>
+        <td class="td-email">${esc(v.email || '—')}</td>
+        <td style="font-size:11px">${esc(v.organizacion || '—')}</td>
+        <td style="font-size:11px">${esc(v.funcionNombre || v.fecha || '—')}</td>
+        <td class="td-num">${v.cantidad || 0}</td>
+        <td class="td-num">${fmtMXN(v.total)}</td>
+        <td>${v4EstadoBadge(v)}</td>
+      </tr>`;
+    }).join('');
+    tbody.innerHTML = rows || '<tr><td colspan="9" style="padding:24px;text-align:center;color:var(--soft)">Sin compradores con estos filtros</td></tr>';
+    tbody.querySelectorAll('.ops-pick-comp').forEach(btn => {
+      btn.onclick = () => {
+        state.view = 'ops';
+        v4ShowView('ops');
+        v4BuscarVenta(btn.dataset.cert);
+      };
+    });
+  }
+
+  function v4RenderCompradores() {
+    v4FillCompFuncionesSelect();
+    v4FillCompOrgSelect();
+    v4RenderCompradoresResumen();
+    v4RenderCompradoresTable();
+    v4Toggle('btn-comp-export', perm('exportarDatos') && (state.compradores?.length > 0));
+  }
+
+  async function v4BuscarCompradores() {
+    const tbody = document.getElementById('comp-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="padding:24px;text-align:center;color:var(--soft)">Cargando…</td></tr>';
+    try {
+      await cargarCompradores();
+      v4RenderCompradores();
+    } catch (e) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="9" style="padding:24px;text-align:center;color:#facc15">${esc(e.message)}</td></tr>`;
+    }
+  }
+
   async function refrescarInformes() {
     const jobs = [];
     if (perm('verFiscal')) jobs.push(cargarFiscal().catch(() => { state.fiscal = 0; }));
@@ -1077,7 +1212,7 @@
   }
 
   function exportCsv(ventas, name) {
-    const head = ['certificado', 'nombre', 'email', 'telefono', 'cantidad', 'total', 'metodoPago', 'codigoCupon', 'cuponPct', 'referidoDe', 'utm_source', 'utm_medium', 'utm_campaign', 'fechaCompra', 'estado', 'usado'];
+    const head = ['certificado', 'nombre', 'email', 'telefono', 'cantidad', 'total', 'metodoPago', 'organizacion', 'codigoCupon', 'cuponPct', 'referidoDe', 'utm_source', 'utm_medium', 'utm_campaign', 'fechaCompra', 'fechaCompraDia', 'funcion', 'funcionNombre', 'estado', 'usado'];
     const lines = [head.join(',')].concat(ventas.map(v => {
       const row = {
         certificado: certVenta(v),
@@ -1087,6 +1222,7 @@
         cantidad: v.cantidad,
         total: v.total,
         metodoPago: v.metodoPago,
+        organizacion: v.organizacion,
         codigoCupon: v.codigoCupon,
         cuponPct: v.cuponPct,
         referidoDe: v.referidoDe,
@@ -1094,6 +1230,9 @@
         utm_medium: v.utm?.medium,
         utm_campaign: v.utm?.campaign,
         fechaCompra: v.fechaCompra,
+        fechaCompraDia: v.fechaCompraDia,
+        funcion: v.fecha,
+        funcionNombre: v.funcionNombre,
         estado: v.estado,
         usado: v.usado,
       };
@@ -1117,6 +1256,18 @@
     if (el) el.classList.toggle('hidden', !show);
   }
 
+  function loginErrorShow(msg) {
+    const el = document.getElementById('error-login');
+    if (!el) return;
+    if (msg) {
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    } else {
+      el.textContent = '';
+      el.classList.add('hidden');
+    }
+  }
+
   function v4EstadoClase(v) {
     if (v.estado === 'reembolsada') return 'refund';
     if (v.usado) return 'audit';
@@ -1126,7 +1277,7 @@
 
   function v4EstadoBadge(v) {
     const c = v4EstadoClase(v);
-    const labels = { refund: 'reembolsado', audit: 'canjeado', reagend: 'reagendado', ok: 'activo' };
+    const labels = { refund: 'Reembolsado', audit: 'Canjeado', reagend: 'Reagendado', ok: 'Activo' };
     const cls = { refund: 'badge-refund', audit: 'badge-audit', reagend: 'badge-reagend', ok: 'badge-ok' };
     return `<span class="badge ${cls[c]}">${labels[c]}</span>`;
   }
@@ -1364,21 +1515,32 @@
     });
   }
 
+  function esVentaTaquilla(v) {
+    const m = (v?.metodoPago || '').toLowerCase();
+    if (m === 'efectivo' || m === 'tarjeta_taquilla') return true;
+    return String(v?.sessionId || '').startsWith('manual_');
+  }
+
   function v4CalcStats(ventas) {
     let entradas = 0;
-    let revenue = 0;
+    let revenueStripe = 0;
+    let revenueTaquilla = 0;
     let refunds = 0;
     let refundMxn = 0;
+    let tx = 0;
     for (const v of ventas) {
       if (v.estado === 'reembolsada') {
         refunds += 1;
         refundMxn += Number(v.total) || 0;
         continue;
       }
+      tx += 1;
       entradas += v.cantidad || 0;
-      revenue += Number(v.total) || 0;
+      const total = Number(v.total) || 0;
+      if (esVentaTaquilla(v)) revenueTaquilla += total;
+      else revenueStripe += total;
     }
-    return { entradas, revenue, tx: ventas.length, refunds, refundMxn };
+    return { entradas, revenue: revenueStripe, revenueTaquilla, tx, refunds, refundMxn };
   }
 
   function v4RenderStats() {
@@ -1392,6 +1554,7 @@
     const s = v4CalcStats(all);
     v4SetText('stat-entradas', String(s.entradas));
     v4SetText('stat-revenue', fmtMXN(s.revenue));
+    v4SetText('stat-taquilla', fmtMXN(s.revenueTaquilla));
     v4SetText('stat-tx', String(s.tx));
     v4SetText('stat-refunds', String(s.refunds));
     const sub = document.getElementById('stat-entradas-sub');
@@ -1400,8 +1563,18 @@
         ? (state.funciones.find(f => f.fecha_iso === state.chipFuncion)?.nombre || state.chipFuncion)
         : `${state.funciones.length} funciones · temporada`;
     }
+    const revSub = document.getElementById('stat-revenue-sub');
+    if (revSub) {
+      revSub.textContent = state.chipFuncion ? 'Stripe · función seleccionada' : 'MXN en línea · sin taquilla';
+    }
+    const taqSub = document.getElementById('stat-taquilla-sub');
+    if (taqSub) {
+      taqSub.textContent = state.chipFuncion ? 'efectivo + tarjeta en puerta' : 'efectivo + tarjeta en puerta · temporada';
+    }
     const refSub = document.getElementById('stat-refunds-sub');
     if (refSub) refSub.textContent = s.refunds ? fmtMXN(s.refundMxn) + ' devueltos' : 'en la temporada';
+    const txSub = document.getElementById('stat-tx-sub');
+    if (txSub) txSub.textContent = s.refunds ? `${s.tx} activas · ${s.refunds} reembolsadas` : 'online + taquilla';
     v4SetText('ventas-count', `${filtradas.length} resultado${filtradas.length === 1 ? '' : 's'}`);
   }
 
@@ -1442,7 +1615,9 @@
     const rows = v4VentasFiltradas();
     tbody.innerHTML = rows.map(v => {
       const cert = certVenta(v);
-      const metodo = v.metodoPago === 'efectivo' ? 'taquilla' : (v.metodoPago || 'online');
+      const metodo = esVentaTaquilla(v)
+        ? ((v.metodoPago || '').toLowerCase() === 'tarjeta_taquilla' ? 'tarjeta taquilla' : 'efectivo')
+        : (v.metodoPago || 'online');
       const st = v4EstadoClase(v);
       return `<tr data-venta="${esc(cert)}" class="row-st-${st}">
         <td class="td-mono">${esc(cert)}</td>
@@ -1451,7 +1626,7 @@
         <td class="td-num">${v.cantidad || 0}</td>
         <td class="td-num">${fmtMXN(v.total)}</td>
         <td>${v4EstadoBadge(v)}</td>
-        <td style="font-family:var(--mono);font-size:10px;color:var(--soft)">${esc(metodo)}</td>
+        <td class="td-metodo">${esc(metodo)}</td>
         <td class="td-actions"><button type="button" class="td-btn" data-open="${esc(cert)}">Ver</button></td>
       </tr>`;
     }).join('') || '<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--soft)">Sin ventas</td></tr>';
@@ -1928,6 +2103,7 @@
         }
         v4RenderInformeFn();
         v4RenderInformeVentas();
+        v4FillCompFuncionesSelect();
         v4RenderAuditoriaFixed('audit-tbody-inf', 'audit-count-inf', document.getElementById('audit-filtro-inf')?.value || '');
         v4RenderOpsInformes();
       } else if (view === 'equipo') {
@@ -2250,6 +2426,15 @@
     document.getElementById('btn-refrescar-informes')?.addEventListener('click', async () => {
       await v4PaintView('informes');
     });
+    document.getElementById('btn-comp-buscar')?.addEventListener('click', () => v4BuscarCompradores());
+    document.getElementById('comp-buscar')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') v4BuscarCompradores();
+    });
+    document.getElementById('btn-comp-export')?.addEventListener('click', () => {
+      const desde = document.getElementById('comp-desde')?.value || 'todas';
+      const hasta = document.getElementById('comp-hasta')?.value || 'fechas';
+      exportCsv(state.compradores, `compradores_${TID()}_${desde}_${hasta}_${Date.now()}.csv`);
+    });
     document.getElementById('btn-fiscal-reset')?.addEventListener('click', async () => {
       const ok = await v4ConfirmarAccion({
         titulo: 'Resetear reserva fiscal',
@@ -2348,9 +2533,15 @@
     btn.parentElement?.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     v4Toggle('tab-resumen', tabId === 'tab-resumen');
+    v4Toggle('tab-compradores', tabId === 'tab-compradores');
     v4Toggle('tab-audit2', tabId === 'tab-audit2');
     v4Toggle('tab-informes-ops', tabId === 'tab-informes-ops');
     if (tabId === 'tab-informes-ops') v4RenderOpsInformes();
+    if (tabId === 'tab-compradores') {
+      v4FillCompFuncionesSelect();
+      if (!state.compradores.length) v4BuscarCompradores();
+      else v4RenderCompradores();
+    }
   };
 
   window.opsBuscarVenta = function opsBuscarVenta(q) {
@@ -2424,7 +2615,8 @@
       el.classList.toggle('hidden', !ok);
     });
     document.querySelectorAll('.sidebar-section').forEach(el => { if (viaEmail) el.classList.add('hidden'); });
-    const topSite = document.querySelector('.topbar-btn[href="/"], .topbar-btn[href="index.html"]');
+    const topSite = document.getElementById('link-sitio')
+      || document.querySelector('.topbar-btn[href="/"], .topbar-btn[href="index.html"]');
     if (topSite && viaEmail) topSite.classList.add('hidden');
     v4Toggle('link-boletera', !viaEmail && perm('venderEfectivo'));
     v4Toggle('btn-copiar-boletera', !viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente'));
@@ -2437,6 +2629,7 @@
 
   window.AdminPanel = {
     iniciar(usuario, viewInicial) {
+      if (window.ElGorilaApi?.iniciarMonitorRed) ElGorilaApi.iniciarMonitorRed();
       if (usuario.rol === 'validacion' && !usuario.viaEmail) {
         state.view = 'verificar';
       }
@@ -2487,37 +2680,24 @@
         : 'Acceso taquilla (nombre + correo)';
     }
     const err = document.getElementById('error-login');
-    if (err) { err.textContent = ''; err.style.display = 'none'; }
+    if (err) loginErrorShow('');
   };
 
   window.verificarAcceso = async function verificarAcceso() {
-    const errorDiv = document.getElementById('error-login');
-    if (errorDiv) {
-      if (IS_V4()) errorDiv.style.display = 'none';
-      else errorDiv.classList.add('hidden');
-    }
+    loginErrorShow('');
 
     if (loginTaquillaMode) {
       const nombre = document.getElementById('taquilla-nombre-input')?.value?.trim();
       const email  = document.getElementById('taquilla-email-input')?.value?.trim();
       if (!nombre || !email) {
-        if (errorDiv) {
-          errorDiv.textContent = 'Ingresa nombre y correo autorizados';
-          if (IS_V4()) { errorDiv.style.display = 'block'; errorDiv.classList.remove('hidden'); }
-          else errorDiv.classList.remove('hidden');
-        }
+        loginErrorShow('Ingresa nombre y correo autorizados');
         return;
       }
       const r = await AuthManager.autenticarAccesoTaquilla(nombre, email);
       if (!r.ok) {
-        if (errorDiv) {
-          errorDiv.textContent = r.error || 'Acceso denegado';
-          if (IS_V4()) { errorDiv.style.display = 'block'; errorDiv.classList.remove('hidden'); }
-          else errorDiv.classList.remove('hidden');
-        }
+        loginErrorShow(r.error || 'Acceso denegado');
         return;
       }
-      if (errorDiv && IS_V4()) errorDiv.style.display = 'none';
       document.getElementById('login-screen')?.classList.add('hidden');
       document.getElementById('admin-panel')?.classList.remove('hidden');
       AdminPanel.iniciar(r.usuario, 'boletera');
@@ -2527,23 +2707,14 @@
     const usuarioId = document.getElementById('usuario-input')?.value?.trim();
     const password  = document.getElementById('password-input')?.value;
     if (!usuarioId || !password) {
-    if (errorDiv) {
-      errorDiv.textContent = 'Ingresa usuario y contraseña';
-      if (IS_V4()) { errorDiv.style.display = 'block'; errorDiv.classList.remove('hidden'); }
-      else errorDiv.classList.remove('hidden');
-    }
+      loginErrorShow('Ingresa usuario y contraseña');
       return;
     }
     const resultado = await AuthManager.autenticarAdmin(usuarioId, password);
     if (!resultado.exito) {
-      if (errorDiv) {
-        errorDiv.textContent = resultado.error || 'Credenciales incorrectas';
-        if (IS_V4()) { errorDiv.style.display = 'block'; errorDiv.classList.remove('hidden'); }
-        else errorDiv.classList.remove('hidden');
-      }
+      loginErrorShow(resultado.error || 'Credenciales incorrectas');
       return;
     }
-    if (errorDiv && IS_V4()) errorDiv.style.display = 'none';
     document.getElementById('login-screen')?.classList.add('hidden');
     document.getElementById('admin-panel')?.classList.remove('hidden');
     AdminPanel.iniciar(resultado.usuario);
@@ -2571,10 +2742,7 @@
         return;
       }
       const err = document.getElementById('error-login');
-      if (err) {
-        err.textContent = r.error || 'Enlace inválido o expirado.';
-        err.style.display = 'block';
-      }
+      if (err) loginErrorShow(r.error || 'Enlace inválido o expirado.');
     }
 
     const u = AuthManager.obtenerUsuarioActual();

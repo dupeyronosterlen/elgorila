@@ -12,16 +12,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
-<title>Guardar boleto en WhatsApp — EL GORILA</title>
+<title>Tu boleto — EL GORILA</title>
 <link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500&family=EB+Garamond:ital,wght@0,400;0,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 <style>
 :root {
   --bg: #0a0706;
   --fg: #f1ead9;
   --gold: #d99b3a;
+  --gold-faint: rgba(217,155,58,.25);
+  --gold-dim: rgba(217,155,58,.45);
   --green: #128C7E;
   --display: "Cormorant Garamond", Georgia, serif;
   --cuerpo: "EB Garamond", Georgia, serif;
@@ -39,26 +42,55 @@ h1 {
   font-family: var(--display); font-size: clamp(2rem, 7vw, 2.5rem);
   font-weight: 500; line-height: 1.05; margin: 0 0 12px;
 }
-.sub { color: rgba(241,234,217,.78); margin: 0 0 28px; font-size: 1.05rem; }
-.preview {
-  margin: 0 auto 24px; max-width: 280px;
-  border: 1px solid rgba(217,155,58,.25); background: rgba(0,0,0,.35);
+.sub { color: rgba(241,234,217,.78); margin: 0 0 24px; font-size: 1.05rem; }
+.boleto-preview {
+  margin: 0 auto 14px; max-width: 270px;
+  border: 1px solid var(--gold-faint); background: rgba(0,0,0,.35);
 }
-.preview img { display: block; width: 100%; height: auto; }
-.meta {
-  font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
-  color: rgba(241,234,217,.55); margin: 0 0 24px; word-break: break-all;
+.boleto-preview img { display: block; width: 100%; height: auto; }
+.boleto-meta {
+  font-family: var(--display); font-size: 20px; font-weight: 500;
+  color: var(--fg); text-align: center; margin: 0 0 6px;
 }
+.boleto-cert {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+  color: rgba(241,234,217,.55); text-align: center; word-break: break-all;
+  margin: 0 0 14px;
+}
+.btn-guardar-boleto {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px 18px; margin-bottom: 10px;
+  background: transparent; border: 1px solid var(--gold-faint);
+  color: var(--gold); font-family: var(--cuerpo); font-size: 17px;
+  font-weight: 500; cursor: pointer; transition: border-color .15s, background .15s;
+}
+.btn-guardar-boleto:hover { border-color: var(--gold-dim); background: rgba(212,175,55,0.06); }
+.btn-guardar-boleto .material-symbols-outlined { font-size: 20px; }
+.boleto-hint {
+  font-family: var(--cuerpo); font-size: 16px; line-height: 1.65;
+  color: rgba(241,234,217,.55); text-align: center; margin: 0 0 16px;
+}
+.boleto-fallback-qr {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px; border: 1px solid var(--gold-faint); background: rgba(0,0,0,.2);
+  text-align: left;
+}
+.boleto-fallback-qr .qr-box {
+  flex-shrink: 0; width: 96px; height: 96px; padding: 6px;
+  background: #fff; border-radius: 4px;
+}
+#btn-whatsapp-container:not(.hidden) { margin-bottom: 12px; }
 .btn-wa {
   display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; padding: 16px 20px; border: none; cursor: pointer;
-  background: var(--green); color: #fff; font-family: var(--cuerpo);
-  font-size: 18px; font-weight: 600; text-decoration: none;
-  transition: opacity .15s;
+  width: 100%; padding: 14px 20px; border: 1px solid rgba(37,211,102,.45);
+  background: rgba(18,140,126,.25); color: #6ee7b7; font-family: var(--cuerpo);
+  font-size: 17px; font-weight: 600; cursor: pointer;
+  transition: background .15s, border-color .15s;
 }
-.btn-wa:hover { opacity: .9; }
+.btn-wa:hover { background: rgba(18,140,126,.4); border-color: rgba(37,211,102,.6); }
 .btn-wa:disabled { opacity: .45; cursor: not-allowed; }
 .btn-wa svg { width: 22px; height: 22px; flex-shrink: 0; }
+.wa-hint { font-size: 14px; color: rgba(241,234,217,.5); margin: 8px 0 0; line-height: 1.55; }
 .hint { font-size: 14px; color: rgba(241,234,217,.55); margin: 16px 0 0; line-height: 1.55; }
 .error { color: #f87171; padding: 20px; border: 1px solid rgba(248,113,113,.3); margin-top: 20px; }
 .hidden { display: none !important; }
@@ -75,15 +107,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div id="estado-carga">Cargando boleto…</div>
   <div id="estado-error" class="error hidden"></div>
   <div id="contenido" class="hidden">
-    <h1>Guárdalo en WhatsApp</h1>
+    <h1>Tu boleto digital</h1>
     <p class="sub" id="sub-funcion"></p>
-    <div class="preview"><img id="preview-img" alt="Tu boleto"></div>
-    <p class="meta" id="meta-folio"></p>
-    <button type="button" class="btn-wa" id="btn-wa">
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.109.549 4.09 1.508 5.814L0 24l6.335-1.496A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.882 9.882 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374A9.858 9.858 0 012.106 12c0-5.455 4.44-9.894 9.894-9.894 5.455 0 9.894 4.439 9.894 9.894 0 5.455-4.439 9.894-9.894 9.894z"/></svg>
-      Enviarme el boleto por WhatsApp
-    </button>
-    <p class="hint">En el teléfono se abre WhatsApp con la imagen del boleto. Preséntala en la entrada el día de la función.</p>
+    <div id="boleto-preview-wrap"></div>
+    <div id="btn-whatsapp-container" class="hidden"></div>
+    <p class="hint">Presenta el QR en la entrada del teatro el día de la función.</p>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
