@@ -583,7 +583,7 @@ function cargarFechas() {
         const esSeleccionada = fechaSeleccionada === funcion.clave;
         const partesNombre   = funcion.nombre.split(/\s*[—–-]\s*/);
         const fechaCorta     = partesNombre[0] || funcion.nombre;
-        const hora           = partesNombre[1] || '20:30 hrs';
+        const hora           = partesNombre[1] || '18:00 hrs';
         const estrenoTag     = funcion.estreno
             ? '<span class="fecha-estreno-tag">Estreno</span>'
             : '';

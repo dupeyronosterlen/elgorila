@@ -621,7 +621,7 @@ function htmlBoleto(venta, funcionNombre, config, opts = {}) {
       El día de la función
     </p>
     <ul style="margin:0;padding:0 0 0 18px;font-family:Georgia,serif;font-size:15px;line-height:1.65;color:#3a2e26;">
-      <li style="margin-bottom:8px;">Llega con <strong>al menos 30 minutos de anticipación</strong>. El acceso puede cerrarse al iniciar la función (20:30 hrs).</li>
+      <li style="margin-bottom:8px;">Llega con <strong>al menos 30 minutos de anticipación</strong>. El acceso puede cerrarse al iniciar la función (18:00 hrs).</li>
       <li style="margin-bottom:8px;">Presenta el <strong>QR de arriba</strong> en la entrada — no necesitas hacer nada más en línea.</li>
       <li style="margin-bottom:8px;">Si compraste tarifa de <strong>estudiante, INAPAM o maestro</strong>, lleva credencial vigente al acceso.</li>
       <li style="margin-bottom:0;"><strong>${config.venue || 'Teatro Wilberto Cantón'}</strong><br><span style="font-size:13px;color:#6b5c4a;">${direccion}</span></li>
@@ -803,8 +803,8 @@ function htmlEmailDiaFuncion(venta, funcionNombre, config) {
     <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a7760;">Acceso</p>
     <ul style="margin:0;padding:0 0 0 18px;font-family:Georgia,serif;font-size:15px;line-height:1.65;color:#3a2e26;">
       <li><strong>${config.venue || 'Teatro Wilberto Cantón'}</strong><br>${direccion}</li>
-      <li style="margin-top:10px;">Llega al menos <strong>30 minutos antes</strong> (recomendado 20:00 hrs).</li>
-      <li>Inicio de función: <strong>20:30 hrs</strong>.</li>
+      <li style="margin-top:10px;">Llega al menos <strong>30 minutos antes</strong> (recomendado 17:30 hrs).</li>
+      <li>Inicio de función: <strong>18:00 hrs</strong>.</li>
       <li>Presenta tu boleto con QR (correo de confirmación o imagen guardada).</li>
       <li>Tarifas con descuento: lleva credencial vigente (estudiante, INAPAM, maestro).</li>
     </ul>

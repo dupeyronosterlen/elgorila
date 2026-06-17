@@ -21,29 +21,28 @@
 
 - Teatro: Teatro Wilberto Cantón
 - Dirección: José María Velasco 59, San José Insurgentes, Ciudad de México, CDMX
-- Días: miércoles
-- Hora: 20:30 (recomendado llegar 20:00; acceso a sala 20:25)
-- Funciones: 13 (8 jul – 30 sep 2026)
+- Días: sábados (miércoles reservados, no en venta por ahora)
+- Hora: 18:00 (recomendado llegar 17:30; acceso a sala 17:55)
+- Funciones en venta: 12 (estreno 11 jul – cierre 26 sep 2026)
 - Precio desde: $350 MXN por boleto (compra en línea en el sitio oficial)
 - Estacionamiento: disponible en el teatro
 
-## Calendario de funciones
+## Calendario de funciones (en venta)
 
 | Fecha | Día | Hora | Notas |
 |-------|-----|------|-------|
-| 2026-07-08 | Miércoles | 20:30 | Estreno |
-| 2026-07-15 | Miércoles | 20:30 | |
-| 2026-07-22 | Miércoles | 20:30 | |
-| 2026-07-29 | Miércoles | 20:30 | |
-| 2026-08-05 | Miércoles | 20:30 | |
-| 2026-08-12 | Miércoles | 20:30 | |
-| 2026-08-19 | Miércoles | 20:30 | |
-| 2026-08-26 | Miércoles | 20:30 | |
-| 2026-09-02 | Miércoles | 20:30 | |
-| 2026-09-09 | Miércoles | 20:30 | |
-| 2026-09-16 | Miércoles | 20:30 | |
-| 2026-09-23 | Miércoles | 20:30 | |
-| 2026-09-30 | Miércoles | 20:30 | Cierre de temporada |
+| 2026-07-11 | Sábado | 18:00 | Estreno |
+| 2026-07-18 | Sábado | 18:00 | |
+| 2026-07-25 | Sábado | 18:00 | |
+| 2026-08-01 | Sábado | 18:00 | |
+| 2026-08-08 | Sábado | 18:00 | |
+| 2026-08-15 | Sábado | 18:00 | |
+| 2026-08-22 | Sábado | 18:00 | |
+| 2026-08-29 | Sábado | 18:00 | |
+| 2026-09-05 | Sábado | 18:00 | |
+| 2026-09-12 | Sábado | 18:00 | |
+| 2026-09-19 | Sábado | 18:00 | |
+| 2026-09-26 | Sábado | 18:00 | Cierre de temporada |
 
 ## Contacto y redes
 

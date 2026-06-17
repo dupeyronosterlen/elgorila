@@ -3,17 +3,24 @@
  * Filtra funciones pasadas; opcionalmente excluye la fecha actual (reagendar).
  */
 (function (global) {
-  const HORA_FUNCION = 20;
-  const MIN_FUNCION = 30;
+  const HORA_FUNCION = 18;
+  const MIN_FUNCION = 0;
   const TZ = 'America/Mexico_City';
 
   function ahoraMx() {
     return new Date(new Date().toLocaleString('en-US', { timeZone: TZ }));
   }
 
-  function inicioFuncion(fechaIso) {
+  function horaDesdeFn(fn) {
+    const nombre = typeof fn === 'string' ? '' : (fn?.nombre || '');
+    const m = nombre.match(/(\d{1,2}):(\d{2})/);
+    return { h: m ? +m[1] : HORA_FUNCION, min: m ? +m[2] : MIN_FUNCION };
+  }
+
+  function inicioFuncion(fechaIso, fn) {
     const [y, m, d] = fechaIso.split('-').map(Number);
-    return new Date(y, m - 1, d, HORA_FUNCION, MIN_FUNCION, 0);
+    const { h, min } = horaDesdeFn(fn);
+    return new Date(y, m - 1, d, h, min, 0);
   }
 
   function finDiaFuncion(fechaIso) {
@@ -22,9 +29,10 @@
   }
 
   /** true cuando ya no aplica vender / reagendar hacia esa función */
-  function funcionYaPaso(fechaIso) {
+  function funcionYaPaso(fn) {
+    const fechaIso = typeof fn === 'string' ? fn : fn?.fecha_iso;
     if (!fechaIso || !/^\d{4}-\d{2}-\d{2}$/.test(fechaIso)) return true;
-    return ahoraMx() >= inicioFuncion(fechaIso);
+    return ahoraMx() >= inicioFuncion(fechaIso, fn);
   }
 
   /** true al terminar el día (lista de visitantes / check-in) */
@@ -54,7 +62,7 @@
       if (excluir && iso === excluir) return false;
       if (modoLista) {
         if (funcionDiaTerminado(iso)) return false;
-      } else if (futuras && funcionYaPaso(iso)) {
+      } else if (futuras && funcionYaPaso(f)) {
         return false;
       }
       return true;
@@ -65,7 +73,7 @@
     const partes = (nombre || fechaIso || '').split(/\s*[—–-]\s*/);
     return {
       fecha: partes[0] || nombre || fechaIso,
-      hora: partes[1] || '20:30 hrs',
+      hora: partes[1] || '18:00 hrs',
     };
   }
 

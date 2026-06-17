@@ -5,7 +5,7 @@
  * USO:
  *   node scripts/verify-sistema.js
  *   node scripts/verify-sistema.js --api https://elgorila-api.dupeyronosterlen.workers.dev
- *   node scripts/verify-sistema.js --fecha 2026-07-08 --checkout
+ *   node scripts/verify-sistema.js --fecha 2026-07-11 --checkout
  *
  * --checkout  Crea sesión Stripe real (1 boleto general platea). Cancela en Stripe si no quieres pagar.
  */
@@ -19,7 +19,7 @@ const API = (() => {
 
 const FECHA = (() => {
   const i = process.argv.indexOf('--fecha');
-  return (i >= 0 && process.argv[i + 1]) || '2026-07-08';
+  return (i >= 0 && process.argv[i + 1]) || '2026-07-11';
 })();
 
 const DO_CHECKOUT = process.argv.includes('--checkout');
