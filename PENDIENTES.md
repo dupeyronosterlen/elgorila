@@ -11,9 +11,50 @@ Actualizado: **2026-06-16**
 - Stripe online + boletera efectivo operativos (panel único: `admin.html`)
 - Resend verificado · emails operativos
 - **Confirmación con QR visible** · compartir boleto por WhatsApp con imagen (desplegado 2026-06-15)
+- **Tracking GTM V5 live** (2026-06-16) · purchase **solo** en `confirmacion.html` (QR)
 
 **Panel operativo único:** `admin.html` (ventas, boletera, verificar, auditoría).  
 URLs legacy (`boletera.html`, `verificar.html`, `taquilla.html`, etc.) → 301 en `_redirects`.
+
+---
+
+## 📊 Tracking — GTM, Meta, GA4, Google Ads
+
+Actualizado: **2026-06-16** (post GTM V5 + dedup purchase)
+
+### Layer contract (producción)
+
+| Capa | Responsable | Qué mide |
+|------|-------------|----------|
+| **GTM** `GTM-P4BDXRN9` V5 | Tags 1–11 | Meta init/PageView, GA4 page_view, WhatsApp Lead, CTA, engagement |
+| **`analytics.js`** | Código funnel | add_to_cart → begin_checkout → add_payment_info → **purchase** (+ Meta fbq) |
+| **`index.html` pushEvent** | dataLayer | visit, whatsapp_click, email_click, cta_comprar_click |
+
+**Conversión purchase (única):** `confirmacion.html` al mostrar QR (`confirmacion.js` → `mostrarExito`).  
+**`gracias.html`:** indicaciones post-compra — GTM PageView ok, **sin** purchase ni `analytics.js`.
+
+IDs: Meta `24471801772518505` · GA4 `G-NXF8093MDJ` · GAds `AW-17961021514`
+
+### Hecho (tracking)
+
+| # | Tarea | Estado |
+|---|--------|--------|
+| TRK-01 | Quitar pixel Meta inline en `index.html` | ✅ |
+| TRK-02 | `pushEvent` → dataLayer (landing) | ✅ commit `d2777ce` |
+| TRK-03 | `initMetaPixel()` solo vía GTM (sin init duplicado) | ✅ |
+| TRK-04 | GTM V5 publicado (15 tags, 10 triggers, 12 vars) | ✅ 2026-06-16 |
+| TRK-05 | Purchase solo en `confirmacion.html` (no `gracias.html`) | ✅ |
+| TRK-06 | GA4 ↔ Google Ads vinculados (cuenta 268-142-3694) | ✅ |
+
+### Pendiente (tracking)
+
+| # | Tarea | Dónde | Prioridad |
+|---|--------|-------|-----------|
+| TRK-07 | GTM Tag 5 — conversión GAds `WhatsApp_Lead` (label `AW-17961021514/XXXX`) | Google Ads → Goals → GTM V6 | 🟡 |
+| TRK-08 | Importar evento GA4 `purchase` como conversión en Google Ads | GA4 Admin → Product Links (ya vinculado) | 🟡 antes 8 jul |
+| TRK-09 | Verificación manual post-deploy: 1× PageView Meta, funnel test, 1× Purchase en confirmación | Tag Assistant + Pixel Helper | 🟡 |
+| TRK-10 | TikTok Pixel — temporada orgánica (UTM `utm_source=tiktok` ya en checkout) | GTM o `analytics.js` | ⬜ temporada |
+| TRK-11 | Desconectar integración Meta ↔ TikTok checkout viejo si sigue activa | Meta Events Manager | ⬜ si aplica |
 
 ---
 
@@ -203,6 +244,7 @@ Hasta P-14, la agencia usa admin CSV + `/api/reporte` (stats sin nombres/emails)
 | Admin | Informes, reenvío, anular ventas manuales |
 | Limpieza repo (P-19/P-20) | `js/admin.js` fuera; docs ops; redirects; skill SEO interno |
 | SEO on-page (SEO-01–10) | OG, schema, sitemap, Tailwind compilado, programas OG |
+| Tracking (TRK-01–06) | GTM V5, dataLayer landing, purchase único confirmación |
 
 ---
 

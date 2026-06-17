@@ -252,9 +252,10 @@ function mostrarExito() {
     if (contenedorPago) contenedorPago.classList.add('hidden');
     if (contenedorExito) contenedorExito.classList.remove('hidden');
 
+    // Único punto de conversión purchase (GA4 + Meta). gracias.html = indicaciones, sin tracking.
     if (window.ElGorilaAnalytics && ordenCompra) {
         const params = new URLSearchParams(window.location.search);
-        const txId = ordenCompra.numeroOrden || params.get('session_id') || '';
+        const txId = ordenCompra.certificado || ordenCompra.numeroOrden || params.get('session_id') || '';
         ElGorilaAnalytics.purchase(ordenCompra, txId);
     }
 

@@ -5,6 +5,7 @@
  * Layer contract:
  *   GTM  → page_view, Meta init/PageView, engagement (whatsapp, FAQ, CTA click…)
  *   Aquí → add_to_cart, begin_checkout, add_payment_info, purchase (+ fbq track)
+ *   purchase SOLO en confirmacion.html (QR) — gracias.html no dispara conversión
  *   GA4 page_view: GTM (analytics.js usa send_page_view: false)
  *   Meta init:     GTM únicamente; trackMeta() asume que fbq ya existe
  */

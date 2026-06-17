@@ -8,7 +8,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
 <!-- End Google Tag Manager -->
-<script src="js/analytics.js" data-meta="1"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
@@ -428,13 +427,5 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/qr-boleto.js"></script>
 <script src="js/generar-imagen-boleto.js"></script>
 <script src="js/compartir-wa-boleto.js"></script>
-<script>
-(function () {
-  if (!window.ElGorilaAnalytics) return;
-  var orden = null;
-  try { orden = JSON.parse(localStorage.getItem('orden_compra') || 'null'); } catch (_) {}
-  if (orden) ElGorilaAnalytics.purchase(orden, orden.numeroOrden || '');
-})();
-</script>
 </body>
 </html>
