@@ -6,7 +6,6 @@ module.exports = {
     './boletos.html',
     './checkout.html',
     './confirmacion.html',
-    './gracias.html',
     './js/main.js',
     './js/checkout.js',
     './js/confirmacion.js',

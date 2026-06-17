@@ -4,10 +4,11 @@
  *
  * Layer contract:
  *   GTM  → page_view, Meta init/PageView, engagement (whatsapp, FAQ, CTA click…)
- *   Aquí → add_to_cart, begin_checkout, add_payment_info, purchase (+ fbq track)
- *   purchase SOLO en confirmacion.html (QR) — gracias.html no dispara conversión
+ *   Aquí → view_content, add_to_cart, begin_checkout, add_payment_info, purchase (+ fbq track)
+ *   purchase SOLO en confirmacion.html (QR)
  *   GA4 page_view: GTM (analytics.js usa send_page_view: false)
  *   Meta init:     GTM únicamente; trackMeta() asume que fbq ya existe
+ *   eventID purchase: purchase_{sessionId} — dedup con CAPI servidor
  */
 (function () {
   var GA4_ID = 'G-NXF8093MDJ';
@@ -25,13 +26,11 @@
     s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_ID;
     document.head.appendChild(s);
     gtag('js', new Date());
-    // GTM (GTM-P4BDXRN9) ya envía page_view; aquí solo eventos del funnel.
     gtag('config', GA4_ID, { send_page_view: false });
     gtag('config', AW_ID);
   }
 
   function initMetaPixel() {
-    // Meta base (init + PageView) lo carga GTM en All Pages.
     window._egFBInit = true;
   }
 
@@ -61,12 +60,29 @@
     };
   }
 
-  function trackMeta(eventName, payload) {
+  function purchaseEventId(orden, transactionId) {
+    if (orden && orden.sessionId) return 'purchase_' + String(orden.sessionId);
+    var txId = transactionId || (orden && (orden.numeroOrden || orden.certificado)) || '';
+    if (!txId) return '';
+    return 'purchase_' + String(txId).replace(/[^a-zA-Z0-9_-]/g, '');
+  }
+
+  function trackMeta(eventName, payload, eventId) {
     if (typeof fbq !== 'function') return;
     try {
       var p = payload || {};
+      var params = {};
       if (p.value != null) {
-        fbq('track', eventName, { value: p.value, currency: p.currency || 'MXN' });
+        params.value = p.value;
+        params.currency = p.currency || 'MXN';
+      }
+      if (p.content_type) params.content_type = p.content_type;
+      if (p.content_ids) params.content_ids = p.content_ids;
+      if (p.content_name) params.content_name = p.content_name;
+      if (eventId) {
+        fbq('track', eventName, params, { eventID: eventId });
+      } else if (Object.keys(params).length) {
+        fbq('track', eventName, params);
       } else {
         fbq('track', eventName);
       }
@@ -83,10 +99,29 @@
       if (!opts || opts.meta !== false) initMetaPixel();
     },
 
+    purchaseEventId: purchaseEventId,
+
     grupoGrande: function (cantidad) {
       if (typeof gtag === 'function') {
         gtag('event', 'grupo_grande', { cantidad: cantidad });
       }
+    },
+
+    viewContent: function (opts) {
+      opts = opts || {};
+      var ids = opts.content_ids || [];
+      if (typeof gtag === 'function') {
+        gtag('event', 'view_item', {
+          items: ids.map(function (id) {
+            return { item_id: id, item_name: opts.content_name || id };
+          }),
+        });
+      }
+      trackMeta('ViewContent', {
+        content_type: opts.content_type || 'funcion',
+        content_ids: ids,
+        content_name: opts.content_name || '',
+      });
     },
 
     addToCart: function (orden) {
@@ -108,17 +143,19 @@
     },
 
     purchase: function (orden, transactionId) {
-      var txId = transactionId || (orden && (orden.numeroOrden || orden.sessionId)) || '';
-      if (!txId) return false;
+      var txId = transactionId || (orden && (orden.numeroOrden || orden.sessionId || orden.certificado)) || '';
+      var eventId = purchaseEventId(orden, txId);
+      if (!txId && !eventId) return false;
+      var dedupeKey = eventId || purchaseKey(txId);
       try {
-        if (sessionStorage.getItem(purchaseKey(txId))) return false;
-        sessionStorage.setItem(purchaseKey(txId), '1');
+        if (sessionStorage.getItem(purchaseKey(dedupeKey))) return false;
+        sessionStorage.setItem(purchaseKey(dedupeKey), '1');
       } catch (_) {}
 
       var p = ecommercePayload(orden);
       p.transaction_id = txId;
       if (typeof gtag === 'function') gtag('event', 'purchase', p);
-      trackMeta('Purchase', p);
+      trackMeta('Purchase', p, eventId);
       return true;
     },
   };

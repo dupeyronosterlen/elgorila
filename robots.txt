@@ -4,7 +4,6 @@ Disallow: /admin.html
 Disallow: /admin-panel-v4.html
 Disallow: /checkout.html
 Disallow: /confirmacion.html
-Disallow: /gracias.html
 Disallow: /boletos.html
 Disallow: /invitacion.html
 Disallow: /compartir-boleto.html

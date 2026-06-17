@@ -184,6 +184,14 @@ function seleccionarFecha(clave, texto, funcion = null) {
     actualizarPantalla();
     resaltarBotonFecha(clave);
 
+    if (window.ElGorilaAnalytics && fechaIsoActual) {
+        ElGorilaAnalytics.viewContent({
+            content_type: 'funcion',
+            content_ids:  [fechaIsoActual],
+            content_name: texto,
+        });
+    }
+
     if (totalCantidad() > 0) {
         verificarDisponibilidad();
     }

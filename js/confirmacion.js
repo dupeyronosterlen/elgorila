@@ -46,16 +46,6 @@ function pintarQR(container, url, size) {
     });
 }
 
-async function solicitarEmailBoleto(sessionId) {
-    if (!sessionId || !window.API_BASE) return;
-    const tid = typeof window.teatroIdFromUrl === 'function' ? window.teatroIdFromUrl() : (window.TEATRO_ID || 'wilberto');
-    try {
-        await fetch(`${window.API_BASE}/api/${tid}/venta/${encodeURIComponent(sessionId)}/enviar-boleto`, {
-            method: 'POST',
-        });
-    } catch (_) { /* reintento silencioso; el usuario puede pedir reenvío en admin */ }
-}
-
 // Cargar datos de la orden
 async function cargarConfirmacion() {
     const params = new URLSearchParams(window.location.search);
@@ -89,7 +79,6 @@ async function cargarConfirmacion() {
                     try {
                         localStorage.setItem('orden_compra', JSON.stringify(ordenCompra));
                     } catch (_) {}
-                    solicitarEmailBoleto(sessionId);
                     mostrarExito();
                     return;
                 }
@@ -252,10 +241,13 @@ function mostrarExito() {
     if (contenedorPago) contenedorPago.classList.add('hidden');
     if (contenedorExito) contenedorExito.classList.remove('hidden');
 
-    // Único punto de conversión purchase (GA4 + Meta). gracias.html = indicaciones, sin tracking.
+    // Único punto de conversión purchase (GA4 + Meta).
     if (window.ElGorilaAnalytics && ordenCompra) {
         const params = new URLSearchParams(window.location.search);
         const txId = ordenCompra.certificado || ordenCompra.numeroOrden || params.get('session_id') || '';
+        if (!ordenCompra.sessionId && params.get('session_id')) {
+            ordenCompra.sessionId = params.get('session_id');
+        }
         ElGorilaAnalytics.purchase(ordenCompra, txId);
     }
 

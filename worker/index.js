@@ -25,6 +25,7 @@ import {
   registrarAuditoria, listAuditoria, getSitioConfig, saveSitioConfig,
 } from './admin-extra.js';
 import { googleWalletSaveUrl, appleWalletPkpass, walletStatus } from './wallet.js';
+import { sendMetaCapiPurchase, purchaseEventId } from './meta-capi.js';
 
 // ─── CORS + HELPERS ──────────────────────────────────────────────────────────
 
@@ -759,7 +760,6 @@ function htmlEmailPostFuncion(venta, funcionNombre, config, opts = {}) {
 // ─── EMAIL: DÍA DE LA FUNCIÓN (mañana — programa v2 + indicaciones) ───────────
 
 const URL_PROGRAMA_V2 = `${SITIO_BASE}/programa/v2.html`;
-const URL_INDICACIONES = `${SITIO_BASE}/gracias.html`;
 
 function htmlEmailDiaFuncion(venta, funcionNombre, config) {
   const certificado = venta.certificado || venta.codigo || '';
@@ -816,10 +816,6 @@ function htmlEmailDiaFuncion(venta, funcionNombre, config) {
     </p>
     <a href="${URL_PROGRAMA_V2}" style="display:inline-block;background:#D43A1A;color:#fff;padding:14px 26px;text-decoration:none;font-family:Georgia,serif;font-size:17px;margin:0 6px 10px;border-radius:2px;">
       Programa de mano (v2) →
-    </a>
-    <br>
-    <a href="${URL_INDICACIONES}" style="display:inline-block;margin-top:12px;font-family:Georgia,serif;font-size:14px;color:#6b5c4a;">
-      Más indicaciones para el día →
     </a>
   </td></tr>
 
@@ -2217,11 +2213,17 @@ async function handleWebhook(request, env, ctx) {
   }
 
   const sessionId = session.id;
+  const ventaKey    = kv(tid, `venta:${sessionId}`);
+  const lockKey     = kv(tid, `lock:webhook:${sessionId}`);
 
-  // Idempotencia: verificar con prefijo y sin prefijo (compat gorila pre-v3)
-  const existingNew    = await env.VENTAS.get(kv(tid, `venta:${sessionId}`));
+  if (await env.INVENTARIO.get(lockKey)) return new Response('ok', { status: 200 });
+
+  const existingNew    = await env.VENTAS.get(ventaKey);
   const existingLegacy = (!existingNew && tid === 'gorila') ? await env.VENTAS.get(`venta:${sessionId}`) : null;
   if (existingNew || existingLegacy) return new Response('ok', { status: 200 });
+
+  await env.INVENTARIO.put(lockKey, '1', { expirationTtl: 900 });
+  if (await env.VENTAS.get(ventaKey)) return new Response('ok', { status: 200 });
 
   const fecha         = meta.fecha;
   const cantidad      = parseInt(meta.cantidad, 10);
@@ -2275,7 +2277,7 @@ async function handleWebhook(request, env, ctx) {
     referidoDe:   meta.referidoDe || null,
   };
 
-  await env.VENTAS.put(kv(tid, `venta:${sessionId}`),  JSON.stringify(venta));
+  await env.VENTAS.put(ventaKey, JSON.stringify(venta));
   await persistirCertificadosKv(tid, sessionId, gen.certificado, gen.boletos, env);
   await env.VENTAS.put(kv(tid, `ventaIdx:${fecha}:${sessionId}`), sessionId);
   await env.VENTAS.put(kv(tid, `ventaIdxContable:${fecha}:${sessionId}`), sessionId);
@@ -2308,10 +2310,33 @@ async function handleWebhook(request, env, ctx) {
     comprador: emailResult.compradorOk,
     en:        new Date().toISOString(),
   };
-  await env.VENTAS.put(kv(tid, `venta:${sessionId}`), JSON.stringify(venta));
+  await env.VENTAS.put(ventaKey, JSON.stringify(venta));
 
-  // Webhook de marketing (Make/CAPI) — sin PII
+  const capiEventId = purchaseEventId(sessionId, gen.certificado);
+  ctx.waitUntil((async () => {
+    try {
+      const capiResult = await sendMetaCapiPurchase(venta, env, {
+        eventId:  capiEventId,
+        clientIp: request.headers.get('CF-Connecting-IP') || undefined,
+      });
+      if (capiResult.ok || capiResult.skipped) {
+        const raw = await env.VENTAS.get(ventaKey);
+        if (!raw) return;
+        const v = JSON.parse(raw);
+        v.metaCapiPurchase = {
+          ok:      !!capiResult.ok,
+          skipped: !!capiResult.skipped,
+          eventId: capiEventId,
+          en:      new Date().toISOString(),
+        };
+        await env.VENTAS.put(ventaKey, JSON.stringify(v));
+      }
+    } catch (e) { console.error('Meta CAPI purchase:', e.message); }
+  })());
+
+  // Webhook de marketing (Make) — sin PII
   if (env.MAKE_WEBHOOK_URL) {
+    const codigoVenta = venta.certificado || venta.codigo;
     const payloadMkt = {
       evento:          'venta.completada',
       teatroId:        tid,
@@ -2581,6 +2606,15 @@ async function handleEnviarBoletoCompra(tid, id, request, env) {
   try { venta = JSON.parse(ventaRaw); } catch { return json({ error: 'Venta corrupta.' }, 500, request); }
 
   const sessionId = venta.sessionId || id;
+
+  if (venta.emailsEnviados?.comprador) {
+    return json({
+      ok:          true,
+      alreadySent: true,
+      emailEnviado: venta.email || null,
+    }, 200, request);
+  }
+
   const rlKey     = kv(tid, `emailRetry:${sessionId}`);
   const retries   = parseInt((await env.INVENTARIO.get(rlKey)) || '0', 10);
   if (retries >= 5) {

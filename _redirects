@@ -36,6 +36,11 @@
 /admin                      /admin.html                   301
 /admin/                     /admin.html                   301
 
+# gracias.html eliminada — indicaciones van en el correo
+/gracias.html              /index.html   301
+/gracias                   /index.html   301
+/gracias/                  /index.html   301
+
 # Encuesta legacy → acta (query ?t= se conserva)
 /encuesta                   /acta.html                    301
 /encuesta/                  /acta.html                    301
