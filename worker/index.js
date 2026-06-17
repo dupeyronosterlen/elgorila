@@ -15,6 +15,8 @@
 //   {tid}:ventaIdx:{fecha}:{sid}   → sessionId
 //   {tid}:lista:{fecha}:{ts}       → JSON entrada lista espera
 //   {tid}:fiscal:reserva:acumulado → JSON { acumulado: number }
+//   metrica:dia:{YYYY-MM-DD}       → JSON agregados ventas (tipos, UTM, secciones — sin PII)
+//   metrica:checkout:{YYYY-MM-DD}  → JSON intentos checkout (embudo)
 //
 // TEATRO IDs: wilberto, ccc, gira-xxx…  «gorila» es alias histórico → wilberto (mismo KV).
 // COMPAT: ventas pre-v3 sin prefijo tid; _lookupVenta busca legacy solo para gorila.
@@ -26,6 +28,10 @@ import {
 } from './admin-extra.js';
 import { googleWalletSaveUrl, appleWalletPkpass, walletStatus } from './wallet.js';
 import { sendMetaCapiPurchase, purchaseEventId } from './meta-capi.js';
+import {
+  logInfo, logError, maskEmail, truncateId, sanitizeObject,
+  metricaFromVenta, registrarMetricaVenta, registrarMetricaCheckout, listMetricasDias,
+} from './logs.js';
 
 // ─── CORS + HELPERS ──────────────────────────────────────────────────────────
 
@@ -174,15 +180,22 @@ async function _enviarEmailResend(to, subject, html, env, from, opts = {}) {
     });
     if (!res.ok) {
       const errBody = await res.text();
-      console.error('Resend error', res.status, to, from, errBody);
+      logError('resend.send', {
+        status: res.status,
+        toDomain: maskEmail(to),
+        err: errBody.slice(0, 200),
+      });
       return false;
     }
     return true;
-  } catch (e) { console.error('enviarEmail exception:', to, e.message); return false; }
+  } catch (e) {
+    logError('resend.exception', { toDomain: maskEmail(to), error: e.message });
+    return false;
+  }
 }
 
 async function enviarEmail(to, subject, html, env, opts = {}) {
-  if (!env.RESEND_API_KEY) { console.error('RESEND_API_KEY no configurada'); return false; }
+  if (!env.RESEND_API_KEY) { logError('resend.config', { error: 'RESEND_API_KEY no configurada' }); return false; }
   // Remitente: boletos@elgorilateatro.com.mx (requiere dominio Verified en resend.com/domains).
   // Destinos operativos: comprador + aviso admin → elgorilateatro@gmail.com (nunca otro correo).
   const verifiedFrom = EMAIL_FROM_DEFAULT;
@@ -1480,7 +1493,7 @@ async function expirarSesionesStripe(sessionIds, env) {
         method:  'POST',
         headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
       });
-    } catch (e) { console.error('expire session:', sid, e.message); }
+    } catch (e) { logError('session.expire', { sid: truncateId(sid), error: e.message }); }
   }
 }
 
@@ -1612,7 +1625,7 @@ async function liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId,
     const checkInv = check ? JSON.parse(check) : {};
     if ((checkInv.version ?? -1) === version + 1) return;
   }
-  console.error(`liberarReserva: conflicto persistente para ${tid}/${fecha}`);
+  logError('inventario.liberar_conflicto', { teatroId: tid, fecha });
 }
 
 async function confirmarVentaOptimista(tid, fecha, seccionCantidades, reservaId, env) {
@@ -1642,7 +1655,7 @@ async function confirmarVentaOptimista(tid, fecha, seccionCantidades, reservaId,
     const checkInv = check ? JSON.parse(check) : {};
     if ((checkInv.version ?? -1) === version + 1) return;
   }
-  console.error(`confirmarVenta: conflicto persistente para ${tid}/${fecha}`);
+  logError('inventario.confirmar_conflicto', { teatroId: tid, fecha });
 }
 
 /** Venta inmediata (efectivo / taquilla) — sin hold; solo incrementa vendidos. */
@@ -2184,11 +2197,21 @@ async function handleCheckout(tid, request, env, ctx) {
     const session = await stripeRes.json();
     if (!stripeRes.ok) throw new Error(session.error?.message || 'Stripe error');
     await vincularSessionAlHold(tid, fecha, reservaId, session.id, env);
+    ctx.waitUntil(registrarMetricaCheckout(env, metricaFromVenta({
+      tid: canonical,
+      venta: { fecha, cantidad: cantidadTotal, items: itemsValidados, seccionCantidades },
+      items: itemsValidados,
+      seccionCantidades,
+      utm: utmClean,
+      codigoCupon: cuponAplicado?.codigo || null,
+      referidoDe: referidoDe || null,
+      canal: 'web_checkout',
+    })));
     return json({ url: session.url, sessionId: session.id }, 200, request);
 
   } catch (err) {
     await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
-    console.error('Stripe checkout error:', err.message);
+    logError('stripe.checkout', { error: err.message, teatroId: tid, fecha });
     return json({ error: 'Error al crear sesión de pago. Intenta de nuevo.' }, 500, request);
   }
 }
@@ -2253,7 +2276,7 @@ async function handleWebhook(request, env, ctx) {
   try { if (meta.items) items = JSON.parse(meta.items); } catch {}
 
   if (!fecha || !cantidad) {
-    console.error('Webhook: metadata incompleta en sesión', sessionId);
+    logError('stripe.webhook_meta', { sessionId: truncateId(sessionId) });
     return new Response('ok', { status: 200 });
   }
 
@@ -2304,7 +2327,7 @@ async function handleWebhook(request, env, ctx) {
   if (meta.codigoCupon) {
     ctx.waitUntil(
       incrementarUsoCupon(meta.codigoCupon, env, meta.referidoDe || null)
-        .catch(e => console.error('cupon uso:', e.message)),
+        .catch(e => logError('cupon.uso', { error: e.message })),
     );
   }
 
@@ -2319,7 +2342,7 @@ async function handleWebhook(request, env, ctx) {
       const fiscal    = fiscalRaw ? JSON.parse(fiscalRaw) : { acumulado: 0 };
       fiscal.acumulado = Math.round((fiscal.acumulado + monto8) * 100) / 100;
       await env.VENTAS.put(kv(tid, 'fiscal:reserva:acumulado'), JSON.stringify(fiscal));
-    } catch (e) { console.error('fiscal acumulado error:', e.message); }
+    } catch (e) { logError('fiscal.acumulado', { error: e.message, teatroId: tid }); }
   })());
 
   // Emails (comprador + aviso admin)
@@ -2350,12 +2373,17 @@ async function handleWebhook(request, env, ctx) {
         };
         await env.VENTAS.put(ventaKey, JSON.stringify(v));
       }
-    } catch (e) { console.error('Meta CAPI purchase:', e.message); }
+    } catch (e) { logError('meta.capi', { error: e.message }); }
   })());
 
-  // Webhook de marketing (Make) — sin PII
+  // Webhook de marketing (Make) — sin PII; campos planos para Notion/Make
   if (env.MAKE_WEBHOOK_URL) {
     const codigoVenta = venta.certificado || venta.codigo;
+    const tiposResumen = {};
+    for (const it of (items || [])) {
+      const t = it.tipo || 'general';
+      tiposResumen[t] = (tiposResumen[t] || 0) + (it.cantidad || 1);
+    }
     const payloadMkt = {
       evento:          'venta.completada',
       teatroId:        tid,
@@ -2369,6 +2397,16 @@ async function handleWebhook(request, env, ctx) {
       moneda:          'MXN',
       fechaCompra:     venta.fechaCompra,
       utm,
+      utm_source:      utm.source || null,
+      utm_medium:      utm.medium || null,
+      utm_campaign:    utm.campaign || null,
+      utm_content:     utm.content || null,
+      utm_term:        utm.term || null,
+      codigo_cupon:    meta.codigoCupon || null,
+      canal:           meta.codigoCupon
+        ? `cupon:${String(meta.codigoCupon).toUpperCase()}`
+        : (utm.source || 'directo'),
+      tipos_resumen:   tiposResumen,
       metodo_pago:     metodoPago,
     };
     ctx.waitUntil(
@@ -2376,9 +2414,21 @@ async function handleWebhook(request, env, ctx) {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payloadMkt),
-      }).catch(e => console.error('marketing webhook:', e.message))
+      }).catch(e => logError('marketing.webhook', { error: e.message }))
     );
   }
+
+  ctx.waitUntil(registrarMetricaVenta(env, metricaFromVenta({
+    tid,
+    venta,
+    items,
+    seccionCantidades,
+    utm,
+    metodoPago,
+    codigoCupon: meta.codigoCupon || null,
+    referidoDe: meta.referidoDe || null,
+    canal: 'web',
+  })));
 
   return new Response('ok', { status: 200 });
 }
@@ -3624,7 +3674,7 @@ async function handleVentaManual(tid, request, env, ctx) {
   if (cuponAplicado) {
     ctx.waitUntil(
       incrementarUsoCupon(cuponAplicado.codigo, env, null)
-        .catch(e => console.error('cupon uso manual:', e.message)),
+        .catch(e => logError('cupon.uso_manual', { error: e.message })),
     );
   }
   await persistirCertificadosKv(canonical, sessionId, gen.certificado, gen.boletos, env);
@@ -3638,6 +3688,12 @@ async function handleVentaManual(tid, request, env, ctx) {
     admin: adminOk, comprador: emailEnviado, en: new Date().toISOString(),
   };
   await env.VENTAS.put(kv(canonical, `venta:${sessionId}`), JSON.stringify(venta));
+
+  ctx.waitUntil(registrarMetricaVenta(env, metricaFromVenta({
+    tid: canonical,
+    venta,
+    canal: metodoPago === 'efectivo' ? 'taquilla_efectivo' : 'taquilla',
+  })));
 
   await registrarAuditoria(env, {
     usuarioId: payload.telefono || payload.usuario,
@@ -3892,7 +3948,7 @@ async function handleReembolso(tid, request, env, ctx) {
       if (!refundRes.ok) throw new Error(refund.error?.message || 'Stripe refund error');
       stripeRefundId = refund.id;
     } catch (err) {
-      console.error('Reembolso Stripe:', err.message);
+      logError('stripe.reembolso', { error: err.message, teatroId: tid });
       return json({ error: `No se pudo reembolsar en Stripe: ${err.message}` }, 502, request);
     }
   }
@@ -3929,7 +3985,7 @@ async function handleReembolso(tid, request, env, ctx) {
       const fiscal    = fiscalRaw ? JSON.parse(fiscalRaw) : { acumulado: 0 };
       fiscal.acumulado = Math.max(0, Math.round((fiscal.acumulado - monto8) * 100) / 100);
       await env.VENTAS.put(kv(canonical, 'fiscal:reserva:acumulado'), JSON.stringify(fiscal));
-    } catch (e) { console.error('fiscal reembolso:', e.message); }
+    } catch (e) { logError('fiscal.reembolso', { error: e.message, teatroId: tid }); }
   })());
 
   const audit = await registrarAuditoria(env, {
@@ -3996,6 +4052,22 @@ async function handleCanjearLote(tid, request, env) {
   });
 
   return json({ ok: true, resultados, auditId: audit.id }, 200, request);
+}
+
+async function handleMetricasList(request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_AUDITORIA.has(payload.rol)) {
+    return json({ error: 'Sin permiso.' }, 403, request);
+  }
+  const url  = new URL(request.url);
+  const dias = parseInt(url.searchParams.get('dias') || '30', 10) || 30;
+  const diasData = await listMetricasDias(env, { dias });
+  return json({
+    ok: true,
+    dias: diasData,
+    nota: 'Métricas agregadas por categoría (sin datos personales). Claves KV: metrica:dia:* y metrica:checkout:*',
+  }, 200, request);
 }
 
 async function handleAuditoriaList(request, env) {
@@ -4657,6 +4729,7 @@ export default {
     if (parts[1] === 'admin' && parts[2] === 'sistema') {
       const subSys = parts.slice(3).join('/');
       if (method === 'GET'  && subSys === 'auditoria')   return handleAuditoriaList(request, env);
+      if (method === 'GET'  && subSys === 'metricas')    return handleMetricasList(request, env);
       if (method === 'GET'  && subSys === 'usuarios')    return handleUsuariosList(request, env);
       if (method === 'POST' && subSys === 'usuarios')    return handleUsuariosCreate(request, env);
       if (method === 'GET'  && subSys === 'sitio')       return handleSitioGet(request, env);
@@ -4757,9 +4830,9 @@ export default {
     ctx.waitUntil((async () => {
       try {
         const res = await enviarEmailsDiaFuncion(env);
-        console.log('email-dia-funcion cron:', JSON.stringify(res));
+        logInfo('cron.email_dia_funcion', sanitizeObject(res));
       } catch (e) {
-        console.error('email-dia-funcion cron error:', e.message);
+        logError('cron.email_dia_funcion', { error: e.message });
       }
     })());
   },

@@ -1,5 +1,7 @@
 /** Meta Conversions API — Purchase desde servidor (dedup con pixel vía event_id). */
 
+import { logError } from './logs.js';
+
 const META_PIXEL_DEFAULT = '24471801772518505';
 const META_GRAPH_VERSION = 'v21.0';
 
@@ -82,12 +84,12 @@ export async function sendMetaCapiPurchase(venta, env, opts = {}) {
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
-      console.error('Meta CAPI error', res.status, JSON.stringify(body));
+      logError('meta.capi.response', { status: res.status, error: body?.error?.message || 'api_error' });
       return { ok: false, error: body };
     }
     return { ok: true, eventsReceived: body.events_received, eventId };
   } catch (e) {
-    console.error('Meta CAPI exception', e.message);
+    logError('meta.capi.exception', { error: e.message });
     return { ok: false, error: e.message };
   }
 }
