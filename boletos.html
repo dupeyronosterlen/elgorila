@@ -246,6 +246,8 @@ a   { color: inherit; }
 }
 /* Despliegue progresivo: 3 fechas visibles, botón «Ver más» (sin letreros de mes) */
 #fechas-progressive-ui { margin-top: 10px; }
+#fechas-fecha-wrap.fechas-menu-colapsado #botones-fecha,
+#fechas-fecha-wrap.fechas-menu-colapsado .fecha-sub-label { display: none; }
 .btn-fechas-toggle {
   display: block; width: 100%; margin-top: 8px;
   padding: 14px 16px; background: transparent;
@@ -258,6 +260,16 @@ a   { color: inherit; }
   -webkit-tap-highlight-color: transparent;
 }
 .btn-fechas-toggle:hover { border-color: var(--gold-dim); color: var(--gold); }
+.btn-fechas-toggle--menos {
+  margin-top: 6px;
+  border-style: solid;
+  border-color: rgba(241,234,217,.12);
+  color: rgba(241,234,217,.72);
+}
+.btn-fechas-toggle--menos:hover {
+  border-color: rgba(241,234,217,.28);
+  color: var(--d-fg);
+}
 
 /* Override de botones de fecha JS (amber Tailwind → v3 gold-dark) */
 #botones-fecha button:not([disabled]),
@@ -938,9 +950,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="banner-invitacion" class="invitacion-banner hidden" aria-live="polite"></div>
 
     <!-- Fechas -->
+    <div id="fechas-fecha-wrap">
     <span class="fecha-sub-label">Selecciona una fecha</span>
     <div id="botones-fecha"><!-- JS --></div>
     <div id="fechas-progressive-ui" aria-live="polite"></div>
+    </div>
     <p id="fecha-seleccionada-texto" hidden aria-live="polite"></p>
     <div id="mensaje-agotado" class="hidden" aria-live="polite">Esta función está agotada.</div>
 
@@ -1510,9 +1524,16 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script src="js/invitacion-boletos.js"></script>
 
-<!-- Fechas: 3 visibles → «Ver más fechas» (sin letreros de mes) -->
+<!-- Fechas: 3 visibles → «Ver más fechas»; con fecha elegida → «Ver menos» -->
 <script>
 (function() {
+  var wrap = document.getElementById('fechas-fecha-wrap');
+  var fechaTexto = document.getElementById('fecha-seleccionada-texto');
+  var colapsado = false;
+  var stepIndex = 0;
+  var items = [];
+  var steps = [];
+
   function flattenItems(container) {
     var out = [];
     Array.from(container.children).forEach(function(el) {
@@ -1525,58 +1546,116 @@ document.addEventListener('DOMContentLoaded', function() {
     return out;
   }
 
-  function buildSteps(items) {
-    if (!items.length) return [];
-    var steps = [];
+  function buildSteps(list) {
+    if (!list.length) return [];
+    var out = [];
     var batch = 3;
-    for (var i = 0; i < items.length; i += batch) {
-      var maxIdx = Math.min(i + batch - 1, items.length - 1);
-      steps.push({
+    for (var i = 0; i < list.length; i += batch) {
+      var maxIdx = Math.min(i + batch - 1, list.length - 1);
+      out.push({
         maxIdx: maxIdx,
-        btn: maxIdx < items.length - 1 ? 'Ver más fechas \u2192' : null
+        btn: maxIdx < list.length - 1 ? 'Ver más fechas \u2192' : null
       });
     }
-    return steps;
+    return out;
   }
 
-  function applyStep(items, stepIndex, steps, ui) {
+  function hayFechaSeleccionada() {
+    return fechaTexto && !fechaTexto.hidden && fechaTexto.textContent.trim().length > 0;
+  }
+
+  function setColapsado(val) {
+    colapsado = val;
+    if (wrap) wrap.classList.toggle('fechas-menu-colapsado', colapsado);
+    renderControles();
+  }
+
+  function crearBtn(texto, claseExtra, onClick) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-fechas-toggle' + (claseExtra ? ' ' + claseExtra : '');
+    btn.textContent = texto;
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
+
+  function applyStep(index) {
+    if (!items.length || !steps.length) return;
+    stepIndex = index;
     var maxIdx = steps[stepIndex].maxIdx;
     items.forEach(function(it, i) {
       it.el.style.display = i <= maxIdx ? '' : 'none';
     });
-    ui.querySelectorAll('.btn-fechas-toggle').forEach(function(b) { b.remove(); });
-    var btnText = steps[stepIndex].btn;
-    if (btnText && stepIndex < steps.length - 1) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn-fechas-toggle';
-      btn.textContent = btnText;
-      btn.addEventListener('click', function() {
-        applyStep(items, stepIndex + 1, steps, ui);
-      });
-      ui.appendChild(btn);
+    renderControles();
+  }
+
+  function renderControles() {
+    var ui = document.getElementById('fechas-progressive-ui');
+    if (!ui) return;
+    ui.innerHTML = '';
+
+    if (colapsado) {
+      ui.appendChild(crearBtn('Ver fechas \u2192', '', function() {
+        setColapsado(false);
+        applyStep(stepIndex);
+      }));
+      return;
+    }
+
+    if (steps[stepIndex] && steps[stepIndex].btn && stepIndex < steps.length - 1) {
+      ui.appendChild(crearBtn(steps[stepIndex].btn, '', function() {
+        applyStep(stepIndex + 1);
+      }));
+    }
+
+    if (hayFechaSeleccionada()) {
+      ui.appendChild(crearBtn('Ver menos', 'btn-fechas-toggle--menos', function() {
+        setColapsado(true);
+      }));
     }
   }
 
   function procesarFechas() {
     var container = document.getElementById('botones-fecha');
-    var ui = document.getElementById('fechas-progressive-ui');
-    if (!container || !ui) return;
-    var items = flattenItems(container);
-    if (!items.length) return;
-    var steps = buildSteps(items);
-    if (!steps.length) return;
+    if (!container) return;
+    items = flattenItems(container);
+    steps = buildSteps(items);
+    if (!items.length || !steps.length) return;
+
+    if (stepIndex >= steps.length) stepIndex = Math.max(0, steps.length - 1);
+
+    if (colapsado) {
+      renderControles();
+      return;
+    }
+
+    var maxIdx = steps[stepIndex].maxIdx;
     items.forEach(function(it, i) {
-      it.el.style.display = i <= steps[0].maxIdx ? '' : 'none';
+      it.el.style.display = i <= maxIdx ? '' : 'none';
     });
-    ui.innerHTML = '';
-    applyStep(items, 0, steps, ui);
+    renderControles();
   }
 
   document.addEventListener('DOMContentLoaded', function() {
     var c = document.getElementById('botones-fecha');
     if (!c) return;
-    new MutationObserver(procesarFechas).observe(c, { childList: true });
+
+    new MutationObserver(function() {
+      procesarFechas();
+    }).observe(c, { childList: true });
+
+    if (fechaTexto) {
+      new MutationObserver(function() {
+        renderControles();
+      }).observe(fechaTexto, { attributes: true, attributeFilter: ['hidden'], childList: true, characterData: true, subtree: true });
+    }
+
+    c.addEventListener('click', function(ev) {
+      var btn = ev.target.closest('button[data-fecha-clave]');
+      if (!btn || btn.disabled) return;
+      setTimeout(renderControles, 0);
+    });
+
     if (c.children.length > 0) procesarFechas();
   });
 })();

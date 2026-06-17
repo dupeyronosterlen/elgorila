@@ -144,7 +144,7 @@
     return selected;
   }
 
-  /** Muestra 3 funciones; «Ver más» abre de 3 en 3 (como boletos.html). */
+  /** Muestra 3 funciones; «Ver más» abre de 3 en 3; «Ver menos» colapsa tras elegir fecha. */
   function wireHiddenProgressive(gridEl, uiEl, hiddenEl, funciones, opts = {}) {
     const batch = opts.batchSize || 3;
     const prev = hiddenEl?.value;
@@ -154,6 +154,7 @@
     const onSelect = iso => {
       if (hiddenEl) hiddenEl.value = iso;
       if (userOnSelect) userOnSelect(iso);
+      renderControls();
     };
 
     renderEn(gridEl, list, { ...opts, selected, onSelect });
@@ -162,13 +163,38 @@
 
     const cards = gridEl ? Array.from(gridEl.querySelectorAll('.sel-fn-card')) : [];
     let visibleMax = Math.min(batch - 1, cards.length - 1);
+    let colapsado = false;
 
-    function applyStep() {
+    function applyVisibility() {
+      if (colapsado) {
+        cards.forEach(card => { card.style.display = 'none'; });
+        if (gridEl) gridEl.style.display = 'none';
+        return;
+      }
+      if (gridEl) gridEl.style.display = '';
       cards.forEach((card, i) => {
         card.style.display = i <= visibleMax ? '' : 'none';
       });
+    }
+
+    function renderControls() {
       if (!uiEl) return;
       uiEl.innerHTML = '';
+
+      if (colapsado) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'sel-fn-ver-mas';
+        btn.textContent = 'Ver fechas \u2192';
+        btn.addEventListener('click', () => {
+          colapsado = false;
+          applyVisibility();
+          renderControls();
+        });
+        uiEl.appendChild(btn);
+        return;
+      }
+
       if (visibleMax < cards.length - 1) {
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -176,13 +202,28 @@
         btn.textContent = 'Ver más fechas \u2192';
         btn.addEventListener('click', () => {
           visibleMax = Math.min(visibleMax + batch, cards.length - 1);
-          applyStep();
+          applyVisibility();
+          renderControls();
         });
         uiEl.appendChild(btn);
       }
+
+      if (hiddenEl?.value) {
+        const btnMenos = document.createElement('button');
+        btnMenos.type = 'button';
+        btnMenos.className = 'sel-fn-ver-mas sel-fn-ver-menos';
+        btnMenos.textContent = 'Ver menos';
+        btnMenos.addEventListener('click', () => {
+          colapsado = true;
+          applyVisibility();
+          renderControls();
+        });
+        uiEl.appendChild(btnMenos);
+      }
     }
 
-    applyStep();
+    applyVisibility();
+    renderControls();
     return selected;
   }
 

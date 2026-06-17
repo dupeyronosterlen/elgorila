@@ -349,6 +349,17 @@ button { font-family: var(--cuerpo); border-radius: 0 !important; }
   border-color: var(--gold-dim);
   background: rgba(217,155,58,.06);
 }
+.sel-fn-ver-menos {
+  margin-top: 6px;
+  border-style: solid;
+  border-color: rgba(241,234,217,.12);
+  color: rgba(241,234,217,.72);
+}
+.sel-fn-ver-menos:hover {
+  border-color: rgba(241,234,217,.28);
+  color: var(--d-fg);
+  background: transparent;
+}
 .bol-caja-resumen {
   margin-bottom: 16px;
   padding: 14px 16px;

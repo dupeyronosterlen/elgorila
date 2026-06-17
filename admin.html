@@ -50,9 +50,12 @@ a{color:inherit;text-decoration:none}
 
 /* LAYOUT */
 .shell{display:grid;grid-template-columns:var(--sidebar) 1fr;grid-template-rows:var(--topbar) 1fr;height:100vh;overflow:hidden}
+.sidebar{grid-column:1;grid-row:2}
+.main{grid-column:2;grid-row:2}
+#red-estado-banner{grid-column:1/-1}
 
 /* TOPBAR */
-.topbar{grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:0 20px;border-bottom:1px solid var(--faint);background:var(--bg);z-index:10}
+.topbar{grid-column:1/-1;grid-row:1;display:flex;align-items:center;gap:16px;padding:0 20px;border-bottom:1px solid var(--faint);background:var(--bg);z-index:10}
 .topbar-logo{font-family:var(--display);font-size:22px;font-weight:500;color:var(--gold);letter-spacing:-.01em;line-height:1;flex-shrink:0}
 .topbar-logo span{font-size:10px;font-family:var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--soft);display:block;margin-top:1px}
 .topbar-sep{flex:1}
@@ -62,7 +65,7 @@ a{color:inherit;text-decoration:none}
 .topbar-btn:hover{border-color:var(--red);color:var(--red)}
 
 /* SIDEBAR */
-.sidebar{border-right:1px solid var(--faint);background:var(--bg2);overflow-y:auto;padding:14px 0;display:flex;flex-direction:column;gap:2px}
+.sidebar{border-right:1px solid var(--faint);background:var(--bg2);overflow-y:auto;padding:14px 0;display:flex;flex-direction:column;gap:2px;min-height:0}
 .sidebar-section{padding:10px 16px 4px;font-family:var(--mono);font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:rgba(241,234,217,.28);margin-top:6px}
 .sidebar-section:first-child{margin-top:0}
 .nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--soft);transition:background .1s,color .1s;position:relative;cursor:pointer;border:none;background:none;text-align:left;width:100%}
@@ -75,7 +78,7 @@ a{color:inherit;text-decoration:none}
 .sidebar-divider{height:1px;background:var(--faint);margin:10px 16px}
 
 /* MAIN */
-.main{overflow-y:auto;background:var(--bg);padding:26px 30px;display:flex;flex-direction:column;gap:22px}
+.main{overflow-y:auto;background:var(--bg);padding:26px 30px;display:flex;flex-direction:column;gap:22px;min-height:0}
 
 /* PAGE HEADER */
 .page-hd{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--faint);padding-bottom:14px}
@@ -239,6 +242,65 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
 
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-thumb{background:var(--faint2)}
+
+@media (min-width:901px){
+  .sidebar,.main{
+    scrollbar-gutter:stable;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(217,155,58,.45) rgba(241,234,217,.06);
+  }
+  .main{overflow-y:scroll}
+  .sidebar::-webkit-scrollbar,.main::-webkit-scrollbar{width:10px}
+  .sidebar::-webkit-scrollbar-track,.main::-webkit-scrollbar-track{
+    background:rgba(241,234,217,.05);
+    border-left:1px solid var(--faint);
+  }
+  .sidebar::-webkit-scrollbar-thumb,.main::-webkit-scrollbar-thumb{
+    background:rgba(217,155,58,.38);
+    border:2px solid transparent;
+    background-clip:padding-box;
+    border-radius:0;
+  }
+  .sidebar::-webkit-scrollbar-thumb:hover,.main::-webkit-scrollbar-thumb:hover{
+    background:rgba(217,155,58,.58);
+    background-clip:padding-box;
+  }
+  .admin-scroll-rail{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    position:fixed;
+    right:14px;
+    bottom:24px;
+    z-index:40;
+    padding:6px;
+    background:rgba(17,13,11,.92);
+    border:1px solid var(--faint2);
+    pointer-events:none;
+  }
+  .admin-scroll-rail button{
+    pointer-events:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:36px;
+    height:36px;
+    border:1px solid var(--faint2);
+    color:var(--soft);
+    transition:border-color .15s,color .15s,background .15s;
+  }
+  .admin-scroll-rail button:hover:not(:disabled){
+    border-color:var(--gold);
+    color:var(--gold);
+    background:var(--gold-dd);
+  }
+  .admin-scroll-rail button:disabled{opacity:.28;cursor:default}
+  .admin-scroll-rail .material-symbols-outlined{font-size:20px}
+}
+@media (max-width:900px){
+  .admin-scroll-rail{display:none!important}
+}
 .bol-tab.active{border-color:var(--gold)!important;color:var(--gold)!important}
 .admin-ops-wrap .bol-card{background:var(--bg2);border:1px solid var(--faint);padding:24px;margin-bottom:20px}
 #red-estado-banner{
@@ -1070,6 +1132,15 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
   </main>
 </div>
 
+<div id="admin-scroll-rail" class="admin-scroll-rail hidden" aria-label="Desplazamiento de página">
+  <button type="button" id="admin-scroll-up" aria-label="Subir" title="Subir">
+    <span class="material-symbols-outlined">keyboard_arrow_up</span>
+  </button>
+  <button type="button" id="admin-scroll-down" aria-label="Bajar" title="Bajar">
+    <span class="material-symbols-outlined">keyboard_arrow_down</span>
+  </button>
+</div>
+
 <nav id="mobile-bottom-nav" class="mobile-bottom-nav hidden" aria-label="Navegación principal">
   <button type="button" class="mob-nav-item active" data-mob-nav="hub">
     <span class="material-symbols-outlined">receipt_long</span>
@@ -1231,6 +1302,52 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
 <script src="js/boletera-panel.js"></script>
 <script src="js/verificar.js"></script>
 <script src="js/admin-mobile.js"></script>
+<script>
+(function () {
+  var rail = document.getElementById('admin-scroll-rail');
+  var main = document.getElementById('admin-app');
+  var panel = document.getElementById('admin-panel');
+  var btnUp = document.getElementById('admin-scroll-up');
+  var btnDown = document.getElementById('admin-scroll-down');
+  if (!rail || !main || !panel || !btnUp || !btnDown) return;
+
+  var STEP = function () { return Math.max(280, Math.round(main.clientHeight * 0.72)); };
+  var syncTimer = null;
+
+  function syncRail() {
+    var desktop = window.matchMedia('(min-width:901px)').matches;
+    var loggedIn = !panel.classList.contains('hidden');
+    if (!desktop || !loggedIn) {
+      rail.classList.add('hidden');
+      return;
+    }
+    rail.classList.remove('hidden');
+    var max = main.scrollHeight - main.clientHeight;
+    btnUp.disabled = main.scrollTop <= 4;
+    btnDown.disabled = max <= 4 || main.scrollTop >= max - 4;
+  }
+
+  function scheduleSync() {
+    if (syncTimer) return;
+    syncTimer = setTimeout(function () {
+      syncTimer = null;
+      syncRail();
+    }, 80);
+  }
+
+  btnUp.addEventListener('click', function () {
+    main.scrollBy({ top: -STEP(), behavior: 'smooth' });
+  });
+  btnDown.addEventListener('click', function () {
+    main.scrollBy({ top: STEP(), behavior: 'smooth' });
+  });
+
+  main.addEventListener('scroll', scheduleSync, { passive: true });
+  window.addEventListener('resize', scheduleSync);
+  new MutationObserver(scheduleSync).observe(panel, { attributes: true, attributeFilter: ['class'] });
+  scheduleSync();
+})();
+</script>
 <script src="js/admin-panel.js"></script>
 </body>
 </html>
