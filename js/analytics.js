@@ -146,16 +146,48 @@
       var txId = transactionId || (orden && (orden.numeroOrden || orden.sessionId || orden.certificado)) || '';
       var eventId = purchaseEventId(orden, txId);
       if (!txId && !eventId) return false;
-      var dedupeKey = eventId || purchaseKey(txId);
+      var storageKey = purchaseKey(eventId || txId);
       try {
-        if (sessionStorage.getItem(purchaseKey(dedupeKey))) return false;
-        sessionStorage.setItem(purchaseKey(dedupeKey), '1');
+        if (sessionStorage.getItem(storageKey)) return false;
       } catch (_) {}
 
       var p = ecommercePayload(orden);
       p.transaction_id = txId;
-      if (typeof gtag === 'function') gtag('event', 'purchase', p);
-      trackMeta('Purchase', p, eventId);
+
+      function sendPurchase() {
+        if (typeof gtag === 'function') gtag('event', 'purchase', p);
+        if (typeof fbq !== 'function') return false;
+        try {
+          var params = { value: p.value, currency: p.currency || 'MXN' };
+          if (eventId) {
+            fbq('track', 'Purchase', params, { eventID: eventId });
+          } else {
+            fbq('track', 'Purchase', params);
+          }
+          return true;
+        } catch (_) { return false; }
+      }
+
+      function markSent() {
+        try { sessionStorage.setItem(storageKey, '1'); } catch (_) {}
+      }
+
+      if (sendPurchase()) {
+        markSent();
+        return true;
+      }
+
+      // GTM carga fbq async — reintentar hasta ~6 s antes de rendirse
+      var attempts = 0;
+      var timer = setInterval(function () {
+        attempts += 1;
+        if (sendPurchase()) {
+          clearInterval(timer);
+          markSent();
+        } else if (attempts >= 24) {
+          clearInterval(timer);
+        }
+      }, 250);
       return true;
     },
   };
