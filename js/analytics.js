@@ -1,37 +1,27 @@
 /**
- * Analytics centralizado — GA4 + Google Ads + Meta Pixel (solo eventos de funnel).
- * Cargar en <head> (antes de main.js / confirmacion.js) en páginas del funnel.
+ * Analytics centralizado — eventos de funnel (consolidado a GTM, 2026-06).
  *
- * Layer contract:
- *   GTM  → page_view, Meta init/PageView, engagement (whatsapp, FAQ, CTA click…)
- *   Aquí → view_content, add_to_cart, begin_checkout, add_payment_info, purchase (+ fbq track)
- *   purchase SOLO en confirmacion.html (QR)
- *   GA4 page_view: GTM (analytics.js usa send_page_view: false)
- *   Meta init:     GTM únicamente; trackMeta() asume que fbq ya existe
- *   eventID purchase: purchase_{sessionId} — dedup con CAPI servidor
+ * Contrato de capas (UNA sola fuente de verdad = GTM):
+ *   GTM  → carga GA4 (G-NXF8093MDJ) + Google Ads (AW-17961021514) + Meta base,
+ *          page_view, engagement y AHORA TAMBIÉN todo el ecommerce
+ *          (view_item, add_to_cart, begin_checkout, add_payment_info, purchase, grupo_grande).
+ *   Aquí → empuja los eventos de ecommerce al dataLayer; GTM los envía a GA4/Ads
+ *          (tags "GA4 EC - *" leyendo {{DLV - ecommerce}}). Ya NO usa gtag() directo,
+ *          eso eliminaba la carrera del 2º cargador que perdía conversiones.
+ *        → dispara Meta Pixel (fbq) directo con eventID para dedup con CAPI del servidor.
+ *
+ *   purchase SOLO en confirmacion.html (QR). Dedup por transaction_id (sessionStorage).
  */
 (function () {
-  var GA4_ID = 'G-NXF8093MDJ';
-  var AW_ID = 'AW-17961021514';
-
   window.dataLayer = window.dataLayer || [];
-  function gtag() { window.dataLayer.push(arguments); }
-  if (typeof window.gtag !== 'function') window.gtag = gtag;
 
-  function initGA4() {
-    if (window._egGA4Init) return;
-    window._egGA4Init = true;
-    var s = document.createElement('script');
-    s.async = true;
-    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_ID;
-    document.head.appendChild(s);
-    gtag('js', new Date());
-    gtag('config', GA4_ID, { send_page_view: false });
-    gtag('config', AW_ID);
-  }
-
-  function initMetaPixel() {
-    window._egFBInit = true;
+  // Empuja un evento de ecommerce al dataLayer para que lo recoja GTM.
+  // Limpia `ecommerce` antes (evita que items de un push previo se mezclen).
+  function pushEcommerce(eventName, ecommerce) {
+    window.dataLayer.push({ ecommerce: null });
+    var payload = { event: eventName };
+    if (ecommerce) payload.ecommerce = ecommerce;
+    window.dataLayer.push(payload);
   }
 
   function mapItems(orden) {
@@ -94,29 +84,26 @@
   }
 
   window.ElGorilaAnalytics = {
-    init: function (opts) {
-      initGA4();
-      if (!opts || opts.meta !== false) initMetaPixel();
+    // Meta y GA4 los carga GTM; init se mantiene por compatibilidad de API.
+    init: function () {
+      window._egFBInit = true;
     },
 
     purchaseEventId: purchaseEventId,
 
     grupoGrande: function (cantidad) {
-      if (typeof gtag === 'function') {
-        gtag('event', 'grupo_grande', { cantidad: cantidad });
-      }
+      window.dataLayer.push({ ecommerce: null });
+      window.dataLayer.push({ event: 'grupo_grande', cantidad: cantidad });
     },
 
     viewContent: function (opts) {
       opts = opts || {};
       var ids = opts.content_ids || [];
-      if (typeof gtag === 'function') {
-        gtag('event', 'view_item', {
-          items: ids.map(function (id) {
-            return { item_id: id, item_name: opts.content_name || id };
-          }),
-        });
-      }
+      pushEcommerce('view_item', {
+        items: ids.map(function (id) {
+          return { item_id: id, item_name: opts.content_name || id };
+        }),
+      });
       trackMeta('ViewContent', {
         content_type: opts.content_type || 'funcion',
         content_ids: ids,
@@ -126,19 +113,19 @@
 
     addToCart: function (orden) {
       var p = ecommercePayload(orden);
-      if (typeof gtag === 'function') gtag('event', 'add_to_cart', p);
+      pushEcommerce('add_to_cart', p);
       trackMeta('AddToCart', p);
     },
 
     beginCheckout: function (orden) {
       var p = ecommercePayload(orden);
-      if (typeof gtag === 'function') gtag('event', 'begin_checkout', p);
+      pushEcommerce('begin_checkout', p);
       trackMeta('InitiateCheckout', p);
     },
 
     addPaymentInfo: function (orden) {
       var p = ecommercePayload(orden);
-      if (typeof gtag === 'function') gtag('event', 'add_payment_info', p);
+      pushEcommerce('add_payment_info', p);
       trackMeta('AddPaymentInfo', p);
     },
 
@@ -154,8 +141,16 @@
       var p = ecommercePayload(orden);
       p.transaction_id = txId;
 
-      function sendPurchase() {
-        if (typeof gtag === 'function') gtag('event', 'purchase', p);
+      function markSent() {
+        try { sessionStorage.setItem(storageKey, '1'); } catch (_) {}
+      }
+
+      // 1) GA4 + Google Ads vía GTM (dataLayer) — exactamente una vez.
+      pushEcommerce('purchase', p);
+      markSent();
+
+      // 2) Meta Pixel directo (fbq) con reintento SOLO para fbq (GTM lo carga async).
+      function sendMeta() {
         if (typeof fbq !== 'function') return false;
         try {
           var params = { value: p.value, currency: p.currency || 'MXN' };
@@ -168,31 +163,16 @@
         } catch (_) { return false; }
       }
 
-      function markSent() {
-        try { sessionStorage.setItem(storageKey, '1'); } catch (_) {}
+      if (!sendMeta()) {
+        var attempts = 0;
+        var timer = setInterval(function () {
+          attempts += 1;
+          if (sendMeta() || attempts >= 24) clearInterval(timer);
+        }, 250);
       }
-
-      if (sendPurchase()) {
-        markSent();
-        return true;
-      }
-
-      // GTM carga fbq async — reintentar hasta ~6 s antes de rendirse
-      var attempts = 0;
-      var timer = setInterval(function () {
-        attempts += 1;
-        if (sendPurchase()) {
-          clearInterval(timer);
-          markSent();
-        } else if (attempts >= 24) {
-          clearInterval(timer);
-        }
-      }, 250);
       return true;
     },
   };
 
-  var script = document.currentScript;
-  var withMeta = script && script.getAttribute('data-meta') === '1';
-  window.ElGorilaAnalytics.init({ meta: withMeta });
+  window.ElGorilaAnalytics.init();
 })();
