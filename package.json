@@ -7,6 +7,7 @@
     "optimize-images": "node scripts/optimize-images.js",
     "generate-hero-mobile": "node scripts/generate-hero-mobile.js",
     "generate-qr": "node scripts/generate-qr.js",
+    "generate-favicon": "node scripts/generate-favicon.js",
     "build:css": "tailwindcss -i ./css/tailwind-src.css -o ./css/tailwind.css --minify"
   },
   "devDependencies": {
