@@ -22,3 +22,15 @@
 
 /css/tailwind.css
   Cache-Control: public, max-age=31536000, immutable
+
+# Fuentes: contenido estable (se versionan con ?v=) → cache largo inmutable
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Imágenes de marketing: cache largo pero NO inmutable (a veces se re-optimizan in situ)
+/img/*
+  Cache-Control: public, max-age=2592000
+
+# NOTA: /js/* se deja con el cache por defecto del host a propósito.
+# Poner cache largo aquí arriesgaría servir scripts del funnel obsoletos
+# (checkout.js, confirmacion.js, etc.) tras un deploy. No tocar sin hashing.
