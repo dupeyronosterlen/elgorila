@@ -35,7 +35,7 @@ const DRY = process.argv.includes('--dry-run');
 const PAGES = [
   'index.html', 'funciones.html', 'terminos.html',
   'programa/v1.html', 'programa/v2.html', 'programa/v3.html',
-  'programa/v4.html', 'programa/v5.html',
+  'programa/v4.html',
   'presskit/presskit2026.html',
 ];
 
