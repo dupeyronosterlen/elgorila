@@ -11,6 +11,5 @@ Disallow: /encuesta.html
 Disallow: /enviar-boleto.html
 Disallow: /cupon-invitado.html
 Disallow: /acta.html
-Disallow: /presskit/
 
 Sitemap: https://elgorilateatro.com.mx/sitemap.xml
