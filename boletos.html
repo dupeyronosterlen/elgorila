@@ -228,6 +228,11 @@ a   { color: inherit; }
 .sec-title em { font-style: italic; }
 .sd .sec-title em, .sd--mid .sec-title em { color: var(--gold); }
 .sp .sec-title em { color: var(--red); }
+.sec-sede {
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .1em; color: var(--d-soft);
+  margin-top: 10px;
+}
 .rule { height: 1px; margin: 0 0 22px; }
 .sd .rule, .sd--mid .rule { background: var(--d-faint); }
 .sp .rule { background: var(--p-rule); }
@@ -528,6 +533,20 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   letter-spacing: .14em; text-transform: uppercase; color: var(--p-rule);
 }
 .mapa-leyenda-dot { width: 11px; height: 11px; flex-shrink: 0; border: 1px solid rgba(26,20,17,.15); }
+.mapa-direccion {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 6px 14px; margin-top: 18px; text-align: center;
+}
+.mapa-direccion-texto {
+  font-family: var(--cuerpo); font-size: 14px;
+  color: var(--p-soft);
+}
+.mapa-direccion-link {
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--red); text-decoration: underline;
+  white-space: nowrap;
+}
 
 /* ── CONTACTO (papel) ────────────────────────────────────── */
 .contacto-items { display: flex; flex-direction: column; gap: 8px; }
@@ -944,6 +963,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="sec-head">
       <span class="sec-num">Franz Kafka · Monólogo · 1h 20min</span>
       <h2 class="sec-title">Adquiere tus<br><em>entradas</em></h2>
+      <p class="sec-sede">Teatro Wilberto Cantón · San José Insurgentes, CDMX</p>
     </div>
     <div class="rule"></div>
 
@@ -1236,6 +1256,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="mapa-leyenda-item"><span class="mapa-leyenda-dot" style="background:#0a0706;border-color:#d99b3a;"></span><span>Escenario</span></div>
       <div class="mapa-leyenda-item"><span class="mapa-leyenda-dot" style="background:rgba(217,155,58,.35);"></span><span>Platea</span></div>
       <div class="mapa-leyenda-item"><span class="mapa-leyenda-dot" style="background:rgba(168,149,120,.25);"></span><span>Galería</span></div>
+    </div>
+
+    <div class="mapa-direccion">
+      <span class="mapa-direccion-texto">Teatro Wilberto Cantón — José María Velasco 59, San José Insurgentes, CDMX, CP 03900</span>
+      <a class="mapa-direccion-link" href="https://www.google.com/maps/search/?api=1&query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX" target="_blank" rel="noopener noreferrer">
+        Ver en Google Maps ↗
+      </a>
     </div>
 
     <div class="contacto-bloque">
