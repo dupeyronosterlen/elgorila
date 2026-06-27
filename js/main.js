@@ -308,7 +308,7 @@ function actualizarPantalla() {
     const secCfg = seccionVentaConfig();
     const precioGeneralEl = document.getElementById('precio-general-display');
     if (precioGeneralEl) {
-        precioGeneralEl.innerHTML = `$${secCfg.precio_general} MXN`;
+        precioGeneralEl.innerHTML = `<span style="text-decoration:line-through;opacity:.42;font-size:.75em;">$400</span> $${secCfg.precio_general} MXN`;
     }
 
     // Resumen de items
