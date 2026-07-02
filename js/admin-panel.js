@@ -2061,12 +2061,24 @@
 
   async function v4RenderHub() {
     if (!perm('verVentas')) return;
-    const jobs = [cargarFunciones(true), cargarVentas(state.chipFuncion || undefined)];
-    await Promise.all(jobs);
+    let ventasError = null;
+    const [, ventasResult] = await Promise.allSettled([
+      cargarFunciones(true),
+      cargarVentas(state.chipFuncion || undefined),
+    ]);
+    if (ventasResult.status === 'rejected') {
+      ventasError = ventasResult.reason?.message || 'Error al cargar ventas';
+      state.ventas = [];
+    }
     v4RenderFnChips();
     v4RenderVentasTable();
     v4Toggle('btn-export-todo', perm('exportarDatos'));
     v4Toggle('btn-venta-manual', perm('venderEfectivo'));
+    const errEl = document.getElementById('ventas-api-error');
+    if (errEl) {
+      errEl.textContent = ventasError || '';
+      errEl.style.display = ventasError ? '' : 'none';
+    }
   }
 
   async function v4PaintView(view) {
