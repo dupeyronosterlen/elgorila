@@ -1166,6 +1166,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     @media (min-width: 768px) and (max-width: 1023px) {
       .logo-37-sello img { height: 4.5rem !important; }
     }
+    /* Pantallas de escritorio anchas: sello "37 años" más grande */
+    @media (min-width: 1440px) {
+      .logo-37-sello img { height: 7rem !important; }
+    }
     /* 37 años: visible solo cuando la imagen ya cargó (evita parpadeo/hueco) */
     .logo-37-sello.logo-37-cargando {
       opacity: 0;
@@ -2095,7 +2099,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   @media (min-width: 1440px) {
     .hero-portada--foto .hero-portada__composicion {
       padding-left: clamp(1rem, 2.5%, 1.75rem);
-      padding-right: clamp(0.75rem, 2%, 1.5rem);
+      padding-right: clamp(0.25rem, 0.8%, 0.75rem);
     }
     .hero-portada--foto .hero-portada__bloque-wrap {
       max-width: min(26rem, 48%) !important;
