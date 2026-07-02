@@ -154,7 +154,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         max-width: calc(100vw - 4.5rem);
       }
       .logo-gorila-sello img { height: clamp(2.25rem, 6.8vw, 3.15rem) !important; }
-      .btn-presskit-sello {
+      .btn-volver-arriba {
         margin-top: 0.3rem !important;
         font-size: 8px;
         letter-spacing: 0.14em;
@@ -171,7 +171,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     @media (max-width: 390px) {
       .logo-gorila-sello img { height: clamp(2rem, 6.2vw, 2.65rem) !important; }
       .logo-37-sello img { height: clamp(1.85rem, 8.5vw, 2.45rem) !important; }
-      .btn-presskit-sello { font-size: 7px; letter-spacing: 0.12em; }
+      .btn-volver-arriba { font-size: 7px; letter-spacing: 0.12em; }
     }
     /* Móvil ancho: logo Gorila proporcional (37 ya definido arriba en ≤767) */
     @media (min-width: 391px) and (max-width: 767px) {
@@ -1123,7 +1123,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         filter: saturate(0.55);
         -webkit-filter: saturate(0.55);
     }
-    .btn-presskit-sello {
+    .btn-volver-arriba {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
       font-weight: 500;
@@ -1143,8 +1143,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
-    .btn-presskit-sello:hover,
-    .btn-presskit-sello:focus-visible {
+    .btn-volver-arriba:hover,
+    .btn-volver-arriba:focus-visible {
       color: #D4AF37;
       border-color: rgba(212, 175, 55, 0.65);
       outline: none;
@@ -2089,6 +2089,25 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .hero-portada--foto .hero-portada__titulo {
       font-size: clamp(40px, 4.5vw, 58px) !important;
+    }
+  }
+  /* Pantallas de escritorio anchas: bloque de texto más grande y un poco más centrado con la foto */
+  @media (min-width: 1440px) {
+    .hero-portada--foto .hero-portada__composicion {
+      padding-left: clamp(1rem, 2.5%, 1.75rem);
+      padding-right: clamp(0.75rem, 2%, 1.5rem);
+    }
+    .hero-portada--foto .hero-portada__bloque-wrap {
+      max-width: min(26rem, 48%) !important;
+    }
+    .hero-portada--foto .hero-portada__bloque {
+      transform: scale(1.55);
+    }
+    .hero-portada--foto .hero-portada__titulo {
+      font-size: clamp(64px, 5.2vw, 92px) !important;
+    }
+    .hero-portada--foto .hero-portada__actor {
+      font-size: clamp(26px, 2.4vw, 36px) !important;
     }
   }
 
@@ -3310,8 +3329,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 <div class="logo-gorila-column" id="logo-gorila-column">
   <div class="logo-gorila-sello" id="logo-gorila-wrap">
-    <button type="button" id="btn-gorila-inicio" class="flex items-center justify-center p-0 rounded transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Ir al inicio">
-      <img src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" width="1323" height="424" alt="EL GORILA" class="w-auto object-contain flex-shrink-0 pointer-events-none" loading="eager" decoding="async">
+    <button type="button" id="btn-gorila-inicio" class="btn-volver-arriba flex items-center gap-1.5 p-0 rounded transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-accent-gold/50" aria-label="Volver arriba">
+      <svg class="btn-volver-arriba-icono" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      <span>Volver arriba</span>
     </button>
   </div>
 </div>
@@ -4068,12 +4088,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     var btnGorila = document.getElementById('btn-gorila-inicio');
     if (!btnGorila) return;
     btnGorila.addEventListener('click', function() {
-      if (window.scrollY > 120) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-      if (typeof window.irA === 'function') window.irA('/');
-      else location.href = location.protocol === 'file:' ? 'index.html' : '/';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   })();
   (function() {
