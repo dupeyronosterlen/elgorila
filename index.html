@@ -2306,23 +2306,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     opacity: 0.45 !important;
     transform: scale(2) !important;
   }
-  #la-obra.section-with-bg {
-    --section-bg-url: url('img/OBRA/2.jpg');
-  }
-  #la-obra.section-with-bg::before {
-    filter: blur(52px) brightness(0.28) contrast(1.08) saturate(0.45) !important;
-    opacity: 0.5 !important;
-    transform: scale(2) !important;
-  }
-  #actor.section-with-bg {
-    --section-bg-url: url('img/HUMBERTO DUPEYRON/03.jpg');
-  }
-  #actor.section-with-bg::before {
-    filter: blur(52px) brightness(0.32) contrast(1.06) saturate(0.5) !important;
-    opacity: 0.48 !important;
-    transform: scale(2) !important;
-    background-position: center 30% !important;
-  }
   #comentarios {
     position: relative;
     overflow: hidden;
@@ -3528,74 +3511,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 <!-- Ancla para scroll al widget -->
 <div id="venta-boletos" class="scroll-mt-24"></div>
-<div class="indicador-mas indicador-mas-izquierda" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
-<div class="text-center my-4 sm:my-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">La pieza que no envejece.</p>
-</div>
-<!-- Sección La Obra (fondo Kafka más oscuro y desaturado) -->
-<section id="la-obra" class="seccion-obra-actor obra-fondo-kafka mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8">
-    <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
-        <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
-            <div class="flex-1 w-full min-w-0 order-2 md:order-1 flex flex-col min-h-0 bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
-                <h2 class="seccion-heading-v4 mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">La Obra</h2>
-                <div class="flex-1 min-h-0 flex flex-col">
-                <div id="obra-texto-carrusel" class="relative flex-1 min-h-0 cursor-pointer select-none text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (3 en total)">
-                    <div class="obra-texto-slide texto-slide-activo absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-center" data-index="0">
-                        <p class="w-full">El Gorila está basado en Informe para una Academia de Franz Kafka (1917), relato en el que un simio, ya humanizado, relata ante un auditorio de científicos cómo abandonó su vida salvaje para adaptarse a la civilización. Kafka escribió este texto como una parábola sobre la asimilación forzada, la renuncia a la autenticidad y el precio de la aceptación social.</p>
-                    </div>
-                    <div class="obra-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-center" data-index="1">
-                        <p class="w-full">El simio no celebra su transformación: la describe con ironía, como quien enumera los pasos de una derrota disfrazada de triunfo. La adaptación teatral mantiene la estructura del monólogo kafkiano —un discurso que comienza ordenado y va revelando sus grietas— pero lo actualiza con humor filoso, lenguaje directo y referencias al contexto mexicano contemporáneo.</p>
-                    </div>
-                    <div class="obra-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-center" data-index="2">
-                        <p class="w-full">Lo que en Kafka era crítica a la pérdida de libertad por conveniencia, aquí se vuelve un espejo incómodo: el gorila habla de su propia jaula, pero el público reconoce las propias. La obra no explica ni moraliza; deja que la risa haga el trabajo sucio de la conciencia.</p>
-                    </div>
-                    <span id="obra-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/3</span>
-                </div>
-                </div>
-            </div>
-            <div class="imagen-obra-actor w-full md:w-[500px] lg:w-[600px] flex-shrink-0 order-1 md:order-2">
-                <div class="imagen-obra-actor-inner relative w-full aspect-[4/3] sm:aspect-[5/4] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border-2 border-accent-gold/30 max-h-[300px] sm:max-h-[380px] md:max-h-none shadow-lg">
-                    <img id="obra-imagen" alt="La Obra" class="w-full h-full object-cover transition-opacity duration-150" src="img/OBRA/2.jpg" width="496" height="501" loading="lazy" decoding="async" fetchpriority="low" onerror="this.src='img/OBRA/3.jpg'; this.onerror=function(){this.src='img/OBRA/4.jpg'; this.onerror=function(){this.style.display='none';};};"/>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
-<div class="text-center my-4 sm:my-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Un actor. Un personaje.</p>
-</div>
-<!-- Sección El Actor -->
-<section id="actor" class="seccion-obra-actor mb-10 sm:mb-12 md:mb-14 text-center scroll-mt-24 mt-8 sm:mt-10 section-with-bg rounded-lg p-4 sm:p-6 md:p-8">
-    <div class="py-8 sm:py-10 md:py-12 flex items-center justify-center overflow-visible relative">
-        <div class="contenedor-obra-actor w-full max-w-5xl mx-auto flex flex-col md:flex-row items-stretch justify-center gap-8 sm:gap-10 md:gap-12 px-3 sm:px-4 md:px-6 lg:px-8">
-            <div class="imagen-obra-actor w-full md:w-[500px] lg:w-[600px] flex-shrink-0 order-1 md:order-1">
-                <div class="imagen-obra-actor-inner relative w-full aspect-[4/3] sm:aspect-[5/4] md:h-[500px] lg:h-[600px] rounded-lg overflow-hidden border-2 border-accent-gold/30 max-h-[300px] sm:max-h-[380px] md:max-h-none shadow-lg">
-                    <img id="actor-imagen" alt="Humberto Dupeyrón" class="w-full h-full object-cover transition-opacity duration-150" style="object-position: center 25%;" src="img/HUMBERTO DUPEYRON/01.jpg" width="615" height="831" loading="lazy" decoding="async" fetchpriority="low" onerror="this.src='img/HUMBERTO DUPEYRON/02.JPG'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/03.jpg'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/04.jpg'; this.onerror=function(){this.src='img/HUMBERTO DUPEYRON/05.jpg'; this.onerror=null;};};};"/>
-                </div>
-            </div>
-            <div class="flex-1 w-full min-w-0 order-2 md:order-2 flex flex-col min-h-0 bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
-                <h2 class="seccion-heading-v4 mb-3 sm:mb-4 md:mb-5 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide text-center md:text-left flex-shrink-0">El Actor</h2>
-                <div class="flex-1 min-h-0 flex flex-col">
-                <div id="actor-texto-carrusel" class="relative flex-1 min-h-0 cursor-pointer select-none text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (3 en total)">
-                    <div class="actor-texto-slide texto-slide-activo absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-start" data-index="0">
-                        <p class="w-full">Humberto Dupeyrón (México, 1947) es actor, comediante y director teatral con más de 60 años de trayectoria. Formado en la Academia de Andrés Soler de la ANDA, ganó el Premio Emilio Brillas como mejor actor de comedia en 1983. Desde 1989 ha interpretado El Gorila, monólogo basado en Informe para una Academia de Franz Kafka, convirtiéndolo en una de las obras más longevas del teatro mexicano.</p>
-                    </div>
-                    <div class="actor-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-start" data-index="1">
-                        <p class="w-full">Su trabajo se caracteriza por una intensidad física y emocional que combina humor afilado con crítica social, creando un personaje que confronta al espectador con preguntas incómodas sobre libertad, poder y lo que significa ser humano.</p>
-                    </div>
-                    <div class="actor-texto-slide absolute top-0 left-0 right-0 bottom-0 overflow-hidden text-xs sm:text-sm md:text-base leading-relaxed text-text-dark font-light tracking-wide break-words flex items-start" data-index="2">
-                        <p class="w-full">A pesar de padecer esclerosis múltiple, Dupeyrón sigue eligiendo el escenario como un acto de voluntad, convirtiendo cada función en un recordatorio de que la vitalidad no depende del cuerpo, sino de la decisión de estar vivo.</p>
-                    </div>
-                    <span id="actor-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/3</span>
-                </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Reseñas: después de El Actor -->
+<!-- Reseñas -->
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg p-4 sm:p-6 md:p-8" id="comentarios">
 <div class="comentarios-seccion-frame relative overflow-hidden rounded-lg bg-rich-dark/90 backdrop-blur-md border-2 border-accent-gold/50 p-5 sm:p-6 md:p-8 shadow-[0_0_0_1px_rgba(212,175,55,0.2),inset_0_0_0_1px_rgba(212,175,55,0.08)]">
 <div class="comentarios-carrusel-wrap" aria-label="Comentarios del público en rotación automática">
@@ -3615,101 +3532,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </div>
 </div>
-</section>
-
-<div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
-<div class="text-center my-4 sm:my-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Ambiente y atmósfera.</p>
-</div>
-<!-- Sección Equipo -->
-    <section class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-6 sm:mt-8 section-with-bg" data-bg="img/SINOPSIS/mobile/2.webp">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
-        <!-- Columna Izquierda: Odila Dupeyron -->
-        <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
-            <div class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4">
-                <div class="foto-equipo-kafka w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 rounded-lg overflow-hidden border border-accent-gold/20">
-                    <img src="img/ODILA DUPEYRON/2.jpg" width="846" height="813" alt="Odila Dupeyron" class="w-full h-full object-cover" loading="lazy"/>
-                </div>
-                <div class="flex-1 text-center md:text-left">
-                    <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Odila Dupeyron</h3>
-                    <p class="seccion-equipo-rol text-sm sm:text-base text-accent-gold/80 font-medium italic">Música Original</p>
-                </div>
-            </div>
-            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative">
-                <div id="odila-texto-carrusel" class="relative cursor-pointer select-none text-center md:text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (2 en total)">
-                    <div class="odila-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center p-0" data-index="0">
-                        <p class="w-full text-center md:text-left">Compositora y cantante formada en el Instituto Nacional de Bellas Artes, con trayectoria destacada en la creación de atmósferas sonoras para teatro. Fundó el estudio Antropocosmic, especializado en música contemplativa y orgánica.</p>
-                    </div>
-                    <div class="odila-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
-                        <p class="w-full text-center md:text-left">Su trabajo en El Gorila aporta una dimensión auditiva que sostiene el ritmo interno del monólogo, acompañando los silencios y las rupturas del discurso sin competir con la palabra. La música no decora: profundiza la experiencia, creando un diálogo íntimo entre la voz del gorila y el espacio sonoro que lo rodea.</p>
-                    </div>
-                    <span id="odila-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/2</span>
-                </div>
-            </div>
-        </div>
-        <!-- Columna Derecha: Ariel de la Peña -->
-        <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
-            <div class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4">
-                <div class="foto-equipo-kafka w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 rounded-lg overflow-hidden border border-accent-gold/20">
-                    <img src="img/ARIEL DE LA PEÑA/1.jpg" width="504" height="617" alt="Ariel de la Peña" class="w-full h-full object-cover" loading="lazy" onerror="this.src='img/ARIEL DE LA PEÑA/2.jpg'; this.onerror=function(){this.src='img/ARIEL DE LA PEÑA/3.jpg'; this.onerror=null;};"/>
-                </div>
-                <div class="flex-1 text-center md:text-left">
-                    <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Ariel de la Peña</h3>
-                    <p class="seccion-equipo-rol text-sm sm:text-base text-accent-gold/80 font-medium italic">Escultor</p>
-                </div>
-            </div>
-            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative">
-                <div id="ariel-texto-carrusel" class="relative cursor-pointer select-none text-center md:text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (2 en total)">
-                    <div class="ariel-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center p-0" data-index="0">
-                        <p class="w-full text-center md:text-left">Escultor formado en el oficio de la figura humana y el espacio público. Autor de la réplica de la Diana Cazadora con rostro original en la Zona Rosa (2001), obra que rescata la memoria de Helvia Martínez como modelo.</p>
-                    </div>
-                    <div class="ariel-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
-                        <p class="w-full text-center md:text-left">Su colaboración en El Gorila aporta elementos escultóricos que habitan el espacio sin competir con la palabra. Las piezas acompañan el discurso del simio, creando puntos de anclaje visual que sostienen la tensión del monólogo.</p>
-                    </div>
-                    <span id="ariel-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/2</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Osterlen Dupeyron — Productor -->
-    <div class="mt-6 md:mt-8 max-w-5xl mx-auto">
-        <div class="rounded-lg bg-black/40 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/20 contenedor-texto-scroll">
-            <div class="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4">
-                <div class="foto-equipo-kafka w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 rounded-lg overflow-hidden border border-accent-gold/20">
-                    <img src="img/OSTERLEN DUPEYRON/1.jpg" width="576" height="1024" alt="Osterlen Dupeyron" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none';"/>
-                </div>
-                <div class="flex-1 text-center md:text-left">
-                    <h3 class="mb-2 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Osterlen Dupeyron</h3>
-                    <p class="seccion-equipo-rol text-sm sm:text-base text-accent-gold/80 font-medium italic">Producción y Dirección de Arte</p>
-                </div>
-            </div>
-            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words bg-black/30 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-accent-gold/20 relative">
-                <div id="osterlen-texto-carrusel" class="relative cursor-pointer select-none text-center md:text-left" role="button" tabindex="0" aria-label="Toca para ver el siguiente párrafo (2 en total)">
-                    <div class="osterlen-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-100 transition-opacity duration-300 flex items-center p-0" data-index="0">
-                        <p class="w-full text-center md:text-left">Creció entre funciones, cables y escenarios. Antes de saber qué era producir, ya lo estaba viviendo. El resto lo aprendió afuera — en dirección, diseño y producción audiovisual.</p>
-                    </div>
-                    <div class="osterlen-texto-slide text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide break-words opacity-0 pointer-events-none transition-opacity duration-300 flex items-center p-0" data-index="1">
-                        <p class="w-full text-center md:text-left">En 2026 ese recorrido vuelve al origen — escenografía, dirección de arte y lenguaje visual que argumentan la obra y potencian al actor que la habita.</p>
-                    </div>
-                    <span id="osterlen-texto-indicator" class="obra-actor-texto-indicator" aria-hidden="true">1/2</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Gabriel Ponzanelli (RIP) -->
-    <div class="mt-6 md:mt-8 max-w-3xl mx-auto">
-        <div class="rounded-lg bg-black/60 backdrop-blur-sm p-4 sm:p-6 border border-accent-gold/30 text-center contenedor-texto-scroll">
-            <h3 class="mb-2 sm:mb-3 font-display text-xl sm:text-2xl md:text-3xl text-accent-gold tracking-wide">Gabriel Ponzanelli</h3>
-            <p class="mb-3 sm:mb-4 text-sm sm:text-base text-accent-gold/80 font-medium italic">(RIP)</p>
-            <div class="text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide">
-                <p>
-                    Recordamos a Gabriel Ponzanelli, cuyas esculturas acompañaron El Gorila durante décadas. Su trabajo sigue presente en el escenario, manteniendo viva la visión original de la obra.
-                </p>
-            </div>
-        </div>
-    </div>
 </section>
 
 <div class="text-center my-4 sm:my-5 px-4">
