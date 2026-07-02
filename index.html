@@ -2095,11 +2095,17 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       font-size: clamp(40px, 4.5vw, 58px) !important;
     }
   }
-  /* Pantallas de escritorio anchas: bloque de texto más grande y un poco más centrado con la foto */
+  /* Pantallas de escritorio anchas: bloque de texto más grande; puede salirse del marco de la foto */
   @media (min-width: 1440px) {
+    .hero-portada--foto #cartel-container {
+      overflow: visible !important;
+    }
     .hero-portada--foto .hero-portada__composicion {
-      padding-left: clamp(1rem, 2.5%, 1.75rem);
-      padding-right: clamp(0.25rem, 0.8%, 0.75rem);
+      margin-left: -7rem !important;
+      margin-right: -7rem !important;
+      width: calc(100% + 14rem) !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
     }
     .hero-portada--foto .hero-portada__bloque-wrap {
       max-width: min(26rem, 48%) !important;
