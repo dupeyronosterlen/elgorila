@@ -5,6 +5,7 @@
 ## Sitio oficial
 
 - Inicio: https://elgorilateatro.com.mx/
+- Sobre la obra (historia, actor, equipo, crítica): https://elgorilateatro.com.mx/sobre-la-obra.html
 - Funciones, fechas y precios: https://elgorilateatro.com.mx/funciones.html
 - Comprar boletos (taquilla en línea): https://elgorilateatro.com.mx/boletos.html
 - Términos y privacidad: https://elgorilateatro.com.mx/terminos.html
