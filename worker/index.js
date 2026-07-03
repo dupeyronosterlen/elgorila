@@ -143,6 +143,7 @@ function formatMetodoPago(venta) {
   if (m === 'efectivo') return 'Efectivo en taquilla';
   if (m === 'tarjeta_taquilla') return 'Tarjeta en taquilla';
   if (venta.sessionId?.startsWith('manual_') && !m) return 'Efectivo en taquilla';
+  if (m.includes('oxxo')) return 'OXXO';
   if (m.includes('card') || m.includes('link')) return 'Stripe (tarjeta en línea)';
   return m || '—';
 }
@@ -1544,7 +1545,7 @@ function sumDisponiblesSecciones(seccionesMap) {
   return Object.values(seccionesMap).reduce((s, x) => s + (x.disponibles ?? 0), 0);
 }
 
-async function reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, ctx) {
+async function reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, ctx, holdTtl = RESERVA_TTL) {
   const config = await getVenueConfig(tid, env);
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
@@ -1570,7 +1571,7 @@ async function reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, 
     holds[reservaId] = {
       seccionCantidades,
       createdAt: now,
-      expiresAt: now + RESERVA_TTL * 1000,
+      expiresAt: now + holdTtl * 1000,
       sessionId: null,
     };
     let invNuevo = recalcReservadosDesdeHolds({ ...inv, holds, version: version + 1 }, config);
@@ -2003,7 +2004,8 @@ async function handleCheckout(tid, request, env, ctx) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
 
-  const { items, fecha, codigoCupon, referidoDe: referidoDeRaw } = body;
+  const { items, fecha, codigoCupon, referidoDe: referidoDeRaw, checkoutMode } = body;
+  const modoEmbebido = checkoutMode === 'embedded';
   const referidoDe = typeof referidoDeRaw === 'string' ? referidoDeRaw.trim().toUpperCase() : '';
   const utmClean = sanitizarUTM(body.utm);
   const emailRaw = typeof body.email === 'string' ? body.email.trim().toLowerCase().substring(0, 254) : '';
@@ -2083,7 +2085,7 @@ async function handleCheckout(tid, request, env, ctx) {
 
   const reservaId = `res_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-  // Hold corto (15 min) antes de Stripe; si no hay cupo, expira holds viejos sin pago
+  // Hold antes de Stripe; si no hay cupo, expira holds viejos sin pago
   const reserva = await reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, ctx);
   if (!reserva.ok) return json({ error: reserva.error }, reserva.status, request);
 
@@ -2135,13 +2137,28 @@ async function handleCheckout(tid, request, env, ctx) {
 
   const canonical = resolveTid(tid);
   const baseUrl   = 'https://elgorilateatro.com.mx';
-  const expiresAt = Math.floor(Date.now() / 1000) + RESERVA_TTL;
+
+  // OXXO disponible solo si faltan más de 48 hrs para la función (18:00 CDMX)
+  const fechaFuncionMs  = new Date(`${fecha}T18:00:00-06:00`).getTime();
+  const oxxoDisponible  = (fechaFuncionMs - Date.now()) > 48 * 60 * 60 * 1000;
+  // Si hay OXXO: voucher vence en min(24h, hasta 2h antes de la función); si no, TTL normal
+  const oxxoMaxMs       = Math.min(Date.now() + 24 * 60 * 60 * 1000, fechaFuncionMs - 2 * 60 * 60 * 1000);
+  const sessionTtl      = oxxoDisponible ? Math.floor((oxxoMaxMs - Date.now()) / 1000) : RESERVA_TTL;
+  const sessionExpiresAt = Math.floor(Date.now() / 1000) + sessionTtl;
 
   const params = new URLSearchParams({
     mode:        'payment',
-    expires_at:  String(expiresAt),
-    success_url: `${baseUrl}/confirmacion.html?session_id={CHECKOUT_SESSION_ID}&teatro=${canonical}`,
-    cancel_url:  `${baseUrl}/boletos.html?cancelado=1&teatro=${canonical}`,
+    expires_at:  String(sessionExpiresAt),
+    'phone_number_collection[enabled]': 'false',
+    locale:                             'es-419',
+    'payment_method_types[0]':          'card',
+    ...(oxxoDisponible ? {
+      'payment_method_types[1]': 'oxxo',
+      'payment_method_options[oxxo][expires_after_days]': String(Math.min(30, Math.max(1, Math.round(sessionTtl / 86400)))),
+    } : {}),
+    ...(modoEmbebido
+      ? { ui_mode: 'embedded', return_url: `${baseUrl}/confirmacion.html?session_id={CHECKOUT_SESSION_ID}&teatro=${canonical}` }
+      : { success_url: `${baseUrl}/confirmacion.html?session_id={CHECKOUT_SESSION_ID}&teatro=${canonical}`, cancel_url: `${baseUrl}/boletos.html?cancelado=1&teatro=${canonical}` }),
     'metadata[teatroId]':       canonical,
     'metadata[fecha]':          fecha,
     'metadata[cantidad]':       String(cantidadTotal),
@@ -2151,7 +2168,8 @@ async function handleCheckout(tid, request, env, ctx) {
     'metadata[funcionNombre]':  funcion.nombre,
   });
 
-  if (emailOk) params.set('customer_email', emailOk);
+  // No pasamos customer_email a Stripe para evitar el interstitial de Link
+  if (emailOk) params.set('metadata[email]', emailOk);
   if (nombreOk) params.set('metadata[nombre]', nombreOk);
   if (cuponAplicado) {
     params.set('metadata[codigoCupon]', cuponAplicado.codigo);
@@ -2207,6 +2225,9 @@ async function handleCheckout(tid, request, env, ctx) {
       referidoDe: referidoDe || null,
       canal: 'web_checkout',
     })));
+    if (modoEmbebido) {
+      return json({ clientSecret: session.client_secret, publishableKey: env.STRIPE_PUBLISHABLE_KEY, sessionId: session.id }, 200, request);
+    }
     return json({ url: session.url, sessionId: session.id }, 200, request);
 
   } catch (err) {
@@ -2247,10 +2268,37 @@ async function handleWebhook(request, env, ctx) {
       await liberarReservaOptimista(tid, fecha, seccionCantidades, meta.reservaId || null, env);
       ctx.waitUntil(notificarPrimeroListaEspera(tid, fecha, meta.funcionNombre || fecha, env));
     }
+    // Email de voucher expirado solo si era sesión OXXO y hay correo
+    const emailExpirado = meta.email || session.customer_details?.email;
+    const metodos = session.payment_method_types || [];
+    if (emailExpirado && metodos.includes('oxxo')) {
+      ctx.waitUntil(enviarEmail(
+        emailExpirado,
+        'Tu voucher de OXXO venció — EL GORILA',
+        `<p style="font-family:Georgia,serif;font-size:17px;color:#1a1411;">
+          Tu voucher para pagar en OXXO ya venció y los lugares fueron liberados.<br><br>
+          Si aún quieres asistir, puedes volver a comprar tus boletos aquí:<br><br>
+          <a href="https://elgorilateatro.com.mx/boletos.html"
+             style="display:inline-block;padding:14px 28px;background:#D43A1A;color:#fff;
+                    text-decoration:none;font-family:Georgia,serif;font-size:16px;">
+            Ver boletos disponibles
+          </a>
+        </p>`,
+        env
+      ));
+    }
     return new Response('ok', { status: 200 });
   }
 
-  if (event.type !== 'checkout.session.completed') {
+  const esAsyncPago = event.type === 'checkout.session.async_payment_succeeded';
+
+  if (event.type === 'checkout.session.completed') {
+    // OXXO: session.completed llega cuando el usuario recibe el voucher, aún sin pagar.
+    // Solo procesamos si payment_status === 'paid'. El pago real llega por async_payment_succeeded.
+    if (session.payment_status === 'unpaid') {
+      return new Response('ok', { status: 200 });
+    }
+  } else if (!esAsyncPago) {
     return new Response('ok', { status: 200 });
   }
 
@@ -4544,7 +4592,6 @@ async function handleReporte(request, env, ctx) {
       for (const s of config.secciones) {
         const sInv     = inv.secciones[s.id] || { total: s.total, vendidos: 0, reservados: 0 };
         aforoTotal     += sInv.total;
-        vendidosTotal  += sInv.vendidos  || 0;
         reservadosTotal += sInv.reservados || 0;
         invPorSeccion[s.id] = {
           nombre:     s.nombre,
@@ -4553,6 +4600,9 @@ async function handleReporte(request, env, ctx) {
           disponibles: Math.max(0, sInv.total - (sInv.vendidos||0) - (sInv.reservados||0)),
         };
       }
+      // Sumar vendidos de TODAS las keys del inventario (no solo las de config)
+      // para capturar ventas históricas guardadas bajo 'general' u otros nombres.
+      vendidosTotal = Object.values(inv.secciones).reduce((acc, s) => acc + (s.vendidos || 0), 0);
       const disponibles = Math.max(0, aforoTotal - vendidosTotal - reservadosTotal);
       const ocupacion   = aforoTotal > 0 ? Math.round((vendidosTotal / aforoTotal) * 1000) / 10 : 0;
 
