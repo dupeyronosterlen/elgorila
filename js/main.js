@@ -450,15 +450,9 @@ function irAConfirmacion() {
     const cantTotal = totalCantidad();
     verificarDisponibilidad();
 
-    if (!reservaId) {
-        const resultado = InventarioManager.crearReserva(fechaSeleccionada, cantTotal);
-        if (resultado.exito) {
-            reservaId = resultado.reservaId;
-        } else {
-            alert('No se pudo crear la reserva. Por favor intenta de nuevo.');
-            return false;
-        }
-    }
+    // verificarDisponibilidad ya libera la reserva previa y crea una nueva.
+    // Si reservaId sigue null, significa que no hay lugares disponibles (ya se mostró alerta).
+    if (!reservaId) return false;
 
     const promoAuto = detectarPromoAutomatica();
     const precios   = calcularPreciosConPromo(promoAuto);
