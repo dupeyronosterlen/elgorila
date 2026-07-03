@@ -8,7 +8,7 @@ const TIEMPO_RESERVA = 4 * 60 * 1000; // 4 minutos en milisegundos
 
 // Protección: Rate limiting básico
 const RATE_LIMIT_KEY = 'rate_limit_timestamps';
-const MAX_ACCIONES_POR_MINUTO = 10;
+const MAX_ACCIONES_POR_MINUTO = 50;
 
 // Verificar rate limit
 function verificarRateLimit() {
