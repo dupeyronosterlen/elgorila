@@ -215,6 +215,13 @@ function verificarDisponibilidad() {
     if (!fechaSeleccionada) return;
 
     const total = totalCantidad();
+
+    // Liberar reserva actual antes de verificar para no competir contra nosotros mismos
+    if (reservaId) {
+        InventarioManager.liberarReserva(reservaId);
+        reservaId = null;
+    }
+
     disponibilidadInfo = InventarioManager.obtenerDisponibilidad(fechaSeleccionada);
 
     if (total > 0 && total > disponibilidadInfo.disponible) {
@@ -224,7 +231,6 @@ function verificarDisponibilidad() {
     }
 
     if (total > 0 && disponibilidadInfo.disponible >= total) {
-        if (reservaId) InventarioManager.liberarReserva(reservaId);
         const resultado = InventarioManager.crearReserva(fechaSeleccionada, total);
         if (resultado.exito) {
             reservaId = resultado.reservaId;
@@ -507,6 +513,7 @@ function irAConfirmacion() {
 function mostrarCheckoutInline(orden) {
     const panel = document.getElementById('inline-checkout');
     if (!panel) { window.irA ? window.irA('/checkout.html') : (window.location.href = '/checkout.html'); return; }
+
 
     // Fecha
     const fechaEl = document.getElementById('ichk-fecha');
