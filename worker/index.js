@@ -327,6 +327,35 @@ async function notificarAdminOxxoPendiente(session, meta, tid, env) {
   );
 }
 
+// Registro visible en el admin de la reserva OXXO pendiente de pago. Es solo
+// informativo (no es una venta): se borra solo cuando el pago cae (async_payment
+// _succeeded) o cuando la ficha vence (checkout.session.expired).
+async function guardarOxxoPendiente(session, meta, tid, env) {
+  const canonical = resolveTid(tid);
+  let seccionCantidades = {};
+  try { if (meta.seccionCants) seccionCantidades = JSON.parse(meta.seccionCants); } catch {}
+  await env.VENTAS.put(
+    kv(canonical, `oxxoPend:${session.id}`),
+    JSON.stringify({
+      sessionId:     session.id,
+      fecha:         meta.fecha || null,
+      funcionNombre: meta.funcionNombre || meta.fecha || null,
+      cantidad:      parseInt(meta.cantidad, 10) || null,
+      total:         session.amount_total != null ? session.amount_total / 100 : null,
+      email:         meta.email || session.customer_details?.email || session.customer_email || null,
+      nombre:        meta.nombre || session.customer_details?.name || null,
+      seccionCantidades,
+      creadoEn:      new Date().toISOString(),
+    }),
+    // Respaldo: si por lo que sea no se borra al pagar/vencer, caduca solo a los 31 días.
+    { expirationTtl: 31 * 24 * 60 * 60 },
+  );
+}
+
+async function borrarOxxoPendiente(tid, sessionId, env) {
+  try { await env.VENTAS.delete(kv(tid, `oxxoPend:${sessionId}`)); } catch { /* */ }
+}
+
 function htmlEmailOxxoPendiente({ funcionNombre, total, voucherUrl, venceTexto }) {
   const totalTxt = (total != null)
     ? `$${Number(total).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`
@@ -2456,6 +2485,8 @@ async function handleWebhook(request, env, ctx) {
         env
       ));
     }
+    // La ficha venció: quitar el pendiente del admin (los lugares ya se liberaron).
+    ctx.waitUntil(borrarOxxoPendiente(tid, session.id, env));
     return new Response('ok', { status: 200 });
   }
 
@@ -2465,10 +2496,11 @@ async function handleWebhook(request, env, ctx) {
     // OXXO: session.completed llega cuando el usuario recibe el voucher, aún sin pagar.
     // Solo procesamos si payment_status === 'paid'. El pago real llega por async_payment_succeeded.
     if (session.payment_status === 'unpaid') {
-      // Correo al comprador con la ficha + aviso al equipo de reserva pendiente.
+      // Correo al comprador + aviso al equipo + registro visible en el admin.
       if ((session.payment_method_types || []).includes('oxxo')) {
         ctx.waitUntil(enviarEmailOxxoPendiente(session, meta, tid, env));
         ctx.waitUntil(notificarAdminOxxoPendiente(session, meta, tid, env));
+        ctx.waitUntil(guardarOxxoPendiente(session, meta, tid, env));
       }
       return new Response('ok', { status: 200 });
     }
@@ -2542,6 +2574,8 @@ async function handleWebhook(request, env, ctx) {
   };
 
   await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+  // Pago confirmado: ya existe la venta real, quitar el pendiente OXXO del admin.
+  ctx.waitUntil(borrarOxxoPendiente(tid, sessionId, env));
   await persistirCertificadosKv(tid, sessionId, gen.certificado, gen.boletos, env);
   await env.VENTAS.put(kv(tid, `ventaIdx:${fecha}:${sessionId}`), sessionId);
   await env.VENTAS.put(kv(tid, `ventaIdxContable:${fecha}:${sessionId}`), sessionId);
@@ -4501,6 +4535,24 @@ async function handleSitioPut(request, env) {
   return json({ ok: true, auditId: audit.id }, 200, request);
 }
 
+// Reservas OXXO pendientes de pago (informativo). Se limpian solas al pagar o
+// vencer la ficha; ver guardarOxxoPendiente / borrarOxxoPendiente.
+async function handleOxxoPendientes(tid, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_VENTAS.has(payload.rol)) {
+    return json({ error: 'Sin permiso para ver ventas.' }, 403, request);
+  }
+  const canonical = resolveTid(tid);
+  const list = await env.VENTAS.list({ prefix: kv(canonical, 'oxxoPend:') });
+  const raw  = await Promise.all(list.keys.map(k => env.VENTAS.get(k.name)));
+  const pendientes = raw.filter(Boolean)
+    .map(r => { try { return JSON.parse(r); } catch { return null; } })
+    .filter(Boolean)
+    .sort((a, b) => (b.creadoEn || '').localeCompare(a.creadoEn || ''));
+  return json({ pendientes }, 200, request);
+}
+
 async function handleVentas(tid, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
@@ -5059,6 +5111,7 @@ export default {
       const sub = parts.slice(3).join('/');
 
       if (method === 'GET'  && sub === 'ventas')         return handleVentas(tid, request, env);
+      if (method === 'GET'  && sub === 'oxxo-pendientes') return handleOxxoPendientes(tid, request, env);
       if (method === 'GET'  && sub === 'compradores')    return handleCompradores(tid, request, env);
       if (method === 'GET'  && sub === 'informe-funciones') return handleInformeFunciones(tid, request, env);
       if (method === 'GET'  && sub === 'funciones')        return handleFuncionesAdmin(tid, request, env);

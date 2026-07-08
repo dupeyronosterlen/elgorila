@@ -2074,12 +2074,51 @@
     }
   }
 
+  async function cargarOxxoPendientes() {
+    try {
+      const d = await api(window.teatroAdminApi('oxxo-pendientes'));
+      state.oxxoPendientes = d.pendientes || [];
+    } catch { state.oxxoPendientes = []; }
+  }
+
+  function v4RenderOxxoPendientes() {
+    const wrap = document.getElementById('oxxo-pendientes');
+    if (!wrap) return;
+    const items = state.oxxoPendientes || [];
+    if (!items.length) { wrap.innerHTML = ''; return; }
+    const filas = items.map(p => {
+      const fn = state.funciones.find(f => f.fecha_iso === p.fecha);
+      const nombre = (fn && fn.nombre) || p.funcionNombre || p.fecha || '—';
+      return `<tr>
+        <td>${esc(nombre)}</td>
+        <td>${esc(p.nombre || '—')}</td>
+        <td class="td-email">${esc(p.email || '—')}</td>
+        <td class="td-num">${p.cantidad || '—'}</td>
+        <td class="td-num">${p.total != null ? fmtMXN(p.total) : '—'}</td>
+        <td class="td-metodo">${p.creadoEn ? esc(fmtFecha(p.creadoEn)) : '—'}</td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<div style="margin-bottom:16px;border:1px solid #d99b3a55;background:#d99b3a12;padding:12px 14px">
+      <div style="font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#d99b3a;margin-bottom:6px">
+        Reservas OXXO pendientes de pago · ${items.length}
+      </div>
+      <p style="font-family:var(--mono);font-size:10px;color:var(--soft);margin-bottom:10px;line-height:1.5">
+        Ficha generada, aún sin pagar. El boleto se emite y aparece como venta cuando cae el pago (1–3 días). Desaparecen solas al pagarse o vencer la ficha.
+      </p>
+      <div class="table-wrap"><table><thead><tr>
+        <th>Función</th><th>Comprador</th><th>Email</th>
+        <th style="text-align:right">Cant.</th><th style="text-align:right">Total</th><th>Generada</th>
+      </tr></thead><tbody>${filas}</tbody></table></div>
+    </div>`;
+  }
+
   async function v4RenderHub() {
     if (!perm('verVentas')) return;
     let ventasError = null;
     const [, ventasResult] = await Promise.allSettled([
       cargarFunciones(true),
       cargarVentas(),  // TODAS las ventas; el chip filtra en el cliente
+      cargarOxxoPendientes(),
     ]);
     if (ventasResult.status === 'rejected') {
       ventasError = ventasResult.reason?.message || 'Error al cargar ventas';
@@ -2087,6 +2126,7 @@
     }
     v4RenderFnChips();
     v4RenderVentasTable();
+    v4RenderOxxoPendientes();
     v4Toggle('btn-export-todo', perm('exportarDatos'));
     v4Toggle('btn-venta-manual', perm('venderEfectivo'));
     const errEl = document.getElementById('ventas-api-error');
