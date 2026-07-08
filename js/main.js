@@ -536,13 +536,9 @@ function mostrarCheckoutInline(orden) {
     if (cuponInput) cuponInput.value = orden.promoManual ? (orden.codigoCupon || '') : '';
     if (cuponMsg) { cuponMsg.textContent = ''; cuponMsg.className = ''; }
 
-    // Mostrar panel y desplazar
+    // Mostrar panel y desplazar (nombre y correo se piden en Stripe).
     panel.style.display = '';
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setTimeout(() => {
-        const emailInput = document.getElementById('ichk-email-input');
-        if (emailInput) emailInput.focus();
-    }, 700);
 
     if (window.ElGorilaAnalytics) ElGorilaAnalytics.beginCheckout(orden);
 }

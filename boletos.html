@@ -1120,40 +1120,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="ichk-cupon-msg" aria-live="polite"></div>
     </div>
 
-    <!-- Nombre (lista de puerta / boletera) -->
-    <div class="ichk-input-wrap">
-      <label class="ichk-label" for="ichk-nombre-input">
-        Tu nombre
-        <span class="ichk-hint">Opcional — para la lista de entrada en taquilla</span>
-      </label>
-      <input
-        type="text"
-        id="ichk-nombre-input"
-        class="ichk-input"
-        placeholder="Nombre y apellido"
-        autocomplete="name"
-        maxlength="120"
-      >
-    </div>
-
-    <!-- Campo de correo electrónico -->
-    <div class="ichk-input-wrap">
-      <label class="ichk-label" for="ichk-email-input">
-        Tu correo electrónico
-        <span class="ichk-hint">Aquí recibirás tu boleto digital</span>
-      </label>
-      <input
-        type="email"
-        id="ichk-email-input"
-        class="ichk-input"
-        placeholder="ejemplo@correo.com"
-        autocomplete="email"
-        inputmode="email"
-        aria-required="true"
-        aria-describedby="ichk-email-hint-msg"
-      >
-      <span id="ichk-email-hint-msg" style="display:none;" aria-live="assertive"></span>
-    </div>
+    <!-- Nombre y correo se piden una sola vez en el pago seguro (Stripe). -->
+    <p class="ichk-hint" style="margin-top:4px;line-height:1.5">
+      En el siguiente paso escribes tu <strong>nombre y correo</strong> — ahí te llega tu boleto digital con QR.
+    </p>
 
     <!-- Mensaje de error -->
     <div id="ichk-error" class="ichk-error" role="alert" style="display:none;"></div>
@@ -1466,26 +1436,18 @@ async function aplicarCuponInline() {
 }
 
 async function procesarPagoInline() {
-  const emailEl  = document.getElementById('ichk-email-input');
-  const nombreEl = document.getElementById('ichk-nombre-input');
   const errorEl  = document.getElementById('ichk-error');
   const btnEl    = document.getElementById('btn-pagar-inline');
   const textoBtn = document.getElementById('ichk-btn-texto');
 
   function mostrarError(msg) {
     if (errorEl) { errorEl.textContent = msg; errorEl.style.display = ''; }
-    if (emailEl) emailEl.focus();
   }
   function ocultarError() { if (errorEl) errorEl.style.display = 'none'; }
 
   ocultarError();
 
-  const email = emailEl ? emailEl.value.trim().substring(0, 254).replace(/[<>]/g, '') : '';
-  const nombre = nombreEl ? nombreEl.value.trim().substring(0, 120).replace(/[<>]/g, '') : '';
-  if (!email || !_validarEmail(email)) {
-    mostrarError('Por favor ingresa un correo electrónico válido para recibir tu boleto.');
-    return;
-  }
+  // Nombre y correo los captura Stripe en el pago (una sola vez).
 
   const ordenRaw = localStorage.getItem('orden_compra');
   if (!ordenRaw) {
@@ -1504,10 +1466,6 @@ async function procesarPagoInline() {
 
   if (window.ElGorilaAnalytics) ElGorilaAnalytics.addPaymentInfo(orden);
 
-  orden.email = email;
-  if (nombre) orden.nombre = nombre;
-  localStorage.setItem('orden_compra', JSON.stringify(orden));
-
   /* ── Con backend (Stripe) ── */
   if (window.API_BASE) {
     btnEl.disabled = true;
@@ -1519,8 +1477,6 @@ async function procesarPagoInline() {
         body:    JSON.stringify({
           items:       orden.items,
           fecha:       orden.fechaIso,
-          email,
-          nombre:      nombre || undefined,
           codigoCupon: orden.codigoCupon || undefined,
           referidoDe:  orden.referidoDe || undefined,
           utm:         (typeof window.obtenerUTM === 'function' ? window.obtenerUTM() : {}),
@@ -1538,7 +1494,6 @@ async function procesarPagoInline() {
   }
 
   /* ── Modo simulado (sin backend) ── */
-  orden.email       = email;
   orden.numeroOrden = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
   orden.fechaCompra = new Date().toISOString();
   orden.estado      = 'completada';
