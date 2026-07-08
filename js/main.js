@@ -568,6 +568,19 @@ function limpiarReserva() {
 
 window.addEventListener('beforeunload', limpiarReserva);
 
+// Volver desde Stripe con "Atrás": el navegador restaura la página congelada
+// (bfcache) con el checkout inline abierto y el botón de pago deshabilitado.
+// La reactivamos y regresamos a modo edición para poder ajustar sin refrescar.
+window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return; // solo cuando la página viene de bfcache (atrás/adelante)
+    navegandoACheckout = false;
+    var btn = document.getElementById('btn-pagar-inline');
+    if (btn) btn.disabled = false;
+    var txt = document.getElementById('ichk-btn-texto');
+    if (txt) txt.textContent = 'Ir al pago seguro';
+    if (typeof editarPedido === 'function') editarPedido();
+});
+
 // --- CARGAR FECHAS DINÁMICAS ---
 function cargarFechas() {
     if (typeof FechasManager === 'undefined') return;
