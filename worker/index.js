@@ -2510,9 +2510,9 @@ async function handleWebhook(request, env, ctx) {
     if (val) utm[k] = val;
   }
 
-  const metodoPago = Array.isArray(session.payment_method_types) && session.payment_method_types.length
-    ? session.payment_method_types.join(',')
-    : 'card';
+  // Método REAL usado (no la lista de métodos ofrecidos): OXXO se confirma por
+  // async_payment_succeeded; la tarjeta en línea por checkout.session.completed.
+  const metodoPago = esAsyncPago ? 'oxxo' : 'card';
 
   const venta = {
     teatroId:     tid,
