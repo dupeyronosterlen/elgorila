@@ -4098,7 +4098,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (meta && !meta.querySelector('.barra-compra-precio-promo')) {
           meta.innerHTML = '<span class="barra-compra-precio-tachado">$400</span><span class="barra-compra-precio-promo">$350</span>';
         }
-        if (urlVenta.indexOf('http') === 0) {
+        // Pestaña nueva solo si la venta apunta a OTRO dominio (proveedor externo).
+        // boletos.html es del mismo sitio → misma pestaña (sustituye la página).
+        var esExterno = urlVenta.indexOf('http') === 0 && urlVenta.indexOf(location.origin) !== 0;
+        if (esExterno) {
           a.setAttribute('target', '_blank');
           a.setAttribute('rel', 'noopener');
         } else {
