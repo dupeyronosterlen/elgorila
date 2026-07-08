@@ -243,6 +243,137 @@ async function enviarEmailReagendado(venta, tid, env) {
   return { compradorOk, sinEmail: false };
 }
 
+// ─── EMAIL: RESERVA OXXO PENDIENTE (voucher generado, aún sin pagar) ──────────
+// Se dispara cuando Stripe crea la ficha OXXO (checkout.session.completed sin
+// pagar). El boleto real se emite después, en async_payment_succeeded.
+async function enviarEmailOxxoPendiente(session, meta, tid, env) {
+  const to = meta.email || session.customer_details?.email || session.customer_email;
+  if (!to) return;
+
+  // Anti-duplicado: el webhook puede reintentar el mismo evento.
+  const flagKey = kv(tid, `oxxo-mail:${session.id}`);
+  if (await env.INVENTARIO.get(flagKey)) return;
+  await env.INVENTARIO.put(flagKey, '1', { expirationTtl: 30 * 24 * 60 * 60 });
+
+  // Link de la ficha y vencimiento salen del payment_intent (no vienen en el evento).
+  let voucherUrl = null;
+  let venceTexto = null;
+  try {
+    const piId = typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id;
+    if (piId && env.STRIPE_SECRET_KEY) {
+      const piRes = await fetch(`https://api.stripe.com/v1/payment_intents/${encodeURIComponent(piId)}`, {
+        headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+      });
+      const pi   = await piRes.json();
+      const oxxo = pi?.next_action?.oxxo_display_details;
+      if (oxxo?.hosted_voucher_url) voucherUrl = oxxo.hosted_voucher_url;
+      if (oxxo?.expires_after) {
+        venceTexto = new Date(oxxo.expires_after * 1000).toLocaleString('es-MX', {
+          timeZone: 'America/Mexico_City', dateStyle: 'long', timeStyle: 'short',
+        });
+      }
+    }
+  } catch (e) {
+    logError('oxxo.voucher_fetch', { error: e.message });
+  }
+
+  await enviarEmail(
+    to,
+    'Tu ficha para pagar en OXXO — EL GORILA',
+    htmlEmailOxxoPendiente({
+      funcionNombre: meta.funcionNombre || meta.fecha || '',
+      total:         session.amount_total != null ? session.amount_total / 100 : null,
+      voucherUrl,
+      venceTexto,
+    }),
+    env,
+  );
+}
+
+function htmlEmailOxxoPendiente({ funcionNombre, total, voucherUrl, venceTexto }) {
+  const totalTxt = (total != null)
+    ? `$${Number(total).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`
+    : null;
+
+  const botonFicha = voucherUrl
+    ? `<a href="${voucherUrl}" style="display:inline-block;background:#D43A1A;color:#fff;padding:16px 32px;text-decoration:none;font-family:Georgia,serif;font-size:18px;">
+         Ver mi ficha OXXO →
+       </a>
+       <p style="margin:14px 0 0;font-family:Georgia,serif;font-size:13px;color:rgba(26,20,17,.6);">
+         Muéstrala en la caja desde tu celular o imprímela.
+       </p>`
+    : `<p style="margin:0;font-family:Georgia,serif;font-size:15px;color:#1a1411;">
+         La ficha con el código de barras te la mostró Stripe al terminar la compra.
+         Si la cerraste, revisa también tu bandeja de correo.
+       </p>`;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tu ficha para pagar en OXXO — EL GORILA</title>
+</head>
+<body style="margin:0;padding:0;background:#0a0706;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0706;padding:28px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+  <tr><td style="background:#0a0706;padding:36px 28px 24px;border:1px solid rgba(241,234,217,.12);text-align:center;">
+    <p style="margin:0 0 20px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.36em;text-transform:uppercase;color:#d99b3a;">
+      Reserva apartada${funcionNombre ? ` · ${funcionNombre}` : ''}
+    </p>
+    <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;font-weight:500;color:#f1ead9;">
+      Ya casi. Falta pagar en OXXO.
+    </h1>
+    <p style="margin:16px auto 0;font-family:Georgia,serif;font-size:17px;line-height:1.5;color:rgba(241,234,217,.82);max-width:380px;">
+      Apartamos tus lugares${totalTxt ? ` por <strong>${totalTxt}</strong>` : ''}. En cuanto pagues tu ficha,
+      te llega tu boleto con código QR a este mismo correo.
+    </p>
+  </td></tr>
+
+  <tr><td style="background:#f1ead9;padding:32px 28px;text-align:center;">
+    ${botonFicha}
+  </td></tr>
+
+  <tr><td style="background:#f1ead9;padding:4px 28px 32px;">
+    <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#8a5a2a;">
+      Cómo funciona
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:8px 0;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#1a1411;vertical-align:top;">
+        <strong>1.</strong> Ve a cualquier OXXO y paga con la ficha. Dile al cajero que es un pago de <strong>OXXO Pay</strong>.
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#1a1411;vertical-align:top;">
+        <strong>2.</strong> <strong>Guarda tu recibo</strong> hasta que recibas tu boleto. Es tu comprobante por si algo se atora.
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#1a1411;vertical-align:top;">
+        <strong>3.</strong> El pago tarda de <strong>1 a 3 días hábiles</strong> en reflejarse. No tienes que hacer nada más:
+        en cuanto OXXO nos avisa, tu boleto sale solo a este correo.
+      </td></tr>
+    </table>
+    ${venceTexto ? `<p style="margin:18px 0 0;font-family:Georgia,serif;font-size:14px;line-height:1.5;color:#8a2a1a;">
+      Tus lugares quedan apartados hasta el <strong>${venceTexto}</strong>. Si la ficha vence sin pago, se liberan.
+    </p>` : ''}
+  </td></tr>
+
+  <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
+    <p style="margin:0 0 6px;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.5);">
+      ¿Alguna duda o problema con tu pago? Escríbenos y te ayudamos:
+    </p>
+    <p style="margin:0;font-family:Georgia,serif;font-size:14px;color:rgba(241,234,217,.7);">
+      <a href="mailto:${EMAIL_OPERATIVO}" style="color:#d99b3a;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
 function codigoQrPayload(codigo) {
   return (codigo || '').trim().toUpperCase();
 }
@@ -2296,6 +2427,10 @@ async function handleWebhook(request, env, ctx) {
     // OXXO: session.completed llega cuando el usuario recibe el voucher, aún sin pagar.
     // Solo procesamos si payment_status === 'paid'. El pago real llega por async_payment_succeeded.
     if (session.payment_status === 'unpaid') {
+      // Correo informativo al comprador con la ficha OXXO, tiempos y contacto.
+      if ((session.payment_method_types || []).includes('oxxo')) {
+        ctx.waitUntil(enviarEmailOxxoPendiente(session, meta, tid, env));
+      }
       return new Response('ok', { status: 200 });
     }
   } else if (!esAsyncPago) {
@@ -4049,6 +4184,92 @@ async function handleReembolso(tid, request, env, ctx) {
   return json({ ok: true, venta: _formatVenta(venta), auditId: audit.id }, 200, request);
 }
 
+// ─── HANDLER: ELIMINAR VENTA (limpieza de pruebas) ────────────────────────────
+// Borrado real: quita la venta de las estadísticas y libera el cupo.
+// Guarda una copia íntegra en el archivo `eliminada:` (solo informativo, fuera
+// de los reportes). NO reembolsa en Stripe — pensado para depurar ventas de
+// prueba, no para devolver dinero (para eso está el reembolso).
+async function handleEliminarVenta(tid, codigo, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (payload.rol !== 'admin') {
+    return json({ error: 'Solo el administrador puede eliminar ventas.' }, 403, request);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
+
+  if (!pinFinancieroOk(body, env)) {
+    return json({ error: 'PIN de operaciones incorrecto.' }, 403, request);
+  }
+
+  const cod = (codigo || '').trim().toUpperCase();
+  if (!esCodigoCert(cod)) return json({ error: 'Folio inválido.' }, 400, request);
+
+  const resolved = await _resolveVentaKey(tid, cod, env);
+  if (!resolved) return json({ error: 'Folio no encontrado.' }, 404, request);
+  const { ventaKey, venta } = resolved;
+
+  const canonical   = resolveTid(tid);
+  const certificado = _certificadoVenta(venta) || venta.codigo || cod;
+
+  // Liberar cupo solo si la venta seguía ocupando lugares (una venta ya
+  // reembolsada liberó su cupo en el reembolso).
+  if (venta.estado !== 'reembolsada') {
+    let seccionCantidades = venta.seccionCantidades || {};
+    if (!Object.keys(seccionCantidades).length && venta.items?.length) {
+      seccionCantidades = {};
+      for (const it of venta.items) {
+        const sec = it.seccion || 'platea';
+        seccionCantidades[sec] = (seccionCantidades[sec] || 0) + (it.cantidad || 1);
+      }
+    }
+    if (!Object.keys(seccionCantidades).length) {
+      seccionCantidades = { platea: venta.cantidad || 1 };
+    }
+    const lib = await liberarVendidos(tid, venta.fecha, seccionCantidades, env);
+    if (!lib.ok) return json({ error: 'No se pudo liberar el cupo. Intenta de nuevo.' }, 503, request);
+  }
+
+  // Archivo informativo (fuera de estadísticas): copia completa + quién/cuándo.
+  await env.VENTAS.put(
+    kv(canonical, `eliminada:${venta.sessionId}`),
+    JSON.stringify({
+      venta,
+      certificado,
+      eliminadaPor:    payload.usuario,
+      eliminadaNombre: payload.nombre || payload.usuario,
+      eliminadaEn:     new Date().toISOString(),
+      motivo:          (body.motivo || '').toString().slice(0, 200) || null,
+    }),
+  );
+
+  // Borrado real: la venta, su índice por función (que recorren los reportes)
+  // y todas las referencias de certificados que apuntan a ella.
+  await env.VENTAS.delete(ventaKey);
+  if (venta.fecha && venta.sessionId) {
+    await env.VENTAS.delete(kv(canonical, `ventaIdx:${venta.fecha}:${venta.sessionId}`));
+  }
+  const certs = [certificado, ...(venta.boletos || []).map(b => b.cert).filter(Boolean)];
+  for (const c of certs) {
+    await env.VENTAS.delete(kv(canonical, `cert:${c}`));
+    await env.VENTAS.delete(`cert:${c}`);
+    await env.VENTAS.delete(`gorila:cert:${c}`);
+  }
+
+  const audit = await registrarAuditoria(env, {
+    usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
+    rol: payload.rol, accion: 'eliminacion', teatroId: canonical,
+    detalles: `${certificado} eliminada · $${venta.total} MXN · cupo liberado · archivada`,
+    meta: {
+      tipo: 'eliminacion', codigo: certificado, total: venta.total,
+      fecha: venta.fecha, sessionId: venta.sessionId,
+    },
+  });
+
+  return json({ ok: true, auditId: audit.id }, 200, request);
+}
+
 async function handleCanjearLote(tid, request, env) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
@@ -4823,6 +5044,10 @@ export default {
       const reenviarMatch = sub.match(/^venta\/([^/]+)\/reenviar-email$/);
       if (method === 'POST' && reenviarMatch)
         return handleReenviarEmail(tid, decodeURIComponent(reenviarMatch[1]), request, env);
+
+      const eliminarMatch = sub.match(/^venta\/([^/]+)\/eliminar$/);
+      if (method === 'POST' && eliminarMatch)
+        return handleEliminarVenta(tid, decodeURIComponent(eliminarMatch[1]), request, env);
 
       const canjearMatch = sub.match(/^canjear\/([^/]+)$/);
       if (method === 'POST' && canjearMatch)

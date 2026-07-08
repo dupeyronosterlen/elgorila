@@ -65,7 +65,7 @@ const AuthManager = {
         admin: {
             verInventario: true, verVentas: true, verFiscal: true, fiscalReset: true,
             venderEfectivo: true, verificarBoletos: true, verificarPorNombre: true,
-            reagendar: true, reembolsar: true, exportarDatos: true, verAuditoria: true,
+            reagendar: true, reembolsar: true, eliminarVenta: true, exportarDatos: true, verAuditoria: true,
             reenviarBoleto: true, corregirEmail: true,
             gestionarEquipo: true, editarSitio: true, accesoAdmin: true,
         },

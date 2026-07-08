@@ -66,6 +66,7 @@
     reagendar_boleto:  { label: 'Reagenda',     cls: 'text-blue-400 border-blue-400/40 bg-blue-400/10' },
     reembolso:         { label: 'Reembolso',    cls: 'text-red-400 border-red-400/40 bg-red-400/10' },
     reembolso_venta:   { label: 'Reembolso',    cls: 'text-red-400 border-red-400/40 bg-red-400/10' },
+    eliminacion:       { label: 'Eliminación',  cls: 'text-red-300 border-red-300/40 bg-red-300/10' },
     cancelacion:       { label: 'Cancelación',  cls: 'text-orange-400 border-orange-400/40 bg-orange-400/10' },
     'email.corregido': { label: 'Correo',       cls: 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10' },
     'email.reenviado': { label: 'Reenvío',      cls: 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10' },
@@ -82,6 +83,7 @@
     ['', 'Todas las acciones'],
     ['reagenda', 'Reagenda'],
     ['reembolso', 'Reembolso'],
+    ['eliminacion', 'Eliminación'],
     ['cancelacion', 'Cancelación'],
     ['email', 'Correo / reenvío'],
     ['canje', 'Canje en puerta'],
@@ -95,6 +97,7 @@
     if (ACCION_TIPOS[key]) return ACCION_TIPOS[key];
     if (key.includes('reagend')) return ACCION_TIPOS.reagenda;
     if (key.includes('reembolso')) return ACCION_TIPOS.reembolso;
+    if (key.includes('eliminacion')) return ACCION_TIPOS.eliminacion;
     if (key.includes('email')) return ACCION_TIPOS['email.reenviado'];
     if (key.includes('canjear')) return ACCION_TIPOS.canjear_boleto;
     return { label: a.accion || '—', cls: 'text-text-dark/60 border-primary/20 bg-primary/5' };
@@ -106,6 +109,7 @@
     const metaTipo = (a.meta?.tipo || '').toLowerCase();
     if (filtro === 'reagenda') return key.includes('reagend') || metaTipo === 'reagenda';
     if (filtro === 'reembolso') return key.includes('reembolso');
+    if (filtro === 'eliminacion') return key.includes('eliminacion') || metaTipo === 'eliminacion';
     if (filtro === 'cancelacion') return metaTipo === 'cancelacion' || (a.detalles || '').toLowerCase().includes('cancelado');
     if (filtro === 'email') return key.includes('email');
     if (filtro === 'canje') return key.includes('canjear');
@@ -1326,6 +1330,15 @@
       </dl>`;
   }
 
+  function v4HtmlResumenEliminar(v) {
+    return `${v4ResumenComprador(v)}
+      <dl class="confirm-summary">
+        <dt>Función</dt><dd>${esc(v4FnLabel(v.fecha))}</dd>
+        <dt>Acción</dt><dd>Borrado definitivo + liberación de cupo. Queda archivada solo como referencia, fuera de las estadísticas.</dd>
+        <dt>Ojo</dt><dd><strong>No devuelve dinero.</strong> Úsalo solo para limpiar pruebas.</dd>
+      </dl>`;
+  }
+
   function v4HtmlResumenEmail(v, emailNuevo) {
     const dest = emailNuevo || v.email;
     return `${v4ResumenComprador(v)}
@@ -1704,6 +1717,8 @@
     v4Toggle('dv-btn-reembolso', perm('reembolsar') && v.estado === 'completada' && !v.usado);
     const btnReemb = document.getElementById('dv-btn-reembolso');
     if (btnReemb) btnReemb.textContent = esStripe ? 'Reembolso' : 'Anular venta';
+    // Eliminar (limpieza de pruebas): solo admin. Borra la venta y la saca de stats.
+    v4Toggle('dv-btn-eliminar', perm('eliminarVenta'));
     v4Toggle('dv-reag-panel', false);
     v4Toggle('dv-email-panel', false);
     v4Toggle('dv-msg', false);
@@ -2389,6 +2404,28 @@
           body: JSON.stringify({ codigo: cert, pinFinanciero: v4PinFinanciero() }),
         });
         v4GuardarInforme(v4InformeReembolso(v, data));
+        v4CerrarDrawer();
+        if (state.view === 'hub') await v4RenderHub();
+      } catch (e) { v4DrawerMsg(e.message, 'red'); }
+    });
+
+    document.getElementById('dv-btn-eliminar')?.addEventListener('click', async () => {
+      const v = state.drawerVenta;
+      const cert = v && certVenta(v);
+      if (!cert) return;
+      const ok = await v4ConfirmarAccion({
+        titulo: 'Eliminar venta de prueba',
+        resumenHtml: v4HtmlResumenEliminar(v),
+        peligro: true,
+        requierePin: true,
+        btnOk: 'Eliminar',
+      });
+      if (!ok) return;
+      try {
+        await api(window.teatroAdminApi(`venta/${encodeURIComponent(cert)}/eliminar`), {
+          method: 'POST',
+          body: JSON.stringify({ pinFinanciero: v4PinFinanciero() }),
+        });
         v4CerrarDrawer();
         if (state.view === 'hub') await v4RenderHub();
       } catch (e) { v4DrawerMsg(e.message, 'red'); }
