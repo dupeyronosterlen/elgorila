@@ -1608,9 +1608,10 @@
     }
     wrap.innerHTML = chips.join('');
     wrap.querySelectorAll('[data-chip]').forEach(btn => {
-      btn.onclick = async () => {
+      // Filtrado 100% en el cliente: state.ventas ya trae TODAS las ventas.
+      // (Recargar filtrado por fecha rompía los conteos de los demás chips y trababa.)
+      btn.onclick = () => {
         state.chipFuncion = btn.dataset.chip || null;
-        await cargarVentas(state.chipFuncion || undefined);
         v4RenderFnChips();
         v4RenderVentasTable();
         v4RenderStats();
@@ -1865,12 +1866,11 @@
             body: JSON.stringify({ fecha_iso: iso, activa }),
           });
           await cargarFunciones(false);
-          for (const f of state.funciones) {
+          await Promise.all(state.funciones.map(async (f) => {
             try {
-              const d = await api(window.teatroApi(`disponibilidad?fecha=${f.fecha_iso}`));
-              state.inv[f.fecha_iso] = d;
+              state.inv[f.fecha_iso] = await api(window.teatroApi(`disponibilidad?fecha=${f.fecha_iso}`));
             } catch { /* */ }
-          }
+          }));
           v4RenderFunciones();
         } catch (err) { alert(err.message); }
       };
@@ -2079,7 +2079,7 @@
     let ventasError = null;
     const [, ventasResult] = await Promise.allSettled([
       cargarFunciones(true),
-      cargarVentas(state.chipFuncion || undefined),
+      cargarVentas(),  // TODAS las ventas; el chip filtra en el cliente
     ]);
     if (ventasResult.status === 'rejected') {
       ventasError = ventasResult.reason?.message || 'Error al cargar ventas';
@@ -2102,12 +2102,12 @@
       else if (view === 'ops') { /* búsqueda bajo demanda */ }
       else if (view === 'funciones') {
         await cargarFunciones(false);
-        for (const f of state.funciones) {
+        // En paralelo (antes iba en serie y trababa con muchas funciones).
+        await Promise.all(state.funciones.map(async (f) => {
           try {
-            const d = await api(window.teatroApi(`disponibilidad?fecha=${f.fecha_iso}`));
-            state.inv[f.fecha_iso] = d;
+            state.inv[f.fecha_iso] = await api(window.teatroApi(`disponibilidad?fecha=${f.fecha_iso}`));
           } catch { /* */ }
-        }
+        }));
         v4RenderFunciones();
       } else if (view === 'informes') {
         const jobs = [];
