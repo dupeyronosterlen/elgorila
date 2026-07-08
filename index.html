@@ -1725,9 +1725,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       #modal-37-slides { min-height: 75vh; }
       .modal-37-slide img { max-height: 520px; }
     }
-    /* Galería: móvil 4 fotos grandes (toque 1 = color, toque 2 = cambiar); desktop 12 fotos, hover = color, clic = cambiar */
+    /* Galería: móvil 4 fotos grandes (toque 1 = color, toque 2 = cambiar); desktop 8 fotos, hover = color, clic = cambiar */
     .galeria-reducida { max-width: 100%; }
     .galeria-img-color { filter: none !important; }
+    /* Fondo oscuro detrás de cada foto: mientras carga se ve un cuadro oscuro
+       con su marco fino (intencional), nunca un bloque de color sólido. */
+    .galeria-zoom-wrap img { background-color: #120d0b; }
     @media (max-width: 1229px) {
       .galeria-reducida .grid { gap: 0.5rem; }
     }
@@ -3459,25 +3462,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-accent-gold frame-maze-1"></div>
 <div class="absolute inset-0.5">
-<img alt="Humberto Dupeyrón en escena como El Gorila" id="galeria-img-1" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
+<img alt="Humberto Dupeyrón en escena como El Gorila" id="galeria-img-1" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/mobile/03.webp" decoding="async" fetchpriority="high" data-galeria-index="2" data-galeria-filename="03.jpeg"/>
 </div>
 </div>
 <div class="group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-primary frame-maze-2"></div>
 <div class="absolute inset-0.5">
-<img alt="El Gorila Teatro — monólogo de Franz Kafka" id="galeria-img-2" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
+<img alt="El Gorila Teatro — monólogo de Franz Kafka" id="galeria-img-2" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/mobile/09.webp" decoding="async" fetchpriority="high" data-galeria-index="8" data-galeria-filename="09.jpeg"/>
 </div>
 </div>
 <div class="group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-accent-gold frame-maze-3"></div>
 <div class="absolute inset-0.5">
-<img alt="Humberto Dupeyrón en El Gorila, Ciudad de México" id="galeria-img-3" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
+<img alt="Humberto Dupeyrón en El Gorila, Ciudad de México" id="galeria-img-3" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/mobile/05.webp" decoding="async" fetchpriority="high" data-galeria-index="4" data-galeria-filename="05.jpeg"/>
 </div>
 </div>
 <div class="group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-primary frame-maze-1"></div>
 <div class="absolute inset-0.5">
-<img alt="Escena del monólogo El Gorila de Franz Kafka" id="galeria-img-4" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
+<img alt="Escena del monólogo El Gorila de Franz Kafka" id="galeria-img-4" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/mobile/07.webp" decoding="async" fetchpriority="high" data-galeria-index="6" data-galeria-filename="07.jpeg"/>
 </div>
 </div>
 <div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
@@ -3502,30 +3505,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="absolute inset-0 bg-primary frame-maze-2"></div>
 <div class="absolute inset-0.5">
 <img alt="El Gorila Teatro — obra basada en Kafka" id="galeria-img-8" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
-</div>
-</div>
-<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
-<div class="absolute inset-0 bg-accent-gold frame-maze-3"></div>
-<div class="absolute inset-0.5">
-<img alt="Humberto Dupeyrón — El monólogo sobre la domesticación del hombre" id="galeria-img-9" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
-</div>
-</div>
-<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
-<div class="absolute inset-0 bg-primary frame-maze-1"></div>
-<div class="absolute inset-0.5">
-<img alt="El Gorila en el teatro de Ciudad de México" id="galeria-img-10" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
-</div>
-</div>
-<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
-<div class="absolute inset-0 bg-accent-gold frame-maze-2"></div>
-<div class="absolute inset-0.5">
-<img alt="Escena de El Gorila con Humberto Dupeyrón" id="galeria-img-11" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
-</div>
-</div>
-<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
-<div class="absolute inset-0 bg-primary frame-maze-3"></div>
-<div class="absolute inset-0.5">
-<img alt="El Gorila Teatro — temporada Ciudad de México" id="galeria-img-12" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
 </div>
 </div>
 </div>

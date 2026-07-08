@@ -64,28 +64,41 @@ function galeriaRuta(filename) {
     return 'img/GALERIA/mobile/' + base + '.webp';
 }
 
-// Aplicar imágenes aleatorias a la galería: móvil usa WebP en mobile/, desktop usa original
+// Aplicar imágenes aleatorias a la galería.
+// La primera fila trae su foto fija ya en el HTML (carga instantánea); aquí solo
+// llenamos las fotos que quedaron con placeholder, evitando repetir las fijas.
 function aplicarGaleriaAleatoria() {
-    const cantidadMostrar = 12;
-    const numerosSeleccionados = new Set();
-    while (numerosSeleccionados.size < cantidadMostrar) {
-        numerosSeleccionados.add(Math.floor(Math.random() * imagenesGaleria.length));
+    const placeholders = [];
+    for (let i = 1; i <= 12; i++) {
+        const el = document.getElementById('galeria-img-' + i);
+        if (el && el.hasAttribute('data-galeria-placeholder')) placeholders.push(el);
     }
-    const indices = Array.from(numerosSeleccionados);
+    if (!placeholders.length) return;
+
+    // Índices ya ocupados por las fotos fijas del HTML, para no duplicarlos.
+    const usados = getIndicesUsadosGaleria(null);
+    const disponibles = [];
+    for (let k = 0; k < imagenesGaleria.length; k++) {
+        if (!usados.has(k)) disponibles.push(k);
+    }
+    // Barajar (Fisher–Yates)
+    for (let s = disponibles.length - 1; s > 0; s--) {
+        const r = Math.floor(Math.random() * (s + 1));
+        const tmp = disponibles[s]; disponibles[s] = disponibles[r]; disponibles[r] = tmp;
+    }
+
     const fallback = galeriaFallback;
-    for (let i = 0; i < cantidadMostrar; i++) {
-        const imgElement = document.getElementById(`galeria-img-${i + 1}`);
-        if (imgElement) {
-            const idx = indices[i];
-            imgElement.src = galeriaRuta(imagenesGaleria[idx]);
-            imgElement.setAttribute('data-galeria-index', String(idx));
-            imgElement.setAttribute('data-galeria-filename', imagenesGaleria[idx]);
-            imgElement.onerror = function () {
-                this.onerror = null;
-                this.src = fallback;
-            };
-        }
-    }
+    placeholders.forEach(function (imgElement, n) {
+        const idx = disponibles[n % disponibles.length];
+        imgElement.src = galeriaRuta(imagenesGaleria[idx]);
+        imgElement.setAttribute('data-galeria-index', String(idx));
+        imgElement.setAttribute('data-galeria-filename', imagenesGaleria[idx]);
+        imgElement.removeAttribute('data-galeria-placeholder');
+        imgElement.onerror = function () {
+            this.onerror = null;
+            this.src = fallback;
+        };
+    });
 }
 
 // Índices actualmente usados por otras fotos de la galería (para no duplicar al avanzar)
