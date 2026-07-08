@@ -292,6 +292,41 @@ async function enviarEmailOxxoPendiente(session, meta, tid, env) {
   );
 }
 
+// Aviso al equipo de que entró una reserva OXXO pendiente de pago (aún sin
+// emitir boleto). Cuando el pago cae, llega el aviso normal de "Nueva orden".
+async function notificarAdminOxxoPendiente(session, meta, tid, env) {
+  const flagKey = kv(tid, `oxxo-mail-admin:${session.id}`);
+  if (await env.INVENTARIO.get(flagKey)) return;
+  await env.INVENTARIO.put(flagKey, '1', { expirationTtl: 30 * 24 * 60 * 60 });
+
+  const funcionNombre = meta.funcionNombre || meta.fecha || '—';
+  const emailComprador = meta.email || session.customer_details?.email || session.customer_email || '—';
+  const nombre = meta.nombre || session.customer_details?.name || '—';
+  const total  = session.amount_total != null
+    ? `$${(session.amount_total / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`
+    : '—';
+  const cantidad = meta.cantidad || '—';
+
+  await enviarEmail(
+    adminNotifyEmail(env),
+    `OXXO pendiente de pago — ${funcionNombre}`,
+    `<div style="font-family:Georgia,serif;font-size:15px;color:#1a1411;line-height:1.6;">
+      <p style="font-size:17px;margin:0 0 12px;"><strong>Reserva OXXO pendiente de pago</strong></p>
+      <p style="margin:0 0 12px;">Un comprador generó una ficha OXXO. Los lugares quedan
+      apartados hasta que pague o venza la ficha. <strong>El boleto se emite solo cuando cae el pago</strong>
+      (1–3 días hábiles); ahí llega el aviso normal de «Nueva orden».</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="font-size:14px;">
+        <tr><td style="padding:2px 10px 2px 0;color:#8a5a2a;">Función</td><td><strong>${funcionNombre}</strong></td></tr>
+        <tr><td style="padding:2px 10px 2px 0;color:#8a5a2a;">Entradas</td><td>${cantidad}</td></tr>
+        <tr><td style="padding:2px 10px 2px 0;color:#8a5a2a;">Total</td><td>${total}</td></tr>
+        <tr><td style="padding:2px 10px 2px 0;color:#8a5a2a;">Comprador</td><td>${nombre}</td></tr>
+        <tr><td style="padding:2px 10px 2px 0;color:#8a5a2a;">Correo</td><td>${emailComprador}</td></tr>
+      </table>
+    </div>`,
+    env,
+  );
+}
+
 function htmlEmailOxxoPendiente({ funcionNombre, total, voucherUrl, venceTexto }) {
   const totalTxt = (total != null)
     ? `$${Number(total).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`
@@ -2281,7 +2316,10 @@ async function handleCheckout(tid, request, env, ctx) {
     mode:        'payment',
     expires_at:  String(sessionExpiresAt),
     'phone_number_collection[enabled]': 'false',
-    locale:                             'es-419',
+    // La ficha OXXO solo se genera en 'es' o 'en'; con 'es-419' cae a inglés.
+    locale:                             'es',
+    // Aparece en la ficha OXXO y en el recibo de Stripe.
+    'payment_intent_data[description]': 'EL GORILA con Humberto Dupeyrón',
     'payment_method_types[0]':          'card',
     ...(oxxoDisponible ? {
       'payment_method_types[1]': 'oxxo',
@@ -2427,9 +2465,10 @@ async function handleWebhook(request, env, ctx) {
     // OXXO: session.completed llega cuando el usuario recibe el voucher, aún sin pagar.
     // Solo procesamos si payment_status === 'paid'. El pago real llega por async_payment_succeeded.
     if (session.payment_status === 'unpaid') {
-      // Correo informativo al comprador con la ficha OXXO, tiempos y contacto.
+      // Correo al comprador con la ficha + aviso al equipo de reserva pendiente.
       if ((session.payment_method_types || []).includes('oxxo')) {
         ctx.waitUntil(enviarEmailOxxoPendiente(session, meta, tid, env));
+        ctx.waitUntil(notificarAdminOxxoPendiente(session, meta, tid, env));
       }
       return new Response('ok', { status: 200 });
     }
