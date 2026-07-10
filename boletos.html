@@ -312,6 +312,10 @@ a   { color: inherit; }
 #botones-fecha > div > button:not([disabled]):hover {
   background: rgba(217,155,58,.18) !important;
 }
+/* Fecha destacada en rojo (sin etiqueta de texto) */
+#botones-fecha button[data-fecha-destacada="1"]:not([disabled]) {
+  border-color: rgba(212,58,26,.75) !important;
+}
 #botones-fecha > div > button.underline {
   background: transparent !important; border: none !important;
   color: var(--gold-dim) !important;
@@ -328,15 +332,12 @@ a   { color: inherit; }
 }
 #fecha-seleccionada-texto[hidden] { display: none; }
 
-/* ── ETIQUETA ESTRENO EN BOTÓN DE FECHA ──────────────────── */
+/* ── ETIQUETA EN BOTÓN DE FECHA (sin recuadro, bajo la hora) ── */
 .fecha-estreno-tag {
-  display: inline-block;
-  margin-top: 5px;
-  padding: 3px 8px;
+  display: block;
+  margin-top: 4px;
   font-family: var(--mono); font-size: 13px;
   letter-spacing: .16em; text-transform: uppercase;
-  background: rgba(212,58,26,.18);
-  border: 1px solid rgba(212,58,26,.45);
   color: var(--red);
 }
 

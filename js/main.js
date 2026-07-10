@@ -202,11 +202,20 @@ function resaltarBotonFecha(clave) {
     document.querySelectorAll('#botones-fecha button').forEach(btn => {
         btn.style.border = '';
         btn.style.boxShadow = '';
+        const atenuada = btn.dataset.fechaAtenuada === '1' && !btn.disabled;
+        btn.style.opacity = atenuada ? '0.55' : '';
+        btn.style.filter  = atenuada ? 'saturate(0.75)' : '';
+        if (btn.dataset.fechaDestacada === '1' && !btn.disabled) {
+            btn.style.borderColor = '#d43a1a';
+            btn.style.boxShadow = '0 0 0 2px rgba(212, 58, 26, 0.35)';
+        }
     });
     const sel = document.querySelector(`#botones-fecha button[data-fecha-clave="${clave}"]`);
     if (sel && !sel.disabled) {
         sel.style.border = '3px solid white';
         sel.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.5)';
+        sel.style.opacity = '';
+        sel.style.filter = '';
     }
 }
 
@@ -594,8 +603,9 @@ function cargarFechas() {
         const partesNombre   = funcion.nombre.split(/\s*[—–-]\s*/);
         const fechaCorta     = partesNombre[0] || funcion.nombre;
         const hora           = partesNombre[1] || '18:00 hrs';
-        const estrenoTag     = funcion.estreno
-            ? '<span class="fecha-estreno-tag">Estreno</span>'
+        const textoEtiqueta  = funcion.etiqueta || (funcion.estreno ? 'Estreno' : '');
+        const estrenoTag     = textoEtiqueta
+            ? `<span class="fecha-estreno-tag">${textoEtiqueta}</span>`
             : '';
         const claveStr       = funcion.clave;
         const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
@@ -621,9 +631,13 @@ function cargarFechas() {
         const claseBoton   = bloqueada
             ? 'p-4 rounded-lg text-center border border-slate-700/50 bg-slate-800/40 text-slate-400 cursor-not-allowed backdrop-blur-sm'
             : `p-3 sm:p-4 rounded-lg text-center border-2 ${esSeleccionada ? 'border-white border-4' : 'border-[#967d3d]'} bg-[#c69c3a] text-[#3e1116] transition-all duration-200 hover:bg-[#dcb048] hover:text-[#2a080d] active:bg-[#b88a2f] hover:shadow-md hover:border-[#bda056] group focus:ring-2 focus:ring-white touch-manipulation`;
-        const estiloBoton  = bloqueada ? '' : (esSeleccionada
+        let estiloBoton  = bloqueada ? '' : (esSeleccionada
             ? 'border: 3px solid white; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); -webkit-tap-highlight-color: transparent;'
             : '-webkit-tap-highlight-color: transparent;');
+        // Fecha atenuada: sigue en venta pero con menor protagonismo visual
+        if (funcion.atenuada && !bloqueada && !esSeleccionada) estiloBoton += ' opacity: 0.55; filter: saturate(0.75);';
+        // Fecha destacada: marcada en rojo, sin texto adicional
+        if (funcion.destacada && !bloqueada && !esSeleccionada) estiloBoton += ' border-color: #d43a1a; box-shadow: 0 0 0 2px rgba(212, 58, 26, 0.35);';
 
         const mesIso = claveStr.slice(0, 7);
         html += `
@@ -631,16 +645,18 @@ function cargarFechas() {
                 type="button"
                 data-fecha-clave="${claveStr}"
                 data-fecha-mes="${mesIso}"
+                ${funcion.atenuada ? 'data-fecha-atenuada="1"' : ''}
+                ${funcion.destacada ? 'data-fecha-destacada="1"' : ''}
                 onclick="${bloqueada ? '' : `seleccionarFecha('${claveStr}', '${nombreStr}', ${JSON.stringify(funcion).replace(/"/g, '&quot;')})`}"
                 class="${claseBoton}"
                 ${bloqueada ? 'disabled' : ''}
                 style="${estiloBoton}"
             >
                 <span class="block font-bold ${bloqueada ? 'opacity-60' : ''}">${fechaCorta}</span>
-                ${estrenoTag}
                 <span class="text-sm ${bloqueada ? 'opacity-60' : 'font-medium opacity-90'}">
                     ${bloqueada ? 'Ventas bloqueadas' : hora}
                 </span>
+                ${estrenoTag}
             </button>
         `;
     });
