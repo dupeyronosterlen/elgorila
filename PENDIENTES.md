@@ -226,6 +226,7 @@ Hasta P-14, la agencia usa admin CSV + `/api/reporte` (stats sin nombres/emails)
 | P-14 | Boletera → base procesada → agente IA agencia |
 | P-15 | Hacer **obligatorio** el nombre en checkout online (hoy opcional) |
 | P-16 | Encuesta post-función + cupones en `acta.html` (ver sección arriba) |
+| P-21 | Quitar a Uriel Espinosa Jiménez de "Iluminación y sonido" en `programa/v1–v4.html` y poner al nuevo técnico(s) — falta nombre(s), pendiente de confirmar |
 
 ---
 
