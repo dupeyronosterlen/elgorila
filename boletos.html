@@ -529,6 +529,7 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   background: #0c0a08; overflow: hidden;
 }
 .mapa-teatro-wrap svg { display: block; width: 100%; height: auto; }
+.mapa-teatro-wrap iframe { display: block; width: 100%; height: 280px; border: 0; filter: grayscale(.25) contrast(1.05); }
 .mapa-nota {
   font-family: var(--cuerpo); font-size: 16px;
   line-height: 1.55; color: var(--p-soft);
@@ -1173,32 +1174,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <details class="faq-item">
       <summary class="faq-summary">
-        <span>¿Puedo cambiar mis boletos para otra fecha?</span>
-        <span class="faq-chevron" aria-hidden="true">+</span>
-      </summary>
-      <p class="faq-resp">Las compras son finales. Solo hay cambio de fecha si la producción cancela o reprograma la función; en ese caso te contactamos por correo.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary class="faq-summary">
         <span>¿Hay descuentos disponibles?</span>
         <span class="faq-chevron" aria-hidden="true">+</span>
       </summary>
-      <p class="faq-resp">Hay dos tipos de descuento distintos:</p>
+      <p class="faq-resp">Hay dos formas de obtener descuento:</p>
       <ul class="faq-resp" style="margin-top:8px;padding-left:1.2em;">
         <li><strong>Con credencial</strong> (INAPAM, estudiante o maestro): tarifa fija <strong>$245</strong> — elige esa fila; no usa cupón.</li>
-        <li><strong>ESPEJO</strong> (pareja): exactamente <strong>2 generales = $600</strong> — código al pagar. Ideal para ads de pareja.</li>
         <li><strong>GRUPO20</strong>: <strong>5+ generales</strong>, todos generales → −20% con código al pagar.</li>
-        <li><strong>Invitación</strong> (−25%): enlace personal de quien ya vio la obra — no es cupón de campaña.</li>
       </ul>
     </details>
 
     <details class="faq-item">
       <summary class="faq-summary">
-        <span>¿Cuál es la política de cancelación?</span>
+        <span>¿Qué pasa si la función se cancela o cambia de fecha?</span>
         <span class="faq-chevron" aria-hidden="true">+</span>
       </summary>
-      <p class="faq-resp">Las compras son finales. No se aceptan cancelaciones ni reembolsos, excepto si la función es cancelada por la producción, en cuyo caso se ofrece reembolso completo o cambio de fecha.</p>
+      <p class="faq-resp">Si la producción cancela o reprograma la función, te contactamos por correo y se ofrece reembolso completo o cambio de fecha.</p>
     </details>
 
     <details class="faq-item">
@@ -1208,6 +1199,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </summary>
       <p class="faq-resp">Te recomendamos llegar con al menos <strong>30 minutos de anticipación</strong> (antes de las 17:30 hrs). El acceso puede cerrarse al iniciar la función a las 18:00.</p>
     </details>
+
+    <details class="faq-item">
+      <summary class="faq-summary">
+        <span>¿Cuánto dura la función?</span>
+        <span class="faq-chevron" aria-hidden="true">+</span>
+      </summary>
+      <p class="faq-resp">Aproximadamente <strong>90 minutos, sin intermedio</strong>.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-summary">
+        <span>¿Hay estacionamiento?</span>
+        <span class="faq-chevron" aria-hidden="true">+</span>
+      </summary>
+      <p class="faq-resp">Sí, el <strong>Teatro Wilberto Cantón</strong> cuenta con estacionamiento propio para el público.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-summary">
+        <span>¿Cómo recibo mis boletos?</span>
+        <span class="faq-chevron" aria-hidden="true">+</span>
+      </summary>
+      <p class="faq-resp">Tus boletos llegan por correo electrónico en formato digital (QR) justo después de completar tu compra. Solo debes mostrarlos en tu celular al llegar al teatro.</p>
+    </details>
   </div>
 </section>
 
@@ -1216,33 +1231,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="inner">
     <div class="sec-head">
       <span class="sec-num">Sede</span>
-      <h2 class="sec-title">Mapa del<br><em>teatro</em></h2>
+      <h2 class="sec-title">Cómo<br><em>llegar</em></h2>
     </div>
     <div class="rule"></div>
 
     <div class="mapa-titulo">
-      <span>Distribución del auditorio</span>
-      <span class="mapa-badge">Orientativo</span>
+      <span>Teatro Wilberto Cantón</span>
+      <span class="mapa-badge">Ubicación</span>
     </div>
-    <div class="mapa-teatro-wrap" role="img" aria-label="Plano orientativo: escenario, platea y galería">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 270" aria-hidden="true">
-        <path fill="#1a1411" stroke="#a89578" stroke-width="1.2" d="M 12 34 L 384 18 L 384 252 L 12 236 Z"/>
-        <rect fill="#0a0706" stroke="#d99b3a" stroke-width="1.4" x="24" y="52" width="44" height="166" rx="1"/>
-        <text fill="#d99b3a" font-family="JetBrains Mono, ui-monospace, monospace" font-size="9" letter-spacing="1.6" text-anchor="middle" transform="rotate(-90 46 135)" x="46" y="135">ESCENARIO</text>
-        <rect fill="rgba(217,155,58,0.22)" stroke="#d99b3a" stroke-width="1.1" x="78" y="64" width="188" height="142" rx="1"/>
-        <text fill="#d99b3a" font-family="JetBrains Mono, ui-monospace, monospace" font-size="10" letter-spacing="1.8" text-anchor="middle" x="172" y="138">PLATEA</text>
-        <rect fill="rgba(241,234,217,0.08)" stroke="#a89578" stroke-width="1.1" x="258" y="48" width="84" height="18" rx="1"/>
-        <rect fill="rgba(241,234,217,0.08)" stroke="#a89578" stroke-width="1.1" x="318" y="48" width="30" height="174" rx="1"/>
-        <rect fill="rgba(241,234,217,0.08)" stroke="#a89578" stroke-width="1.1" x="258" y="204" width="84" height="18" rx="1"/>
-        <text fill="#f1ead9" font-family="JetBrains Mono, ui-monospace, monospace" font-size="9" letter-spacing="1.6" text-anchor="middle" transform="rotate(90 333 135)" x="333" y="135">GALERÍA</text>
-        <path fill="none" stroke="rgba(168,149,120,0.55)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M 278 48 L 268 64"/>
-        <path fill="none" stroke="rgba(168,149,120,0.55)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M 278 222 L 268 206"/>
-      </svg>
-    </div>
-    <div class="mapa-leyenda" aria-hidden="true">
-      <div class="mapa-leyenda-item"><span class="mapa-leyenda-dot" style="background:#0a0706;border-color:#d99b3a;"></span><span>Escenario</span></div>
-      <div class="mapa-leyenda-item"><span class="mapa-leyenda-dot" style="background:rgba(217,155,58,.35);"></span><span>Platea</span></div>
-      <div class="mapa-leyenda-item"><span class="mapa-leyenda-dot" style="background:rgba(168,149,120,.25);"></span><span>Galería</span></div>
+    <div class="mapa-teatro-wrap">
+      <iframe title="Mapa de ubicación — Teatro Wilberto Cantón" src="https://www.google.com/maps?q=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
     </div>
 
     <div class="mapa-direccion">
@@ -1278,7 +1276,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <a class="footer-link" href="mailto:elgorilateatro@gmail.com">elgorilateatro@gmail.com</a>
     </div>
-    <div style="text-align:center;">
+    <div style="text-align:center;display:flex;flex-direction:column;gap:8px;">
+      <a class="footer-link" href="/funciones.html" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+        <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Funciones y fechas
+      </a>
+      <a class="footer-link" href="/sobre-la-obra.html" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+        <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Sobre la obra
+      </a>
+      <a class="footer-link" href="/presskit/presskit2026.html" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+        <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Presskit
+      </a>
       <a class="footer-link" href="#faq" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">
         <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Preguntas frecuentes
