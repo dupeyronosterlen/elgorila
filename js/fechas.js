@@ -47,7 +47,7 @@ const FUNCIONES_TEMPORADA = [
   { fecha_iso: '2026-09-16', nombre: 'Miércoles 16 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-09-19', nombre: 'Sábado 19 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
   { fecha_iso: '2026-09-23', nombre: 'Miércoles 23 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
-  { fecha_iso: '2026-09-26', nombre: 'Sábado 26 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-09-26', nombre: 'Sábado 26 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-09-30', nombre: 'Miércoles 30 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
 ];
 

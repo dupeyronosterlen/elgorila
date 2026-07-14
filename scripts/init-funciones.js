@@ -3,7 +3,7 @@
  * Genera JSON de funciones por teatro para KV (INVENTARIO).
  *
  * Temporada 2026 Wilberto:
- * - 11 sábados 18:00 en venta (estreno 18 jul – cierre 26 sep)
+ * - 10 sábados 18:00 en venta (18 jul función de prensa; temporada pública 25 jul – 19 sep, 9 sábados)
  * - 2 sábados ocultos: 4 jul y 11 jul (activables desde admin)
  * - 13 miércoles 20:30 ocultos (activables desde admin)
  *
@@ -33,7 +33,7 @@ const MIERCOLES_2026 = [
 const SABADOS_2026 = [
   { fecha_iso: '2026-07-04', nombre: 'Sábado 4 Jul — 18:00 hrs',  activa: false, numero_obra: 1300 },
   { fecha_iso: '2026-07-11', nombre: 'Sábado 11 Jul — 18:00 hrs', activa: false, numero_obra: 1300 },
-  { fecha_iso: '2026-07-18', nombre: 'Sábado 18 Jul — 18:00 hrs', activa: true,  estreno: true, numero_obra: 1300 },
+  { fecha_iso: '2026-07-18', nombre: 'Sábado 18 Jul — 18:00 hrs', activa: true,  numero_obra: 1300 },
   { fecha_iso: '2026-07-25', nombre: 'Sábado 25 Jul — 18:00 hrs', activa: true,  numero_obra: 1300 },
   { fecha_iso: '2026-08-01', nombre: 'Sábado 1 Ago — 18:00 hrs',  activa: true,  numero_obra: 1300 },
   { fecha_iso: '2026-08-08', nombre: 'Sábado 8 Ago — 18:00 hrs',  activa: true,  numero_obra: 1300 },
@@ -43,7 +43,7 @@ const SABADOS_2026 = [
   { fecha_iso: '2026-09-05', nombre: 'Sábado 5 Sep — 18:00 hrs',  activa: true,  numero_obra: 1300 },
   { fecha_iso: '2026-09-12', nombre: 'Sábado 12 Sep — 18:00 hrs', activa: true,  numero_obra: 1300 },
   { fecha_iso: '2026-09-19', nombre: 'Sábado 19 Sep — 18:00 hrs', activa: true,  numero_obra: 1300 },
-  { fecha_iso: '2026-09-26', nombre: 'Sábado 26 Sep — 18:00 hrs', activa: true,  numero_obra: 1300 },
+  { fecha_iso: '2026-09-26', nombre: 'Sábado 26 Sep — 18:00 hrs', activa: false, numero_obra: 1300 },
 ];
 
 const FUNCIONES_OFICIALES = [...MIERCOLES_2026, ...SABADOS_2026]
