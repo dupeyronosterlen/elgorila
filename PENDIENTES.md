@@ -227,6 +227,7 @@ Hasta P-14, la agencia usa admin CSV + `/api/reporte` (stats sin nombres/emails)
 | P-15 | Hacer **obligatorio** el nombre en checkout online (hoy opcional) |
 | P-16 | Encuesta post-función + cupones en `acta.html` (ver sección arriba) |
 | P-21 | Quitar a Uriel Espinosa Jiménez de "Iluminación y sonido" en `programa/v1–v4.html` y poner al nuevo técnico(s) — falta nombre(s), pendiente de confirmar |
+| P-22 | Cupón **ESPEJO** (2 generales) sube de $600 a $700 cuando sea el estreno — actualizar en backend/API de cupones (no está en HTML, buscar `ESPEJO` en `js/main.js` y `js/boletera-venta.js`) |
 
 ---
 
