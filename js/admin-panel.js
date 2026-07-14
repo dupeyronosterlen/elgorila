@@ -2081,6 +2081,13 @@
     } catch { state.oxxoPendientes = []; }
   }
 
+  async function cargarOxxoHistorial() {
+    try {
+      const d = await api(window.teatroAdminApi('oxxo-historial'));
+      state.oxxoHistorial = d.historial || [];
+    } catch { state.oxxoHistorial = []; }
+  }
+
   function v4RenderOxxoPendientes() {
     const wrap = document.getElementById('oxxo-pendientes');
     if (!wrap) return;
@@ -2112,6 +2119,41 @@
     </div>`;
   }
 
+  function v4RenderOxxoHistorial() {
+    const wrap = document.getElementById('oxxo-historial');
+    if (!wrap) return;
+    const items = state.oxxoHistorial || [];
+    if (!items.length) { wrap.innerHTML = ''; return; }
+    const filas = items.map(p => {
+      const fn = state.funciones.find(f => f.fecha_iso === p.fecha);
+      const nombre = (fn && fn.nombre) || p.funcionNombre || p.fecha || '—';
+      const completada = p.estado === 'completada';
+      const badge = completada
+        ? `<span style="color:var(--green,#3ba55d)">Completada</span>`
+        : `<span style="color:#f87171">Fallida</span>`;
+      return `<tr>
+        <td>${badge}</td>
+        <td>${esc(nombre)}</td>
+        <td>${esc(p.nombre || '—')}</td>
+        <td class="td-email">${esc(p.email || '—')}</td>
+        <td class="td-num">${p.cantidad || '—'}</td>
+        <td class="td-num">${p.total != null ? fmtMXN(p.total) : '—'}</td>
+        <td class="td-metodo">${p.creadoEn ? esc(fmtFecha(p.creadoEn)) : '—'}</td>
+        <td class="td-metodo">${p.resueltoEn ? esc(fmtFecha(p.resueltoEn)) : '—'}</td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<details style="margin-bottom:16px;border:1px solid var(--faint2,#3332);padding:12px 14px">
+      <summary style="cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)">
+        Historial de fichas OXXO (completadas y fallidas) · ${items.length}
+      </summary>
+      <div class="table-wrap" style="margin-top:10px"><table><thead><tr>
+        <th>Estado</th><th>Función</th><th>Comprador</th><th>Email</th>
+        <th style="text-align:right">Cant.</th><th style="text-align:right">Total</th>
+        <th>Generada</th><th>Resuelta</th>
+      </tr></thead><tbody>${filas}</tbody></table></div>
+    </details>`;
+  }
+
   async function v4RenderHub() {
     if (!perm('verVentas')) return;
     let ventasError = null;
@@ -2119,6 +2161,7 @@
       cargarFunciones(true),
       cargarVentas(),  // TODAS las ventas; el chip filtra en el cliente
       cargarOxxoPendientes(),
+      cargarOxxoHistorial(),
     ]);
     if (ventasResult.status === 'rejected') {
       ventasError = ventasResult.reason?.message || 'Error al cargar ventas';
@@ -2127,6 +2170,7 @@
     v4RenderFnChips();
     v4RenderVentasTable();
     v4RenderOxxoPendientes();
+    v4RenderOxxoHistorial();
     v4Toggle('btn-export-todo', perm('exportarDatos'));
     v4Toggle('btn-venta-manual', perm('venderEfectivo'));
     const errEl = document.getElementById('ventas-api-error');

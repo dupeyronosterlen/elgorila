@@ -346,6 +346,9 @@ async function guardarOxxoPendiente(session, meta, tid, env) {
       nombre:        meta.nombre || session.customer_details?.name || null,
       seccionCantidades,
       creadoEn:      new Date().toISOString(),
+      // Vencimiento real de la ficha (Stripe Checkout Session.expires_at). Sirve de
+      // respaldo para que el admin la oculte sola aunque el webhook expired no llegue.
+      expiraEn:      session.expires_at ? session.expires_at * 1000 : null,
     }),
     // Respaldo: si por lo que sea no se borra al pagar/vencer, caduca solo a los 31 días.
     { expirationTtl: 31 * 24 * 60 * 60 },
@@ -354,6 +357,29 @@ async function guardarOxxoPendiente(session, meta, tid, env) {
 
 async function borrarOxxoPendiente(tid, sessionId, env) {
   try { await env.VENTAS.delete(kv(tid, `oxxoPend:${sessionId}`)); } catch { /* */ }
+}
+
+// Historial permanente (fallidas y completadas) de fichas OXXO, para consulta en
+// el admin. No tiene TTL, igual que los registros de venta.
+async function guardarOxxoHistorial(tid, sessionId, estado, pendiente, extra, env) {
+  const canonical = resolveTid(tid);
+  try {
+    await env.VENTAS.put(
+      kv(canonical, `oxxoHist:${sessionId}`),
+      JSON.stringify({
+        sessionId,
+        estado, // 'completada' | 'fallida'
+        fecha:         pendiente?.fecha ?? extra.fecha ?? null,
+        funcionNombre: pendiente?.funcionNombre ?? extra.funcionNombre ?? null,
+        cantidad:      pendiente?.cantidad ?? extra.cantidad ?? null,
+        total:         pendiente?.total ?? extra.total ?? null,
+        email:         pendiente?.email ?? extra.email ?? null,
+        nombre:        pendiente?.nombre ?? extra.nombre ?? null,
+        creadoEn:      pendiente?.creadoEn || extra.creadoEn || null,
+        resueltoEn:    new Date().toISOString(),
+      }),
+    );
+  } catch (e) { logError('oxxo.historial', { error: e.message }); }
 }
 
 function htmlEmailOxxoPendiente({ funcionNombre, total, voucherUrl, venceTexto }) {
@@ -2485,8 +2511,25 @@ async function handleWebhook(request, env, ctx) {
         env
       ));
     }
-    // La ficha venció: quitar el pendiente del admin (los lugares ya se liberaron).
-    ctx.waitUntil(borrarOxxoPendiente(tid, session.id, env));
+    // La ficha venció: quitar el pendiente del admin (los lugares ya se liberaron)
+    // y dejar registro en el historial como fallida.
+    if (metodos.includes('oxxo')) {
+      ctx.waitUntil((async () => {
+        let pendiente = null;
+        try {
+          const raw = await env.VENTAS.get(kv(tid, `oxxoPend:${session.id}`));
+          if (raw) pendiente = JSON.parse(raw);
+        } catch { /* */ }
+        await guardarOxxoHistorial(tid, session.id, 'fallida', pendiente, {
+          fecha, funcionNombre: meta.funcionNombre || fecha,
+          cantidad: meta.cantidad, total: session.amount_total != null ? session.amount_total / 100 : null,
+          email: emailExpirado, nombre: meta.nombre || session.customer_details?.name,
+        }, env);
+        await borrarOxxoPendiente(tid, session.id, env);
+      })());
+    } else {
+      ctx.waitUntil(borrarOxxoPendiente(tid, session.id, env));
+    }
     return new Response('ok', { status: 200 });
   }
 
@@ -2574,8 +2617,24 @@ async function handleWebhook(request, env, ctx) {
   };
 
   await env.VENTAS.put(ventaKey, JSON.stringify(venta));
-  // Pago confirmado: ya existe la venta real, quitar el pendiente OXXO del admin.
-  ctx.waitUntil(borrarOxxoPendiente(tid, sessionId, env));
+  // Pago confirmado: ya existe la venta real, quitar el pendiente OXXO del admin
+  // (se va a Ventas) y, si era OXXO, dejar registro en el historial como completada.
+  if (metodoPago === 'oxxo') {
+    ctx.waitUntil((async () => {
+      let pendiente = null;
+      try {
+        const raw = await env.VENTAS.get(kv(tid, `oxxoPend:${sessionId}`));
+        if (raw) pendiente = JSON.parse(raw);
+      } catch { /* */ }
+      await guardarOxxoHistorial(tid, sessionId, 'completada', pendiente, {
+        fecha, funcionNombre, cantidad, total: venta.total,
+        email: venta.email, nombre: venta.nombre,
+      }, env);
+      await borrarOxxoPendiente(tid, sessionId, env);
+    })());
+  } else {
+    ctx.waitUntil(borrarOxxoPendiente(tid, sessionId, env));
+  }
   await persistirCertificadosKv(tid, sessionId, gen.certificado, gen.boletos, env);
   await env.VENTAS.put(kv(tid, `ventaIdx:${fecha}:${sessionId}`), sessionId);
   await env.VENTAS.put(kv(tid, `ventaIdxContable:${fecha}:${sessionId}`), sessionId);
@@ -4536,8 +4595,10 @@ async function handleSitioPut(request, env) {
 }
 
 // Reservas OXXO pendientes de pago (informativo). Se limpian solas al pagar o
-// vencer la ficha; ver guardarOxxoPendiente / borrarOxxoPendiente.
-async function handleOxxoPendientes(tid, request, env) {
+// vencer la ficha; ver guardarOxxoPendiente / borrarOxxoPendiente. Como respaldo
+// por si el webhook checkout.session.expired no llegó, aquí también se filtran
+// (y se mueven al historial como fallidas) las que ya deberían haber vencido.
+async function handleOxxoPendientes(tid, request, env, ctx) {
   const payload = await requireAdmin(request, env);
   if (!payload) return json({ error: 'No autorizado.' }, 401, request);
   if (!PUEDE_VENTAS.has(payload.rol)) {
@@ -4546,11 +4607,44 @@ async function handleOxxoPendientes(tid, request, env) {
   const canonical = resolveTid(tid);
   const list = await env.VENTAS.list({ prefix: kv(canonical, 'oxxoPend:') });
   const raw  = await Promise.all(list.keys.map(k => env.VENTAS.get(k.name)));
-  const pendientes = raw.filter(Boolean)
+  const todas = raw.filter(Boolean)
+    .map(r => { try { return JSON.parse(r); } catch { return null; } })
+    .filter(Boolean);
+
+  const ahora = Date.now();
+  const vigentes = [];
+  const vencidas = [];
+  for (const p of todas) {
+    if (p.expiraEn && ahora > p.expiraEn) vencidas.push(p);
+    else vigentes.push(p);
+  }
+  if (vencidas.length) {
+    const limpiar = Promise.all(vencidas.map(async p => {
+      await guardarOxxoHistorial(canonical, p.sessionId, 'fallida', p, {}, env);
+      await borrarOxxoPendiente(canonical, p.sessionId, env);
+    }));
+    if (ctx?.waitUntil) ctx.waitUntil(limpiar); else await limpiar;
+  }
+
+  vigentes.sort((a, b) => (b.creadoEn || '').localeCompare(a.creadoEn || ''));
+  return json({ pendientes: vigentes }, 200, request);
+}
+
+// Historial permanente de fichas OXXO (completadas y fallidas).
+async function handleOxxoHistorial(tid, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_VENTAS.has(payload.rol)) {
+    return json({ error: 'Sin permiso para ver ventas.' }, 403, request);
+  }
+  const canonical = resolveTid(tid);
+  const list = await env.VENTAS.list({ prefix: kv(canonical, 'oxxoHist:') });
+  const raw  = await Promise.all(list.keys.map(k => env.VENTAS.get(k.name)));
+  const historial = raw.filter(Boolean)
     .map(r => { try { return JSON.parse(r); } catch { return null; } })
     .filter(Boolean)
-    .sort((a, b) => (b.creadoEn || '').localeCompare(a.creadoEn || ''));
-  return json({ pendientes }, 200, request);
+    .sort((a, b) => (b.resueltoEn || '').localeCompare(a.resueltoEn || ''));
+  return json({ historial }, 200, request);
 }
 
 async function handleVentas(tid, request, env) {
@@ -5111,7 +5205,8 @@ export default {
       const sub = parts.slice(3).join('/');
 
       if (method === 'GET'  && sub === 'ventas')         return handleVentas(tid, request, env);
-      if (method === 'GET'  && sub === 'oxxo-pendientes') return handleOxxoPendientes(tid, request, env);
+      if (method === 'GET'  && sub === 'oxxo-pendientes') return handleOxxoPendientes(tid, request, env, ctx);
+      if (method === 'GET'  && sub === 'oxxo-historial')  return handleOxxoHistorial(tid, request, env);
       if (method === 'GET'  && sub === 'compradores')    return handleCompradores(tid, request, env);
       if (method === 'GET'  && sub === 'informe-funciones') return handleInformeFunciones(tid, request, env);
       if (method === 'GET'  && sub === 'funciones')        return handleFuncionesAdmin(tid, request, env);
