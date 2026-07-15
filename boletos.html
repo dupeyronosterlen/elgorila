@@ -1475,7 +1475,9 @@ async function procesarPagoInline() {
     return;
   }
 
-  if (window.ElGorilaAnalytics) ElGorilaAnalytics.addPaymentInfo(orden);
+  // Click real a Stripe: aquí (y solo aquí) disparan begin_checkout + InitiateCheckout.
+  // AddPaymentInfo se retiró: los datos de pago se capturan dentro de Stripe, no en el sitio.
+  if (window.ElGorilaAnalytics) ElGorilaAnalytics.beginCheckout(orden);
 
   /* ── Con backend (Stripe) ── */
   if (window.API_BASE) {

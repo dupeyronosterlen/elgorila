@@ -549,7 +549,9 @@ function mostrarCheckoutInline(orden) {
     panel.style.display = '';
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    if (window.ElGorilaAnalytics) ElGorilaAnalytics.beginCheckout(orden);
+    // begin_checkout/InitiateCheckout se dispara en procesarPagoInline (el click
+    // real a Stripe): abrir el panel, editarlo o volver de un pago cancelado
+    // inflaba la señal ~4-5x vs sesiones reales de Stripe.
 }
 
 // --- FUNCIÓN 6: VOLVER A EDITAR ---
