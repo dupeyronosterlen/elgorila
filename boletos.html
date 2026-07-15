@@ -1406,7 +1406,7 @@ async function aplicarCuponInline() {
     const res = await fetch(window.teatroApi('validar-cupon'), {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ codigo, items: orden.items }),
+      body:    JSON.stringify({ codigo, items: orden.items, fecha: orden.fechaIso }),
     });
     const data = await res.json();
     if (!res.ok) {

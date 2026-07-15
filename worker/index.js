@@ -1473,6 +1473,8 @@ async function validarCuponDescuento(codigoRaw, env) {
     soloGenerales: entry.solo_generales !== false,
     minGeneral:   entry.min_general != null ? Number(entry.min_general) : null,
     maxGeneral:   entry.max_general != null ? Number(entry.max_general) : null,
+    // Candado por función: el cupón solo aplica a esta fecha (YYYY-MM-DD)
+    soloFecha:    typeof entry.solo_fecha === 'string' ? entry.solo_fecha : null,
   };
 
   if (tipo === 'par_fijo') {
@@ -1485,6 +1487,17 @@ async function validarCuponDescuento(codigoRaw, env) {
   const porcentaje = Math.min(100, Math.max(0, Number(entry.porcentaje) || 0));
   if (porcentaje <= 0) return { ok: false, error: 'Código no válido.' };
   return { ...base, porcentaje };
+}
+
+function errorCuponSoloFecha(cupon) {
+  let legible = cupon.soloFecha;
+  try {
+    const [y, m, d] = cupon.soloFecha.split('-').map(Number);
+    legible = new Date(y, m - 1, d).toLocaleDateString('es-MX', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    });
+  } catch { /* fecha cruda como fallback */ }
+  return `Este código solo aplica para la función del ${legible}.`;
 }
 
 function contarGenerales(itemsValidados) {
@@ -2041,6 +2054,13 @@ async function handleValidarCupon(tid, request, env) {
   const reglas = validarCarritoParaCupon(cupon, itemsValidados);
   if (!reglas.ok) return json({ error: reglas.error }, 400, request);
 
+  // Candado solo_fecha: si el cliente manda la fecha de la orden, se valida aquí
+  // (el candado duro está en la creación del checkout y en venta manual).
+  const fechaOrden = typeof body.fecha === 'string' ? body.fecha : '';
+  if (cupon.soloFecha && fechaOrden && fechaOrden !== cupon.soloFecha) {
+    return json({ error: errorCuponSoloFecha(cupon) }, 400, request);
+  }
+
   const { totalCentavos, subtotalCentavos } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
     cupon,
   });
@@ -2326,6 +2346,11 @@ async function handleCheckout(tid, request, env, ctx) {
     if (!reglas.ok) {
       await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
       return json({ error: reglas.error }, 400, request);
+    }
+    // Candado duro solo_fecha: el cupón únicamente aplica a su función
+    if (cupon.soloFecha && fecha !== cupon.soloFecha) {
+      await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
+      return json({ error: errorCuponSoloFecha(cupon) }, 400, request);
     }
     cuponAplicado = cupon;
   }
@@ -3925,6 +3950,9 @@ async function handleVentaManual(tid, request, env, ctx) {
     if (!cupon.ok) return json({ error: cupon.error }, 400, request);
     const reglas = validarCarritoParaCupon(cupon, itemsValidados);
     if (!reglas.ok) return json({ error: reglas.error }, 400, request);
+    if (cupon.soloFecha && fecha !== cupon.soloFecha) {
+      return json({ error: errorCuponSoloFecha(cupon) }, 400, request);
+    }
     cuponAplicado = cupon;
   }
 
