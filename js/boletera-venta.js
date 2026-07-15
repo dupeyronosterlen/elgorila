@@ -78,7 +78,12 @@
     };
   }
 
+  function esCortesiaSeleccionada() {
+    return (document.getElementById('metodo-pago-efectivo')?.value || '') === 'cortesia';
+  }
+
   function totalMostrado() {
+    if (esCortesiaSeleccionada()) return 0;
     if (cuponAplicado && typeof cuponAplicado.total === 'number') return cuponAplicado.total;
     return subtotalSinCupon();
   }
@@ -274,5 +279,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     actualizarUi();
+    // Cortesía: al cambiar la forma de pago, refrescar el total mostrado ($0)
+    document.getElementById('metodo-pago-efectivo')?.addEventListener('change', actualizarUi);
   });
 })(window);
