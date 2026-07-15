@@ -1560,7 +1560,10 @@ function validarCarritoParaCupon(cupon, itemsValidados) {
   return { ok: true };
 }
 
-function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon }) {
+function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon, sinMinimoStripe = false }) {
+  // sinMinimoStripe: las ventas de taquilla (efectivo/tarjeta_taquilla) no pasan por
+  // Stripe, así que no aplican ni el piso de 50¢/boleto ni el total mínimo de $10 —
+  // una cortesía con cupón 100% debe quedar en $0 exactos.
   const rows           = [];
   let totalCentavos    = 0;
   let subtotalCentavos = 0;
@@ -1583,7 +1586,7 @@ function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon }) {
       idxGen += 1;
       const isLast = idxGen === nGen;
       const unit   = isLast ? rest : Math.floor(target / nGen);
-      row.unitCentavos = Math.max(50, unit);
+      row.unitCentavos = Math.max(sinMinimoStripe ? 0 : 50, unit);
       if (!isLast) rest -= row.unitCentavos;
     }
     totalCentavos = rows.reduce((s, r) => s + r.unitCentavos * r.item.cantidad, 0);
@@ -1593,7 +1596,7 @@ function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon }) {
       if (row.item.tipo === 'general') {
         unit = Math.round(unit * (1 - cupon.porcentaje / 100));
       }
-      row.unitCentavos = Math.max(50, unit);
+      row.unitCentavos = Math.max(sinMinimoStripe ? 0 : 50, unit);
     }
     totalCentavos = rows.reduce((s, r) => s + r.unitCentavos * r.item.cantidad, 0);
   } else {
@@ -1601,7 +1604,7 @@ function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon }) {
     totalCentavos = subtotalCentavos;
   }
 
-  if (totalCentavos > 0 && totalCentavos < STRIPE_MIN_TOTAL_CENTAVOS) {
+  if (!sinMinimoStripe && totalCentavos > 0 && totalCentavos < STRIPE_MIN_TOTAL_CENTAVOS) {
     const diff = STRIPE_MIN_TOTAL_CENTAVOS - totalCentavos;
     rows[0].unitCentavos += Math.ceil(diff / rows[0].item.cantidad);
     totalCentavos = STRIPE_MIN_TOTAL_CENTAVOS;
@@ -3950,6 +3953,7 @@ async function handleVentaManual(tid, request, env, ctx) {
 
   const { totalCentavos } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
     cupon: cuponAplicado,
+    sinMinimoStripe: true,
   });
   const total = totalCentavos / 100;
 
