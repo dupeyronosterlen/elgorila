@@ -195,6 +195,12 @@
     }
 
     if (!de) {
+      // Enlace con cupón directo (?cupon=XXX sin certificado de referido, ej.
+      // cortesías CORTESIA18): activar el auto-aplicado al abrir el checkout.
+      if (cuponParam) {
+        marcarCuponActivo();
+        limpiarUrlInvita();
+      }
       ocultarBanner();
       return;
     }
