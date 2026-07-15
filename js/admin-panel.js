@@ -1530,7 +1530,7 @@
 
   function esVentaTaquilla(v) {
     const m = (v?.metodoPago || '').toLowerCase();
-    if (m === 'efectivo' || m === 'tarjeta_taquilla') return true;
+    if (m === 'efectivo' || m === 'tarjeta_taquilla' || m === 'cortesia') return true;
     return String(v?.sessionId || '').startsWith('manual_');
   }
 
@@ -1629,8 +1629,9 @@
     const rows = v4VentasFiltradas();
     tbody.innerHTML = rows.map(v => {
       const cert = certVenta(v);
+      const mLow = (v.metodoPago || '').toLowerCase();
       const metodo = esVentaTaquilla(v)
-        ? ((v.metodoPago || '').toLowerCase() === 'tarjeta_taquilla' ? 'tarjeta taquilla' : 'efectivo')
+        ? (mLow === 'cortesia' ? 'cortesía' : mLow === 'tarjeta_taquilla' ? 'tarjeta taquilla' : 'efectivo')
         : (v.metodoPago || 'online');
       const st = v4EstadoClase(v);
       return `<tr data-venta="${esc(cert)}" class="row-st-${st}">

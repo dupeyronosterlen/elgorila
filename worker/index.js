@@ -140,6 +140,7 @@ function adminNotifyEmail(env) {
 
 function formatMetodoPago(venta) {
   const m = (venta.metodoPago || '').toLowerCase();
+  if (m === 'cortesia') return 'Cortesía';
   if (m === 'efectivo') return 'Efectivo en taquilla';
   if (m === 'tarjeta_taquilla') return 'Tarjeta en taquilla';
   if (venta.sessionId?.startsWith('manual_') && !m) return 'Efectivo en taquilla';
@@ -150,7 +151,7 @@ function formatMetodoPago(venta) {
 
 function esVentaTaquilla(venta) {
   const m = (venta?.metodoPago || '').toLowerCase();
-  if (m === 'efectivo' || m === 'tarjeta_taquilla') return true;
+  if (m === 'efectivo' || m === 'tarjeta_taquilla' || m === 'cortesia') return true;
   return String(venta?.sessionId || '').startsWith('manual_');
 }
 
@@ -1560,7 +1561,10 @@ function validarCarritoParaCupon(cupon, itemsValidados) {
   return { ok: true };
 }
 
-function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon }) {
+function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon, sinMinimoStripe = false }) {
+  // sinMinimoStripe: las ventas de taquilla (efectivo/tarjeta_taquilla) no pasan por
+  // Stripe, así que no aplican ni el piso de 50¢/boleto ni el total mínimo de $10 —
+  // una cortesía con cupón 100% debe quedar en $0 exactos.
   const rows           = [];
   let totalCentavos    = 0;
   let subtotalCentavos = 0;
@@ -1583,7 +1587,7 @@ function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon }) {
       idxGen += 1;
       const isLast = idxGen === nGen;
       const unit   = isLast ? rest : Math.floor(target / nGen);
-      row.unitCentavos = Math.max(50, unit);
+      row.unitCentavos = Math.max(sinMinimoStripe ? 0 : 50, unit);
       if (!isLast) rest -= row.unitCentavos;
     }
     totalCentavos = rows.reduce((s, r) => s + r.unitCentavos * r.item.cantidad, 0);
@@ -1593,7 +1597,7 @@ function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon }) {
       if (row.item.tipo === 'general') {
         unit = Math.round(unit * (1 - cupon.porcentaje / 100));
       }
-      row.unitCentavos = Math.max(50, unit);
+      row.unitCentavos = Math.max(sinMinimoStripe ? 0 : 50, unit);
     }
     totalCentavos = rows.reduce((s, r) => s + r.unitCentavos * r.item.cantidad, 0);
   } else {
@@ -1601,7 +1605,7 @@ function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon }) {
     totalCentavos = subtotalCentavos;
   }
 
-  if (totalCentavos > 0 && totalCentavos < STRIPE_MIN_TOTAL_CENTAVOS) {
+  if (!sinMinimoStripe && totalCentavos > 0 && totalCentavos < STRIPE_MIN_TOTAL_CENTAVOS) {
     const diff = STRIPE_MIN_TOTAL_CENTAVOS - totalCentavos;
     rows[0].unitCentavos += Math.ceil(diff / rows[0].item.cantidad);
     totalCentavos = STRIPE_MIN_TOTAL_CENTAVOS;
@@ -3860,9 +3864,10 @@ async function handleVentaManual(tid, request, env, ctx) {
   const nombre   = typeof body.nombre === 'string' ? body.nombre.trim() : '';
   const notas    = typeof body.notas === 'string' ? body.notas.trim().substring(0, 300) : '';
   const codigoCuponRaw = typeof body.codigoCupon === 'string' ? body.codigoCupon.trim() : '';
-  const METODOS_TAQUILLA = new Set(['efectivo', 'tarjeta_taquilla']);
+  const METODOS_TAQUILLA = new Set(['efectivo', 'tarjeta_taquilla', 'cortesia']);
   let metodoPago = typeof body.metodoPago === 'string' ? body.metodoPago.trim().toLowerCase() : 'efectivo';
   if (!METODOS_TAQUILLA.has(metodoPago)) metodoPago = 'efectivo';
+  const esCortesia = metodoPago === 'cortesia';
   const { items, fecha } = body;
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -3915,7 +3920,7 @@ async function handleVentaManual(tid, request, env, ctx) {
   if (cantidadTotal > 50) return json({ error: 'Máximo 50 boletos por venta.' }, 400, request);
 
   let cuponAplicado = null;
-  if (codigoCuponRaw) {
+  if (codigoCuponRaw && !esCortesia) {
     const cupon = await validarCuponDescuento(codigoCuponRaw, env);
     if (!cupon.ok) return json({ error: cupon.error }, 400, request);
     const reglas = validarCarritoParaCupon(cupon, itemsValidados);
@@ -3950,8 +3955,10 @@ async function handleVentaManual(tid, request, env, ctx) {
 
   const { totalCentavos } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
     cupon: cuponAplicado,
+    sinMinimoStripe: true,
   });
-  const total = totalCentavos / 100;
+  // Cortesía: boletos e inventario reales, cobro $0. No pasa por Stripe ni usa cupón.
+  const total = esCortesia ? 0 : totalCentavos / 100;
 
   const gen = await generarBoletosVenta(tid, fecha, itemsValidados, env);
   const sessionId = `manual_${crypto.randomUUID().replace(/-/g, '')}`;
@@ -3978,6 +3985,7 @@ async function handleVentaManual(tid, request, env, ctx) {
     estado:         'completada',
     usado:          false,
     metodoPago,
+    cortesia:       esCortesia || undefined,
     registradoPor:  payload.usuario || 'admin',
     codigoCupon:    cuponAplicado?.codigo || null,
     cuponPct:       cuponAplicado?.porcentaje != null ? parseInt(cuponAplicado.porcentaje, 10) : null,
@@ -4007,7 +4015,7 @@ async function handleVentaManual(tid, request, env, ctx) {
   ctx.waitUntil(registrarMetricaVenta(env, metricaFromVenta({
     tid: canonical,
     venta,
-    canal: metodoPago === 'efectivo' ? 'taquilla_efectivo' : 'taquilla',
+    canal: esCortesia ? 'cortesia' : (metodoPago === 'efectivo' ? 'taquilla_efectivo' : 'taquilla'),
   })));
 
   await registrarAuditoria(env, {
@@ -4016,7 +4024,7 @@ async function handleVentaManual(tid, request, env, ctx) {
     rol:       payload.rol,
     accion:    'venta_manual',
     teatroId:  canonical,
-    detalles:  `Venta efectivo ${gen.certificado} — ${cantidadTotal} boleto(s) — ${funcion.nombre}`,
+    detalles:  `${esCortesia ? 'Cortesía' : 'Venta efectivo'} ${gen.certificado} — ${cantidadTotal} boleto(s) — ${funcion.nombre}`,
     meta:      { codigo: gen.certificado, fecha, total, email: email || null, codigoCupon: cuponAplicado?.codigo || null, via: payload.purpose || 'admin' },
   });
 

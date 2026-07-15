@@ -352,7 +352,8 @@ async function generarCodigoEfectivo() {
     if (box) box.style.display = 'block';
     if (txt) txt.textContent = data.codigo;
     if (inf) {
-      const metodoLbl = metodoPago === 'tarjeta_taquilla' ? 'Tarjeta en taquilla' : 'Efectivo';
+      const metodoLbl = metodoPago === 'cortesia' ? 'Cortesía'
+        : metodoPago === 'tarjeta_taquilla' ? 'Tarjeta en taquilla' : 'Efectivo';
       const mailNote = data.emailEnviado
         ? ` · boleto enviado a ${email}${data.idempotentReplay ? ' (recuperado tras fallo de red)' : ''}`
         : ` · error al enviar correo a ${email}`;
