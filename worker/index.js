@@ -1574,10 +1574,12 @@ function validarCarritoParaCupon(cupon, itemsValidados) {
   return { ok: true };
 }
 
-function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon, sinMinimoStripe = false }) {
+function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon, sinMinimoStripe = false, precioEspecialCentavos = null }) {
   // sinMinimoStripe: las ventas de taquilla (efectivo/tarjeta_taquilla) no pasan por
   // Stripe, así que no aplican ni el piso de 50¢/boleto ni el total mínimo de $10 —
   // una cortesía con cupón 100% debe quedar en $0 exactos.
+  // precioEspecialCentavos: la función tiene precio fijo por boleto (funcion.precio_especial,
+  // ej. preestreno de prensa a $10) — aplica a TODOS los tipos y anula cupones.
   const rows           = [];
   let totalCentavos    = 0;
   let subtotalCentavos = 0;
@@ -1590,7 +1592,10 @@ function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon, sinMinimoS
     rows.push({ item, seccionConfig, unitBruto, unitCentavos: unitBruto });
   }
 
-  if (cupon?.tipo === 'par_fijo') {
+  if (precioEspecialCentavos > 0) {
+    for (const row of rows) row.unitCentavos = precioEspecialCentavos;
+    totalCentavos = rows.reduce((s, r) => s + r.unitCentavos * r.item.cantidad, 0);
+  } else if (cupon?.tipo === 'par_fijo') {
     const target = Math.round(cupon.totalMxn * 100);
     const nGen   = contarGenerales(itemsValidados);
     let rest     = target;
@@ -2061,6 +2066,17 @@ async function handleValidarCupon(tid, request, env) {
     return json({ error: errorCuponSoloFecha(cupon) }, 400, request);
   }
 
+  // Funciones con precio especial (ej. preestreno $10/boleto) no combinan cupones
+  if (fechaOrden) {
+    try {
+      const fRaw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
+      const fn   = fRaw ? JSON.parse(fRaw).find(f => f.fecha_iso === fechaOrden) : null;
+      if (Number(fn?.precio_especial) > 0) {
+        return json({ error: 'Esta función ya tiene precio especial — los cupones no aplican.' }, 400, request);
+      }
+    } catch { /* si falla la lectura, el checkout aplica el precio especial de todos modos */ }
+  }
+
   const { totalCentavos, subtotalCentavos } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
     cupon,
   });
@@ -2312,6 +2328,10 @@ async function handleCheckout(tid, request, env, ctx) {
   } catch { return json({ error: 'Error al leer configuración.' }, 500, request); }
   if (!funcion) return json({ error: 'Fecha de función no válida.' }, 400, request);
 
+  // Precio especial de la función (ej. preestreno de prensa $10/boleto):
+  // aplica a todos los boletos y anula cupones — el cupón se ignora en silencio.
+  const precioEspecialCentavos = Math.round(Number(funcion.precio_especial || 0) * 100);
+
   // Agrupar cantidades por sección para optimistic lock
   const seccionCantidades = {};
   for (const item of itemsValidados) {
@@ -2336,7 +2356,7 @@ async function handleCheckout(tid, request, env, ctx) {
 
   // Cupón (única vía de descuento promocional; credenciales van en su fila a $245)
   let cuponAplicado = null;
-  if (codigoCupon) {
+  if (codigoCupon && precioEspecialCentavos <= 0) {
     const cupon = await validarCuponDescuento(codigoCupon, env);
     if (!cupon.ok) {
       await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
@@ -2383,6 +2403,7 @@ async function handleCheckout(tid, request, env, ctx) {
 
   const { rows: lineRows } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
     cupon: cuponAplicado,
+    precioEspecialCentavos: precioEspecialCentavos > 0 ? precioEspecialCentavos : null,
   });
 
   const canonical = resolveTid(tid);
@@ -3984,6 +4005,10 @@ async function handleVentaManual(tid, request, env, ctx) {
   const { totalCentavos } = calcularLineItemsPrecio(itemsValidados, seccionMap, {
     cupon: cuponAplicado,
     sinMinimoStripe: true,
+    // Si la función tiene precio especial (ej. preestreno $10), taquilla cobra lo mismo
+    precioEspecialCentavos: Number(funcion.precio_especial) > 0
+      ? Math.round(Number(funcion.precio_especial) * 100)
+      : null,
   });
   // Cortesía: boletos e inventario reales, cobro $0. No pasa por Stripe ni usa cupón.
   const total = esCortesia ? 0 : totalCentavos / 100;

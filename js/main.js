@@ -23,7 +23,17 @@ function seccionVentaConfig() {
     return map[seccionActiva] || map.platea || { precio_general: 350, precio_descuento: 245, nombre: 'Platea' };
 }
 
+// Precio especial de la función seleccionada (ej. preestreno de prensa $10/boleto).
+// Aplica a todos los tipos y desactiva promos automáticas.
+function precioEspecialFuncion() {
+    const f  = (window.FUNCIONES_TEMPORADA || []).find(x => x.fecha_iso === fechaSeleccionada);
+    const pe = Number(f?.precio_especial);
+    return pe > 0 ? pe : null;
+}
+
 function precioUnitario(tipo) {
+    const pe = precioEspecialFuncion();
+    if (pe) return pe;
     const sec = seccionVentaConfig();
     return tipo === 'general' ? sec.precio_general : sec.precio_descuento;
 }
@@ -47,6 +57,7 @@ function tieneBoletosCredencial() {
 
 // Promo automática: solo GRUPO20 (5+ generales, sin credencial). ESPEJO va manual al pagar.
 function detectarPromoAutomatica() {
+    if (precioEspecialFuncion()) return null;
     if (tieneBoletosCredencial()) return null;
     const gen   = cantidades.general || 0;
     const total = totalCantidad();
@@ -321,9 +332,22 @@ function actualizarPantalla() {
     }
 
     const secCfg = seccionVentaConfig();
+    const pe = precioEspecialFuncion();
     const precioGeneralEl = document.getElementById('precio-general-display');
     if (precioGeneralEl) {
-        precioGeneralEl.innerHTML = `<span style="text-decoration:line-through;opacity:.42;font-size:.75em;">$400</span> $${secCfg.precio_general} MXN`;
+        precioGeneralEl.innerHTML = pe
+            ? `<span style="text-decoration:line-through;opacity:.42;font-size:.75em;">$${secCfg.precio_general}</span> $${pe} MXN`
+            : `<span style="text-decoration:line-through;opacity:.42;font-size:.75em;">$400</span> $${secCfg.precio_general} MXN`;
+    }
+    const precioCredencialEl = document.getElementById('precio-credencial-display');
+    if (precioCredencialEl) {
+        precioCredencialEl.innerHTML = pe
+            ? `<span style="text-decoration:line-through;opacity:.42;">$${secCfg.precio_descuento}</span> <span style="margin: 0 4px;">→</span> <span class="ticket-precio-promo">$${pe} MXN</span>`
+            : `<span style="text-decoration:line-through;opacity:.42;">$350</span> <span style="margin: 0 4px;">→</span> <span class="ticket-precio-promo">$${secCfg.precio_descuento} MXN</span> <span style="opacity:.55;"> · −30%</span>`;
+    }
+    const notaPreventaEl = document.getElementById('nota-preventa-general');
+    if (notaPreventaEl) {
+        notaPreventaEl.textContent = pe ? 'Función de prensa — precio especial' : 'Preventa hasta 25 jul';
     }
 
     // Resumen de items
