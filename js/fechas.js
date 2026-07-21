@@ -29,7 +29,7 @@ const FUNCIONES_TEMPORADA = [
   { fecha_iso: '2026-07-15', nombre: 'Miércoles 15 Jul — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-07-18', nombre: 'Sábado 18 Jul — 18:00 hrs', sede: SEDE_TEMPORADA, atenuada: true, etiqueta: 'Prensa', activa: true, precio_especial: 10 },
   { fecha_iso: '2026-07-22', nombre: 'Miércoles 22 Jul — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
-  { fecha_iso: '2026-07-25', nombre: 'Sábado 25 Jul — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-07-25', nombre: 'Sábado 25 Jul — 18:00 hrs', sede: SEDE_TEMPORADA, etiqueta: 'Estreno', activa: true },
   { fecha_iso: '2026-07-29', nombre: 'Miércoles 29 Jul — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-08-01', nombre: 'Sábado 1 Ago — 18:00 hrs',  sede: SEDE_TEMPORADA, activa: true },
   { fecha_iso: '2026-08-05', nombre: 'Miércoles 5 Ago — 20:30 hrs',  sede: SEDE_TEMPORADA, activa: false },
