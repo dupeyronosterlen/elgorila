@@ -1916,6 +1916,23 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     margin: 0 !important;
     white-space: nowrap !important;
   }
+  .hero-portada__tagline {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-size: clamp(15px, 3.4vw, 22px) !important;
+    line-height: 1.2 !important;
+    font-weight: 600 !important;
+    font-style: italic !important;
+    letter-spacing: 0.01em !important;
+    color: #D4AF37 !important;
+    margin: clamp(4px, 1.4vw, 8px) 0 0 !important;
+    text-shadow:
+      0 2px 18px rgba(0,0,0,0.95),
+      0 1px 4px rgba(0,0,0,1),
+      0 0 48px rgba(0,0,0,0.6) !important;
+  }
+  .hero-portada__tagline-br {
+    display: none;
+  }
   .hero-portada__meta {
     align-items: center !important;
   }
@@ -1972,6 +1989,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .hero-portada--foto .hero-portada__titulo {
       font-size: clamp(36px, 11.5vw, 68px) !important;
+    }
+    .hero-portada--foto .hero-portada__tagline {
+      font-size: 13px !important;
+      max-width: 92% !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+    .hero-portada__tagline-br {
+      display: inline;
     }
   }
   @media (max-width: 390px) {
@@ -3316,6 +3342,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <h1 class="titulo-el-gorila hero-portada__titulo">EL GORILA</h1>
 <p class="portada-kafka hero-portada__kafka">de Franz Kafka</p>
 <div class="portada-separador hero-portada__regla"></div>
+<p class="hero-portada__tagline">El fenómeno teatral con 37 años en cartelera.</p>
 </div>
 </div>
 <div class="portada-info-temporada hero-portada__direccion" id="portada-info-desktop">
@@ -3343,9 +3370,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 <!-- Contenido de la obra (siempre visible, sobre eliminado) -->
 <div id="sobre-contenido" style="max-height:none; opacity:1; overflow:visible; padding-top:0;">
-<section class="mb-8 sm:mb-10 scroll-mt-24 mt-1 sm:mt-2 md:mt-4">
 <div class="text-center mb-4 sm:mb-5 px-4">
 <p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">37 años esperándote. Llegó tu turno.</p>
+</div>
+<section id="sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-1 sm:mt-2 md:mt-4 section-with-bg">
+<h2 class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
+            <div class="mx-auto max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left break-words bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 relative contenedor-texto-scroll">
+                <div id="sinopsis-texto" class="w-full space-y-4">
+                <p class="w-full">Peter es un simio capturado en la selva africana que, para sobrevivir en cautiverio, aprendió a comportarse como humano. Hoy, convertido en artista de variedades, sube al escenario a dar un informe ante una academia científica sobre cómo logró esa transformación.</p>
+                <p class="w-full">Lo cuenta con humor crudo y sin filtros —afilado, mexicano— cómo dejó de ser animal para "encajar" en un mundo que no le pidió permiso. La palabra no adorna: piensa, confronta y expone preguntas esenciales sobre la obediencia, la identidad y el precio de pertenecer.</p>
+                <p class="w-full">Verlo actuar incomoda: es escuchar a alguien que aprendió a hablar, pensar y actuar como nosotros… y que, desde esa lucidez, nos regresa la mirada y nos pregunta cuánto de "domesticados" estamos nosotros también.</p>
+                </div>
+            </div>
+            <div class="mx-auto max-w-3xl flex justify-center sm:justify-end mt-4 sm:mt-5">
+                <a href="/sobre-la-obra.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-accent-gold/40 bg-accent-gold/10 text-accent-gold text-sm sm:text-base tracking-wide transition-colors hover:bg-accent-gold/20 hover:border-accent-gold/60">
+                    <span>Saber más sobre la obra</span>
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+            </div>
+</section>
+<div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+<section class="mb-8 sm:mb-10 scroll-mt-24 mt-4 sm:mt-6">
+<div class="text-center mb-4 sm:mb-5 px-4">
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Galería</p>
 </div>
 <div class="max-w-5xl galeria-reducida mx-auto galeria-wrap">
 <div class="galeria-hilo galeria-hilo-1 hidden md:block" aria-hidden="true"></div>
@@ -3402,26 +3449,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </div>
 </div>
-</section>
-<div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
-<div class="text-center my-4 sm:my-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">¿De qué trata, en realidad?</p>
-</div>
-<section id="sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-4 sm:mt-6 section-with-bg">
-<h2 class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
-            <div class="mx-auto max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-text-dark font-light tracking-wide text-left break-words bg-black/30 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-accent-gold/20 relative contenedor-texto-scroll">
-                <div id="sinopsis-texto" class="w-full space-y-4">
-                <p class="w-full">El Gorila es una pieza que cruza pensamiento filosófico, humor incisivo y una animalidad siempre latente. El discurso avanza con aparente orden, pero se tensiona a través de la ironía, el juego y una risa que no busca alivio, sino conciencia. Lo que inicia como una explicación razonable se va transformando en un reflejo incómodo de nuestra propia necesidad de adaptación.</p>
-                <p class="w-full">La obra parte de un texto fundamental, pero lo lleva a escena con una voz propia: clara, directa y viva. El humor —afilado, mexicano— abre grietas por donde aparecen preguntas esenciales sobre la obediencia, la identidad y el precio de pertenecer. La palabra no adorna: piensa, confronta y expone.</p>
-                <p class="w-full">Más que narrar una historia, El Gorila propone una experiencia íntima y perturbadora: escuchar a alguien que aprendió a hablar como nosotros, pensar como nosotros… y que, desde ese aprendizaje, nos observa con una lucidez inquietante.</p>
-                </div>
-            </div>
-            <div class="mx-auto max-w-3xl flex justify-center sm:justify-end mt-4 sm:mt-5">
-                <a href="/sobre-la-obra.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-accent-gold/40 bg-accent-gold/10 text-accent-gold text-sm sm:text-base tracking-wide transition-colors hover:bg-accent-gold/20 hover:border-accent-gold/60">
-                    <span>Saber más sobre la obra</span>
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                </a>
-            </div>
 </section>
 <!-- Ancla para scroll al widget -->
 <div id="venta-boletos" class="scroll-mt-24"></div>
