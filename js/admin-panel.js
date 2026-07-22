@@ -1595,16 +1595,23 @@
     const wrap = document.getElementById('fn-chips');
     if (!wrap) return;
     const counts = {};
+    const butacas = {};
+    let butacasTotal = 0;
     for (const v of state.ventas) {
       if (v.estado === 'reembolsada') continue;
       const fc = v.fechaContable || v.fecha;
-      if (fc) counts[fc] = (counts[fc] || 0) + 1;
+      if (fc) {
+        counts[fc] = (counts[fc] || 0) + 1;
+        butacas[fc] = (butacas[fc] || 0) + (v.cantidad || 0);
+      }
+      butacasTotal += v.cantidad || 0;
     }
-    const chips = [`<button type="button" class="fn-chip${!state.chipFuncion ? ' active' : ''}" data-chip="">Todas<span class="fn-chip-count">${state.ventas.length}</span></button>`];
+    const chips = [`<button type="button" class="fn-chip${!state.chipFuncion ? ' active' : ''}" data-chip="">Todas<span class="fn-chip-count">${state.ventas.length}-${butacasTotal}</span></button>`];
     for (const f of state.funciones) {
       const n = counts[f.fecha_iso] || 0;
+      const b = butacas[f.fecha_iso] || 0;
       const act = state.chipFuncion === f.fecha_iso ? ' active' : '';
-      chips.push(`<button type="button" class="fn-chip${act}" data-chip="${esc(f.fecha_iso)}">${esc(f.nombre)}<span class="fn-chip-count">${n}</span></button>`);
+      chips.push(`<button type="button" class="fn-chip${act}" data-chip="${esc(f.fecha_iso)}">${esc(f.nombre)}<span class="fn-chip-count">${n}-${b}</span></button>`);
     }
     wrap.innerHTML = chips.join('');
     wrap.querySelectorAll('[data-chip]').forEach(btn => {
