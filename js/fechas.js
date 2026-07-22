@@ -126,8 +126,37 @@ const FechasManager = {
   },
 };
 
+/**
+ * El admin activa/oculta funciones desde el panel (botón "En venta/Oculta"),
+ * lo cual escribe en la KV del Worker. Aquí se trae ese estado y se aplica
+ * sobre FUNCIONES_TEMPORADA para que boletos.html lo respete sin necesitar
+ * un deploy de código por cada cambio de fechas.
+ * Si el fetch falla, se conserva `activa` tal como está en este archivo.
+ */
+async function sincronizarFuncionesActivas() {
+  if (typeof window === 'undefined' || typeof window.teatroApi !== 'function') return;
+  try {
+    const res = await fetch(window.teatroApi('funciones'));
+    if (!res.ok) return;
+    const remotas = await res.json();
+    if (!Array.isArray(remotas)) return;
+    const porFecha = new Map(remotas.map(f => [f.fecha_iso, f]));
+    FUNCIONES_TEMPORADA.forEach(f => {
+      const r = porFecha.get(f.fecha_iso);
+      f.activa = !!r;
+      if (r) {
+        if (r.nombre) f.nombre = r.nombre;
+        if (r.etiqueta) f.etiqueta = r.etiqueta;
+        if (typeof r.atenuada === 'boolean') f.atenuada = r.atenuada;
+        if (typeof r.precio_especial === 'number') f.precio_especial = r.precio_especial;
+      }
+    });
+  } catch (_) { /* sin conexión: se mantiene la config local como respaldo */ }
+}
+
 if (typeof window !== 'undefined') {
   window.FechasManager = FechasManager;
   window.SEDES = SEDES;
   window.FUNCIONES_TEMPORADA = FUNCIONES_TEMPORADA;
+  window.sincronizarFuncionesActivas = sincronizarFuncionesActivas;
 }

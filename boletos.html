@@ -1368,10 +1368,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   var badge = document.getElementById('badge-temporada-boletos');
   var badgeTexto = document.getElementById('badge-temporada-boletos-texto');
-  var activas = (window.FUNCIONES_TEMPORADA || []).filter(function(f) { return f.activa !== false; });
-  if (badge && badgeTexto && activas.length) {
-    badgeTexto.textContent = 'Temporada 2026 — 9 funciones';
-    badge.hidden = false;
+  function pintarBadgeTemporada() {
+    var activas = (window.FUNCIONES_TEMPORADA || []).filter(function(f) { return f.activa !== false; });
+    if (badge && badgeTexto && activas.length) {
+      badgeTexto.textContent = 'Temporada 2026 — ' + activas.length + (activas.length === 1 ? ' función' : ' funciones');
+      badge.hidden = false;
+    }
+  }
+  pintarBadgeTemporada();
+  if (typeof window.sincronizarFuncionesActivas === 'function') {
+    window.sincronizarFuncionesActivas().then(pintarBadgeTemporada);
   }
 })();
 </script>

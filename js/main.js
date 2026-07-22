@@ -692,9 +692,10 @@ function cargarFechas() {
 }
 
 // --- INICIALIZACIÓN ---
-function inicializar() {
+async function inicializar() {
     if (typeof InventarioManager !== 'undefined') InventarioManager.inicializar();
 
+    if (typeof sincronizarFuncionesActivas === 'function') await sincronizarFuncionesActivas();
     cargarFechas();
 
     if (typeof FechasManager !== 'undefined') {
@@ -710,7 +711,10 @@ function inicializar() {
         if (fechaSeleccionada) { verificarDisponibilidad(); actualizarPantalla(); }
     }, 30000);
 
-    setInterval(cargarFechas, 60000);
+    setInterval(async () => {
+        if (typeof sincronizarFuncionesActivas === 'function') await sincronizarFuncionesActivas();
+        cargarFechas();
+    }, 60000);
 }
 
 // --- LISTA DE ESPERA ---

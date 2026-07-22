@@ -268,41 +268,6 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
     background:rgba(217,155,58,.58);
     background-clip:padding-box;
   }
-  .admin-scroll-rail{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:6px;
-    position:fixed;
-    right:14px;
-    bottom:24px;
-    z-index:40;
-    padding:6px;
-    background:rgba(17,13,11,.92);
-    border:1px solid var(--faint2);
-    pointer-events:none;
-  }
-  .admin-scroll-rail button{
-    pointer-events:auto;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    width:36px;
-    height:36px;
-    border:1px solid var(--faint2);
-    color:var(--soft);
-    transition:border-color .15s,color .15s,background .15s;
-  }
-  .admin-scroll-rail button:hover:not(:disabled){
-    border-color:var(--gold);
-    color:var(--gold);
-    background:var(--gold-dd);
-  }
-  .admin-scroll-rail button:disabled{opacity:.28;cursor:default}
-  .admin-scroll-rail .material-symbols-outlined{font-size:20px}
-}
-@media (max-width:900px){
-  .admin-scroll-rail{display:none!important}
 }
 .bol-tab.active{border-color:var(--gold)!important;color:var(--gold)!important}
 .admin-ops-wrap .bol-card{background:var(--bg2);border:1px solid var(--faint);padding:24px;margin-bottom:20px}
@@ -1139,15 +1104,6 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
   </main>
 </div>
 
-<div id="admin-scroll-rail" class="admin-scroll-rail hidden" aria-label="Desplazamiento de página">
-  <button type="button" id="admin-scroll-up" aria-label="Subir" title="Subir">
-    <span class="material-symbols-outlined">keyboard_arrow_up</span>
-  </button>
-  <button type="button" id="admin-scroll-down" aria-label="Bajar" title="Bajar">
-    <span class="material-symbols-outlined">keyboard_arrow_down</span>
-  </button>
-</div>
-
 <nav id="mobile-bottom-nav" class="mobile-bottom-nav hidden" aria-label="Navegación principal">
   <button type="button" class="mob-nav-item active" data-mob-nav="hub">
     <span class="material-symbols-outlined">receipt_long</span>
@@ -1312,52 +1268,6 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
 <script src="js/boletera-panel.js"></script>
 <script src="js/verificar.js"></script>
 <script src="js/admin-mobile.js"></script>
-<script>
-(function () {
-  var rail = document.getElementById('admin-scroll-rail');
-  var main = document.getElementById('admin-app');
-  var panel = document.getElementById('admin-panel');
-  var btnUp = document.getElementById('admin-scroll-up');
-  var btnDown = document.getElementById('admin-scroll-down');
-  if (!rail || !main || !panel || !btnUp || !btnDown) return;
-
-  var STEP = function () { return Math.max(280, Math.round(main.clientHeight * 0.72)); };
-  var syncTimer = null;
-
-  function syncRail() {
-    var desktop = window.matchMedia('(min-width:901px)').matches;
-    var loggedIn = !panel.classList.contains('hidden');
-    if (!desktop || !loggedIn) {
-      rail.classList.add('hidden');
-      return;
-    }
-    rail.classList.remove('hidden');
-    var max = main.scrollHeight - main.clientHeight;
-    btnUp.disabled = main.scrollTop <= 4;
-    btnDown.disabled = max <= 4 || main.scrollTop >= max - 4;
-  }
-
-  function scheduleSync() {
-    if (syncTimer) return;
-    syncTimer = setTimeout(function () {
-      syncTimer = null;
-      syncRail();
-    }, 80);
-  }
-
-  btnUp.addEventListener('click', function () {
-    main.scrollBy({ top: -STEP(), behavior: 'smooth' });
-  });
-  btnDown.addEventListener('click', function () {
-    main.scrollBy({ top: STEP(), behavior: 'smooth' });
-  });
-
-  main.addEventListener('scroll', scheduleSync, { passive: true });
-  window.addEventListener('resize', scheduleSync);
-  new MutationObserver(scheduleSync).observe(panel, { attributes: true, attributeFilter: ['class'] });
-  scheduleSync();
-})();
-</script>
 <script src="js/admin-panel.js"></script>
 </body>
 </html>
