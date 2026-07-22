@@ -1375,7 +1375,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     var estreno = funciones.find(function(f) { return f.etiqueta === 'Estreno'; });
     var hoy = new Date().toLocaleDateString('en-CA');
     var temporadaActiva = !estreno || hoy >= estreno.fecha_iso;
-    badgeTexto.textContent = temporadaActiva ? 'Temporada activa' : 'Preventa';
+    badgeTexto.textContent = temporadaActiva ? 'Temporada activa' : 'Preventa activa';
     badge.hidden = false;
   }
   pintarBadgeTemporada();
