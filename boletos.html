@@ -1369,11 +1369,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   var badge = document.getElementById('badge-temporada-boletos');
   var badgeTexto = document.getElementById('badge-temporada-boletos-texto');
   function pintarBadgeTemporada() {
-    var activas = (window.FUNCIONES_TEMPORADA || []).filter(function(f) { return f.activa !== false; });
-    if (badge && badgeTexto && activas.length) {
-      badgeTexto.textContent = 'Temporada 2026 — ' + activas.length + (activas.length === 1 ? ' función' : ' funciones');
-      badge.hidden = false;
-    }
+    var funciones = window.FUNCIONES_TEMPORADA || [];
+    var activas = funciones.filter(function(f) { return f.activa !== false; });
+    if (!badge || !badgeTexto || !activas.length) return;
+    var estreno = funciones.find(function(f) { return f.etiqueta === 'Estreno'; });
+    var hoy = new Date().toLocaleDateString('en-CA');
+    var temporadaActiva = !estreno || hoy >= estreno.fecha_iso;
+    badgeTexto.textContent = temporadaActiva ? 'Temporada activa' : 'Preventa';
+    badge.hidden = false;
   }
   pintarBadgeTemporada();
   if (typeof window.sincronizarFuncionesActivas === 'function') {

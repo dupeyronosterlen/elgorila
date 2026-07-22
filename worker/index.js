@@ -1977,6 +1977,10 @@ function actorLabel(payload) {
   return nom || payload.usuario;
 }
 
+function hoyISOMx() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+}
+
 function _errorCanjeVenta(venta, fechaPuerta) {
   if (!venta) return 'Venta no encontrada.';
   if (venta.estado === 'reembolsada') {
@@ -1992,6 +1996,12 @@ function _errorCanjeVenta(venta, fechaPuerta) {
   }
   if (fechaPuerta && fechaVenta && fechaPuerta !== fechaVenta) {
     return `Este boleto es para ${venta.funcionNombre || fechaVenta}, no para la función seleccionada.`;
+  }
+  // Aunque no se seleccione fecha en la puerta (fechaPuerta ausente), un boleto de
+  // una función que ya pasó nunca es canjeable — evita que se use por error en una
+  // función posterior.
+  if (!venta.usado && fechaVenta && fechaVenta < hoyISOMx()) {
+    return `Esta función (${venta.funcionNombre || fechaVenta}) ya pasó. El boleto ya no es válido.`;
   }
   return null;
 }
@@ -4673,10 +4683,18 @@ async function handleOxxoPendientes(tid, request, env, ctx) {
     .filter(Boolean);
 
   const ahora = Date.now();
+  const hoyMx = hoyISOMx();
+  // Respaldo para fichas antiguas creadas antes de que existiera `expiraEn`:
+  // si la función ya pasó, o si ya lleva más de 4 días sin resolverse (el
+  // voucher de OXXO nunca dura tanto), se considera vencida igual.
+  const MAX_EDAD_SIN_EXPIRAEN_MS = 4 * 24 * 60 * 60 * 1000;
   const vigentes = [];
   const vencidas = [];
   for (const p of todas) {
-    if (p.expiraEn && ahora > p.expiraEn) vencidas.push(p);
+    const expiroPorFicha    = p.expiraEn && ahora > p.expiraEn;
+    const funcionYaPaso     = !p.expiraEn && p.fecha && p.fecha < hoyMx;
+    const demasiadoAntigua  = !p.expiraEn && p.creadoEn && (ahora - new Date(p.creadoEn).getTime()) > MAX_EDAD_SIN_EXPIRAEN_MS;
+    if (expiroPorFicha || funcionYaPaso || demasiadoAntigua) vencidas.push(p);
     else vigentes.push(p);
   }
   if (vencidas.length) {

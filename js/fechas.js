@@ -41,11 +41,11 @@ const FUNCIONES_TEMPORADA = [
   { fecha_iso: '2026-08-26', nombre: 'Miércoles 26 Ago — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-08-29', nombre: 'Sábado 29 Ago — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
   { fecha_iso: '2026-09-02', nombre: 'Miércoles 2 Sep — 20:30 hrs',  sede: SEDE_TEMPORADA, activa: false },
-  { fecha_iso: '2026-09-05', nombre: 'Sábado 5 Sep — 18:00 hrs',  sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-09-05', nombre: 'Sábado 5 Sep — 18:00 hrs',  sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-09-09', nombre: 'Miércoles 9 Sep — 20:30 hrs',  sede: SEDE_TEMPORADA, activa: false },
-  { fecha_iso: '2026-09-12', nombre: 'Sábado 12 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-09-12', nombre: 'Sábado 12 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-09-16', nombre: 'Miércoles 16 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
-  { fecha_iso: '2026-09-19', nombre: 'Sábado 19 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-09-19', nombre: 'Sábado 19 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-09-23', nombre: 'Miércoles 23 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-09-26', nombre: 'Sábado 26 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-09-30', nombre: 'Miércoles 30 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
@@ -142,8 +142,13 @@ async function sincronizarFuncionesActivas() {
     if (!Array.isArray(remotas)) return;
     const porFecha = new Map(remotas.map(f => [f.fecha_iso, f]));
     FUNCIONES_TEMPORADA.forEach(f => {
+      const ocultaLocal = f.activa === false;
       const r = porFecha.get(f.fecha_iso);
-      f.activa = !!r;
+      // Ocultar aquí (activa:false en este archivo) es solo de cara al público —
+      // no toca el backend, así que taquilla/manual sigue pudiendo vender esa
+      // fecha aunque no se muestre en boletos.html. Si el backend la desactiva
+      // (admin), eso sí bloquea todo — gana lo más restrictivo de los dos.
+      f.activa = ocultaLocal ? false : !!r;
       if (r) {
         if (r.nombre) f.nombre = r.nombre;
         if (r.etiqueta) f.etiqueta = r.etiqueta;
