@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html class="dark" lang="es">
 <head>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
+<!-- Google Tag Manager: se inyecta hasta que la página termina de cargar (el tracking puede esperar a que elijan asientos) -->
+<script>
+window.dataLayer = window.dataLayer || [];
+window.addEventListener('load', function () {
+  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-P4BDXRN9');
+});
+</script>
 <!-- End Google Tag Manager -->
 <script src="js/analytics.js" data-meta="1"></script>
 <meta charset="utf-8">
@@ -14,7 +19,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boletos — EL GORILA</title>
-<link rel="icon" type="image/jpeg" href="img/LOGO/1.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/img/favicon/favicon-48.png">
+<link rel="apple-touch-icon" href="/img/favicon/apple-touch-icon.png">
 <link rel="preconnect" href="https://www.googletagmanager.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1245,7 +1252,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span class="mapa-badge">Ubicación</span>
     </div>
     <div class="mapa-teatro-wrap">
-      <iframe title="Mapa de ubicación — Teatro Wilberto Cantón" src="https://www.google.com/maps?q=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+      <iframe title="Mapa de ubicación — Teatro Wilberto Cantón" id="mapa-teatro-iframe" data-src="https://www.google.com/maps?q=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX&output=embed" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+      <noscript><iframe title="Mapa de ubicación — Teatro Wilberto Cantón" src="https://www.google.com/maps?q=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX&output=embed" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></noscript>
     </div>
 
     <div class="mapa-direccion">
@@ -1683,6 +1691,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (c.children.length > 0) procesarFechas();
   });
 })();
+</script>
+<script>
+// Mapa: se carga hasta el final, después de todo lo demás (incluido el tracking).
+window.addEventListener('load', function () {
+  setTimeout(function () {
+    var mapa = document.getElementById('mapa-teatro-iframe');
+    if (mapa && mapa.dataset.src) mapa.src = mapa.dataset.src;
+  }, 0);
+});
 </script>
 </body>
 </html>
