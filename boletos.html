@@ -990,6 +990,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <h2 class="sec-title">Adquiere tus<br><em>entradas</em></h2>
       <p class="sec-sede">Teatro Wilberto Cantón · San José Insurgentes, CDMX</p>
       <p class="badge-temporada" id="badge-temporada-boletos" hidden><span class="badge-temporada-dot" aria-hidden="true"></span><span id="badge-temporada-boletos-texto"></span></p>
+      <p id="badge-temporada-boletos-nota" hidden style="font-family:var(--cuerpo);font-size:13px;color:var(--d-soft);opacity:.75;margin-top:3px;">Válida para cualquier función de la temporada — cambios disponibles con mínimo 5 días de anticipación.</p>
     </div>
     <div class="rule"></div>
 
@@ -1368,6 +1369,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   var badge = document.getElementById('badge-temporada-boletos');
   var badgeTexto = document.getElementById('badge-temporada-boletos-texto');
+  var badgeNota = document.getElementById('badge-temporada-boletos-nota');
   function pintarBadgeTemporada() {
     var funciones = window.FUNCIONES_TEMPORADA || [];
     var activas = funciones.filter(function(f) { return f.activa !== false; });
@@ -1377,6 +1379,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     var temporadaActiva = !estreno || hoy >= estreno.fecha_iso;
     badgeTexto.textContent = temporadaActiva ? 'Temporada activa' : 'Preventa activa';
     badge.hidden = false;
+    if (badgeNota) badgeNota.hidden = false;
   }
   pintarBadgeTemporada();
   if (typeof window.sincronizarFuncionesActivas === 'function') {
