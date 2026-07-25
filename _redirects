@@ -2,8 +2,8 @@
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre    /index.html   200
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/   /index.html   200
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/boletos.html   /boletos.html   301
-/el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/privacidad     /terminos.html  301
-/el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/privacidad/    /terminos.html  301
+/el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/privacidad     /privacidad.html  301
+/el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/privacidad/    /privacidad.html  301
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/terminos          /terminos.html       301
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/terminos/         /terminos.html       301
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/eliminar-datos    /eliminar-datos.html 301
@@ -21,8 +21,8 @@
 /terminos/        /terminos.html   200
 /terminos-y-condiciones    /terminos.html   200
 /terminos-y-condiciones/   /terminos.html   200
-/privacidad       /terminos.html#privacidad   200
-/privacidad/      /terminos.html#privacidad   200
+/privacidad       /privacidad.html   200
+/privacidad/      /privacidad.html   200
 
 # Legacy operativo → panel único admin.html
 /boletera                   /admin.html?view=boletera     301

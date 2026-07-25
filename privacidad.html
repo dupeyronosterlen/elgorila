@@ -1,13 +1,236 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="refresh" content="0; url=/terminos.html#privacidad" />
-  <link rel="canonical" href="https://elgorilateatro.com.mx/terminos.html#privacidad" />
-  <title>Privacidad — El Gorila</title>
-  <script>location.replace("/terminos.html#privacidad");</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Política de Privacidad de la taquilla oficial de EL GORILA Teatro.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://elgorilateatro.com.mx/privacidad.html">
+<meta property="og:title" content="Política de Privacidad — EL GORILA Teatro">
+<meta property="og:description" content="Política de privacidad de EL GORILA Teatro.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://elgorilateatro.com.mx/privacidad.html">
+<meta property="og:image" content="https://elgorilateatro.com.mx/img/programa/portada-v4.jpg">
+<meta property="og:image:alt" content="EL GORILA — cartel de temporada 2026">
+<meta property="og:locale" content="es_MX">
+<title>Política de Privacidad — EL GORILA Teatro</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="48x48" href="/img/favicon/favicon-48.png"/>
+<link rel="apple-touch-icon" href="/img/favicon/apple-touch-icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --d-bg:    #0a0706;
+  --d-bg2:   #120d0b;
+  --d-fg:    #f1ead9;
+  --d-soft:  rgba(241,234,217,.94);
+  --d-muted: rgba(241,234,217,.78);
+  --gold:    #d99b3a;
+  --gold-dim:rgba(217,155,58,.75);
+  --red:     #D43A1A;
+  --display: "Cormorant Garamond", Georgia, serif;
+  --cuerpo:  "EB Garamond", Georgia, serif;
+  --mono:    "JetBrains Mono", ui-monospace, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--d-bg); scroll-behavior: smooth; }
+body {
+  background: var(--d-bg);
+  color: var(--d-fg);
+  font-family: var(--cuerpo);
+  font-size: 18px;
+  line-height: 1.72;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
+a:hover { color: var(--d-fg); }
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 28px 48px;
+}
+.site-header {
+  padding: 28px 0 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  border-bottom: 0.5px solid rgba(217,155,58,.35);
+  margin-bottom: 32px;
+}
+.site-logo { height: 44px; width: auto; opacity: .95; }
+.doc-kicker {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-align: center;
+}
+.doc-title {
+  font-family: var(--display);
+  font-size: clamp(34px, 8vw, 44px);
+  font-weight: 500;
+  line-height: .95;
+  letter-spacing: -.02em;
+  text-align: center;
+}
+.doc-meta {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .1em;
+  color: var(--d-muted);
+  text-align: center;
+  line-height: 1.5;
+}
+.doc-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  justify-content: center;
+  margin: 24px 0 8px;
+  padding: 16px 0;
+  border-top: 0.5px solid rgba(241,234,217,.12);
+  border-bottom: 0.5px solid rgba(241,234,217,.12);
+}
+.doc-nav a {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--gold-dim);
+}
+.doc-nav a:hover { color: var(--d-fg); text-decoration: underline; }
+
+h2 {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--d-fg);
+  margin: 36px 0 14px;
+  line-height: 1.05;
+  letter-spacing: -.01em;
+}
+h2::before {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 2px;
+  background: var(--red);
+  margin-bottom: 12px;
+}
+h3 {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--gold);
+  margin: 22px 0 10px;
+}
+p, li {
+  color: var(--d-soft);
+  margin-bottom: 14px;
+}
+ul, ol {
+  padding-left: 1.35rem;
+  margin-bottom: 14px;
+}
+li { margin-bottom: 8px; }
+.site-footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 0.5px solid rgba(217,155,58,.25);
+  text-align: center;
+}
+.site-footer p {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .1em;
+  color: var(--d-muted);
+}
+.site-footer a {
+  display: inline-block;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--gold-dim);
+}
+.site-footer a:hover { text-decoration: underline; color: var(--d-fg); }
+</style>
 </head>
 <body>
-  <p><a href="/terminos.html#privacidad">Ir a aviso de privacidad</a></p>
+<div class="page">
+  <header class="site-header">
+    <a href="/" aria-label="Ir al inicio">
+      <img class="site-logo" src="img/ELGORILA/LETRAS EL GORILA DE FRANZ KAFKA 2025.png" alt="EL GORILA" decoding="async">
+    </a>
+    <p class="doc-kicker">Documento legal</p>
+    <h1 class="doc-title">Política de Privacidad</h1>
+    <p class="doc-meta">Última actualización: 10 de junio de 2026 · Ciudad de México</p>
+    <nav class="doc-nav" aria-label="Secciones del documento">
+      <a href="/terminos.html">Términos y condiciones</a>
+      <a href="/boletos.html">Volver a boletos</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Responsable</h2>
+    <p>El sitio <strong>elgorilateatro.com.mx</strong> y su taquilla en línea son operados por la producción teatral <strong>EL GORILA</strong> (en adelante, «la Producción»), monólogo interpretado por Humberto Dupeyrón, basado en la obra de Franz Kafka, con domicilio de contacto en Ciudad de México. La Producción es responsable del tratamiento de los datos personales que nos proporciones al comprar boletos o suscribirte a comunicaciones relacionadas con la obra.</p>
+
+    <h2>Datos que recabamos</h2>
+    <ul>
+      <li><strong>Correo electrónico</strong> (obligatorio para enviar boletos y confirmaciones).</li>
+      <li><strong>Nombre</strong>, cuando lo proporciones en formularios de lista de espera o contacto.</li>
+      <li><strong>Datos de la compra:</strong> función seleccionada, tipo y cantidad de boletos, monto pagado, identificador de transacción.</li>
+      <li><strong>Datos técnicos básicos</strong> de navegación (dirección IP, tipo de dispositivo, páginas visitadas) cuando el sitio los registra para su funcionamiento o seguridad.</li>
+    </ul>
+    <p>Los datos de tarjeta bancaria son tratados directamente por <strong>Stripe</strong> conforme a su propia política de privacidad; la Producción no guarda el número completo de tu tarjeta.</p>
+
+    <h2>Finalidades</h2>
+    <ul>
+      <li>Procesar tu compra y enviarte boletos digitales.</li>
+      <li>Enviarte información sobre la función adquirida (cambios de horario, sede o cancelación).</li>
+      <li>Atender consultas, quejas o solicitudes de soporte.</li>
+      <li>Enviarte avisos de preventa o nueva temporada, solo si te registraste o aceptaste recibirlos.</li>
+    </ul>
+
+    <h2>Transferencia de datos</h2>
+    <p>Podemos compartir datos estrictamente necesarios con:</p>
+    <ul>
+      <li><strong>Stripe</strong>, para procesar pagos.</li>
+      <li><strong>Proveedores de correo y hosting</strong>, para operar el sitio y enviar confirmaciones.</li>
+    </ul>
+    <p>No vendemos ni rentamos tu información personal a terceros con fines comerciales ajenos a la Producción.</p>
+
+    <h2>Conservación</h2>
+    <p>Conservamos tus datos el tiempo necesario para cumplir las finalidades anteriores, atender obligaciones fiscales o legales aplicables y resolver disputas. Los registros de compra se mantienen al menos durante el periodo que exija la normativa vigente.</p>
+
+    <h2>Tus derechos (ARCO)</h2>
+    <p>Conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares, puedes solicitar <strong>Acceso, Rectificación, Cancelación u Oposición</strong> al tratamiento de tus datos, así como revocar tu consentimiento cuando aplique. Envía tu solicitud a <a href="mailto:elgorilateatro@gmail.com">elgorilateatro@gmail.com</a> indicando tu nombre, correo de compra y el derecho que deseas ejercer. Responderemos en los plazos que marca la ley.</p>
+
+    <h2>Cookies</h2>
+    <p>El sitio utiliza cookies y tecnologías similares para el funcionamiento de la taquilla y recordar preferencias. Puedes configurar tu navegador para limitar cookies; algunas funciones del sitio podrían verse afectadas.</p>
+
+    <h2>Menores</h2>
+    <p>La compra en línea debe ser realizada por una persona con capacidad legal para contratar. Si un menor asiste a la función, el adulto que realiza la compra es responsable del uso de sus datos.</p>
+
+    <h2>Cambios a esta política</h2>
+    <p>Cualquier cambio sustancial se publicará en esta misma página con fecha de actualización. Te recomendamos revisarla periódicamente.</p>
+
+    <h2>Contacto</h2>
+    <p>Para cualquier consulta relacionada con esta política puedes escribir a <a href="mailto:elgorilateatro@gmail.com">elgorilateatro@gmail.com</a>.</p>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 EL GORILA Teatro · Ciudad de México</p>
+    <a href="/">Volver al inicio</a>
+  </footer>
+</div>
 </body>
 </html>
