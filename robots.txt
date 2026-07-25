@@ -9,6 +9,11 @@ Disallow: /invitacion.html
 Disallow: /compartir-boleto.html
 Disallow: /encuesta.html
 Disallow: /enviar-boleto.html
+Disallow: /boleto-muestra-export.html
+Disallow: /boleto-imprimible.html
+Disallow: /boleto-imprimible-blanco.html
+Disallow: /separador-boleto.html
+Disallow: /separador-boleto-muestra.html
 Disallow: /acta.html
 
 Sitemap: https://elgorilateatro.com.mx/sitemap.xml

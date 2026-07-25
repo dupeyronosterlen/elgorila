@@ -19,8 +19,14 @@ let _galeriaAbierta    = false;
 let _grupoGrandeNotificado = false;
 
 function seccionVentaConfig() {
-    const map = window.SECCIONES_VENTA || {};
-    return map[seccionActiva] || map.platea || { precio_general: 350, precio_descuento: 245, nombre: 'Platea' };
+    const map = (typeof window.seccionesVentaVigentes === 'function'
+      ? window.seccionesVentaVigentes()
+      : window.SECCIONES_VENTA) || {};
+    return map[seccionActiva] || map.platea || {
+      precio_general: (typeof window.precioGeneralVigente === 'function' ? window.precioGeneralVigente() : 350),
+      precio_descuento: window.PRECIO_CREDENCIAL || 245,
+      nombre: 'Platea',
+    };
 }
 
 // Precio especial de la función seleccionada (ej. preestreno de prensa $10/boleto).
@@ -333,21 +339,29 @@ function actualizarPantalla() {
 
     const secCfg = seccionVentaConfig();
     const pe = precioEspecialFuncion();
+    const lista = window.PRECIO_GENERAL_TEMPORADA || 400;
+    const preventa = typeof window.esPreventaVigente === 'function' ? window.esPreventaVigente() : true;
     const precioGeneralEl = document.getElementById('precio-general-display');
     if (precioGeneralEl) {
-        precioGeneralEl.innerHTML = pe
-            ? `<span style="text-decoration:line-through;opacity:.42;font-size:.75em;">$${secCfg.precio_general}</span> $${pe} MXN`
-            : `<span style="text-decoration:line-through;opacity:.42;font-size:.75em;">$400</span> $${secCfg.precio_general} MXN`;
+        if (pe) {
+            precioGeneralEl.innerHTML = `<span style="text-decoration:line-through;opacity:.42;font-size:.75em;">$${secCfg.precio_general}</span> $${pe} MXN`;
+        } else if (preventa) {
+            precioGeneralEl.innerHTML = `<span style="text-decoration:line-through;opacity:.42;font-size:.75em;">$${lista}</span> $${secCfg.precio_general} MXN`;
+        } else {
+            precioGeneralEl.innerHTML = `$${secCfg.precio_general} MXN`;
+        }
     }
     const precioCredencialEl = document.getElementById('precio-credencial-display');
     if (precioCredencialEl) {
         precioCredencialEl.innerHTML = pe
             ? `<span style="text-decoration:line-through;opacity:.42;">$${secCfg.precio_descuento}</span> <span style="margin: 0 4px;">→</span> <span class="ticket-precio-promo">$${pe} MXN</span>`
-            : `<span style="text-decoration:line-through;opacity:.42;">$350</span> <span style="margin: 0 4px;">→</span> <span class="ticket-precio-promo">$${secCfg.precio_descuento} MXN</span> <span style="opacity:.55;"> · −30%</span>`;
+            : `<span style="text-decoration:line-through;opacity:.42;">$${secCfg.precio_general}</span> <span style="margin: 0 4px;">→</span> <span class="ticket-precio-promo">$${secCfg.precio_descuento} MXN</span> <span style="opacity:.55;"> · −30%</span>`;
     }
     const notaPreventaEl = document.getElementById('nota-preventa-general');
     if (notaPreventaEl) {
-        notaPreventaEl.textContent = pe ? 'Función de prensa — precio especial' : 'Preventa hasta 25 jul';
+        if (pe) notaPreventaEl.textContent = 'Función de prensa — precio especial';
+        else if (preventa) notaPreventaEl.textContent = 'Precio especial hasta el 26 jul · 15:00';
+        else notaPreventaEl.textContent = 'Precio de temporada';
     }
 
     // Resumen de items

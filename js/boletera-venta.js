@@ -3,7 +3,16 @@
  * general + credencial combinables, cupones ESPEJO / GRUPO20 / etc.
  */
 (function (global) {
-  const PRECIOS = { general: 350, credencial: 245 };
+  const PRECIOS = {
+    get general() {
+      return typeof window.precioGeneralVigente === 'function'
+        ? window.precioGeneralVigente()
+        : 350;
+    },
+    get credencial() {
+      return window.PRECIO_CREDENCIAL || 245;
+    },
+  };
   const NOMBRE_CREDENCIAL = 'INAPAM · Estudiante · Maestro';
   const CUPON_GRUPO20_MIN = 5;
   const CUPON_GRUPO20_HINT_MIN = 3;
@@ -99,7 +108,27 @@
     if (desc) desc.style.display = 'none';
   }
 
+  function syncPreciosDisplay() {
+    const g = PRECIOS.general;
+    const c = PRECIOS.credencial;
+    const filas = document.querySelectorAll('.bol-ticket-fila');
+    if (filas[0]) {
+      const precioEl = filas[0].querySelector('.bol-ticket-precio');
+      if (precioEl) precioEl.textContent = `$${g} MXN`;
+    }
+    if (filas[1]) {
+      const precioEl = filas[1].querySelector('.bol-ticket-precio');
+      if (precioEl) {
+        precioEl.innerHTML = `<span style="text-decoration:line-through;opacity:.45;">$${g}</span>
+              <span> → </span>
+              <span class="bol-ticket-promo">$${c} MXN</span>
+              <span style="opacity:.55;"> · −30%</span>`;
+      }
+    }
+  }
+
   function actualizarUi() {
+    syncPreciosDisplay();
     aplicarPromoAutomaticaSiCorresponde();
 
     ['general', 'estudiante'].forEach(t => {

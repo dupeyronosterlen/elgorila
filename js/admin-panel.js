@@ -218,9 +218,19 @@
       ? window.teatroApi('funciones')
       : window.teatroAdminApi('funciones');
     const data = await api(url);
-    state.funciones = typeof SelectorFunciones !== 'undefined'
+    const lista = typeof SelectorFunciones !== 'undefined'
       ? SelectorFunciones.normalizarLista(data)
       : (Array.isArray(data) ? data : (data.funciones || []));
+    // Vigentes primero (próxima arriba); ya pasadas al final.
+    const yaPaso = (f) => (typeof SelectorFunciones !== 'undefined' && SelectorFunciones.funcionYaPaso)
+      ? SelectorFunciones.funcionYaPaso(f)
+      : false;
+    state.funciones = lista.slice().sort((a, b) => {
+      const aPasada = yaPaso(a);
+      const bPasada = yaPaso(b);
+      if (aPasada !== bPasada) return aPasada ? 1 : -1;
+      return String(a.fecha_iso || '').localeCompare(String(b.fecha_iso || ''));
+    });
   }
 
   async function cargarFiscal() {
@@ -2761,6 +2771,8 @@
     if (topSite && viaEmail) topSite.classList.add('hidden');
     v4Toggle('link-boletera', !viaEmail && perm('venderEfectivo'));
     v4Toggle('btn-copiar-boletera', !viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente'));
+    v4Toggle('btn-muestra-boleto', !viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente'));
+    v4Toggle('btn-separador', !viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente' || usuario.rol === 'taquilla'));
     v4Toggle('link-verificar', !viaEmail && perm('verificarBoletos'));
     v4Toggle('nav-boletera', perm('venderEfectivo'));
     v4Toggle('nav-verificar', perm('verificarBoletos'));
@@ -2785,6 +2797,8 @@
 
       v4Toggle('link-boletera', !usuario.viaEmail && perm('venderEfectivo'));
       v4Toggle('btn-copiar-boletera', !usuario.viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente'));
+      v4Toggle('btn-muestra-boleto', !usuario.viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente'));
+      v4Toggle('btn-separador', !usuario.viaEmail && (usuario.rol === 'admin' || usuario.rol === 'gerente' || usuario.rol === 'taquilla'));
       v4Toggle('link-verificar', !usuario.viaEmail && perm('verificarBoletos'));
       v4Toggle('nav-boletera', perm('venderEfectivo'));
       v4Toggle('nav-verificar', perm('verificarBoletos'));

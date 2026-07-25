@@ -29,11 +29,33 @@ window.ADMIN_SIN_LOGIN = false;
 window.VENTA_PUBLICA_ABIERTA = true;
 window.INSTAGRAM_BOLETOS_URL = 'https://www.instagram.com/elgorilateatro';
 
-/** Precios por zona (deben coincidir con KV config / scripts/init-config.js) */
-window.SECCIONES_VENTA = {
-  platea:  { id: 'platea',  nombre: 'Platea (abajo)',  precio_general: 350, precio_descuento: 245 },
-  galeria: { id: 'galeria', nombre: 'Galería (arriba)', precio_general: 350, precio_descuento: 245 },
+/** Precios por zona (deben coincidir con el Worker). Preventa $350 hasta 26 jul 2026 15:00 CDMX; luego $400. */
+window.PRECIO_GENERAL_PREVENTA = 350;
+window.PRECIO_GENERAL_TEMPORADA = 400;
+window.PRECIO_CREDENCIAL = 245;
+/** 26 jul 2026 15:00 America/Mexico_City = 21:00 UTC (CDMX sin DST). */
+window.FIN_PREVENTA_UTC_MS = Date.parse('2026-07-26T21:00:00.000Z');
+
+window.esPreventaVigente = function esPreventaVigente() {
+  return Date.now() < window.FIN_PREVENTA_UTC_MS;
 };
+
+window.precioGeneralVigente = function precioGeneralVigente() {
+  return window.esPreventaVigente()
+    ? window.PRECIO_GENERAL_PREVENTA
+    : window.PRECIO_GENERAL_TEMPORADA;
+};
+
+window.seccionesVentaVigentes = function seccionesVentaVigentes() {
+  const g = window.precioGeneralVigente();
+  const c = window.PRECIO_CREDENCIAL;
+  return {
+    platea:  { id: 'platea',  nombre: 'Platea (abajo)',  precio_general: g, precio_descuento: c },
+    galeria: { id: 'galeria', nombre: 'Galería (arriba)', precio_general: g, precio_descuento: c },
+  };
+};
+
+window.SECCIONES_VENTA = window.seccionesVentaVigentes();
 
 /** Aforo total Wilberto Cantón (250 platea + 75 galería). Solo uso interno. */
 window.AFORO_TOTAL_WILBERTO = 325;

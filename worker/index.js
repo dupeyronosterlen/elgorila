@@ -1335,6 +1335,29 @@ const SECCIONES_WILBERTO_FALLBACK = [
   { id: 'galeria', nombre: 'Galería (arriba)', total: 75,  precio_general: 350, precio_descuento: 245 },
 ];
 
+/** Preventa $350 hasta 26 jul 2026 15:00 CDMX (= 21:00 UTC); luego general $400. Credencial queda en $245. */
+const PRECIO_GENERAL_PREVENTA   = 350;
+const PRECIO_GENERAL_TEMPORADA  = 400;
+const PRECIO_CREDENCIAL_FIJO    = 245;
+const FIN_PREVENTA_UTC_MS       = Date.parse('2026-07-26T21:00:00.000Z');
+
+function precioGeneralVigente() {
+  return Date.now() < FIN_PREVENTA_UTC_MS ? PRECIO_GENERAL_PREVENTA : PRECIO_GENERAL_TEMPORADA;
+}
+
+function aplicarPreciosVigentes(config) {
+  if (!config || !Array.isArray(config.secciones)) return config;
+  const general = precioGeneralVigente();
+  return {
+    ...config,
+    secciones: config.secciones.map(s => ({
+      ...s,
+      precio_general: general,
+      precio_descuento: PRECIO_CREDENCIAL_FIJO,
+    })),
+  };
+}
+
 const VENUE_FALLBACKS = {
   wilberto: {
     id:        'wilberto',
@@ -1355,10 +1378,12 @@ const VENUE_FALLBACKS = {
 async function getVenueConfig(tid, env) {
   const canonical = resolveTid(tid);
   const raw = await env.INVENTARIO.get(kv(canonical, 'config'));
+  let config = null;
   if (raw) {
-    try { return JSON.parse(raw); } catch {}
+    try { config = JSON.parse(raw); } catch {}
   }
-  return VENUE_FALLBACKS[canonical] || VENUE_FALLBACKS.wilberto;
+  if (!config) config = VENUE_FALLBACKS[canonical] || VENUE_FALLBACKS.wilberto;
+  return aplicarPreciosVigentes(config);
 }
 
 // ─── NORMALIZAR INVENTARIO (compat flat → zone-based) ────────────────────────

@@ -29,7 +29,9 @@
     return orden.items.map(function (i) {
       var precio = i.precio;
       if (precio == null) {
-        precio = i.tipo === 'general' ? 350 : 245;
+        precio = i.tipo === 'general'
+          ? (typeof window.precioGeneralVigente === 'function' ? window.precioGeneralVigente() : 350)
+          : (window.PRECIO_CREDENCIAL || 245);
       }
       return {
         item_id: i.tipo,
