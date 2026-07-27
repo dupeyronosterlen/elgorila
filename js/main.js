@@ -1,10 +1,10 @@
 // --- TIPOS DE BOLETO ---
 // Precios definitivos. El Worker los valida de forma independiente.
 const TIPOS_BOLETO = [
-    { tipo: 'general',    nombre: 'General',    precio: 350 },
-    { tipo: 'inapam',     nombre: 'INAPAM',     precio: 245, desc: '30% desc.' },
-    { tipo: 'estudiante', nombre: 'Estudiante', precio: 245, desc: '30% desc.' },
-    { tipo: 'maestro',    nombre: 'Maestro',    precio: 245, desc: '30% desc.' },
+    { tipo: 'general',    nombre: 'General',    precio: 400 },
+    { tipo: 'inapam',     nombre: 'INAPAM',     precio: 280, desc: '30% desc.' },
+    { tipo: 'estudiante', nombre: 'Estudiante', precio: 280, desc: '30% desc.' },
+    { tipo: 'maestro',    nombre: 'Maestro',    precio: 280, desc: '30% desc.' },
 ];
 
 // --- ESTADO DEL CARRITO ---
@@ -23,8 +23,8 @@ function seccionVentaConfig() {
       ? window.seccionesVentaVigentes()
       : window.SECCIONES_VENTA) || {};
     return map[seccionActiva] || map.platea || {
-      precio_general: (typeof window.precioGeneralVigente === 'function' ? window.precioGeneralVigente() : 350),
-      precio_descuento: window.PRECIO_CREDENCIAL || 245,
+      precio_general: (typeof window.precioGeneralVigente === 'function' ? window.precioGeneralVigente() : 400),
+      precio_descuento: window.PRECIO_CREDENCIAL || 280,
       nombre: 'Platea',
     };
 }
@@ -50,7 +50,7 @@ function totalCantidad() {
     return Object.values(cantidades).reduce((s, c) => s + c, 0);
 }
 
-// Credenciales: tarifa fija $245 en su fila (no son cupones).
+// Credenciales: tarifa fija $280 en su fila (no son cupones).
 const NOMBRE_CREDENCIAL     = 'INAPAM · Estudiante · Maestro';
 const TIPOS_CREDENCIAL      = ['inapam', 'estudiante', 'maestro'];
 const CUPON_GRUPO20_MIN      = 5;
@@ -421,7 +421,7 @@ function actualizarPantalla() {
             promoBanner.className = 'promo-grupo-banner';
             promoBanner.style.color = 'rgba(217,155,58,.6)';
             promoBanner.innerHTML =
-                '<strong>GRUPO20</strong> aplica solo cuando todos los boletos son generales. Las credenciales van en tarifa aparte ($245).';
+                '<strong>GRUPO20</strong> aplica solo cuando todos los boletos son generales. Las credenciales van en tarifa aparte ($280).';
         } else {
             promoBanner.className = 'promo-grupo-banner hidden';
             promoBanner.innerHTML = '';
@@ -566,7 +566,7 @@ function mostrarCheckoutInline(orden) {
         itemsWrap.innerHTML = orden.items.map(item => {
             const prevSec = item.seccion || seccionActiva;
             const secMap = window.SECCIONES_VENTA || {};
-            const sec = secMap[prevSec] || secMap.platea || { precio_general: 350, precio_descuento: 245 };
+            const sec = secMap[prevSec] || secMap.platea || { precio_general: 400, precio_descuento: 280 };
             let precioUnit = item.tipo === 'general' ? sec.precio_general : sec.precio_descuento;
             const sub = (precioUnit * item.cantidad).toFixed(0);
             return `<div class="ichk-item-fila">

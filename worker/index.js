@@ -1331,14 +1331,14 @@ const VALID_TEATROS = new Set(['gorila', 'elgorila', 'wilberto', 'ccc']);
 // ─── VENUE CONFIG ────────────────────────────────────────────────────────────
 
 const SECCIONES_WILBERTO_FALLBACK = [
-  { id: 'platea',  nombre: 'Platea (abajo)',  total: 250, precio_general: 350, precio_descuento: 245 },
-  { id: 'galeria', nombre: 'Galería (arriba)', total: 75,  precio_general: 350, precio_descuento: 245 },
+  { id: 'platea',  nombre: 'Platea (abajo)',  total: 250, precio_general: 400, precio_descuento: 280 },
+  { id: 'galeria', nombre: 'Galería (arriba)', total: 75,  precio_general: 400, precio_descuento: 280 },
 ];
 
-/** Preventa $350 hasta 26 jul 2026 15:00 CDMX (= 21:00 UTC); luego general $400. Credencial queda en $245. */
+/** Preventa $350 hasta 26 jul 2026 15:00 CDMX (= 21:00 UTC, ya pasó); luego general $400. Credencial = 30% de descuento sobre el general vigente: $280 en temporada. */
 const PRECIO_GENERAL_PREVENTA   = 350;
 const PRECIO_GENERAL_TEMPORADA  = 400;
-const PRECIO_CREDENCIAL_FIJO    = 245;
+const PRECIO_CREDENCIAL_FIJO    = 280;
 const FIN_PREVENTA_UTC_MS       = Date.parse('2026-07-26T21:00:00.000Z');
 
 function precioGeneralVigente() {
@@ -1371,7 +1371,7 @@ const VENUE_FALLBACKS = {
     nombre:    'El Gorila — Centro Cultural Coyoacanense',
     venue:     'Centro Cultural Coyoacanense',
     direccion: 'Felipe Carrillo Puerto 54, Coyoacán, CDMX',
-    secciones: [{ id: 'general', nombre: 'General', total: 200, precio_general: 350, precio_descuento: 245 }],
+    secciones: [{ id: 'general', nombre: 'General', total: 200, precio_general: 400, precio_descuento: 280 }],
   },
 };
 
@@ -1442,7 +1442,7 @@ const TIPOS_BOLETO = {
 function getPrecio(tipo, seccionConfig) {
   const esDes = TIPOS_BOLETO[tipo]?.es_descuento ?? false;
   return esDes
-    ? (seccionConfig.precio_descuento ?? 245)
+    ? (seccionConfig.precio_descuento ?? 280)
     : (seccionConfig.precio_general   ?? 350);
 }
 
@@ -1564,7 +1564,7 @@ function validarCarritoParaCupon(cupon, itemsValidados) {
     if (!cantGeneral) {
       return {
         ok:    false,
-        error: 'Los cupones aplican solo a boletos generales. Las entradas con credencial ($245) van en su fila aparte.',
+        error: 'Los cupones aplican solo a boletos generales. Las entradas con credencial ($280) van en su fila aparte.',
       };
     }
     if (!carritoSoloGenerales(itemsValidados)) {
@@ -2389,7 +2389,7 @@ async function handleCheckout(tid, request, env, ctx) {
   const reserva = await reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, ctx);
   if (!reserva.ok) return json({ error: reserva.error }, reserva.status, request);
 
-  // Cupón (única vía de descuento promocional; credenciales van en su fila a $245)
+  // Cupón (única vía de descuento promocional; credenciales van en su fila a $280)
   let cuponAplicado = null;
   if (codigoCupon && precioEspecialCentavos <= 0) {
     const cupon = await validarCuponDescuento(codigoCupon, env);

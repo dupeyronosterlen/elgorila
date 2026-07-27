@@ -7,10 +7,10 @@
     get general() {
       return typeof window.precioGeneralVigente === 'function'
         ? window.precioGeneralVigente()
-        : 350;
+        : 400;
     },
     get credencial() {
-      return window.PRECIO_CREDENCIAL || 245;
+      return window.PRECIO_CREDENCIAL || 280;
     },
   };
   const NOMBRE_CREDENCIAL = 'INAPAM · Estudiante · Maestro';

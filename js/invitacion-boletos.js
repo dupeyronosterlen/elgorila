@@ -119,7 +119,7 @@
         <button type="button" class="invitacion-btn-activar" id="btn-activar-invitacion">
           Activar descuento de ${tipo} (−25%)
         </button>
-        <p class="invitacion-nota">Solo al pulsar este botón. INAPAM, estudiantes y maestros conservan su tarifa ($245).</p>
+        <p class="invitacion-nota">Solo al pulsar este botón. INAPAM, estudiantes y maestros conservan su tarifa ($280).</p>
       </div>`;
   }
 

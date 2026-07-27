@@ -30,8 +30,8 @@
       var precio = i.precio;
       if (precio == null) {
         precio = i.tipo === 'general'
-          ? (typeof window.precioGeneralVigente === 'function' ? window.precioGeneralVigente() : 350)
-          : (window.PRECIO_CREDENCIAL || 245);
+          ? (typeof window.precioGeneralVigente === 'function' ? window.precioGeneralVigente() : 400)
+          : (window.PRECIO_CREDENCIAL || 280);
       }
       return {
         item_id: i.tipo,

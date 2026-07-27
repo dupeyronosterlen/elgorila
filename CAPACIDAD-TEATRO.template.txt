@@ -10,8 +10,8 @@ NÚMEROS OFICIALES (SOGEM / recinto)
   Platea (abajo) ................. 250  ← venta principal
   Galería (arriba) ...............  75  ← solo cuando platea = 0
 
-  Precio general ................. $350 MXN
-  INAPAM / Estudiante / Maestro .. $245 MXN (credencial en puerta)
+  Precio general ................. $400 MXN
+  INAPAM / Estudiante / Maestro .. $280 MXN (−30% · credencial en puerta)
 
 
 CÓMO FUNCIONA LA VENTA (para todo el equipo)

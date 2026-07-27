@@ -19,21 +19,21 @@ const SECCIONES_WILBERTO = [
     id:               'platea',
     nombre:           'Platea (abajo)',
     total:            250,
-    precio_general:   350,
-    precio_descuento: 245,
+    precio_general:   400,
+    precio_descuento: 280,
   },
   {
     id:               'galeria',
     nombre:           'Galería (arriba)',
     total:            75,
-    precio_general:   350,
-    precio_descuento: 245,
+    precio_general:   400,
+    precio_descuento: 280,
   },
 ];
 
 const SECCIONES_CCC = [
-  { id: 'platea', nombre: 'Platea', total: 200, precio_general: 350, precio_descuento: 245 },
-  { id: 'galeria', nombre: 'Galería', total: 50, precio_general: 350, precio_descuento: 245 },
+  { id: 'platea', nombre: 'Platea', total: 200, precio_general: 400, precio_descuento: 280 },
+  { id: 'galeria', nombre: 'Galería', total: 50, precio_general: 400, precio_descuento: 280 },
 ];
 
 const CONFIGS = {

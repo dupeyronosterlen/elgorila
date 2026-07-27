@@ -6,8 +6,8 @@
 
 PRECIOS BASE (sin cupón)
 ────────────────────────
-  General ............................ $350 MXN
-  INAPAM / Estudiante / Maestro ...... $245 MXN  (credencial al ingresar)
+  General ............................ $400 MXN
+  INAPAM / Estudiante / Maestro ...... $280 MXN  (−30% · credencial al ingresar)
   → Las credenciales NO usan cupón: el comprador elige esa fila en la boletera.
 
 CÓMO REDIMIR CUALQUIER CUPÓN
@@ -29,7 +29,7 @@ CUPONES ACTIVOS PARA CAMPAÑAS
 ├──────────┼─────────────────────┼──────────────────────────────────────────┤
 │ ESPEJO   │ Espejo (pareja)     │ Parejas, "llévate a alguien", San Valentín│
 │          │                     │ Regla: EXACTAMENTE 2 generales = $600    │
-│          │                     │ (ahorro $100 vs $700)                      │
+│          │                     │ (ahorro $200 vs $800)                      │
 ├──────────┼─────────────────────┼──────────────────────────────────────────┤
 │ GRUPO20  │ Grupo 20%           │ Squad, amigos, cumpleaños en grupo        │
 │          │                     │ Regla: 5 o más generales, todos generales│
@@ -53,7 +53,7 @@ CÓDIGOS RETIRADOS (ya no funcionan)
 ───────────────────────────────────
 
   MANADA, TRIBU, COYOACAN — nombres viejos; reemplazados por GRUPO20 / PRENSA30
-  ESTUDIANTE, MAESTRO, INAPAM — nunca fueron cupones; usar fila credencial $245
+  ESTUDIANTE, MAESTRO, INAPAM — nunca fueron cupones; usar fila credencial $280
 
 
 COPY SUGERIDO PARA ADS

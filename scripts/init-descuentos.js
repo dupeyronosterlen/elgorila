@@ -3,7 +3,7 @@
  * Catálogo de cupones → KV "codigos:descuento"
  *
  * REGLAS (sincronizadas con Worker + boletos.html):
- * - INAPAM / estudiante / maestro: NO son cupones — tarifa $245 en su fila de la boletera.
+ * - INAPAM / estudiante / maestro: NO son cupones — tarifa $280 (−30%) en su fila de la boletera.
  * - Todos los cupones activos aplican solo a boletos GENERALES (sin mezclar credenciales).
  * - GRUPO20 se activa sola con 5+ generales (sin credencial). ESPEJO y demás van manual al pagar.
  *

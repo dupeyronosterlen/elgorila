@@ -32,7 +32,7 @@ window.INSTAGRAM_BOLETOS_URL = 'https://www.instagram.com/elgorilateatro';
 /** Precios por zona (deben coincidir con el Worker). Preventa $350 hasta 26 jul 2026 15:00 CDMX; luego $400. */
 window.PRECIO_GENERAL_PREVENTA = 350;
 window.PRECIO_GENERAL_TEMPORADA = 400;
-window.PRECIO_CREDENCIAL = 245;
+window.PRECIO_CREDENCIAL = 280;
 /** 26 jul 2026 15:00 America/Mexico_City = 21:00 UTC (CDMX sin DST). */
 window.FIN_PREVENTA_UTC_MS = Date.parse('2026-07-26T21:00:00.000Z');
 
