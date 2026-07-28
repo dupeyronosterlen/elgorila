@@ -108,7 +108,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="preload" as="font" type="font/woff2" href="fonts/lora-latin.woff2?v=2" crossorigin/>
 <link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin/>
 <!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
-<link rel="preload" as="image" href="img/programa/portada-v1.jpg" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/hero/gorila-personaje.webp" type="image/webp" fetchpriority="high"/>
+<link rel="preload" as="image" href="img/hero/gorila-ambiente.webp" type="image/webp"/>
 <style>
     body {
       padding-top: 0;
@@ -1807,7 +1808,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
   .hero-portada #cartel-container::before { display: none; }
 
-  /* Hero foto — imagen real de fondo + texto encima (sin cartel rotatorio) */
+  /* Hero foto — personaje aislado con borde degradado + atmósfera */
   .hero-portada--foto #cartel-container {
     position: relative;
     overflow: hidden !important;
@@ -1817,6 +1818,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     height: min(78svh, 680px) !important;
     max-height: 680px !important;
     padding: 0 !important;
+    background:
+      radial-gradient(ellipse 70% 60% at 58% 48%, rgba(18, 42, 44, 0.55) 0%, transparent 70%),
+      #0a0706;
   }
   .hero-portada__cartel-oculto {
     position: absolute !important;
@@ -1832,23 +1836,49 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     position: absolute;
     inset: 0;
     z-index: 0;
-    -webkit-mask-image: radial-gradient(ellipse 85% 82% at 50% 45%, black 58%, transparent 100%);
-    mask-image: radial-gradient(ellipse 85% 82% at 50% 45%, black 58%, transparent 100%);
+  }
+  .hero-portada__bg {
+    position: absolute;
+    inset: -12%;
+    width: 124%;
+    height: 124%;
+    object-fit: cover;
+    object-position: center 40%;
+    display: block;
+    filter: blur(36px) saturate(0.75) brightness(0.42);
+    opacity: 0.38;
+    transform: scale(1.08);
+    -webkit-mask-image: radial-gradient(ellipse 70% 65% at 55% 48%, black 10%, transparent 72%);
+    mask-image: radial-gradient(ellipse 70% 65% at 55% 48%, black 10%, transparent 72%);
+  }
+  .hero-portada__figure {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(ellipse 88% 92% at 50% 58%, black 42%, rgba(0,0,0,0.55) 72%, transparent 100%);
+    mask-image: radial-gradient(ellipse 88% 92% at 50% 58%, black 42%, rgba(0,0,0,0.55) 72%, transparent 100%);
+  }
+  .hero-portada__figure picture {
+    display: contents;
   }
   .hero-portada__img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 22%;
+    width: auto;
+    height: 108%;
+    max-width: min(920px, 118%);
+    object-fit: contain;
+    object-position: center bottom;
     display: block;
-    filter: contrast(1.04) saturate(0.92);
-    transform: scale(1.08);
+    filter: contrast(1.05) saturate(0.94);
+    transform: translateY(4%);
   }
   .hero-portada__overlay {
     position: absolute;
     inset: 0;
     background:
-      linear-gradient(180deg, rgba(10,7,6,0.35) 0%, rgba(10,7,6,0.2) 40%, rgba(10,7,6,0.72) 100%);
+      linear-gradient(180deg, rgba(10,7,6,0.42) 0%, rgba(10,7,6,0.06) 36%, rgba(10,7,6,0.18) 68%, rgba(10,7,6,0.55) 86%, rgba(10,7,6,0.88) 100%);
   }
   .hero-portada__panel {
     position: absolute !important;
@@ -1959,12 +1989,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       height: 100% !important;
       max-height: none !important;
     }
+    .hero-portada--foto .hero-portada__figure {
+      -webkit-mask-image: radial-gradient(ellipse 95% 90% at 50% 55%, black 38%, rgba(0,0,0,0.5) 70%, transparent 100%);
+      mask-image: radial-gradient(ellipse 95% 90% at 50% 55%, black 38%, rgba(0,0,0,0.5) 70%, transparent 100%);
+    }
     .hero-portada--foto .hero-portada__img {
-      object-position: center 18%;
+      height: 102%;
+      max-width: min(720px, 128%);
+      transform: translateY(6%);
     }
     .hero-portada--foto .hero-portada__overlay {
       background:
-        linear-gradient(180deg, rgba(10,7,6,0.4) 0%, rgba(10,7,6,0.15) 35%, rgba(10,7,6,0.82) 100%);
+        linear-gradient(180deg, rgba(10,7,6,0.48) 0%, rgba(10,7,6,0.08) 30%, rgba(10,7,6,0.16) 62%, rgba(10,7,6,0.52) 82%, rgba(10,7,6,0.9) 100%);
     }
     .hero-portada--foto .hero-portada__panel {
       align-items: flex-end !important;
@@ -2034,14 +2070,25 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       height: min(62vh, 640px) !important;
       max-height: 640px !important;
     }
+    .hero-portada--foto .hero-portada__bg {
+      object-position: 62% 42%;
+      opacity: 0.5;
+    }
+    .hero-portada--foto .hero-portada__figure {
+      justify-content: flex-end;
+      padding-right: clamp(1%, 4vw, 6%);
+      -webkit-mask-image: radial-gradient(ellipse 78% 88% at 68% 55%, black 36%, rgba(0,0,0,0.55) 68%, transparent 100%);
+      mask-image: radial-gradient(ellipse 78% 88% at 68% 55%, black 36%, rgba(0,0,0,0.55) 68%, transparent 100%);
+    }
     .hero-portada--foto .hero-portada__img {
-      object-position: 78% 28%;
-      transform: scale(1.04);
+      height: 112%;
+      max-width: min(820px, 62vw);
+      transform: translate(2%, 5%);
     }
     .hero-portada--foto .hero-portada__overlay {
       background:
-        linear-gradient(90deg, rgba(10,7,6,0.92) 0%, rgba(10,7,6,0.72) 22%, rgba(10,7,6,0.28) 42%, rgba(10,7,6,0.06) 56%, transparent 66%),
-        linear-gradient(180deg, rgba(10,7,6,0.22) 0%, transparent 38%, rgba(10,7,6,0.38) 72%, rgba(10,7,6,0.78) 100%);
+        linear-gradient(90deg, rgba(10,7,6,0.94) 0%, rgba(10,7,6,0.78) 20%, rgba(10,7,6,0.28) 42%, rgba(10,7,6,0.05) 58%, transparent 70%),
+        linear-gradient(180deg, rgba(10,7,6,0.28) 0%, transparent 42%, rgba(10,7,6,0.12) 70%, rgba(10,7,6,0.55) 88%, rgba(10,7,6,0.82) 100%);
     }
     .hero-portada--foto .hero-portada__panel {
       display: flex !important;
@@ -3326,9 +3373,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Hero — foto de escena + texto (sin cartel rotatorio por ahora) -->
 <section class="mb-2 sm:mb-5 lg:mb-8 text-center scroll-mt-24 hero-cartel-desktop hero-portada hero-portada--foto" id="hero-cartel">
 <div class="relative flex items-center justify-center overflow-hidden" id="cartel-container">
-<div class="hero-portada__ambiente" aria-hidden="true">
-<img class="hero-portada__img" src="img/programa/portada-v1.jpg" alt="" width="1600" height="900" decoding="async" fetchpriority="high"/>
-<div class="hero-portada__overlay"></div>
+<div class="hero-portada__ambiente">
+<img class="hero-portada__bg" src="img/hero/gorila-ambiente.webp" alt="" width="1100" height="1000" decoding="async" aria-hidden="true"/>
+<div class="hero-portada__figure">
+<picture>
+<source type="image/webp" srcset="img/hero/gorila-personaje-sm.webp 960w, img/hero/gorila-personaje.webp 1600w" sizes="(max-width: 1023px) 90vw, 52vw"/>
+<img class="hero-portada__img" src="img/hero/gorila-personaje.png" alt="Humberto Dupeyrón como El Gorila" width="1600" height="1431" decoding="async" fetchpriority="high"/>
+</picture>
+</div>
+<div class="hero-portada__overlay" aria-hidden="true"></div>
 </div>
 <div class="cartel-rotatorio-container reading-mode-hidden hero-portada__cartel-oculto" aria-hidden="true">
 <div id="cartel-rotatorio-halo" class="cartel-rotatorio-halo"></div>
