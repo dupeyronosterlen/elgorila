@@ -340,7 +340,7 @@ function actualizarPantalla() {
     const secCfg = seccionVentaConfig();
     const pe = precioEspecialFuncion();
     const lista = window.PRECIO_GENERAL_TEMPORADA || 400;
-    const preventa = typeof window.esPreventaVigente === 'function' ? window.esPreventaVigente() : true;
+    const preventa = typeof window.esPreventaVigente === 'function' ? window.esPreventaVigente() : false;
     const precioGeneralEl = document.getElementById('precio-general-display');
     if (precioGeneralEl) {
         if (pe) {

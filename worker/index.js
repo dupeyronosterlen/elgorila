@@ -1443,7 +1443,7 @@ function getPrecio(tipo, seccionConfig) {
   const esDes = TIPOS_BOLETO[tipo]?.es_descuento ?? false;
   return esDes
     ? (seccionConfig.precio_descuento ?? 280)
-    : (seccionConfig.precio_general   ?? 350);
+    : (seccionConfig.precio_general   ?? 400);
 }
 
 const CAPACIDAD_DEFAULT = 200;

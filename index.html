@@ -3814,13 +3814,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </div>
 <!-- Barra fija de compra -->
-<a class="barra-compra-fija link-venta-boletos" href="/boletos.html" aria-label="Adquiere tus entradas — desde $350">
+<a class="barra-compra-fija link-venta-boletos" href="/boletos.html" aria-label="Adquiere tus entradas — desde $400">
   <span class="barra-compra-titulo">Adquiere tus entradas</span>
   <span class="barra-compra-meta" aria-hidden="true">
-    <span class="barra-compra-precio-tachado">$400</span>
-    <span class="barra-compra-precio-promo">$350</span>
+    <span class="barra-compra-precio">$400</span>
   </span>
 </a>
+<script src="js/config.js"></script>
 <script src="js/rutas.js"></script>
 <script>
   (function () {
@@ -4003,16 +4003,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
       /* Venta abierta: siempre /boletos.html en la raíz del sitio (nunca ruta relativa). */
       var urlVenta = hrefBoletosVenta();
+      var lista = (typeof window.PRECIO_GENERAL_TEMPORADA === 'number') ? window.PRECIO_GENERAL_TEMPORADA : 400;
+      var vigente = (typeof window.precioGeneralVigente === 'function') ? window.precioGeneralVigente() : lista;
+      var preventa = (typeof window.esPreventaVigente === 'function') ? window.esPreventaVigente() : false;
+      var precioHtml = preventa
+        ? '<span class="barra-compra-precio-tachado">$' + lista + '</span><span class="barra-compra-precio-promo">$' + vigente + '</span>'
+        : '<span class="barra-compra-precio">$' + vigente + '</span>';
       if (urlVenta) links.forEach(function(a) {
         a.href = urlVenta;
-        a.setAttribute('aria-label', 'Adquiere tus entradas — desde $350');
+        a.setAttribute('aria-label', 'Adquiere tus entradas — desde $' + vigente);
         a.removeAttribute('data-fuera-temporada');
         var tit = a.querySelector('.barra-compra-titulo');
         if (tit) tit.textContent = 'Adquiere tus entradas';
         var meta = a.querySelector('.barra-compra-meta');
-        if (meta && !meta.querySelector('.barra-compra-precio-promo')) {
-          meta.innerHTML = '<span class="barra-compra-precio-tachado">$400</span><span class="barra-compra-precio-promo">$350</span>';
-        }
+        if (meta) meta.innerHTML = precioHtml;
         // Pestaña nueva solo si la venta apunta a OTRO dominio (proveedor externo).
         // boletos.html es del mismo sitio → misma pestaña (sustituye la página).
         var esExterno = urlVenta.indexOf('http') === 0 && urlVenta.indexOf(location.origin) !== 0;
