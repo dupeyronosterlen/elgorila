@@ -46,6 +46,15 @@ const codigos = {
     activo:         true,
     agencia:        'Prensa, influencers, vecindad · hasta 4 generales · −30%',
   },
+  ITAM: {
+    tipo:           'par_fijo',
+    nombre:         'ITAM (2x1 estudiantes/trabajadores)',
+    total_mxn:      400,
+    min_general:    2,
+    solo_generales: true,
+    activo:         true,
+    agencia:        'Exclusivo comunidad ITAM (estudiantes/trabajadores, credencial) · exactamente 2 generales = $400 · aplica a cualquier función publicada · sin fecha límite ni tope de usos · distribuir directo a ITAM, NO en ads públicos',
+  },
 
   // ── Referidos (NO usar en ads) ────────────────────────────────────────────
   INVITADO25: {
