@@ -212,6 +212,16 @@ function seleccionarFecha(clave, texto, funcion = null) {
     if (totalCantidad() > 0) {
         verificarDisponibilidad();
     }
+
+    // Guía de scroll: tras elegir fecha, acomoda la pantalla con
+    // "Boletos" arriba para que el conteo y el botón Continuar
+    // queden a la vista sin que la persona tenga que buscarlos.
+    var seccionBoletos = document.querySelector('.boletos-sub-label');
+    if (seccionBoletos) {
+        setTimeout(function () {
+            seccionBoletos.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 60);
+    }
 }
 
 // --- RESALTAR BOTÓN DE FECHA ---

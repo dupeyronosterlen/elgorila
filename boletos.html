@@ -58,7 +58,7 @@ window.addEventListener('load', function () {
 
 /* ── RESET ───────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
-html { background: var(--d-bg); scroll-behavior: smooth; }
+html { background: var(--d-bg); scroll-behavior: smooth; touch-action: manipulation; }
 body {
   background: var(--d-bg) !important;
   color: var(--d-fg);
@@ -67,6 +67,7 @@ body {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  touch-action: manipulation;
 }
 img { display: block; max-width: 100%; }
 a   { color: inherit; }
@@ -253,6 +254,28 @@ a   { color: inherit; }
 }
 .rule { height: 1px; margin: 0 0 22px; }
 .sd .rule, .sd--mid .rule { background: var(--d-faint); }
+
+/* Gancho visual — foto + cita, entre el encabezado y el selector de fecha */
+.hook-boletos {
+  position: relative; margin: 18px 0 22px; border-radius: 2px;
+  overflow: hidden; background: var(--d-bg);
+  height: 230px;
+}
+.hook-boletos img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: 50% 22%;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 30%, black 45%, transparent 92%);
+          mask-image: radial-gradient(120% 90% at 50% 30%, black 45%, transparent 92%);
+}
+.hook-boletos-fade {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 6px 4px;
+  background: linear-gradient(180deg, transparent, var(--d-bg) 85%);
+}
+.hook-boletos-fade p {
+  margin: 0; font-family: var(--display); font-style: italic; font-size: 17px;
+  line-height: 1.35; color: var(--d-fg); text-align: center;
+}
+@media (min-width: 640px) { .hook-boletos { height: 300px; } .hook-boletos-fade p { font-size: 19px; } }
 .sp .rule { background: var(--p-rule); }
 
 /* ── SECCIÓN: FECHAS ─────────────────────────────────────── */
@@ -719,15 +742,17 @@ details[open] .faq-chevron { transform: rotate(45deg); }
 .ichk-input::placeholder { color: rgba(26,20,17,.45); }
 .ichk-input-wrap { margin-bottom: 22px; }
 
-/* Cupón de descuento */
-.ichk-cupon-wrap { margin-bottom: 22px; }
+/* Cupón de descuento — compacto, es opcional, no debe competir con Continuar */
+.ichk-cupon-wrap { margin-bottom: 14px; opacity: .8; }
+.ichk-cupon-wrap .ichk-label { font-size: 13px; }
+.ichk-cupon-wrap .ichk-hint { font-size: 11px; }
 .ichk-cupon-fila {
-  display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;
+  display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap;
 }
-.ichk-cupon-fila .ichk-input { flex: 1; min-width: 180px; height: 56px; font-size: 18px; letter-spacing: .08em; text-transform: uppercase; }
+.ichk-cupon-fila .ichk-input { flex: 1; min-width: 140px; height: 40px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
 .ichk-btn-cupon {
-  height: 56px; padding: 0 20px;
-  font-family: var(--mono); font-size: 13px; letter-spacing: .18em; text-transform: uppercase;
+  height: 40px; padding: 0 14px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
   background: var(--p-bg2); color: var(--p-ink);
   border: 2px solid rgba(168,149,120,.5); cursor: pointer;
   transition: border-color .2s, background .2s;
@@ -990,8 +1015,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <h2 class="sec-title">Adquiere tus<br><em>entradas</em></h2>
       <p class="sec-sede">Teatro Wilberto Cantón · San José Insurgentes, CDMX</p>
       <p class="badge-temporada" id="badge-temporada-boletos" hidden><span class="badge-temporada-dot" aria-hidden="true"></span><span id="badge-temporada-boletos-texto"></span></p>
-      <p id="badge-temporada-boletos-nota" hidden style="font-family:var(--cuerpo);font-size:13px;color:var(--d-soft);opacity:.75;margin-top:3px;">Válida para cualquier función de la temporada — cambios disponibles con mínimo 5 días de anticipación.</p>
+      <p id="badge-temporada-boletos-nota" hidden style="font-family:var(--display);font-style:italic;font-size:15px;letter-spacing:.02em;color:var(--gold);margin-top:3px;">Solo 9 sábados.</p>
     </div>
+
+    <div class="hook-boletos">
+      <img src="img/BOLETOS/hook-humberto.jpg" alt="Humberto Dupeyrón en El Gorila de Franz Kafka" loading="lazy">
+      <div class="hook-boletos-fade">
+        <p>&ldquo;¿Cuánto de domesticados estamos nosotros también?&rdquo;</p>
+      </div>
+    </div>
+
     <div class="rule"></div>
 
     <div id="banner-invitacion" class="invitacion-banner hidden" aria-live="polite"></div>
