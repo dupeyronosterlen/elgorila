@@ -255,6 +255,17 @@ a   { color: inherit; }
 .rule { height: 1px; margin: 0 0 22px; }
 .sd .rule, .sd--mid .rule { background: var(--d-faint); }
 
+/* Promo ESPEJO — pareja, código manual al pagar */
+.promo-espejo {
+  display: flex; align-items: center; gap: .5em; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 12px; letter-spacing: .02em;
+  color: var(--gold); margin-top: 8px;
+}
+.promo-espejo strong { letter-spacing: .06em; }
+.promo-espejo-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0;
+}
+
 /* Gancho visual — foto + cita, entre el encabezado y el selector de fecha */
 .hook-boletos {
   position: relative; margin: 18px 0 22px; border-radius: 2px;
@@ -1047,6 +1058,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="ticket-nombre">General</div>
         <div class="ticket-precio" id="precio-general-display">$400 MXN</div>
         <div id="nota-preventa-general" style="font-family:var(--cuerpo);font-size:13px;color:var(--d-soft);opacity:.75;margin-top:3px;">Precio de temporada</div>
+        <div class="promo-espejo">
+          <span class="promo-espejo-dot" aria-hidden="true"></span>
+          Promo activa · Código <strong>ESPEJO</strong>: 2 boletos por $600 — ingrésalo en el pago
+        </div>
       </div>
       <div class="ticket-controls">
         <button type="button" class="qty-btn" onclick="cambiarCantidad('general', -1)" aria-label="Menos general">−</button>
