@@ -371,7 +371,7 @@ function actualizarPantalla() {
     if (notaPreventaEl) {
         if (pe) notaPreventaEl.textContent = 'Función de prensa — precio especial';
         else if (preventa) notaPreventaEl.textContent = 'Precio especial hasta el 26 jul · 15:00';
-        else notaPreventaEl.textContent = 'Precio de temporada';
+        else notaPreventaEl.innerHTML = 'Código <strong style="color:var(--gold)">ESPEJO</strong>: pareja $600';
     }
 
     // Resumen de items
