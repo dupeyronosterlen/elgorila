@@ -11,9 +11,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate"/>
-<meta name="description" content="El Gorila con Humberto Dupeyrón · basado en Kafka. Solo 9 funciones, sábados jul–sep 2026 · Teatro Wilberto Cantón, CDMX. Boletos en línea."/>
+<meta name="description" content="El Gorila con Humberto Dupeyrón · monólogo basado en Kafka. Solo 9 sábados jul–sep 2026 · Teatro Wilberto Cantón, CDMX. Boletos en línea."/>
 <meta property="og:title" content="El Gorila — obra de teatro con Humberto Dupeyrón en CDMX"/>
-<meta property="og:description" content="Obra de teatro con Humberto Dupeyrón en CDMX. Monólogo basado en Kafka. 9 funciones, 25 jul–19 sep en Teatro Wilberto Cantón. Sábados 18:00."/>
+<meta property="og:description" content="Monólogo con Humberto Dupeyrón basado en Kafka. 9 sábados, 25 jul–19 sep · Teatro Wilberto Cantón, CDMX. Desde $400."/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://elgorilateatro.com.mx/"/>
 <meta property="og:image" content="https://elgorilateatro.com.mx/img/programa/portada-v4.jpg"/>
@@ -23,7 +23,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:locale" content="es_MX"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="El Gorila — obra de teatro con Humberto Dupeyrón en CDMX"/>
-<meta name="twitter:description" content="Obra de teatro con Humberto Dupeyrón en CDMX. Monólogo basado en Kafka. 9 funciones, 25 jul–19 sep en Teatro Wilberto Cantón."/>
+<meta name="twitter:description" content="El Gorila con Humberto Dupeyrón · Kafka. 9 sábados, 25 jul–19 sep · Wilberto Cantón, CDMX. Desde $400."/>
 <meta name="twitter:image" content="https://elgorilateatro.com.mx/img/programa/portada-v4.jpg"/>
 <meta name="twitter:image:alt" content="EL GORILA — cartel de temporada 2026"/>
 <title>El Gorila — obra de teatro con Humberto Dupeyrón en CDMX | 2026</title>
@@ -65,6 +65,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="preload" href="css/tailwind.css" as="style"/>
 <link rel="stylesheet" href="css/tailwind.css"/>
 <style>
+:root {
+  /* Colorimetría de escena — muestreo 2026-07-30
+     Fuentes: portada-v1-hero, portada-v4, GALERIA 03/04/07
+     Personalidad: jaula/noche + foco sangre + piel bajo luz */
+  --scene-night: #120A07;
+  --scene-void: #0D0902;
+  --scene-blood: #F04818;
+  --scene-blood-deep: #C43316;
+  --scene-crimson: #900000;
+  --scene-flesh: #C07848;
+  --scene-earth: #604830;
+  --scene-skin: #F0D8C0;
+}
 @font-face {
   font-family: 'Inter';
   font-style: normal;
@@ -1150,7 +1163,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       border-color: rgba(212, 175, 55, 0.65);
       outline: none;
     }
-    /* 37 tipo sello: fijo arriba a la derecha */
+    /* 37 tipo sello: fijo arriba a la derecha — opacidad 50% */
     .logo-37-sello {
       position: fixed !important;
       top: max(0.5rem, env(safe-area-inset-top)) !important;
@@ -1178,7 +1191,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .logo-37-sello.logo-37-loaded,
     .logo-37-sello:not(.logo-37-cargando) {
-      opacity: 1;
+      opacity: 0.5;
+    }
+    .logo-37-sello.logo-37-loaded:hover,
+    .logo-37-sello:not(.logo-37-cargando):hover,
+    .logo-37-sello:focus-within {
+      opacity: 0.9;
     }
     /* Botón CTA v3 — granate plano, esquinas vivas */
     .btn-granate-terciopelo {
@@ -1533,32 +1551,38 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       align-items: baseline;
       justify-content: center;
       gap: 0.35rem 0.65rem;
-      padding: 1rem 1.5rem;
-      background: #D43A1A;
-      border: 1px solid rgba(212,58,26,.55);
+      padding: 1.05rem 1.5rem;
+      background: linear-gradient(180deg, var(--scene-blood) 0%, #D43A1A 55%, var(--scene-blood-deep) 100%);
+      border: 1px solid color-mix(in srgb, var(--scene-skin) 40%, transparent);
       border-radius: 0;
-      box-shadow: 0 8px 28px rgba(212,58,26,.32), 0 4px 12px rgba(0,0,0,.45);
-      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--scene-blood) 30%, transparent),
+        0 10px 32px color-mix(in srgb, var(--scene-blood) 45%, transparent),
+        0 4px 14px rgba(0, 0, 0, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, filter 0.2s ease;
       -webkit-tap-highlight-color: transparent;
-      color: #f1ead9;
+      color: var(--scene-skin);
       font-family: 'EB Garamond', Georgia, serif;
       font-weight: 600;
       font-size: 1.15rem;
       letter-spacing: 0.02em;
       text-decoration: none;
-      text-shadow: none;
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
       text-align: center;
       line-height: 1.2;
       cursor: pointer;
     }
     .barra-compra-fija:hover {
       transform: translateY(-2px);
-      background: #e04422;
-      box-shadow: 0 12px 32px rgba(212,58,26,.4), 0 4px 12px rgba(0,0,0,.45);
+      background: linear-gradient(180deg, #FF5530 0%, var(--scene-blood) 55%, #D43A1A 100%);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--scene-skin) 45%, transparent),
+        0 14px 36px color-mix(in srgb, var(--scene-blood) 50%, transparent),
+        0 4px 12px rgba(0, 0, 0, 0.4);
     }
     .barra-compra-fija:active {
       transform: translateY(1px);
-      box-shadow: 0 4px 12px rgba(212,58,26,.25);
+      box-shadow: 0 4px 12px rgba(212, 58, 26, 0.3);
     }
     .barra-compra-fija .barra-compra-titulo {
       display: block;
@@ -1579,7 +1603,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       font-weight: 500;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: rgba(241,234,217,.96);
+      color: color-mix(in srgb, var(--scene-skin) 98%, white);
       text-shadow: none;
       font-variant-numeric: tabular-nums;
     }
@@ -1589,7 +1613,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       font-size: 0.85rem;
       font-weight: 400;
       letter-spacing: 0.06em;
-      color: rgba(232, 215, 175, 0.55);
+      color: color-mix(in srgb, var(--scene-skin) 55%, transparent);
       text-decoration: line-through;
       font-variant-numeric: tabular-nums;
     }
@@ -1599,7 +1623,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       font-size: 0.95rem;
       font-weight: 500;
       letter-spacing: 0.08em;
-      color: #f1ead9;
+      color: var(--scene-skin);
       font-variant-numeric: tabular-nums;
     }
     .barra-compra-fija .barra-compra-aforo {
@@ -1609,8 +1633,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       font-weight: 500;
       font-style: italic;
       letter-spacing: 0.06em;
-      color: rgba(245, 240, 232, 0.78);
-      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      color: color-mix(in srgb, var(--scene-skin) 90%, var(--scene-flesh));
+      text-shadow: 0 1px 2px rgba(0,0,0,0.25);
     }
     .barra-compra-fija .barra-compra-meta-sep {
       opacity: 0.45;
@@ -1726,7 +1750,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       #modal-37-slides { min-height: 75vh; }
       .modal-37-slide img { max-height: 520px; }
     }
-    /* Galería: móvil 4 fotos grandes (toque 1 = color, toque 2 = cambiar); desktop 8 fotos, hover = color, clic = cambiar */
+    /* Galería: 4 fotos (móvil y desktop) */
     .galeria-reducida { max-width: 100%; }
     .galeria-img-color { filter: none !important; }
     /* Fondo oscuro detrás de cada foto: mientras carga se ve un cuadro oscuro
@@ -1845,14 +1869,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     object-fit: cover;
     object-position: center 22%;
     display: block;
-    filter: contrast(1.04) saturate(0.92);
+    filter: contrast(1.06) saturate(1.1) brightness(1.04);
     transform: scale(1.08);
   }
   .hero-portada__overlay {
     position: absolute;
     inset: 0;
     background:
-      linear-gradient(180deg, rgba(10,7,6,0.35) 0%, rgba(10,7,6,0.2) 40%, rgba(10,7,6,0.72) 100%);
+      radial-gradient(ellipse 70% 55% at 50% 35%, color-mix(in srgb, var(--scene-blood) 22%, transparent) 0%, transparent 62%),
+      linear-gradient(180deg, color-mix(in srgb, var(--scene-night) 55%, transparent) 0%, color-mix(in srgb, var(--scene-night) 18%, transparent) 38%, color-mix(in srgb, var(--scene-void) 72%, transparent) 78%, color-mix(in srgb, var(--scene-void) 88%, transparent) 100%);
   }
   .hero-portada__panel {
     position: absolute !important;
@@ -1884,8 +1909,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .hero-portada__regla {
     width: 52px !important;
     height: 1.5px !important;
-    background: #D43A1A !important;
-    opacity: 0.85 !important;
+    background: var(--scene-blood) !important;
+    opacity: 0.9 !important;
     margin: 2px auto 0 !important;
   }
   .hero-portada--foto .portada-nombre-actor,
@@ -1927,12 +1952,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     font-weight: 600 !important;
     font-style: italic !important;
     letter-spacing: 0.01em !important;
-    color: #D4AF37 !important;
+    color: var(--scene-skin) !important;
     margin: clamp(4px, 1.4vw, 8px) 0 0 !important;
     text-shadow:
-      0 2px 18px rgba(0,0,0,0.95),
-      0 1px 4px rgba(0,0,0,1),
-      0 0 48px rgba(0,0,0,0.6) !important;
+      0 2px 14px rgba(0,0,0,0.85),
+      0 1px 3px rgba(0,0,0,0.9),
+      0 0 28px color-mix(in srgb, var(--scene-flesh) 45%, transparent) !important;
   }
   .hero-portada__tagline-br {
     display: none;
@@ -1968,7 +1993,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .hero-portada--foto .hero-portada__overlay {
       background:
-        linear-gradient(180deg, rgba(10,7,6,0.4) 0%, rgba(10,7,6,0.15) 35%, rgba(10,7,6,0.82) 100%);
+        radial-gradient(ellipse 75% 50% at 50% 30%, color-mix(in srgb, var(--scene-blood) 24%, transparent) 0%, transparent 58%),
+        linear-gradient(180deg, color-mix(in srgb, var(--scene-night) 65%, transparent) 0%, color-mix(in srgb, var(--scene-night) 12%, transparent) 32%, color-mix(in srgb, var(--scene-void) 78%, transparent) 78%, color-mix(in srgb, var(--scene-void) 92%, transparent) 100%);
     }
     .hero-portada--foto .hero-portada__panel {
       align-items: flex-end !important;
@@ -2044,8 +2070,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .hero-portada--foto .hero-portada__overlay {
       background:
-        linear-gradient(90deg, rgba(10,7,6,0.92) 0%, rgba(10,7,6,0.72) 22%, rgba(10,7,6,0.28) 42%, rgba(10,7,6,0.06) 56%, transparent 66%),
-        linear-gradient(180deg, rgba(10,7,6,0.22) 0%, transparent 38%, rgba(10,7,6,0.38) 72%, rgba(10,7,6,0.78) 100%);
+        radial-gradient(ellipse 45% 60% at 22% 55%, color-mix(in srgb, var(--scene-crimson) 28%, transparent) 0%, transparent 70%),
+        linear-gradient(90deg, color-mix(in srgb, var(--scene-void) 90%, transparent) 0%, color-mix(in srgb, var(--scene-night) 70%, transparent) 22%, color-mix(in srgb, var(--scene-night) 28%, transparent) 42%, color-mix(in srgb, var(--scene-night) 6%, transparent) 56%, transparent 66%),
+        linear-gradient(180deg, color-mix(in srgb, var(--scene-night) 40%, transparent) 0%, transparent 38%, color-mix(in srgb, var(--scene-void) 45%, transparent) 72%, color-mix(in srgb, var(--scene-void) 82%, transparent) 100%);
     }
     .hero-portada--foto .hero-portada__panel {
       display: flex !important;
@@ -2349,8 +2376,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     font-style: italic !important;
     letter-spacing: 0.02em;
     line-height: 1.45;
-    color: rgba(217, 155, 58, 0.92) !important;
-    text-shadow: 0 1px 8px rgba(0,0,0,0.75) !important;
+    color: var(--scene-skin) !important;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.55) !important;
     border: none;
     padding: 0.25rem 0.5rem;
     max-width: 32rem;
@@ -2427,9 +2454,23 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   /* Barra compra — Cormorant + mono */
   .barra-compra-fija .barra-compra-titulo {
     font-family: 'Cormorant Garamond', Georgia, serif !important;
-    font-weight: 500 !important;
-    font-size: 1.2rem !important;
+    font-weight: 600 !important;
+    font-size: 1.28rem !important;
     letter-spacing: 0.02em;
+    color: var(--scene-skin) !important;
+  }
+
+  /* CTA secundario — mismo sangre de escena que la barra */
+  .cta-scene-blood {
+    background: linear-gradient(180deg, var(--scene-blood) 0%, #D43A1A 60%, var(--scene-blood-deep) 100%);
+    color: var(--scene-skin);
+    border: 1px solid color-mix(in srgb, var(--scene-skin) 35%, transparent);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--scene-blood) 40%, transparent);
+  }
+  .cta-scene-blood:hover {
+    background: linear-gradient(180deg, #FF5530 0%, var(--scene-blood) 60%, #D43A1A 100%);
+    color: var(--scene-skin);
+    border-color: color-mix(in srgb, var(--scene-skin) 55%, transparent);
   }
 
   .font-display, .preview-fellenglish.font-display {
@@ -3124,7 +3165,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       "name": "¿Hay funciones en este momento?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Sí: 9 funciones en Teatro Wilberto Cantón, CDMX, sábados 18:00, del 25 de julio al 19 de septiembre. Compra en elgorilateatro.com.mx/boletos.html."
+        "text": "Sí: solo 9 sábados en Teatro Wilberto Cantón, CDMX, a las 18:00, del 25 de julio al 19 de septiembre. Compra anticipada en elgorilateatro.com.mx/boletos.html."
       }
     },
     {
@@ -3196,7 +3237,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       "name": "¿Hay descuentos?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Precio de temporada: generales $400. Tarifa credencial $280 (−30%) para INAPAM, estudiante y maestro. Comprando 5 o más generales, el 20% de descuento se aplica automáticamente. En pareja, el código ESPEJO deja 2 boletos generales en $600 total (se ingresa al pagar). Esta taquilla no cobra cargo por servicio; Ticketmaster y Teatrando pueden aplicar cargos propios."
+"text": "Precio de temporada: generales $400. Tarifa credencial $280 (−30%) para INAPAM, estudiante y maestro. Comprando 5 o más generales, el 20% de descuento se aplica automáticamente. En pareja, el código ESPEJO deja 2 boletos generales en $600 total (se ingresa al pagar). Esta taquilla no cobra cargo por servicio; Ticketmaster y Teatrando pueden aplicar cargos propios."
       }
     },
     {
@@ -3220,7 +3261,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       "name": "¿Puedo reservar para un grupo (escuela, empresa)?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Grupos de más de 10 personas: elgorilateatro@gmail.com. Con 5 o más boletos generales, el 20% de descuento se aplica automáticamente al comprar en línea."
+        "text": "Grupos de más de 10: WhatsApp o elgorilateatro@gmail.com. Con 5 o más boletos generales, el 20% de descuento se aplica automáticamente al comprar en línea."
       }
     },
     {
@@ -3350,7 +3391,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <h1 class="titulo-el-gorila hero-portada__titulo">EL GORILA</h1>
 <p class="portada-kafka hero-portada__kafka">de Franz Kafka</p>
 <div class="portada-separador hero-portada__regla"></div>
-<p class="hero-portada__tagline">El fenómeno teatral con 37 años en escena.</p>
+<p class="hero-portada__tagline">¿Qué dejaste atrás para poder encajar?</p>
 </div>
 </div>
 <div class="portada-info-temporada hero-portada__direccion" id="portada-info-desktop">
@@ -3379,7 +3420,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Contenido de la obra (siempre visible, sobre eliminado) -->
 <div id="sobre-contenido" style="max-height:none; opacity:1; overflow:visible; padding-top:0;">
 <div class="text-center mb-4 sm:mb-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">37 años esperándote. Llegó tu turno.</p>
+<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Un informe desde la jaula. Una pregunta que no suelta.</p>
 </div>
 <section id="sinopsis" class="mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 lg:p-12 text-center backdrop-blur-md border border-accent-gold/20 scroll-mt-24 mt-1 sm:mt-2 md:mt-4 section-with-bg">
 <h2 class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Sinopsis</h2>
@@ -3397,15 +3438,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </a>
             </div>
 </section>
-<div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
-<section class="mb-8 sm:mb-10 scroll-mt-24 mt-4 sm:mt-6">
-<div class="text-center mb-4 sm:mb-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Galería</p>
+<section id="para-ti" class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 section-with-bg" aria-labelledby="para-ti-heading">
+<div class="mx-auto max-w-2xl text-center">
+<h2 id="para-ti-heading" class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Una noche, varias capas</h2>
+<p class="font-body text-text-dark/85 text-sm sm:text-base md:text-lg leading-relaxed mb-3">
+Kafka y Humberto Dupeyrón: la libertad negociada, la máscara que salva, la perseverancia de seguir hablando cuando el cuerpo ya aprendió otro idioma.
+</p>
+<p class="font-body text-text-dark/70 text-sm sm:text-base leading-relaxed mb-6 sm:mb-8">
+Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados, 18:00 · Wilberto Cantón · desde $400.
+</p>
+<div class="flex justify-center">
+<a href="/boletos.html" class="link-venta-boletos cta-scene-blood inline-flex items-center gap-2 px-6 py-2.5 text-sm sm:text-base tracking-wide transition-colors">Conseguir entradas</a>
 </div>
+</div>
+</section>
+<section class="mb-8 sm:mb-10 scroll-mt-24 mt-4 sm:mt-6">
 <div class="max-w-5xl galeria-reducida mx-auto galeria-wrap">
-<div class="galeria-hilo galeria-hilo-1 hidden md:block" aria-hidden="true"></div>
-<div class="galeria-hilo galeria-hilo-2 hidden md:block" aria-hidden="true"></div>
-<div class="galeria-hilo galeria-hilo-3 hidden md:block" aria-hidden="true"></div>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
 <div class="group relative aspect-square galeria-zoom-wrap">
 <div class="absolute inset-0 bg-accent-gold frame-maze-1"></div>
@@ -3431,65 +3479,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <img alt="Escena del monólogo El Gorila de Franz Kafka" id="galeria-img-4" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="img/GALERIA/mobile/07.webp" decoding="async" fetchpriority="high" data-galeria-index="6" data-galeria-filename="07.jpeg"/>
 </div>
 </div>
-<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
-<div class="absolute inset-0 bg-accent-gold frame-maze-2"></div>
-<div class="absolute inset-0.5">
-<img alt="Humberto Dupeyrón en el papel del gorila Peter" id="galeria-img-5" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
-</div>
-</div>
-<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
-<div class="absolute inset-0 bg-primary frame-maze-3"></div>
-<div class="absolute inset-0.5">
-<img alt="El Gorila — 37 años en escena" id="galeria-img-6" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" fetchpriority="low" data-galeria-placeholder/>
-</div>
-</div>
-<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
-<div class="absolute inset-0 bg-accent-gold frame-maze-1"></div>
-<div class="absolute inset-0.5">
-<img alt="Actuación de Humberto Dupeyrón en El Gorila" id="galeria-img-7" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
-</div>
-</div>
-<div class="hidden md:block group relative aspect-square galeria-zoom-wrap">
-<div class="absolute inset-0 bg-primary frame-maze-2"></div>
-<div class="absolute inset-0.5">
-<img alt="El Gorila Teatro — obra basada en Kafka" id="galeria-img-8" class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-150 cursor-pointer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loading="lazy" decoding="async" data-galeria-placeholder/>
-</div>
-</div>
 </div>
 </div>
 </section>
 <!-- Ancla para scroll al widget -->
 <div id="venta-boletos" class="scroll-mt-24"></div>
-<div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
-<div class="text-center my-4 sm:my-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">No lo decimos solo nosotros.</p>
-</div>
-
 <!-- Reseñas -->
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg p-4 sm:p-6 md:p-8" id="comentarios">
 <div class="comentarios-seccion-frame relative overflow-hidden rounded-lg bg-rich-dark/90 backdrop-blur-md border-2 border-accent-gold/50 p-5 sm:p-6 md:p-8 shadow-[0_0_0_1px_rgba(212,175,55,0.2),inset_0_0_0_1px_rgba(212,175,55,0.08)]">
 <div class="comentarios-carrusel-wrap" aria-label="Comentarios del público en rotación automática">
 <div class="comentarios-carrusel-track" id="comentarios-track">
-<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">He tenido la fortuna de verlo casi una media docena de veces y llevarlo a 3 escuelas. Lo recuerdo con admiración.</p><cite class="comentarios-autor">— Victor Manuel Ordaz</cite></blockquote>
-<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">El Gorila de hace 25 años me emocionó y me hizo reír. Verlo de nuevo, con todos estos años encima, me dejó más emocionada que la primera vez.</p><cite class="comentarios-autor">— LaBiblio Tecota</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">¡Excelente y muy reflexiva obra, vayan a verla!</p><cite class="comentarios-autor">— Valencia Beatriz</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">La mejor obra de teatro que he visto en mi vida.</p><cite class="comentarios-autor">— Bernardo Hernandez</cite></blockquote>
 <blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Reí mucho y también lloré.</p><cite class="comentarios-autor">— Sandra Ruedas</cite></blockquote>
-<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Me tocó el privilegio de verle en escena en 1998 en Coyoacán. Esplendidísimo trabajo actoral. Grande es Humberto Dupeyron.</p><cite class="comentarios-autor">— Osvaldo Villafañe</cite></blockquote>
-<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Es una experiencia en la que tus sentimientos y emociones están en un constante sube y baja.</p><cite class="comentarios-autor">— Arturo Mozo</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Una obra bastante reflexiva y excelentemente representada por el maestro Dupeyrón.</p><cite class="comentarios-autor">— Alejandra Núñez</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Excelente obra. Imperdible.</p><cite class="comentarios-autor">— Daniel Compeán Pérez</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">¡Me encantó! Excelente actuación, se notan las tablas y experiencia para interactuar con el público.</p><cite class="comentarios-autor">— mirianmaiwa</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Increíble función la de hoy.</p><cite class="comentarios-autor">— Nestor Torres</cite></blockquote>
 <blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Fui con mi novio y se quedó en mi top 3 obras.</p><cite class="comentarios-autor">— America Lara</cite></blockquote>
-<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Magistral. Nunca olvidaré esa obra.</p><cite class="comentarios-autor">— Talina Adriana Macías</cite></blockquote>
-<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Te lleva por muchas emociones y la forma de improvisar es tan única. Un maestro de verdad.</p><cite class="comentarios-autor">— Estefani Trejo</cite></blockquote>
-<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Me pareció estupenda la actuación de Humberto Dupeyron. Es un gran ejemplo de vida.</p><cite class="comentarios-autor">— Avril Nuñez</cite></blockquote>
-<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Nada más, ni nada menos: el mejor actor del país.</p><cite class="comentarios-autor">— Capeto Teysal</cite></blockquote>
-<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Admirable como este actor no se ha dejado vencer.</p><cite class="comentarios-autor">— Pat Gar</cite></blockquote>
-<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Te disfruté mucho en El Gorila hace ya algunos años y procuraré volver ahora.</p><cite class="comentarios-autor">— Paloma Woolrich</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Chulada de monólogo! Me encantó.</p><cite class="comentarios-autor">— Arturo Tirado</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Hoy fui. Genial la obra, Humberto Dupeyrón es lo máximo. Me gustó mucho.</p><cite class="comentarios-autor">— Lupita Medel</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">Es una experiencia en la que tus sentimientos y emociones están en un constante sube y baja.</p><cite class="comentarios-autor">— Arturo Mozo</cite></blockquote>
+<blockquote class="comentarios-casilla font-body text-text-dark/90"><p class="italic">He tenido la fortuna de verlo casi una media docena de veces y llevarlo a 3 escuelas. Lo recuerdo con admiración.</p><cite class="comentarios-autor">— Victor Manuel Ordaz</cite></blockquote>
 </div>
 </div>
 </div>
 </section>
-
-<div class="text-center my-4 sm:my-5 px-4">
-<p class="narrativa-cita text-sm sm:text-base font-light tracking-wide italic max-w-2xl mx-auto">Ven a descubrirlo...</p>
-</div>
 
 <section class="scroll-mt-24 mb-8 sm:mb-10 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 mt-6 sm:mt-8 section-with-bg" id="faq" data-bg="img/SINOPSIS/mobile/4.webp">
 <div class="flex flex-col items-center justify-center">
@@ -3499,7 +3514,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <h2 class="seccion-heading-v4 mb-3 sm:mb-4 text-center font-display text-2xl sm:text-3xl md:text-4xl text-white">Preguntas Frecuentes</h2>
 </div>
 <div class="mx-auto max-w-3xl divide-y divide-accent-gold/20 contenedor-texto-scroll">
-<details class="group py-3 sm:py-4 faq-destacado" open>
+<details class="group py-3 sm:py-4 faq-destacado">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base font-semibold text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Hay funciones en este momento?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3508,7 +3523,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </summary>
 <div class="mt-3 pl-4 border-l-2 border-accent-gold/40 bg-black/40 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/25">
 <p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
-                Sí: en <strong>Teatro Wilberto Cantón</strong>, <strong>9 funciones</strong> los <strong>sábados a las 18:00</strong>, del <strong>25 de julio al 19 de septiembre</strong>. Boletos en <a href="/boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a> o avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">Instagram</a>.
+                Sí: <strong>solo 9 sábados</strong> a las <strong>18:00</strong> en <strong>Teatro Wilberto Cantón</strong>, del <strong>25 de julio al 19 de septiembre</strong>. Compra anticipada en <a href="/boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a> o sigue avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">Instagram</a>.
               </p>
 </div>
 </details>
@@ -3614,7 +3629,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </span>
 </summary>
 <p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
-                Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Tarifa <strong>credencial $280</strong> (−30%) para INAPAM, estudiante y maestro. Si compras <strong>5 o más boletos generales</strong>, el <strong>20% de descuento</strong> se aplica automáticamente, sin necesidad de código. Si van en <strong>pareja</strong>, el código <strong>ESPEJO</strong> deja 2 boletos generales en $600 total (se ingresa al pagar). En esta taquilla <strong>no hay cargo por servicio</strong>; también puedes comprar en Ticketmaster o Teatrando (esas plataformas pueden cobrar cargos propios).
+Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Tarifa <strong>credencial $280</strong> (−30%) para INAPAM, estudiante y maestro. Si compras <strong>5 o más boletos generales</strong>, el <strong>20% de descuento</strong> se aplica automáticamente, sin necesidad de código. Si van en <strong>pareja</strong>, el código <strong>ESPEJO</strong> deja 2 boletos generales en $600 total (se ingresa al pagar). En esta taquilla <strong>no hay cargo por servicio</strong>; también puedes comprar en Ticketmaster o Teatrando (esas plataformas pueden cobrar cargos propios).
               </p>
 </details>
 <details class="group py-3 sm:py-4">
@@ -3647,7 +3662,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </span>
 </summary>
 <p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
-                Para <strong>grupos de más de 10 personas</strong>, escríbenos a <a href="mailto:elgorilateatro@gmail.com" class="text-accent-gold hover:text-white underline">elgorilateatro@gmail.com</a> o en <a href="#contacto" class="text-accent-gold hover:text-white underline">Contacto</a>. Con <strong>5 o más boletos generales</strong> el <strong>20% de descuento</strong> se aplica automáticamente al comprar en línea.
+                Para <strong>grupos de más de 10 personas</strong>, escríbenos por <a href="https://wa.me/5215671311191?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20grupo%20o%20escuela%20en%20El%20Gorila." target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">WhatsApp</a>, a <a href="mailto:elgorilateatro@gmail.com" class="text-accent-gold hover:text-white underline">elgorilateatro@gmail.com</a> o en <a href="#grupos" class="text-accent-gold hover:text-white underline">Escuelas y grupos</a>. Con <strong>5 o más boletos generales</strong> el <strong>20% de descuento</strong> se aplica automáticamente al comprar en línea.
               </p>
 </details>
 <details class="group py-3 sm:py-4">
@@ -3675,7 +3690,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </section>
 
-<div class="indicador-mas" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+<section id="grupos" class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 section-with-bg" aria-labelledby="grupos-heading">
+<div class="mx-auto max-w-3xl text-center">
+<h2 id="grupos-heading" class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Escuelas y grupos</h2>
+<p class="font-body text-text-dark/90 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-4">
+Una obra que se discute al salir — identidad, libertad y el costo de pertenecer. Pensada para aulas, empresas y salidas culturales.
+</p>
+<p class="font-body text-text-dark/80 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto mb-6">
+Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <strong class="text-accent-gold">20% de descuento</strong> se aplica automáticamente al comprar en línea. Para grupos de más de 10 personas, escríbenos y te armamos la función.
+</p>
+<div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+<a href="https://wa.me/5215671311191?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20grupo%20o%20escuela%20en%20El%20Gorila." class="inline-flex items-center gap-2 px-5 py-2.5 border border-accent-gold/50 bg-accent-gold/15 text-accent-gold text-sm sm:text-base tracking-wide transition-colors hover:bg-accent-gold/25 hover:border-accent-gold/70" target="_blank" rel="noopener noreferrer">WhatsApp grupos</a>
+<a href="mailto:elgorilateatro@gmail.com?subject=Reserva%20grupo%20%2F%20escuela%20—%20El%20Gorila" class="inline-flex items-center gap-2 px-5 py-2.5 border border-accent-gold/30 text-text-dark/90 text-sm sm:text-base tracking-wide transition-colors hover:border-accent-gold/60 hover:text-accent-gold">Escribir por correo</a>
+<a href="/boletos.html" class="link-venta-boletos inline-flex items-center gap-2 px-5 py-2.5 text-accent-gold/90 text-sm sm:text-base tracking-wide underline underline-offset-4 hover:text-accent-gold">Comprar 5+ en línea</a>
+</div>
+</div>
+</section>
+
 <!-- Contacto -->
 <section class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg p-4 sm:p-6 md:p-8 section-with-bg seccion-contacto-wide overflow-visible" id="contacto" data-bg="img/programa/kafka-1923.webp">
 <div class="relative z-10 rounded-lg bg-rich-dark/90 backdrop-blur-md border-2 border-accent-gold/40 p-5 sm:p-6 md:p-8 mx-auto max-w-4xl overflow-visible">
@@ -3683,7 +3714,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="contacto-grupo-1 mb-6">
 <svg class="h-8 w-8 sm:h-10 sm:w-10 text-accent-gold mx-auto mb-3 opacity-80 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
 <h2 class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white">Contacto</h2>
-<p class="texto-contacto text-text-dark/90 text-sm sm:text-base mx-auto">Para consultas, reservas o más información sobre la obra, escríbenos. Te respondemos a la brevedad.</p>
+<p class="texto-contacto text-text-dark/90 text-sm sm:text-base mx-auto">Para consultas, reservas, <strong>grupos y escuelas</strong>, o más información sobre la obra, escríbenos por WhatsApp o correo. Te respondemos a la brevedad.</p>
 </div>
 <div class="contacto-grupo-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
 <a id="link-correo" class="flex items-center justify-center h-10 w-10 min-w-[2.5rem] min-h-[2.5rem] rounded-full bg-accent-gold/20 hover:bg-accent-gold/30 text-accent-gold border border-accent-gold/40 transition-colors flex-shrink-0" href="mailto:elgorilateatro@gmail.com" aria-label="Correo">
@@ -3822,10 +3853,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </div>
 <!-- Barra fija de compra -->
-<a class="barra-compra-fija link-venta-boletos" href="/boletos.html" aria-label="Adquiere tus entradas — desde $400">
-  <span class="barra-compra-titulo">Adquiere tus entradas</span>
+<a class="barra-compra-fija link-venta-boletos" href="/boletos.html" aria-label="Conseguir entradas — desde $400 · 9 sábados">
+  <span class="barra-compra-titulo">Conseguir entradas</span>
   <span class="barra-compra-meta" aria-hidden="true">
-    <span class="barra-compra-precio">$400</span>
+    <span class="barra-compra-precio">Desde $400</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo">9 sábados</span>
   </span>
 </a>
 <script src="js/config.js"></script>
@@ -4015,14 +4046,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       var vigente = (typeof window.precioGeneralVigente === 'function') ? window.precioGeneralVigente() : lista;
       var preventa = (typeof window.esPreventaVigente === 'function') ? window.esPreventaVigente() : false;
       var precioHtml = preventa
-        ? '<span class="barra-compra-precio-tachado">$' + lista + '</span><span class="barra-compra-precio-promo">$' + vigente + '</span>'
-        : '<span class="barra-compra-precio">$' + vigente + '</span>';
+        ? '<span class="barra-compra-precio-tachado">$' + lista + '</span><span class="barra-compra-precio-promo">Desde $' + vigente + '</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo">9 sábados</span>'
+        : '<span class="barra-compra-precio">Desde $' + vigente + '</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo">9 sábados</span>';
       if (urlVenta) links.forEach(function(a) {
         a.href = urlVenta;
-        a.setAttribute('aria-label', 'Adquiere tus entradas — desde $' + vigente);
+        a.setAttribute('aria-label', 'Conseguir entradas — desde $' + vigente + ' · 9 sábados');
         a.removeAttribute('data-fuera-temporada');
         var tit = a.querySelector('.barra-compra-titulo');
-        if (tit) tit.textContent = 'Adquiere tus entradas';
+        if (tit) tit.textContent = 'Conseguir entradas';
         var meta = a.querySelector('.barra-compra-meta');
         if (meta) meta.innerHTML = precioHtml;
         // Pestaña nueva solo si la venta apunta a OTRO dominio (proveedor externo).
