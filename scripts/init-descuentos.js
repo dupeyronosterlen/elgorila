@@ -64,6 +64,15 @@ const codigos = {
     activo:         true,
     agencia:        'Exclusivo comunidad UNAM (estudiantes/trabajadores, credencial) · exactamente 2 generales = $400 · aplica a cualquier función publicada · sin fecha límite ni tope de usos · distribuir directo a UNAM, NO en ads públicos',
   },
+  CUPA: {
+    tipo:           'porcentaje',
+    porcentaje:     30,
+    nombre:         'CUPA (vecinos)',
+    solo_generales: true,
+    activo:         true,
+    max_usos:       30,
+    agencia:        'Vecinos (CUPA) · sin credencial, sin verificación · cada general baja de $400 a $280 (mismo precio que estudiante/INAPAM, nunca menos) · tope duro de 30 usos totales · repartir solo a mano en el grupo de vecinos, NUNCA en ads ni en el sitio',
+  },
 
   // ── Referidos (NO usar en ads) ────────────────────────────────────────────
   INVITADO25: {
