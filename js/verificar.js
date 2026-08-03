@@ -64,6 +64,30 @@ async function verificarBoleto() {
     }
 }
 
+function _etiquetaPapelVerificar(venta) {
+  if (!venta) return '—';
+  if (venta.cortesia || (venta.metodoPago || '').toLowerCase() === 'cortesia') {
+    const n = venta.pendientes != null ? venta.pendientes : (venta.totalBoletos || venta.cantidad || 1);
+    return `${n} × Cortesía`;
+  }
+  const items = venta.items || [];
+  if (items.length) {
+    const partes = items.map(i => {
+      const t = i.tipo === 'estudiante' || i.tipo === 'inapam' || i.tipo === 'maestro' ? 'Credencial' : 'General';
+      return `${i.cantidad || 0} × ${t}`;
+    });
+    let txt = partes.join(' · ');
+    if (venta.codigoCupon) txt += ` · ${venta.codigoCupon}`;
+    return txt;
+  }
+  if (venta.tipo) {
+    const t = venta.tipo === 'estudiante' || venta.tipo === 'inapam' || venta.tipo === 'maestro' ? 'Credencial' : 'General';
+    return `1 × ${t}`;
+  }
+  const n = venta.pendientes != null ? venta.pendientes : (venta.totalBoletos || 1);
+  return `${n} × General`;
+}
+
 function mostrarValido(venta) {
     v$('resultado-verificacion').classList.remove('hidden');
     v$('resultado-valido').classList.remove('hidden');
@@ -74,6 +98,9 @@ function mostrarValido(venta) {
             ? `Certificado · ${venta.pendientes} entrada(s) pendiente(s)`
             : `Entrada ${venta.boletoNum || 1} de ${venta.totalBoletos}`)
         : '1 entrada';
+
+    const papelEl = v$('resultado-papel');
+    if (papelEl) papelEl.textContent = _etiquetaPapelVerificar(venta);
 
     v$('resultado-codigo').textContent  = venta.codigo;
     v$('resultado-fecha').textContent   =
@@ -98,6 +125,8 @@ function mostrarValido(venta) {
     if (btnU) {
         btnU.classList.toggle('hidden', !_puedeCanjear());
         btnU.disabled = false;
+        btnU.textContent = '';
+        btnU.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;">done</span> Marcar entrada';
     }
 }
 
@@ -132,8 +161,6 @@ async function marcarComoUsado() {
 
     const token = obtenerTokenAdmin();
     if (!token) { alert('Necesitas iniciar sesión como admin para canjear boletos'); return; }
-
-    if (!confirm('¿Marcar este boleto como canjeado? Esta acción no se puede deshacer.')) return;
 
     const btnU = v$('btn-marcar-usado');
     if (btnU) { btnU.disabled = true; btnU.textContent = 'Canjeando…'; }
@@ -348,6 +375,11 @@ async function cargarListaPuerta() {
 
         cont.innerHTML = data.grupos.map(g => {
             const color = _colorGrupo(g.certificado);
+            const papel = (g.cortesia || (g.metodoPago || '').toLowerCase() === 'cortesia')
+              ? `${g.cantidad || (g.boletos || []).length} × Cortesía`
+              : ((g.items || []).length
+                ? g.items.map(i => `${i.cantidad} × ${(i.tipo === 'estudiante' || i.tipo === 'inapam' || i.tipo === 'maestro') ? 'Credencial' : 'General'}`).join(' · ')
+                : `${g.cantidad || (g.boletos || []).length} × General`);
             const boletosHtml = (g.boletos || []).map(b => `
               <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0" title="${b.usado ? 'Toca para quitar check-in' : 'Toca para marcar ingreso'}">
                 <div>
@@ -359,7 +391,7 @@ async function cargarListaPuerta() {
             return `
               <div class="lista-grupo" style="border-left-color:${color}">
                 <p class="lista-grupo-nombre">${g.nombre || '—'}</p>
-                <p class="lista-grupo-cert">${g.certificado}</p>
+                <p class="lista-grupo-papel" style="margin:0 0 8px;font-size:14px;font-weight:600;color:var(--gold);">${papel}${g.codigoCupon ? ' · ' + g.codigoCupon : ''}</p>
                 ${boletosHtml}
               </div>`;
         }).join('');

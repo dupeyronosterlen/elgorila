@@ -796,30 +796,28 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
         </div>
       </div>
       <div class="bol-tabs" style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
-        <button type="button" class="btn-ghost bol-tab active" onclick="BoleteraPanel.bolNavGo(this,'venta')">Venta taquilla</button>
-        <button type="button" class="btn-ghost bol-tab" onclick="BoleteraPanel.bolNavGo(this,'lista')">Lista visitantes</button>
-        <button type="button" class="btn-ghost bol-tab" onclick="BoleteraPanel.bolNavGo(this,'hoy')">Ventas hoy</button>
+        <button type="button" class="btn-ghost bol-tab active" onclick="BoleteraPanel.bolNavGo(this,'venta')">En vivo</button>
+        <button type="button" class="btn-ghost bol-tab" onclick="BoleteraPanel.bolNavGo(this,'hoy')">Caja / aforo</button>
       </div>
 <div id="view-bol-venta" class="bol-admin-view">
     <div class="bol-card">
-      <h2 class="bol-card-title">Venta manual — taquilla</h2>
+      <h2 class="bol-card-title">Venta rápida</h2>
       <div class="bol-card-rule"></div>
-      <span class="sec-label">El boleto con QR se envía al correo del comprador · entra a la lista del día</span>
 
       <form id="form-efectivo" onsubmit="event.preventDefault(); generarCodigo();">
-        <span class="sec-label" style="display:block;margin-bottom:10px;">1 · Función</span>
+        <span class="sec-label" style="display:block;margin-bottom:10px;">Función</span>
         <div id="bol-venta-funciones-grid"></div>
         <div id="bol-venta-funciones-ui"></div>
         <input type="hidden" id="fecha-efectivo" value="" required>
         <p id="bol-funcion-seleccionada" class="bol-funcion-seleccionada">Selecciona una función</p>
+        <p id="bol-funcion-aviso" class="bol-funcion-aviso" hidden></p>
 
-        <span class="sec-label" style="display:block;margin:18px 0 10px;">2 · Entradas</span>
+        <span class="sec-label" style="display:block;margin:18px 0 10px;">Entradas</span>
 
         <div class="bol-ticket-fila">
           <div>
             <div class="bol-ticket-nombre">General</div>
             <div class="bol-ticket-precio">$400 MXN</div>
-            <div class="bol-ticket-nota">Código <strong>ESPEJO</strong>: 2 generales = $600</div>
           </div>
           <div class="bol-qty-controls">
             <button type="button" class="bol-qty-btn" onclick="BoleteraVenta.cambiarCantidad('general', -1)" aria-label="Menos general">−</button>
@@ -835,9 +833,7 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
               <span style="text-decoration:line-through;opacity:.45;">$400</span>
               <span> → </span>
               <span class="bol-ticket-promo">$280 MXN</span>
-              <span style="opacity:.55;"> · −30%</span>
             </div>
-            <div class="bol-ticket-nota">Credencial al ingresar</div>
           </div>
           <div class="bol-qty-controls">
             <button type="button" class="bol-qty-btn" onclick="BoleteraVenta.cambiarCantidad('estudiante', -1)" aria-label="Menos credencial">−</button>
@@ -859,95 +855,85 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
           <div id="bol-promo-hint" class="bol-promo-hint" style="display:none;"></div>
         </div>
 
-        <span class="sec-label" style="display:block;margin-bottom:10px;">3 · Cupón (opcional)</span>
-        <div class="bol-cupon-wrap">
-          <label class="form-label" for="bol-cupon-input">Cupón / promo (opcional)</label>
-          <div class="bol-cupon-fila">
-            <input type="text" id="bol-cupon-input" class="form-input" placeholder="ESPEJO, GRUPO20, PRENSA30…" autocomplete="off" spellcheck="false" maxlength="32">
-            <button type="button" id="bol-btn-cupon" class="btn-copiar" onclick="BoleteraVenta.aplicarCupon()">Aplicar</button>
-          </div>
-          <div id="bol-cupon-msg" class="bol-cupon-msg" aria-live="polite"></div>
-        </div>
-
         <div class="bol-seccion-comprador">
-          <span class="sec-label" style="display:block;margin-bottom:10px;">4 · Comprador y pago</span>
           <div class="form-grid">
-            <div style="grid-column:1/-1;">
-              <label class="form-label" for="email-efectivo">Correo * — ahí llega el boleto con QR</label>
-              <input type="email" id="email-efectivo" class="form-input" placeholder="correo@ejemplo.com" autocomplete="email" required>
-            </div>
             <div>
-              <label class="form-label" for="metodo-pago-efectivo">Forma de pago</label>
+              <label class="form-label" for="metodo-pago-efectivo">Pago</label>
               <select id="metodo-pago-efectivo" class="form-input" required>
                 <option value="efectivo">Efectivo</option>
-                <option value="tarjeta_taquilla">Tarjeta en taquilla</option>
-                <option value="cortesia">Cortesía (sin cobro)</option>
+                <option value="tarjeta_taquilla">Tarjeta</option>
+                <option value="cortesia">Cortesía</option>
               </select>
             </div>
             <div>
-              <label class="form-label" for="nombre-efectivo">Nombre (opcional)</label>
-              <input type="text" id="nombre-efectivo" class="form-input" placeholder="Para la lista de puerta">
+              <label class="form-label" for="nombre-efectivo">Nombre</label>
+              <input type="text" id="nombre-efectivo" class="form-input" placeholder="Opcional · lista de llamado" autocomplete="name">
             </div>
             <div style="grid-column:1/-1;">
-              <label class="form-label" for="notas-efectivo">Notas internas (opcional)</label>
-              <input type="text" id="notas-efectivo" class="form-input" placeholder="Observaciones de taquilla…">
+              <label class="form-label" for="email-efectivo">Correo <span style="opacity:.55;font-weight:400;">(opcional · rifas / lookalike)</span></label>
+              <input type="email" id="email-efectivo" class="form-input" placeholder="Si lo dan — no obligatorio" autocomplete="email">
             </div>
           </div>
         </div>
 
+        <details class="bol-mas-opciones">
+          <summary>Cupón y notas</summary>
+          <div class="bol-cupon-wrap" style="margin-top:12px;">
+            <label class="form-label" for="bol-cupon-input">Cupón</label>
+            <div class="bol-cupon-fila">
+              <input type="text" id="bol-cupon-input" class="form-input" placeholder="ESPEJO, GRUPO20…" autocomplete="off" spellcheck="false" maxlength="32">
+              <button type="button" id="bol-btn-cupon" class="btn-copiar" onclick="BoleteraVenta.aplicarCupon()">Aplicar</button>
+            </div>
+            <div id="bol-cupon-msg" class="bol-cupon-msg" aria-live="polite"></div>
+          </div>
+          <div style="margin-top:12px;">
+            <label class="form-label" for="notas-efectivo">Notas internas</label>
+            <input type="text" id="notas-efectivo" class="form-input" placeholder="Solo si hace falta…">
+          </div>
+        </details>
+
         <button type="submit" class="btn-generar" id="btn-generar" disabled style="margin-top:18px;">
-          <span class="material-symbols-outlined" style="font-size:20px;">mail</span>
-          Agendar y enviar entrada
+          Registrar venta
         </button>
-        <p class="bol-cupon-msg" style="margin-top:10px;">Se registra la venta, se suma a la lista del día y el comprador recibe su QR por correo.</p>
       </form>
 
       <div id="venta-error" style="display:none;margin-top:10px;color:#f87171;font-size:15px;"></div>
 
-      <!-- Folio generado -->
-      <div id="codigo-generado" style="display:none;margin-top:18px;">
-        <div id="qr-codigo-efectivo" style="margin-bottom:12px;"></div>
-        <p id="codigo-texto" style="font-family:var(--mono);font-size:13px;letter-spacing:.08em;word-break:break-all;">—</p>
-        <p id="codigo-info" style="font-size:15px;color:var(--d-soft);margin-top:8px;line-height:1.5;">—</p>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
-          <button type="button" class="btn-copiar" onclick="copiarCodigo()">
-            <span class="material-symbols-outlined" style="font-size:14px;">content_copy</span>
-            Copiar folio
-          </button>
-        </div>
+      <div id="codigo-generado" class="bol-resultado-venta" style="display:none;margin-top:18px;">
+        <p id="bol-resultado-papel" class="bol-resultado-papel">—</p>
+        <p id="bol-resultado-estado" class="bol-resultado-estado">—</p>
+        <p id="codigo-info" style="font-size:14px;color:var(--d-soft);margin-top:8px;line-height:1.45;">—</p>
+        <details class="bol-mas-opciones" style="margin-top:10px;">
+          <summary>Folio / QR</summary>
+          <div id="qr-codigo-efectivo" style="margin:12px 0;"></div>
+          <p id="codigo-texto" style="font-family:var(--mono);font-size:12px;letter-spacing:.06em;word-break:break-all;">—</p>
+          <button type="button" class="btn-copiar" style="margin-top:8px;" onclick="copiarCodigo()">Copiar folio</button>
+        </details>
       </div>
     </div>
-    </div>
 
-    <div id="view-bol-lista" class="bol-admin-view hidden">
-    <!-- 2. LISTA VISITANTES — check-in manual -->
-    <div class="bol-card">
-      <h2 class="bol-card-title">Lista de visitantes — check-in</h2>
+    <!-- Lista de llamado — misma función que la venta -->
+    <div class="bol-card" style="margin-top:18px;">
+      <h2 class="bol-card-title">Lista de llamado</h2>
       <div class="bol-card-rule"></div>
-      <span class="sec-label">Por función · valida por nombre o folio · entrada individual si no llegan juntos</span>
-
-      <div style="margin-bottom:14px;">
-        <span class="sec-label" style="display:block;margin-bottom:10px;">Función</span>
-        <div id="bol-lista-funciones-grid"></div>
-        <input type="hidden" id="bol-lista-funcion" value="">
+      <span class="sec-label">Misma función · busca y toca para marcar entrada</span>
+      <input type="hidden" id="bol-lista-funcion" value="">
+      <div id="bol-lista-funciones-grid" class="hidden" aria-hidden="true"></div>
+      <div style="margin:12px 0 14px;">
+        <label class="form-label" for="bol-lista-buscar">Buscar nombre o folio</label>
+        <input type="search" id="bol-lista-buscar" class="form-input"
+               placeholder="Nombre, CERT o folio…">
       </div>
-      <div class="form-grid" style="margin-bottom:14px;">
-        <div style="grid-column:1/-1;">
-          <label class="form-label" for="bol-lista-buscar">Buscar nombre o folio</label>
-          <input type="search" id="bol-lista-buscar" class="form-input"
-                 placeholder="Nombre, CERT o folio interno…">
-        </div>
-      </div>
-
       <p id="bol-lista-resumen" class="sec-label" style="margin-bottom:10px;">—</p>
       <div id="bol-lista-grupos" class="lista-grupos">
-        <p style="font-family:var(--mono,monospace);font-size:11px;color:var(--d-soft);">Selecciona una función…</p>
+        <p style="font-family:var(--mono,monospace);font-size:11px;color:var(--d-soft);">Selecciona una función arriba…</p>
       </div>
     </div>
     </div>
 
+    <div id="view-bol-lista" class="bol-admin-view hidden" aria-hidden="true"></div>
+
     <div id="view-bol-hoy" class="bol-admin-view hidden">
-    <!-- 3. VENTAS MANUALES HOY + CAJA -->
     <div class="bol-card">
       <h2 class="bol-card-title">Caja taquilla hoy</h2>
       <div class="bol-card-rule"></div>
@@ -1035,14 +1021,15 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
           <span class="material-symbols-outlined">check_circle</span>
           Boleto válido
         </h3>
-        <div class="resultado-fila"><span>Folio</span><span id="resultado-codigo">—</span></div>
+        <div class="resultado-fila"><span>A entregar</span><span id="resultado-papel" style="font-weight:700;color:var(--gold);">—</span></div>
         <div class="resultado-fila"><span>Función</span><span id="resultado-fecha">—</span></div>
+        <div class="resultado-fila"><span>Folio</span><span id="resultado-codigo">—</span></div>
         <div class="resultado-fila hidden" id="fila-comprador"><span>Comprador</span><span id="resultado-orden">—</span></div>
         <div class="resultado-fila hidden" id="fila-email"><span>Email</span><span id="resultado-email">—</span></div>
         <div class="resultado-fila"><span>Estado</span><span id="resultado-estado" style="color:#4ade80;">Válido</span></div>
         <button type="button" id="btn-marcar-usado" class="btn-canjear hidden">
           <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;">done</span>
-          Marcar entrada (canjear)
+          Marcar entrada
         </button>
       </div>
     </div>

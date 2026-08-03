@@ -481,6 +481,8 @@ function urlVerificarBoleto(codigo) {
 }
 
 const SITIO_BASE = 'https://elgorilateatro.com.mx';
+/** Reseña pública (Google Maps · Teatro Wilberto Cantón). Filtro suave en copy: solo si la noche gustó. */
+const URL_RESENA_GOOGLE = 'https://www.google.com/maps/search/?api=1&query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX';
 const CUPONES_REFERIDO = new Set(['INVITADO25', 'REGALO25', 'OTRA50', 'MANADA15']);
 const ENCUESTA_TTL_SEC = 7776000; // 90 días
 
@@ -718,6 +720,9 @@ function respuestaBoletoPublica(v, tid, boleto, boletoIdx) {
       boletoNum:     pendientes.length ? (pendientes[0].numero || 1) : totalBoletos,
       pendientes:    pendientes.length,
       items:         v.items || [],
+      metodoPago:    v.metodoPago || null,
+      cortesia:      !!v.cortesia || (v.metodoPago || '').toLowerCase() === 'cortesia',
+      codigoCupon:   v.codigoCupon || null,
       total:         v.total,
       fechaCompra:   v.fechaCompra,
       estado:        v.estado,
@@ -737,6 +742,9 @@ function respuestaBoletoPublica(v, tid, boleto, boletoIdx) {
     totalBoletos,
     boletoNum:     boleto?.numero || (boletoIdx != null ? boletoIdx + 1 : 1),
     items:         v.items || [],
+    metodoPago:    v.metodoPago || null,
+    cortesia:      !!v.cortesia || (v.metodoPago || '').toLowerCase() === 'cortesia',
+    codigoCupon:   v.codigoCupon || null,
     total:         v.total,
     fechaCompra:   v.fechaCompra,
     estado:        v.estado,
@@ -998,6 +1006,20 @@ function htmlEmailPostFuncion(venta, funcionNombre, config, opts = {}) {
     <a href="${encuestaUrl}" style="display:inline-block;background:#D43A1A;color:#fff;padding:16px 32px;text-decoration:none;font-family:Georgia,serif;font-size:18px;">
       Abrir →
     </a>
+  </td></tr>
+
+  <tr><td style="background:#e8dfc8;padding:26px 28px;text-align:center;border-top:1px solid #c9b896;">
+    <p style="margin:0 0 14px;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#3a2e26;">
+      Si esta noche te gustó, ¿nos dejas una reseña corta en Google? Ayuda a que más gente encuentre <em>El Gorila</em> los sábados a las 18:00.
+    </p>
+    <a href="${URL_RESENA_GOOGLE}" style="display:inline-block;background:transparent;color:#D43A1A;padding:10px 18px;text-decoration:none;font-family:Georgia,serif;font-size:16px;border:1px solid #D43A1A;">
+      Dejar reseña →
+    </a>
+    <p style="margin:16px 0 0;font-family:Georgia,serif;font-size:13px;line-height:1.5;color:#6b5c4a;">
+      Si algo no salió bien, escríbenos a
+      <a href="mailto:${EMAIL_OPERATIVO}" style="color:#8a5a20;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
+      — preferimos escucharte en privado.
+    </p>
   </td></tr>
 
   <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
@@ -2917,7 +2939,9 @@ const ENCUESTA_ORIGEN    = new Set([
 ]);
 
 function respuestaEncuestaPublica(data, certificado) {
-  const nombre = (data.respuestas?.nombrePortador || data.nombre || '').trim();
+  const nombreBoleto = (data.nombre || '').trim();
+  const nombrePortador = (data.respuestas?.nombrePortador || '').trim();
+  const nombre = (nombrePortador || nombreBoleto).trim();
   const primer = nombre ? nombre.split(/\s+/)[0] : null;
   const out = {
     valido:        true,
@@ -2926,6 +2950,7 @@ function respuestaEncuestaPublica(data, certificado) {
     fecha:         data.fecha || null,
     saludo:        primer,
     nombre:        nombre || null,
+    nombreBoleto:  nombreBoleto || null,
   };
   if (data.completadaEn && data.respuestas) {
     out.regalos = regalosParaEncuesta(certificado, data.respuestas);
@@ -3816,6 +3841,10 @@ async function handleListaPuerta(tid, request, env) {
       email:       v.email || null,
       cantidad:    v.cantidad,
       numeroObra:  v.numeroObra || null,
+      metodoPago:  v.metodoPago || null,
+      cortesia:    !!v.cortesia || (v.metodoPago || '').toLowerCase() === 'cortesia',
+      codigoCupon: v.codigoCupon || null,
+      items:       v.items || [],
       boletos: (v.boletos || []).map(b => ({
         cert:   b.cert,
         folio:  b.folio,
@@ -3957,10 +3986,8 @@ async function handleVentaManual(tid, request, env, ctx) {
   if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
     return json({ error: 'Fecha inválida.' }, 400, request);
   }
-  if (!email) {
-    return json({ error: 'Indica el correo del comprador — ahí se envía el boleto.' }, 400, request);
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  // Email opcional: lookalike / rifas. Sin correo la venta sigue (walk-up).
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return json({ error: 'Correo inválido.' }, 400, request);
   }
 
@@ -4051,12 +4078,19 @@ async function handleVentaManual(tid, request, env, ctx) {
   const gen = await generarBoletosVenta(tid, fecha, itemsValidados, env);
   const sessionId = `manual_${crypto.randomUUID().replace(/-/g, '')}`;
 
+  // Función de hoy (CDMX): marcar ingreso al vender. Otra función: solo registrar.
+  const esFuncionHoy = fecha === hoyISOMx();
+  const ahoraIso = new Date().toISOString();
+  const boletosVenta = esFuncionHoy
+    ? gen.boletos.map(b => ({ ...b, usado: true, usadoEn: ahoraIso }))
+    : gen.boletos;
+
   const venta = {
     teatroId:       canonical,
     sessionId,
     codigo:         gen.codigo,
     certificado:    gen.certificado,
-    boletos:        gen.boletos,
+    boletos:        boletosVenta,
     numeroObra:     gen.numeroObra,
     fecha,
     fechaContable:  fecha,
@@ -4065,13 +4099,16 @@ async function handleVentaManual(tid, request, env, ctx) {
     cantidad:       cantidadTotal,
     items:          itemsValidados,
     seccionCantidades,
-    email:          email,
+    email:          email || null,
     nombre:         nombre || null,
     notas:          notas || null,
     total,
-    fechaCompra:    new Date().toISOString(),
+    fechaCompra:    ahoraIso,
     estado:         'completada',
-    usado:          false,
+    usado:          esFuncionHoy,
+    usadoEn:        esFuncionHoy ? ahoraIso : null,
+    canjeadoPor:    esFuncionHoy ? (payload.usuario || 'admin') : undefined,
+    canjeEnVenta:   esFuncionHoy || undefined,
     metodoPago,
     cortesia:       esCortesia || undefined,
     registradoPor:  payload.usuario || 'admin',
@@ -4112,18 +4149,24 @@ async function handleVentaManual(tid, request, env, ctx) {
     rol:       payload.rol,
     accion:    'venta_manual',
     teatroId:  canonical,
-    detalles:  `${esCortesia ? 'Cortesía' : 'Venta efectivo'} ${gen.certificado} — ${cantidadTotal} boleto(s) — ${funcion.nombre}`,
-    meta:      { codigo: gen.certificado, fecha, total, email: email || null, codigoCupon: cuponAplicado?.codigo || null, via: payload.purpose || 'admin' },
+    detalles:  `${esCortesia ? 'Cortesía' : 'Venta efectivo'} ${gen.certificado} — ${cantidadTotal} boleto(s) — ${funcion.nombre}${esFuncionHoy ? ' · ingreso marcado' : ''}`,
+    meta:      {
+      codigo: gen.certificado, fecha, total, email: email || null,
+      codigoCupon: cuponAplicado?.codigo || null, via: payload.purpose || 'admin',
+      ingresoMarcado: esFuncionHoy,
+    },
   });
 
   const respBody = {
     ok:           true,
     codigo:       gen.certificado,
     certificado:  gen.certificado,
-    boletos:      gen.boletos.map(b => ({ cert: b.cert, folio: b.folio, numero: b.numero })),
+    boletos:      boletosVenta.map(b => ({ cert: b.cert, folio: b.folio, numero: b.numero, tipo: b.tipo, usado: !!b.usado })),
     emailEnviado,
+    ingresoMarcado: esFuncionHoy,
     total,
     funcionNombre: funcion.nombre,
+    metodoPago,
     venta:         _formatVenta(venta),
   };
   if (idemKey) {

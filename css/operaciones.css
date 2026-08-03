@@ -248,6 +248,63 @@ button { font-family: var(--cuerpo); border-radius: 0 !important; }
   line-height: .98; letter-spacing: -.01em;
 }
 .bol-card-rule { height: 1px; background: var(--d-faint); margin: 12px 0 18px; }
+.bol-funcion-aviso {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  font-family: var(--cuerpo);
+  font-size: 15px;
+  line-height: 1.35;
+  border-left: 3px solid var(--gold);
+  background: rgba(217, 155, 58, .08);
+  color: var(--d-fg);
+}
+.bol-funcion-aviso.hoy {
+  border-left-color: #16a34a;
+  background: rgba(22, 163, 74, .1);
+}
+.bol-funcion-aviso.otra {
+  border-left-color: #d97706;
+  background: rgba(217, 119, 6, .12);
+}
+.bol-mas-opciones {
+  margin-top: 14px;
+  border: 1px solid var(--d-faint);
+  padding: 10px 12px;
+}
+.bol-mas-opciones summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--d-soft);
+}
+.bol-resultado-venta {
+  padding: 16px;
+  border: 1px solid var(--d-faint);
+  background: rgba(255,255,255,.03);
+}
+.bol-resultado-papel {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--gold);
+  line-height: 1.15;
+}
+.bol-resultado-estado {
+  margin: 8px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.bol-resultado-estado.ok { color: #4ade80; }
+.bol-resultado-estado.otra { color: #fbbf24; }
+.lista-grupo-papel {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gold);
+}
 .sec-label {
   font-family: var(--mono); font-size: 10px;
   letter-spacing: .22em; text-transform: uppercase;

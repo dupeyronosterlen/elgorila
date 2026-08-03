@@ -5,6 +5,8 @@
 function bolNavGo(btn, view) {
   const root = document.getElementById('view-boletera');
   if (!root) return;
+  // "lista" quedó unida a En vivo
+  if (view === 'lista') view = 'venta';
   root.querySelectorAll('.bol-tab').forEach(n => n.classList.toggle('active', n === btn));
   root.querySelectorAll('.bol-admin-view').forEach(v => v.classList.add('hidden'));
   root.querySelector('#view-bol-' + view)?.classList.remove('hidden');
@@ -12,6 +14,37 @@ function bolNavGo(btn, view) {
 
 function _boletaToken() {
   return typeof AuthManager !== 'undefined' ? AuthManager.obtenerAdminToken() : null;
+}
+
+function _hoyIsoMx() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+}
+
+function _etiquetaTipoItem(tipo) {
+  if (tipo === 'general') return 'General';
+  if (tipo === 'estudiante' || tipo === 'inapam' || tipo === 'maestro') return 'Credencial';
+  return tipo || 'General';
+}
+
+/** Resumen de papel a entregar (cortesía / general / cupón). */
+function _resumenPapel(opts) {
+  const metodo = (opts.metodoPago || '').toLowerCase();
+  const items = opts.items || [];
+  if (metodo === 'cortesia' || opts.cortesia) {
+    const n = opts.cantidad || items.reduce((s, i) => s + (i.cantidad || 0), 0) || 1;
+    return `${n} × Cortesía`;
+  }
+  const partes = [];
+  if (items.length) {
+    items.forEach(i => {
+      partes.push(`${i.cantidad || 0} × ${_etiquetaTipoItem(i.tipo)}`);
+    });
+  } else if (opts.cantidad) {
+    partes.push(`${opts.cantidad} × General`);
+  }
+  let txt = partes.join(' · ') || '—';
+  if (opts.codigoCupon) txt += ` · ${opts.codigoCupon}`;
+  return txt;
 }
 
 async function _boletaIniciar() {
@@ -27,9 +60,38 @@ let _bolFuncionesCache = [];
 
 function _bolActualizarEtiquetaFuncion(iso) {
   const el = document.getElementById('bol-funcion-seleccionada');
-  if (!el) return;
-  const f = _bolFuncionesCache.find(x => x.fecha_iso === iso);
-  el.textContent = f ? (f.nombre || iso) : (iso ? iso : 'Selecciona una función');
+  if (el) {
+    const f = _bolFuncionesCache.find(x => x.fecha_iso === iso);
+    el.textContent = f ? (f.nombre || iso) : (iso ? iso : 'Selecciona una función');
+  }
+  _bolActualizarAvisoFuncion(iso);
+}
+
+function _bolActualizarAvisoFuncion(iso) {
+  const aviso = document.getElementById('bol-funcion-aviso');
+  if (!aviso) return;
+  if (!iso) {
+    aviso.hidden = true;
+    aviso.textContent = '';
+    return;
+  }
+  const hoy = _hoyIsoMx();
+  aviso.hidden = false;
+  if (iso === hoy) {
+    aviso.className = 'bol-funcion-aviso hoy';
+    aviso.textContent = 'Función de hoy — al registrar se marca el ingreso.';
+  } else {
+    aviso.className = 'bol-funcion-aviso otra';
+    aviso.textContent = 'Otra función — solo se reserva; no se valida el ingreso ahora.';
+  }
+}
+
+function _bolSyncListaConVenta(iso) {
+  const lista = document.getElementById('bol-lista-funcion');
+  if (lista && iso && lista.value !== iso) {
+    lista.value = iso;
+  }
+  if (iso) _boletaCargarListaPuerta();
 }
 
 async function _boletaCargarFuncionesGrids() {
@@ -38,6 +100,12 @@ async function _boletaCargarFuncionesGrids() {
     const res = await fetch(window.teatroApi('funciones'));
     if (!res.ok) return;
     _bolFuncionesCache = SelectorFunciones.normalizarLista(await res.json());
+
+    const onVentaSelect = iso => {
+      _bolActualizarEtiquetaFuncion(iso);
+      BoleteraVenta?.onFechaChange?.();
+      _bolSyncListaConVenta(iso);
+    };
 
     const ventaIso = SelectorFunciones.wireHiddenProgressive
       ? SelectorFunciones.wireHiddenProgressive(
@@ -49,10 +117,7 @@ async function _boletaCargarFuncionesGrids() {
           futuras: true,
           showDisponibles: true,
           batchSize: 3,
-          onSelect: iso => {
-            _bolActualizarEtiquetaFuncion(iso);
-            BoleteraVenta?.onFechaChange?.();
-          },
+          onSelect: onVentaSelect,
         },
       )
       : SelectorFunciones.wireHidden(
@@ -62,21 +127,23 @@ async function _boletaCargarFuncionesGrids() {
         {
           futuras: true,
           showDisponibles: true,
-          onSelect: iso => {
-            _bolActualizarEtiquetaFuncion(iso);
-            BoleteraVenta?.onFechaChange?.();
-          },
+          onSelect: onVentaSelect,
         },
       );
     _bolActualizarEtiquetaFuncion(ventaIso);
 
+    // Hidden grid para mantener API de lista; se sincroniza desde venta
     SelectorFunciones.wireHidden(
       document.getElementById('bol-lista-funciones-grid'),
       document.getElementById('bol-lista-funcion'),
       _bolFuncionesCache,
       { modoLista: true, onSelect: () => _boletaCargarListaPuerta() },
     );
-    if (document.getElementById('bol-lista-funcion')?.value) await _boletaCargarListaPuerta();
+    if (ventaIso) {
+      _bolSyncListaConVenta(ventaIso);
+    } else if (document.getElementById('bol-lista-funcion')?.value) {
+      await _boletaCargarListaPuerta();
+    }
   } catch (_) {}
 }
 
@@ -105,19 +172,25 @@ function _boletaRenderGrupos(grupos) {
     const color = _colorGrupo(g.certificado);
     const pend = (g.boletos || []).filter(b => !b.usado).length;
     const total = (g.boletos || []).length;
+    const papel = _resumenPapel({
+      metodoPago: g.metodoPago,
+      cortesia: g.cortesia,
+      items: g.items,
+      cantidad: g.cantidad || total,
+      codigoCupon: g.codigoCupon,
+    });
     const boletosHtml = (g.boletos || []).map(b => `
       <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0" title="${b.usado ? 'Toca para quitar check-in' : 'Toca para marcar ingreso'}">
         <div>
           <div class="lista-boleto-folio">${b.folio || b.cert}</div>
-          <div class="lista-boleto-meta">${b.tipo || 'entrada'} · #${b.numero || '—'}</div>
+          <div class="lista-boleto-meta">${_etiquetaTipoItem(b.tipo)} · #${b.numero || '—'}</div>
         </div>
         <div class="lista-boleto-check" aria-hidden="true">${b.usado ? '✓' : ''}</div>
       </div>`).join('');
     return `
       <div class="lista-grupo" style="border-left-color:${color}">
-        <p class="lista-grupo-nombre">${g.nombre || '—'} <span style="font-size:12px;color:var(--d-soft);">(${pend}/${total} pendientes)</span></p>
-        ${g.email && g.email !== g.nombre ? `<p class="lista-grupo-cert" style="margin-top:-4px;margin-bottom:6px;">${g.email}</p>` : ''}
-        <p class="lista-grupo-cert">${g.certificado}</p>
+        <p class="lista-grupo-nombre">${g.nombre || '—'} <span style="font-size:12px;color:var(--d-soft);">(${pend}/${total} pend.)</span></p>
+        <p class="lista-grupo-papel">${papel}</p>
         ${boletosHtml}
       </div>`;
   }).join('');
@@ -171,10 +244,11 @@ async function _boletaCargarListaPuerta() {
 }
 
 async function _boletaCanjear(cert) {
-  if (!cert || !confirm(`¿Marcar ingreso de ${cert}?`)) return;
+  if (!cert) return;
   const token = _boletaToken();
   if (!token) return;
-  const fecha = document.getElementById('bol-lista-funcion')?.value;
+  const fecha = document.getElementById('bol-lista-funcion')?.value
+    || document.getElementById('fecha-efectivo')?.value;
   const body = fecha ? JSON.stringify({ fecha }) : undefined;
   try {
     const res = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(cert)}`), {
@@ -187,7 +261,22 @@ async function _boletaCanjear(cert) {
     });
     const data = await res.json();
     if (!res.ok) { alert(data.error || 'No se pudo marcar'); return; }
-    await _boletaCargarListaPuerta();
+    // Actualización local rápida — sin recargar toda la lista
+    const g = _listaGruposRaw.find(x => (x.boletos || []).some(b => b.cert === cert));
+    if (g) {
+      const b = g.boletos.find(x => x.cert === cert);
+      if (b) { b.usado = true; b.usadoEn = data.usadoEn || new Date().toISOString(); }
+      g.usado = (g.boletos || []).every(x => x.usado);
+      _boletaFiltrarLista();
+      const resumen = document.getElementById('bol-lista-resumen');
+      if (resumen) {
+        const total = _listaGruposRaw.reduce((s, x) => s + (x.boletos || []).length, 0);
+        const ingresados = _listaGruposRaw.reduce((s, x) => s + (x.boletos || []).filter(b => b.usado).length, 0);
+        resumen.textContent = `${ingresados} / ${total} ingresados · ${total - ingresados} pendientes`;
+      }
+    } else {
+      await _boletaCargarListaPuerta();
+    }
   } catch { alert('Error de conexión'); }
 }
 
@@ -266,7 +355,7 @@ async function generarCodigoEfectivo() {
   const token = _boletaToken();
 
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
-  if (!token) { alert('Sesión expirada. Vuelve a entrar.');; return; }
+  if (!token) { alert('Sesión expirada. Vuelve a entrar.'); return; }
 
   const fechaIso = document.getElementById('fecha-efectivo')?.value;
   const email    = (document.getElementById('email-efectivo')?.value || '').trim();
@@ -279,8 +368,8 @@ async function generarCodigoEfectivo() {
     if (errEl) { errEl.textContent = 'Selecciona función y al menos un boleto.'; errEl.style.display = 'block'; }
     return;
   }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    if (errEl) { errEl.textContent = 'Indica un correo válido — ahí se envía el boleto con QR.'; errEl.style.display = 'block'; }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (errEl) { errEl.textContent = 'Correo inválido — déjalo vacío si no lo dan.'; errEl.style.display = 'block'; }
     return;
   }
 
@@ -299,6 +388,16 @@ async function generarCodigoEfectivo() {
 
   const idemKey = window.ElGorilaApi?.crearIdempotencyKey?.() || null;
 
+  const payloadBody = {
+    fecha: fechaIso,
+    items,
+    codigoCupon: cupon?.codigo || undefined,
+    email: email || undefined,
+    nombre: nombre || undefined,
+    metodoPago,
+    notas: notas || undefined,
+  };
+
   try {
     let data;
     if (window.ElGorilaApi?.fetchJson) {
@@ -308,15 +407,7 @@ async function generarCodigoEfectivo() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          fecha: fechaIso,
-          items,
-          codigoCupon: cupon?.codigo || undefined,
-          email,
-          nombre: nombre || undefined,
-          metodoPago,
-          notas: notas || undefined,
-        }),
+        body: JSON.stringify(payloadBody),
       }, { idempotencyKey: idemKey, retries: 3 });
       data = out.data;
     } else {
@@ -327,15 +418,7 @@ async function generarCodigoEfectivo() {
           Authorization: `Bearer ${token}`,
           ...(idemKey ? { 'Idempotency-Key': idemKey } : {}),
         },
-        body: JSON.stringify({
-          fecha: fechaIso,
-          items,
-          codigoCupon: cupon?.codigo || undefined,
-          email,
-          nombre: nombre || undefined,
-          metodoPago,
-          notas: notas || undefined,
-        }),
+        body: JSON.stringify(payloadBody),
       });
       data = await res.json();
       if (!res.ok) {
@@ -348,25 +431,42 @@ async function generarCodigoEfectivo() {
     const txt = document.getElementById('codigo-texto');
     const inf = document.getElementById('codigo-info');
     const qr  = document.getElementById('qr-codigo-efectivo');
+    const papelEl = document.getElementById('bol-resultado-papel');
+    const estadoEl = document.getElementById('bol-resultado-estado');
+
+    const papel = _resumenPapel({
+      metodoPago: data.metodoPago || metodoPago,
+      items: data.venta?.items || items,
+      cantidad: data.venta?.cantidad,
+      codigoCupon: data.venta?.codigoCupon || cupon?.codigo,
+    });
 
     if (box) box.style.display = 'block';
+    if (papelEl) papelEl.textContent = `A entregar: ${papel}`;
+    if (estadoEl) {
+      if (data.ingresoMarcado) {
+        estadoEl.className = 'bol-resultado-estado ok';
+        estadoEl.textContent = 'Ingreso marcado · ya entra';
+      } else {
+        estadoEl.className = 'bol-resultado-estado otra';
+        estadoEl.textContent = `Reservado para ${data.funcionNombre || fechaIso} · no entra hoy`;
+      }
+    }
     if (txt) txt.textContent = data.codigo;
     if (inf) {
       const metodoLbl = metodoPago === 'cortesia' ? 'Cortesía'
-        : metodoPago === 'tarjeta_taquilla' ? 'Tarjeta en taquilla' : 'Efectivo';
-      const mailNote = data.emailEnviado
-        ? ` · boleto enviado a ${email}${data.idempotentReplay ? ' (recuperado tras fallo de red)' : ''}`
-        : ` · error al enviar correo a ${email}`;
-      const resumen = BoleteraVenta.resumenVentaTexto(data.venta) || `${data.venta?.cantidad || ''} boleto(s)`;
-      const cuponNote = data.venta?.codigoCupon ? ` · ${data.venta.codigoCupon}` : '';
-      inf.innerHTML = `${data.funcionNombre}<br>${resumen} (${seccion}) · $${data.total} MXN · ${metodoLbl}${cuponNote}${mailNote}`;
+        : metodoPago === 'tarjeta_taquilla' ? 'Tarjeta' : 'Efectivo';
+      const mailNote = email
+        ? (data.emailEnviado ? ` · enviado a ${email}` : ` · no se pudo enviar a ${email}`)
+        : '';
+      inf.textContent = `${data.funcionNombre || ''} · $${data.total} MXN · ${metodoLbl}${mailNote}`;
     }
     if (qr && typeof QRCode !== 'undefined') {
       qr.innerHTML = '';
       const qrCodigo = (data.boletos?.length === 1 && data.boletos[0]?.cert)
         ? data.boletos[0].cert
         : (data.codigo || data.certificado || '');
-      if (qrCodigo) QRCode.toCanvas(qr, qrCodigo.trim().toUpperCase(), { width: 180, margin: 1 });
+      if (qrCodigo) QRCode.toCanvas(qr, qrCodigo.trim().toUpperCase(), { width: 160, margin: 1 });
     }
 
     ['nombre-efectivo', 'email-efectivo', 'notas-efectivo'].forEach(id => {
@@ -382,7 +482,8 @@ async function generarCodigoEfectivo() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;">mail</span> Agendar y enviar entrada';
+      btn.textContent = 'Registrar venta';
+      BoleteraVenta?.actualizarUi?.();
     }
   }
 }
