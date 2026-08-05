@@ -15,6 +15,17 @@
 (function () {
   window.dataLayer = window.dataLayer || [];
 
+  // Desarrollo local: no contaminar el píxel ni GA4 de producción.
+  // El desglose por URL del píxel mostraba eventos desde localhost/127.0.0.1.
+  // Se silencian los envíos, NO la API: el resto del sitio sigue llamando a
+  // ElGorilaAnalytics con normalidad y el checkout local no se rompe.
+  var _egHost = location.hostname;
+  var ES_LOCAL = _egHost === 'localhost' || _egHost === '127.0.0.1' ||
+                 _egHost === '' || _egHost.slice(-6) === '.local';
+  if (ES_LOCAL && window.console && console.info) {
+    console.info('[analytics] entorno local: no se envían eventos a GA4 ni Meta');
+  }
+
   // Página que declara `data-viewcontent="<nombre>"` en el <script> dispara
   // ViewContent / view_item al cargar. Necesario para optimizar campañas de
   // prospección a "Ver contenido": sin esto el evento nunca existe.
@@ -24,6 +35,7 @@
   // Empuja un evento de ecommerce al dataLayer para que lo recoja GTM.
   // Limpia `ecommerce` antes (evita que items de un push previo se mezclen).
   function pushEcommerce(eventName, ecommerce) {
+    if (ES_LOCAL) return;
     window.dataLayer.push({ ecommerce: null });
     var payload = { event: eventName };
     if (ecommerce) payload.ecommerce = ecommerce;
@@ -66,6 +78,7 @@
   }
 
   function trackMeta(eventName, payload, eventId) {
+    if (ES_LOCAL) return;
     if (typeof fbq !== 'function') return;
     try {
       var p = payload || {};
@@ -100,6 +113,7 @@
     purchaseEventId: purchaseEventId,
 
     grupoGrande: function (cantidad) {
+      if (ES_LOCAL) return;
       window.dataLayer.push({ ecommerce: null });
       window.dataLayer.push({ event: 'grupo_grande', cantidad: cantidad });
     },
@@ -159,6 +173,7 @@
 
       // 2) Meta Pixel directo (fbq) con reintento SOLO para fbq (GTM lo carga async).
       function sendMeta() {
+        if (ES_LOCAL) return true;
         if (typeof fbq !== 'function') return false;
         try {
           var params = { value: p.value, currency: p.currency || 'MXN' };
