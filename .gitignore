@@ -12,10 +12,16 @@ usuarios.json
 CREDENCIALES*
 PROMPT-CLAUDE*.md
 
+# Scripts que contienen códigos de cupón y sus descuentos.
+# El repo es público: dejarlos aquí equivale a publicar la lista de cupones.
+scripts/init-descuentos.js
+scripts/patch-cupon-prueba99.js
+
 # Documentos internos (estrategia, finanzas, operación, credenciales).
 # El repo es la raíz del sitio: TODO lo commiteado queda PÚBLICO en
 # https://elgorilateatro.com.mx/<ruta>. Nada interno va aquí dentro.
 docs-internos/
+agencia/campana/
 .wrangler/
 
 # Previews / artefactos locales
