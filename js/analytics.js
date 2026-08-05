@@ -10,7 +10,9 @@
  *          eso eliminaba la carrera del 2º cargador que perdía conversiones.
  *        → dispara Meta Pixel (fbq) directo con eventID para dedup con CAPI del servidor.
  *
- *   purchase SOLO en confirmacion.html (QR). Dedup por transaction_id (sessionStorage).
+ *   purchase SOLO en confirmacion.html (QR). Dedup por transaction_id en
+ *   localStorage: sessionStorage se vaciaba al cerrar la pestaña, así que
+ *   reabrir el enlace de confirmación volvía a disparar Purchase.
  */
 (function () {
   window.dataLayer = window.dataLayer || [];
@@ -157,6 +159,9 @@
       if (!txId && !eventId) return false;
       var storageKey = purchaseKey(eventId || txId);
       try {
+        if (localStorage.getItem(storageKey)) return false;
+      } catch (_) {}
+      try {
         if (sessionStorage.getItem(storageKey)) return false;
       } catch (_) {}
 
@@ -164,6 +169,7 @@
       p.transaction_id = txId;
 
       function markSent() {
+        try { localStorage.setItem(storageKey, '1'); } catch (_) {}
         try { sessionStorage.setItem(storageKey, '1'); } catch (_) {}
       }
 
