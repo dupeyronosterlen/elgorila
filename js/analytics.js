@@ -15,6 +15,12 @@
 (function () {
   window.dataLayer = window.dataLayer || [];
 
+  // Página que declara `data-viewcontent="<nombre>"` en el <script> dispara
+  // ViewContent / view_item al cargar. Necesario para optimizar campañas de
+  // prospección a "Ver contenido": sin esto el evento nunca existe.
+  var _egScript = document.currentScript;
+  var _egViewContent = _egScript && _egScript.getAttribute('data-viewcontent');
+
   // Empuja un evento de ecommerce al dataLayer para que lo recoja GTM.
   // Limpia `ecommerce` antes (evita que items de un push previo se mezclen).
   function pushEcommerce(eventName, ecommerce) {
@@ -177,4 +183,19 @@
   };
 
   window.ElGorilaAnalytics.init();
+
+  if (_egViewContent) {
+    var dispararViewContent = function () {
+      window.ElGorilaAnalytics.viewContent({
+        content_type: 'obra',
+        content_ids: [_egViewContent],
+        content_name: _egViewContent,
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', dispararViewContent);
+    } else {
+      dispararViewContent();
+    }
+  }
 })();

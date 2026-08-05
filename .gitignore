@@ -12,6 +12,16 @@ usuarios.json
 CREDENCIALES*
 !CUPONES-AGENCIA.template.txt
 PROMPT-CLAUDE*.md
+
+# Documentos internos de estrategia y finanzas.
+# El repo es la raíz del sitio: cualquier .md commiteado queda PÚBLICO
+# en https://elgorilateatro.com.mx/<archivo>.md
+BRIEF-CAMPANA-SEGUNDA-OPINION.md
+PLAN-CAMPANA-HOY.md
+LANZAMIENTO-CHECKLIST.md
+CAMBIOS-CREATIVOS.md
+CREATIVOS-FUNNELS.md
+TEXTOS-ANUNCIOS.md
 .wrangler/
 
 # Previews / artefactos locales
