@@ -79,27 +79,47 @@
     return 'purchase_' + String(txId).replace(/[^a-zA-Z0-9_-]/g, '');
   }
 
-  function trackMeta(eventName, payload, eventId) {
-    if (ES_LOCAL) return;
-    if (typeof fbq !== 'function') return;
+  // GTM carga el Meta Pixel de forma asíncrona (11 tags que procesar). Si esto
+  // se llama antes de que `fbq` exista (ej. ViewContent en DOMContentLoaded,
+  // que casi siempre gana la carrera), se reintenta igual que ya hace
+  // purchase() — antes se perdía el evento en silencio (fix 2026-08-06:
+  // auditoría mostró 104 Landing Page View reales vs solo 3 ViewContent,
+  // ~97% de pérdida por esta carrera, no por falta de tráfico real).
+  function fireMetaPixel(eventName, params, eventId) {
+    if (typeof fbq !== 'function') return false;
     try {
-      var p = payload || {};
-      var params = {};
-      if (p.value != null) {
-        params.value = p.value;
-        params.currency = p.currency || 'MXN';
-      }
-      if (p.content_type) params.content_type = p.content_type;
-      if (p.content_ids) params.content_ids = p.content_ids;
-      if (p.content_name) params.content_name = p.content_name;
       if (eventId) {
         fbq('track', eventName, params, { eventID: eventId });
-      } else if (Object.keys(params).length) {
+      } else if (params && Object.keys(params).length) {
         fbq('track', eventName, params);
       } else {
         fbq('track', eventName);
       }
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function trackMeta(eventName, payload, eventId) {
+    if (ES_LOCAL) return;
+    var p = payload || {};
+    var params = {};
+    if (p.value != null) {
+      params.value = p.value;
+      params.currency = p.currency || 'MXN';
+    }
+    if (p.content_type) params.content_type = p.content_type;
+    if (p.content_ids) params.content_ids = p.content_ids;
+    if (p.content_name) params.content_name = p.content_name;
+
+    if (fireMetaPixel(eventName, params, eventId)) return;
+
+    var attempts = 0;
+    var timer = setInterval(function () {
+      attempts += 1;
+      if (fireMetaPixel(eventName, params, eventId) || attempts >= 24) clearInterval(timer);
+    }, 250);
   }
 
   function purchaseKey(id) {
