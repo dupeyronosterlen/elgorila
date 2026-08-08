@@ -101,8 +101,14 @@
     }
   }
 
+  // Devuelve una promesa (se resuelve en cuanto el pixel dispara, o tras
+  // agotar reintentos) para que llamadas críticas como beginCheckout puedan
+  // esperar un poco antes de dejar navegar la página — sin esto, un
+  // fetch()+redirect rápido a Stripe puede ganarle la carrera al primer
+  // reintento de 250ms y el evento se pierde en silencio (fix 2026-08-07,
+  // encontrado al ver más Purchase que InitiateCheckout en AS-P2).
   function trackMeta(eventName, payload, eventId) {
-    if (ES_LOCAL) return;
+    if (ES_LOCAL) return Promise.resolve(false);
     var p = payload || {};
     var params = {};
     if (p.value != null) {
@@ -113,13 +119,30 @@
     if (p.content_ids) params.content_ids = p.content_ids;
     if (p.content_name) params.content_name = p.content_name;
 
-    if (fireMetaPixel(eventName, params, eventId)) return;
+    if (fireMetaPixel(eventName, params, eventId)) return Promise.resolve(true);
 
-    var attempts = 0;
-    var timer = setInterval(function () {
-      attempts += 1;
-      if (fireMetaPixel(eventName, params, eventId) || attempts >= 24) clearInterval(timer);
-    }, 250);
+    return new Promise(function (resolve) {
+      var attempts = 0;
+      var timer = setInterval(function () {
+        attempts += 1;
+        var ok = fireMetaPixel(eventName, params, eventId);
+        if (ok || attempts >= 24) {
+          clearInterval(timer);
+          resolve(ok);
+        }
+      }, 250);
+    });
+  }
+
+  // Espera como máximo `maxMs` a que `promise` resuelva; si no, sigue de
+  // largo (nunca debe retrasar una compra real por un problema de tracking).
+  function waitBriefly(promise, maxMs) {
+    return new Promise(function (resolve) {
+      var done = false;
+      var finish = function () { if (!done) { done = true; resolve(); } };
+      promise.then(finish, finish);
+      setTimeout(finish, maxMs);
+    });
   }
 
   function purchaseKey(id) {
@@ -161,10 +184,12 @@
       trackMeta('AddToCart', p);
     },
 
+    // Devuelve una promesa: el caller (boletos.html) debe hacer `await` antes
+    // de redirigir a Stripe, para darle al pixel una ventana real de disparo.
     beginCheckout: function (orden) {
       var p = ecommercePayload(orden);
       pushEcommerce('begin_checkout', p);
-      trackMeta('InitiateCheckout', p);
+      return waitBriefly(trackMeta('InitiateCheckout', p), 400);
     },
 
     addPaymentInfo: function (orden) {

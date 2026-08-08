@@ -1542,7 +1542,10 @@ async function procesarPagoInline() {
 
   // Click real a Stripe: aquí (y solo aquí) disparan begin_checkout + InitiateCheckout.
   // AddPaymentInfo se retiró: los datos de pago se capturan dentro de Stripe, no en el sitio.
-  if (window.ElGorilaAnalytics) ElGorilaAnalytics.beginCheckout(orden);
+  // Se espera (máx 400ms) a que el pixel confirme el disparo antes de seguir:
+  // sin este await, un backend rápido puede redirigir a Stripe antes de que
+  // fbq termine de cargar y el evento se pierde en silencio (fix 2026-08-07).
+  if (window.ElGorilaAnalytics) await ElGorilaAnalytics.beginCheckout(orden);
 
   /* ── Con backend (Stripe) ── */
   if (window.API_BASE) {
