@@ -986,6 +986,10 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
           <h1 class="page-title">Verificar entrada</h1>
         </div>
         <div class="page-hd-actions">
+          <button type="button" class="btn-ghost" id="btn-emergencia-top" onclick="abrirScannerEmergencia()">
+            <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px">bolt</span>
+            Emergencia
+          </button>
           <button type="button" class="btn-primary" id="btn-escanear-top" onclick="abrirScanner()">
             <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px">qr_code_scanner</span>
             Escanear QR
@@ -1120,9 +1124,21 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
       <span class="material-symbols-outlined" style="font-size:18px">close</span>
       Cerrar
     </button>
+    <p id="scanner-modo-label" class="modal-scanner-modo hidden">EMERGENCIA · validación rápida</p>
     <video id="scanner-video" playsinline webkit-playsinline autoplay muted></video>
     <canvas id="scanner-canvas" class="hidden" aria-hidden="true"></canvas>
-    <p class="modal-scanner-hint">Apunta al QR del boleto (CERT-…)</p>
+    <p class="modal-scanner-hint" id="scanner-hint">Apunta al QR del boleto (CERT-…)</p>
+    <div id="scanner-emergencia-resultado" class="scanner-emergencia-resultado hidden" role="dialog" aria-live="polite">
+      <div class="scanner-emergencia-card" id="scanner-emergencia-card">
+        <p class="scanner-emergencia-estado" id="scanner-emergencia-estado">—</p>
+        <p class="scanner-emergencia-total" id="scanner-emergencia-total"></p>
+        <div class="scanner-emergencia-lineas" id="scanner-emergencia-lineas"></div>
+        <p class="scanner-emergencia-meta" id="scanner-emergencia-meta"></p>
+        <button type="button" class="btn-primario scanner-emergencia-ok" id="btn-emergencia-ok" onclick="emergenciaOk()">
+          OK
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 

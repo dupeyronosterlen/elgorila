@@ -206,6 +206,10 @@ function obtenerTokenAdmin() {
 
 let _scannerStream = null;
 let _scannerActivo = false;
+let _modoEmergencia = false;
+let _emergenciaPausa = false;
+let _emergenciaUltimoCodigo = '';
+let _emergenciaUltimoTs = 0;
 
 /** Extrae CERT-… de texto crudo, URL de boleto o enlace de verificación. */
 function extraerCodigoDeQr(raw) {
@@ -228,7 +232,25 @@ function extraerCodigoDeQr(raw) {
     return s.toUpperCase();
 }
 
-function abrirScanner() {
+function _actualizarUIScannerModo() {
+    const modal = document.getElementById('modal-scanner') || v$('modal-scanner');
+    const label = document.getElementById('scanner-modo-label');
+    const hint = document.getElementById('scanner-hint');
+    modal?.classList.toggle('emergencia', _modoEmergencia);
+    if (label) label.classList.toggle('hidden', !_modoEmergencia);
+    if (hint) {
+        hint.textContent = _modoEmergencia
+            ? 'Apunta al QR · se valida solo · OK para seguir'
+            : 'Apunta al QR del boleto (CERT-…)';
+    }
+}
+
+function _ocultarResultadoEmergencia() {
+    const box = document.getElementById('scanner-emergencia-resultado');
+    box?.classList.add('hidden');
+}
+
+function abrirScanner(opts = {}) {
     if (!window.isSecureContext) {
         alert('La cámara requiere HTTPS. Abre el panel desde https://elgorilateatro.com.mx');
         return;
@@ -237,25 +259,41 @@ function abrirScanner() {
         alert('Este navegador no soporta acceso a la cámara.');
         return;
     }
+    _modoEmergencia = !!opts.emergencia;
+    _emergenciaPausa = false;
+    _ocultarResultadoEmergencia();
     const modal = document.getElementById('modal-scanner') || v$('modal-scanner');
     if (modal) {
         modal.classList.remove('hidden');
         modal.classList.add('open');
         modal.style.display = 'flex';
     }
+    _actualizarUIScannerModo();
     _scannerActivo = true;
     iniciarCamara();
 }
 
+function abrirScannerEmergencia() {
+    if (!_puedeCanjear()) {
+        alert('Necesitas sesión con permiso de puerta para validación de emergencia.');
+        return;
+    }
+    abrirScanner({ emergencia: true });
+}
+
 function cerrarScanner() {
     _scannerActivo = false;
+    _emergenciaPausa = false;
+    _modoEmergencia = false;
+    _ocultarResultadoEmergencia();
     pararCamara();
     const modal = document.getElementById('modal-scanner') || v$('modal-scanner');
     if (modal) {
         modal.classList.add('hidden');
-        modal.classList.remove('open');
+        modal.classList.remove('open', 'emergencia');
         modal.style.display = 'none';
     }
+    _actualizarUIScannerModo();
 }
 
 async function iniciarCamara() {
@@ -288,8 +326,225 @@ function pararCamara() {
     if (_scannerStream) { _scannerStream.getTracks().forEach(t => t.stop()); _scannerStream = null; }
 }
 
+function _precioTipoEmergencia(tipo, fechaCompra) {
+    const t = (tipo || 'general').toLowerCase();
+    if (t === 'estudiante' || t === 'inapam' || t === 'maestro') {
+        return typeof window.PRECIO_CREDENCIAL === 'number' ? window.PRECIO_CREDENCIAL : 280;
+    }
+    const compraMs = fechaCompra ? Date.parse(fechaCompra) : NaN;
+    const finPrev = window.FIN_PREVENTA_UTC_MS || Date.parse('2026-07-26T21:00:00.000Z');
+    if (Number.isFinite(compraMs) && compraMs < finPrev) {
+        return typeof window.PRECIO_GENERAL_PREVENTA === 'number' ? window.PRECIO_GENERAL_PREVENTA : 350;
+    }
+    return typeof window.PRECIO_GENERAL_TEMPORADA === 'number' ? window.PRECIO_GENERAL_TEMPORADA : 400;
+}
+
+function _nombreTipoEmergencia(tipo, precio) {
+    const t = (tipo || 'general').toLowerCase();
+    if (t === 'estudiante' || t === 'inapam' || t === 'maestro') return 'especial';
+    if (precio === 350) return 'preventa';
+    return 'general';
+}
+
+/** Resumen legible para taquilla: "1 boleto general ($400) · 1 boleto especial ($280)" */
+function _resumenEmergencia(venta) {
+    if (!venta) return { total: 0, lineas: ['Sin datos'], texto: 'Sin datos' };
+
+    if (venta.cortesia || (venta.metodoPago || '').toLowerCase() === 'cortesia') {
+        const n = venta.esCertificado && venta.pendientes != null
+            ? venta.pendientes
+            : (venta.pendientes != null ? venta.pendientes : (venta.totalBoletos || venta.cantidad || 1));
+        const lineas = [`${n} boleto${n === 1 ? '' : 's'} cortesía`];
+        return { total: n, lineas, texto: lineas.join(' · ') };
+    }
+
+    // Orden (CERT-ORD): desglose de items; boleto individual: 1 × su tipo
+    if (venta.esCertificado || (!venta.tipo && (venta.items || []).length)) {
+        const items = venta.items || [];
+        if (items.length) {
+            const lineas = items.map(i => {
+                const cant = i.cantidad || 0;
+                const precio = _precioTipoEmergencia(i.tipo, venta.fechaCompra);
+                const nombre = _nombreTipoEmergencia(i.tipo, precio);
+                return `${cant} boleto${cant === 1 ? '' : 's'} ${nombre} ($${precio})`;
+            }).filter(Boolean);
+            const totalItems = items.reduce((s, i) => s + (i.cantidad || 0), 0);
+            const total = venta.pendientes != null ? venta.pendientes : totalItems;
+            if (venta.pendientes != null && venta.pendientes < totalItems) {
+                lineas.push(`${venta.pendientes} pendiente(s) de esta orden`);
+            }
+            return { total, lineas, texto: lineas.join(' · ') };
+        }
+    }
+
+    if (venta.tipo) {
+        const precio = _precioTipoEmergencia(venta.tipo, venta.fechaCompra);
+        const nombre = _nombreTipoEmergencia(venta.tipo, precio);
+        return {
+            total: 1,
+            lineas: [`1 boleto ${nombre} ($${precio})`],
+            texto: `1 boleto ${nombre} ($${precio})`,
+        };
+    }
+
+    const n = venta.pendientes != null ? venta.pendientes : (venta.totalBoletos || venta.cantidad || 1);
+    const precio = _precioTipoEmergencia('general', venta.fechaCompra);
+    const nombre = _nombreTipoEmergencia('general', precio);
+    const lineas = [`${n} boleto${n === 1 ? '' : 's'} ${nombre} ($${precio})`];
+    return { total: n, lineas, texto: lineas.join(' · ') };
+}
+
+function _mostrarResultadoEmergencia({ kind, titulo, lineas, total, meta }) {
+    const box = document.getElementById('scanner-emergencia-resultado');
+    const card = document.getElementById('scanner-emergencia-card');
+    const estado = document.getElementById('scanner-emergencia-estado');
+    const totalEl = document.getElementById('scanner-emergencia-total');
+    const lineasEl = document.getElementById('scanner-emergencia-lineas');
+    const metaEl = document.getElementById('scanner-emergencia-meta');
+    if (!box || !card) return;
+
+    card.classList.remove('ok', 'bad', 'warn');
+    if (kind === 'ok') card.classList.add('ok');
+    else if (kind === 'bad') card.classList.add('bad');
+    else card.classList.add('warn');
+
+    if (estado) estado.textContent = titulo || '—';
+    if (totalEl) {
+        if (total != null && total > 0) {
+            totalEl.textContent = total === 1 ? '1 boleto' : `${total} boletos`;
+            totalEl.style.display = '';
+        } else {
+            totalEl.textContent = '';
+            totalEl.style.display = 'none';
+        }
+    }
+    if (lineasEl) {
+        const arr = Array.isArray(lineas) ? lineas : (lineas ? [lineas] : []);
+        lineasEl.innerHTML = arr.map(l => `<div class="scanner-emergencia-linea">${l}</div>`).join('');
+    }
+    if (metaEl) metaEl.textContent = meta || '';
+    box.classList.remove('hidden');
+}
+
+function emergenciaOk() {
+    _ocultarResultadoEmergencia();
+    _emergenciaPausa = false;
+    if (_scannerActivo && _modoEmergencia && _scannerStream) {
+        requestAnimationFrame(escanearFrame);
+    }
+}
+
+async function procesarScanEmergencia(codigo) {
+    _emergenciaPausa = true;
+    _emergenciaUltimoCodigo = codigo;
+    _emergenciaUltimoTs = Date.now();
+
+    const input = v$('codigo-qr-input');
+    if (input) input.value = codigo;
+
+    if (!window.API_BASE) {
+        _mostrarResultadoEmergencia({ kind: 'bad', titulo: 'API no configurada', lineas: [], meta: codigo });
+        return;
+    }
+
+    try {
+        const fecha = _fechaPuertaSeleccionada();
+        const qs = fecha ? `?fecha=${encodeURIComponent(fecha)}` : '';
+        const res = await fetch(window.teatroApi(`venta/${encodeURIComponent(codigo)}${qs}`));
+        const data = await res.json();
+
+        if (!res.ok) {
+            _mostrarResultadoEmergencia({
+                kind: 'bad',
+                titulo: 'No válido',
+                lineas: [data.error || 'Folio no encontrado.'],
+                meta: codigo,
+            });
+            return;
+        }
+
+        if (data.estado === 'reembolsada' || data.estado === 'cancelada') {
+            _mostrarResultadoEmergencia({
+                kind: 'bad',
+                titulo: 'Sin validez',
+                lineas: [data.error || 'Reembolsado o cancelado.'],
+                meta: codigo,
+            });
+            return;
+        }
+
+        const resumen = _resumenEmergencia(data);
+        const meta = `${data.funcionNombre || data.fecha || '—'} · ${codigo}`;
+
+        if (data.usado) {
+            const cuandoMX = data.usadoEn
+                ? new Date(data.usadoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })
+                : '';
+            _mostrarResultadoEmergencia({
+                kind: 'warn',
+                titulo: 'Ya canjeado',
+                total: resumen.total,
+                lineas: [...resumen.lineas, cuandoMX ? `Canjeado: ${cuandoMX}` : 'Ya tenía entrada'].filter(Boolean),
+                meta,
+            });
+            return;
+        }
+
+        const token = obtenerTokenAdmin();
+        if (!token) {
+            _mostrarResultadoEmergencia({
+                kind: 'bad',
+                titulo: 'Sin sesión',
+                lineas: ['Inicia sesión para validar.'],
+                meta: codigo,
+            });
+            return;
+        }
+
+        const canjeRes = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(codigo)}`), {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                ...(_canjeBodyExtra() ? { 'Content-Type': 'application/json' } : {}),
+            },
+            body: _canjeBodyExtra(),
+        });
+        const canjeData = await canjeRes.json();
+
+        if (!canjeRes.ok) {
+            _mostrarResultadoEmergencia({
+                kind: 'bad',
+                titulo: 'No se pudo validar',
+                lineas: [canjeData.error || 'Error al canjear', ...resumen.lineas],
+                total: resumen.total,
+                meta,
+            });
+            return;
+        }
+
+        _mostrarResultadoEmergencia({
+            kind: 'ok',
+            titulo: 'Validado',
+            total: resumen.total,
+            lineas: resumen.lineas,
+            meta,
+        });
+
+        if (_puedeCanjear()) cargarListaPuerta();
+        _agregarIngreso(data.nombre || data.email || codigo, resumen.total || 1);
+    } catch {
+        _mostrarResultadoEmergencia({
+            kind: 'bad',
+            titulo: 'Error de conexión',
+            lineas: ['Intenta de nuevo.'],
+            meta: codigo,
+        });
+    }
+}
+
 function escanearFrame() {
     if (!_scannerStream || !_scannerActivo) return;
+    if (_emergenciaPausa) return;
     const video  = document.getElementById('scanner-video') || v$('scanner-video');
     const canvas = document.getElementById('scanner-canvas') || v$('scanner-canvas');
     if (!video || !canvas || video.readyState !== video.HAVE_ENOUGH_DATA) {
@@ -310,6 +565,15 @@ function escanearFrame() {
                 requestAnimationFrame(escanearFrame);
                 return;
             }
+            if (_modoEmergencia) {
+                // Evita re-leer el mismo QR mientras sigue en cámara
+                if (codigo === _emergenciaUltimoCodigo && Date.now() - _emergenciaUltimoTs < 2500) {
+                    requestAnimationFrame(escanearFrame);
+                    return;
+                }
+                procesarScanEmergencia(codigo);
+                return;
+            }
             cerrarScanner();
             const input = v$('codigo-qr-input');
             if (input) input.value = codigo;
@@ -321,7 +585,9 @@ function escanearFrame() {
 }
 
 window.abrirScanner = abrirScanner;
+window.abrirScannerEmergencia = abrirScannerEmergencia;
 window.cerrarScanner = cerrarScanner;
+window.emergenciaOk = emergenciaOk;
 
 function _puedeVerListaPuerta() {
     return _puedeCanjear();
@@ -620,6 +886,8 @@ function _bindVerificarUI() {
     if (codigoURL && input) {
         input.value = codigoURL.toUpperCase();
         setTimeout(verificarBoleto, 300);
+    } else if (params.get('emergencia') === '1') {
+        setTimeout(() => abrirScannerEmergencia(), 400);
     } else if (params.get('scan') === '1' && btnS) {
         setTimeout(abrirScanner, 400);
     }

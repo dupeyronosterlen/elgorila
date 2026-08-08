@@ -2635,10 +2635,14 @@
     navGo(nav, 'boletera');
   }
 
-  function abrirVerificar(abrirScan) {
+  function abrirVerificar(abrirScan, emergencia) {
     const nav = document.getElementById('nav-verificar') || document.querySelector('[data-nav=verificar]');
     navGo(nav, 'verificar');
-    if (abrirScan || new URLSearchParams(location.search).get('scan') === '1') {
+    const params = new URLSearchParams(location.search);
+    const modoEmergencia = emergencia || params.get('emergencia') === '1';
+    if (modoEmergencia) {
+      setTimeout(() => window.abrirScannerEmergencia?.(), 500);
+    } else if (abrirScan || params.get('scan') === '1') {
       setTimeout(() => window.abrirScanner?.(), 500);
     }
   }
@@ -2905,7 +2909,9 @@
       document.getElementById('login-screen')?.classList.add('hidden');
       document.getElementById('admin-panel')?.classList.remove('hidden');
       AdminPanel.iniciar(u, viewParam === 'boletera' || viewParam === 'verificar' ? viewParam : undefined);
-      if (viewParam === 'verificar' && params.get('scan') === '1') {
+      if (viewParam === 'verificar' && params.get('emergencia') === '1') {
+        setTimeout(() => window.abrirScannerEmergencia?.(), 700);
+      } else if (viewParam === 'verificar' && params.get('scan') === '1') {
         setTimeout(() => window.abrirScanner?.(), 700);
       }
       return;
