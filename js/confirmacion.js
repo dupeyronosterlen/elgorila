@@ -74,6 +74,9 @@ async function cargarConfirmacion() {
                     const venta = await res.json();
                     let local = null;
                     try { local = JSON.parse(localStorage.getItem('orden_compra') || 'null'); } catch (_) {}
+                    const fechaIsoApi = venta.fecha && /^\d{4}-\d{2}-\d{2}$/.test(String(venta.fecha))
+                        ? venta.fecha
+                        : null;
                     ordenCompra = {
                         estado: 'completada',
                         email: (local && local.email) || venta.email || '',
@@ -84,6 +87,7 @@ async function cargarConfirmacion() {
                         sessionId,
                         cantidad: venta.cantidad,
                         cantidadTotal: venta.cantidad,
+                        fechaIso: (local && local.fechaIso) || fechaIsoApi,
                         fecha: venta.funcionNombre || venta.fecha,
                         items: venta.items || (local && local.items) || [],
                         total: venta.total,

@@ -97,6 +97,10 @@
     var fechaIso = typeof ordenOrFechaIso === 'string'
       ? ordenOrFechaIso
       : (ordenOrFechaIso && ordenOrFechaIso.fechaIso);
+    if (!fechaIso && ordenOrFechaIso && ordenOrFechaIso.fecha
+        && /^\d{4}-\d{2}-\d{2}$/.test(String(ordenOrFechaIso.fecha))) {
+      fechaIso = ordenOrFechaIso.fecha;
+    }
     var id = catalogContentId(fechaIso);
     if (!id) return {};
     var qty = typeof ordenOrFechaIso === 'string' ? 1 : ticketQuantity(ordenOrFechaIso);
