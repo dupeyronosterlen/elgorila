@@ -79,6 +79,41 @@
     return 'purchase_' + String(txId).replace(/[^a-zA-Z0-9_-]/g, '');
   }
 
+  // ID de catálogo Actividades Meta — debe coincidir EXACTO con columna `id` del feed CSV.
+  function catalogContentId(fechaIso) {
+    if (!fechaIso || !/^\d{4}-\d{2}-\d{2}$/.test(String(fechaIso))) return null;
+    return 'gorila-' + String(fechaIso);
+  }
+
+  function ticketQuantity(orden) {
+    if (!orden) return 1;
+    if (orden.cantidadTotal != null && orden.cantidadTotal > 0) return orden.cantidadTotal;
+    if (!Array.isArray(orden.items)) return 1;
+    var n = orden.items.reduce(function (s, i) { return s + (Number(i.cantidad) || 0); }, 0);
+    return n > 0 ? n : 1;
+  }
+
+  function metaCatalogParams(ordenOrFechaIso) {
+    var fechaIso = typeof ordenOrFechaIso === 'string'
+      ? ordenOrFechaIso
+      : (ordenOrFechaIso && ordenOrFechaIso.fechaIso);
+    var id = catalogContentId(fechaIso);
+    if (!id) return {};
+    var qty = typeof ordenOrFechaIso === 'string' ? 1 : ticketQuantity(ordenOrFechaIso);
+    return {
+      content_type: 'product',
+      content_ids: [id],
+      contents: [{ id: id, quantity: qty }],
+    };
+  }
+
+  function catalogContentIds(ids) {
+    if (!Array.isArray(ids)) return [];
+    return ids.filter(function (id) {
+      return typeof id === 'string' && /^gorila-\d{4}-\d{2}-\d{2}$/.test(id);
+    });
+  }
+
   // GTM carga el Meta Pixel de forma asíncrona (11 tags que procesar). Si esto
   // se llama antes de que `fbq` exista (ej. ViewContent en DOMContentLoaded,
   // que casi siempre gana la carrera), se reintenta igual que ya hace
@@ -116,7 +151,8 @@
       params.currency = p.currency || 'MXN';
     }
     if (p.content_type) params.content_type = p.content_type;
-    if (p.content_ids) params.content_ids = p.content_ids;
+    if (p.content_ids && p.content_ids.length) params.content_ids = p.content_ids;
+    if (p.contents && p.contents.length) params.contents = p.contents;
     if (p.content_name) params.content_name = p.content_name;
 
     if (fireMetaPixel(eventName, params, eventId)) return Promise.resolve(true);
@@ -156,6 +192,7 @@
     },
 
     purchaseEventId: purchaseEventId,
+    catalogContentId: catalogContentId,
 
     grupoGrande: function (cantidad) {
       if (ES_LOCAL) return;
@@ -165,23 +202,26 @@
 
     viewContent: function (opts) {
       opts = opts || {};
-      var ids = opts.content_ids || [];
+      var ids = catalogContentIds(opts.content_ids || []);
       pushEcommerce('view_item', {
         items: ids.map(function (id) {
           return { item_id: id, item_name: opts.content_name || id };
         }),
       });
-      trackMeta('ViewContent', {
-        content_type: opts.content_type || 'funcion',
-        content_ids: ids,
-        content_name: opts.content_name || '',
-      });
+      var meta = { content_name: opts.content_name || '' };
+      if (ids.length) {
+        meta.content_type = 'product';
+        meta.content_ids = ids;
+        meta.contents = [{ id: ids[0], quantity: 1 }];
+      }
+      trackMeta('ViewContent', meta);
     },
 
     addToCart: function (orden) {
       var p = ecommercePayload(orden);
       pushEcommerce('add_to_cart', p);
-      trackMeta('AddToCart', p);
+      var cat = metaCatalogParams(orden);
+      trackMeta('AddToCart', Object.assign({ value: p.value, currency: p.currency }, cat));
     },
 
     // Devuelve una promesa: el caller (boletos.html) debe hacer `await` antes
@@ -189,13 +229,18 @@
     beginCheckout: function (orden) {
       var p = ecommercePayload(orden);
       pushEcommerce('begin_checkout', p);
-      return waitBriefly(trackMeta('InitiateCheckout', p), 400);
+      var cat = metaCatalogParams(orden);
+      return waitBriefly(
+        trackMeta('InitiateCheckout', Object.assign({ value: p.value, currency: p.currency }, cat)),
+        400
+      );
     },
 
     addPaymentInfo: function (orden) {
       var p = ecommercePayload(orden);
       pushEcommerce('add_payment_info', p);
-      trackMeta('AddPaymentInfo', p);
+      var cat = metaCatalogParams(orden);
+      trackMeta('AddPaymentInfo', Object.assign({ value: p.value, currency: p.currency }, cat));
     },
 
     purchase: function (orden, transactionId) {
@@ -227,7 +272,11 @@
         if (ES_LOCAL) return true;
         if (typeof fbq !== 'function') return false;
         try {
-          var params = { value: p.value, currency: p.currency || 'MXN' };
+          var cat = metaCatalogParams(orden);
+          var params = Object.assign(
+            { value: p.value, currency: p.currency || 'MXN' },
+            cat
+          );
           if (eventId) {
             fbq('track', 'Purchase', params, { eventID: eventId });
           } else {
@@ -252,9 +301,8 @@
 
   if (_egViewContent) {
     var dispararViewContent = function () {
+      // TOFU / landing genérica: sin content_ids (no hay ítem de catálogo aún).
       window.ElGorilaAnalytics.viewContent({
-        content_type: 'obra',
-        content_ids: [_egViewContent],
         content_name: _egViewContent,
       });
     };

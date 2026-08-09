@@ -202,9 +202,11 @@ function seleccionarFecha(clave, texto, funcion = null) {
     resaltarBotonFecha(clave);
 
     if (window.ElGorilaAnalytics && fechaIsoActual) {
+        var catId = ElGorilaAnalytics.catalogContentId
+            ? ElGorilaAnalytics.catalogContentId(fechaIsoActual)
+            : ('gorila-' + fechaIsoActual);
         ElGorilaAnalytics.viewContent({
-            content_type: 'funcion',
-            content_ids:  [fechaIsoActual],
+            content_ids:  [catId],
             content_name: texto,
         });
     }

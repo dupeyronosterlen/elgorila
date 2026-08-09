@@ -28,6 +28,12 @@ export function purchaseEventId(sessionId, fallback) {
   return sid ? `purchase_${sid}` : '';
 }
 
+function catalogContentId(fecha) {
+  const f = (fecha || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(f)) return null;
+  return `gorila-${f}`;
+}
+
 export async function sendMetaCapiPurchase(venta, env, opts = {}) {
   const token = env.META_CAPI_ACCESS_TOKEN;
   const pixelId = (env.META_PIXEL_ID || META_PIXEL_DEFAULT).trim();
@@ -57,10 +63,12 @@ export async function sendMetaCapiPurchase(venta, env, opts = {}) {
     currency: 'MXN',
     value: venta.total != null ? Number(venta.total) : 0,
   };
-  const cert = venta.certificado || venta.codigo;
-  if (cert) {
-    customData.content_ids = [cert];
+  const catId = catalogContentId(venta.fecha);
+  const qty = Number(venta.cantidad || venta.cantidadTotal) || 1;
+  if (catId) {
+    customData.content_ids = [catId];
     customData.content_type = 'product';
+    customData.contents = [{ id: catId, quantity: qty }];
   }
 
   const payload = {
