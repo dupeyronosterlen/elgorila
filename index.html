@@ -1443,54 +1443,72 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       color: #fff;
     }
     .grupos-promo-online {
-      margin-bottom: 1.5rem;
-    }
-    .grupos-institucional {
-      margin-top: 1.5rem; padding-top: 1.5rem;
-      border-top: 1px solid rgba(212, 175, 55, 0.22);
+      margin-top: 1.25rem; margin-bottom: 0.75rem;
+      font-size: 0.9375rem; line-height: 1.55;
+      color: rgba(241, 234, 217, 0.88);
     }
     .grupos-institucional-texto {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.15rem; line-height: 1.5;
-      color: rgba(241, 234, 217, 0.92);
-      margin-bottom: 1rem;
+      font-size: 1.2rem; line-height: 1.5;
+      color: rgba(241, 234, 217, 0.96);
+      margin: 1rem auto 1.1rem;
+      max-width: 36rem;
     }
     @media (min-width: 640px) {
-      .grupos-institucional-texto { font-size: 1.25rem; }
+      .grupos-institucional-texto { font-size: 1.35rem; }
+    }
+    .grupos-contacto-btns {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+      gap: 0.75rem 1rem;
+      margin-bottom: 0.25rem;
     }
     .btn-grupos {
       display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-      padding: 0.65rem 1.25rem;
-      font-size: 0.875rem; letter-spacing: 0.04em;
-      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      padding: 0.72rem 1.35rem;
+      font-size: 0.9rem; font-weight: 600; letter-spacing: 0.03em;
+      border-radius: 2px;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
     }
+    .btn-grupos:hover { transform: translateY(-1px); }
     .btn-grupos--wa {
-      border: 1px solid rgba(212, 175, 55, 0.55);
-      background: rgba(212, 175, 55, 0.18);
-      color: rgba(212, 175, 55, 0.98);
+      border: 1px solid #d4af37;
+      background: linear-gradient(180deg, rgba(212, 175, 55, 0.42) 0%, rgba(212, 175, 55, 0.28) 100%);
+      color: #fff8e8;
+      box-shadow: 0 4px 18px rgba(212, 175, 55, 0.28);
     }
     .btn-grupos--wa:hover {
-      background: rgba(212, 175, 55, 0.28);
-      border-color: rgba(212, 175, 55, 0.85);
+      background: linear-gradient(180deg, rgba(232, 198, 88, 0.55) 0%, rgba(212, 175, 55, 0.38) 100%);
+      border-color: #e8c658;
       color: #fff;
+      box-shadow: 0 6px 22px rgba(212, 175, 55, 0.38);
     }
     .btn-grupos--mail {
-      border: 1px solid rgba(212, 175, 55, 0.45);
-      background: rgba(0, 0, 0, 0.25);
-      color: rgba(241, 234, 217, 0.94);
+      border: 1px solid rgba(212, 175, 55, 0.75);
+      background: rgba(212, 175, 55, 0.14);
+      color: #f5e6c0;
+      box-shadow: 0 3px 14px rgba(0, 0, 0, 0.22);
     }
     .btn-grupos--mail:hover {
-      background: rgba(212, 175, 55, 0.12);
-      border-color: rgba(212, 175, 55, 0.75);
-      color: rgba(212, 175, 55, 0.98);
+      background: rgba(212, 175, 55, 0.26);
+      border-color: #d4af37;
+      color: #fff;
+      box-shadow: 0 5px 18px rgba(212, 175, 55, 0.22);
     }
     .btn-grupos--compra {
-      border: 1px solid rgba(212, 175, 55, 0.35);
-      background: transparent;
-      color: rgba(212, 175, 55, 0.92);
-      text-decoration: underline; text-underline-offset: 4px;
+      display: inline-flex;
+      margin-top: 0.35rem;
+      border: 1px solid rgba(212, 175, 55, 0.55);
+      background: rgba(212, 175, 55, 0.1);
+      color: #e8c658;
+      text-decoration: none;
+      box-shadow: 0 2px 12px rgba(212, 175, 55, 0.15);
     }
-    .btn-grupos--compra:hover { color: #fff; border-color: rgba(212, 175, 55, 0.65); }
+    .btn-grupos--compra:hover {
+      background: rgba(212, 175, 55, 0.22);
+      border-color: #d4af37;
+      color: #fff8e8;
+      box-shadow: 0 4px 16px rgba(212, 175, 55, 0.28);
+    }
     /* Fotos Odila y Ariel: filtro kafkiano (grises, sepia suave, saturación baja) */
     .foto-equipo-kafka img {
       filter: grayscale(0.5) sepia(0.15) saturate(0.6) contrast(1.08) brightness(0.94);
@@ -3759,22 +3777,20 @@ Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Ta
 <section id="grupos" class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 section-with-bg" aria-labelledby="grupos-heading">
 <div class="mx-auto max-w-3xl text-center">
 <h2 id="grupos-heading" class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Escuelas y grupos</h2>
-<p class="font-body text-text-dark/90 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-4">
+<p class="font-body text-text-dark/90 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-2">
 Una obra que se discute al salir — identidad, libertad y el costo de pertenecer. Pensada para aulas, empresas y salidas culturales.
 </p>
-<p class="font-body text-text-dark/80 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto grupos-promo-online">
-Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <strong class="text-accent-gold">20% de descuento</strong> se aplica automáticamente al comprar en línea.
-</p>
-<div class="grupos-institucional max-w-2xl mx-auto">
 <p class="grupos-institucional-texto">
 ¿Te interesa llevar <em>El Gorila</em> a tu aula o empresa? Escríbenos y platicamos — para <strong class="text-accent-gold">grupos de más de 10 personas</strong> te armamos la función.
 </p>
-<div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+<div class="grupos-contacto-btns max-w-2xl mx-auto">
 <a href="https://wa.me/5215671311191?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20grupo%20o%20escuela%20en%20El%20Gorila." class="btn-grupos btn-grupos--wa" target="_blank" rel="noopener noreferrer">WhatsApp grupos</a>
 <a href="mailto:elgorilateatro@gmail.com?subject=Grupos%20y%20escuelas%20—%20El%20Gorila%20(sitio%20web)&amp;body=Hola%2C%20me%20interesa%20llevar%20El%20Gorila%20a%20mi%20aula%2Fempresa.%0A%0AInstitución%3A%20%0APersonas%20aprox.%3A%20%0AFecha%20preferida%3A%20" class="btn-grupos btn-grupos--mail">elgorilateatro@gmail.com</a>
+</div>
+<p class="font-body text-text-dark/80 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto grupos-promo-online">
+Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <strong class="text-accent-gold">20% de descuento</strong> se aplica automáticamente al comprar en línea.
+</p>
 <a href="/boletos.html#fechas-fecha-wrap" class="link-venta-boletos btn-grupos btn-grupos--compra">Comprar 5+ en línea</a>
-</div>
-</div>
 </div>
 </section>
 
