@@ -4180,7 +4180,17 @@ Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <st
       applyTemporadaPortada();
       applyVenta();
     }
-    fetch('/api/config').then(function(r) { return r.ok ? r.json() : Promise.reject(); }).then(run).catch(function() { run(getLocalConfig()); });
+    // El CTA de compra lo arma applyVenta() dentro de run(). Antes se esperaba a
+    // que /api/config respondiera para llamarlo, pero en GitHub Pages esa ruta no
+    // existe: devolvía 404 en CADA visita y el botón quedaba en pausa hasta que
+    // el 404 volviera. Ahora se arma de inmediato con la config local (que es lo
+    // que de hecho se venía usando siempre) y, si algún día /api/config existe
+    // —por ejemplo tras migrar a Cloudflare Pages—, se reaplica encima.
+    run(getLocalConfig());
+    fetch('/api/config')
+      .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(run)
+      .catch(function() { /* sin API de config: ya quedó aplicada la local */ });
   })();
   (function() {
     function initModal37() {
