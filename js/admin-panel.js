@@ -327,6 +327,26 @@
     return '<span class="text-green-400">activo</span>';
   }
 
+  /**
+   * true SOLO cuando consta que el correo al comprador falló.
+   * Ojo con los dos casos que NO se marcan, a propósito:
+   *  - Ventas anteriores a que existiera este dato → llega null = "no se sabe",
+   *    que no es lo mismo que "falló". Marcarlas pintaría de rojo el historial.
+   *  - Ventas de taquilla/efectivo sin correo → no había nada que enviar.
+   */
+  function correoFallido(v) {
+    return !!(v && v.email && v.emailsEnviados && v.emailsEnviados.comprador === false);
+  }
+
+  // Ojo: admin.html NO carga Tailwind (solo operaciones.css / admin-mobile.css /
+  // admin-legible.css), así que clases como text-red-400 no pintan nada. Se usa
+  // el color propio del panel, var(--red), en estilo inline para que sí se vea.
+  function avisoCorreoFallido(v) {
+    if (!correoFallido(v)) return '';
+    return `<span style="color:var(--red);font-weight:700;margin-right:4px;"
+      title="El correo con el boleto NO se pudo enviar. Abre la venta y usa «Reenviar boleto».">●</span>`;
+  }
+
   function renderVentaRow(v) {
     const cert = certVenta(v);
     const reag = (!v.usado && v.estado !== 'reembolsada' && perm('reagendar'))
@@ -337,7 +357,7 @@
     return `<tr class="border-b border-primary/10 hover:bg-primary/5 cursor-pointer" data-venta="${esc(cert)}">
       <td class="py-2 pr-2 font-mono text-xs text-primary/90">${esc(cert)}</td>
       <td class="py-2 pr-2 text-sm">${esc(v.nombre || '—')}</td>
-      <td class="py-2 pr-2 text-sm max-w-[140px] truncate" title="${esc(v.email || '')}">${esc(v.email || '—')}</td>
+      <td class="py-2 pr-2 text-sm max-w-[140px] truncate" title="${correoFallido(v) ? 'CORREO NO ENVIADO — ' : ''}${esc(v.email || '')}">${avisoCorreoFallido(v)}${esc(v.email || '—')}</td>
       <td class="py-2 pr-2 text-xs font-mono">${esc(v.codigoCupon || '—')}</td>
       <td class="py-2 pr-2 text-xs font-mono">${esc(v.referidoDe || '—')}</td>
       <td class="py-2 pr-2 text-xs">${esc(utmResumen(v.utm))}</td>
@@ -377,7 +397,11 @@
       <div><dt class="text-xs font-mono text-text-dark/50">Certificado</dt><dd class="font-mono text-primary">${esc(cert)}</dd></div>
       <div><dt class="text-xs font-mono text-text-dark/50">Estado</dt><dd>${estadoVentaHtml(v)}</dd></div>
       <div><dt class="text-xs font-mono text-text-dark/50">Nombre</dt><dd>${esc(v.nombre || '—')}</dd></div>
-      <div><dt class="text-xs font-mono text-text-dark/50">Correo</dt><dd id="mv-email-actual">${esc(v.email || '—')}</dd></div>
+      <div><dt class="text-xs font-mono text-text-dark/50">Correo</dt><dd id="mv-email-actual">${avisoCorreoFallido(v)}${esc(v.email || '—')}</dd></div>
+      ${correoFallido(v) ? `<div class="sm:col-span-2" style="border:1px solid var(--red);background:rgba(212,58,26,.12);padding:10px;">
+        <dt style="color:var(--red);font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;">Correo no enviado</dt>
+        <dd style="font-size:13px;margin-top:4px;">El boleto <strong>no le llegó</strong> a esta persona. Usa «Reenviar boleto» aquí abajo. Si el correo está mal escrito, usa «Corregir y reenviar».</dd>
+      </div>` : ''}
       <div><dt class="text-xs font-mono text-text-dark/50">Teléfono</dt><dd>${esc(v.telefono || '—')}</dd></div>
       <div><dt class="text-xs font-mono text-text-dark/50">Compra</dt><dd>${fmtFecha(v.fechaCompra)}</dd></div>
       <div><dt class="text-xs font-mono text-text-dark/50">Total</dt><dd>${fmtMXN(v.total)} · ${esc(v.metodoPago || '—')}</dd></div>
@@ -454,6 +478,13 @@
       try {
         await reenviarEmailVenta(cert);
         if (msg) { msg.textContent = 'Boleto reenviado al correo registrado.'; msg.className = 'text-sm mt-3 text-green-400'; msg.classList.remove('hidden'); }
+        // Recargar la lista para que se apague el foquito rojo de «correo no
+        // enviado» (igual que hace «Corregir y reenviar»); si no, se queda en
+        // rojo en pantalla aunque el reenvío haya funcionado.
+        await cargarVentas(state.funcion, document.getElementById('buscar-ventas')?.value?.trim());
+        const tbody = document.querySelector('#admin-app tbody');
+        if (tbody) tbody.innerHTML = state.ventas.map(renderVentaRow).join('') || '<tr><td colspan="10" class="p-6 text-center text-text-dark/50">Sin ventas</td></tr>';
+        bindVentaRowEvents();
       } catch (e) {
         if (msg) { msg.textContent = e.message; msg.className = 'text-sm mt-3 text-red-300'; msg.classList.remove('hidden'); }
       }

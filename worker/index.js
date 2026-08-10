@@ -3841,9 +3841,15 @@ async function handleReenviarEmail(tid, id, request, env) {
     return json({ error: 'No se pudo enviar el correo. Revisa Resend o intenta más tarde.' }, 502, request);
   }
 
-  if (emailNuevo && emailNuevo !== emailAnterior) {
-    await env.VENTAS.put(ventaKey, JSON.stringify(venta));
-  }
+  // El reenvío funcionó: dejarlo asentado. Sin esto, una venta cuyo correo falló
+  // al principio se quedaría marcada en rojo en el panel para siempre y se
+  // reenviaría de más, porque antes solo se re-guardaba si CAMBIÓ el correo.
+  venta.emailsEnviados = {
+    ...(venta.emailsEnviados || {}),
+    comprador: true,
+    en:        new Date().toISOString(),
+  };
+  await env.VENTAS.put(ventaKey, JSON.stringify(venta));
 
   await registrarAuditoria(env, {
     usuarioId: payload.usuario,
@@ -4330,6 +4336,10 @@ function _formatVenta(v) {
     referidoDe:       v.referidoDe     || null,
     utm:              v.utm            || null,
     reembolso:        v.reembolso      || null,
+    // Si el correo del comprador salió o no. Las ventas anteriores a este campo
+    // llegan como null = "no se sabe", que NO es lo mismo que "falló": el panel
+    // solo marca en rojo cuando consta explícitamente que falló.
+    emailsEnviados:   v.emailsEnviados || null,
   };
 }
 
