@@ -215,13 +215,13 @@ function seleccionarFecha(clave, texto, funcion = null) {
         verificarDisponibilidad();
     }
 
-    // Guía de scroll: tras elegir fecha, acomoda la pantalla con
-    // "Boletos" arriba para que el conteo y el botón Continuar
-    // queden a la vista sin que la persona tenga que buscarlos.
-    var seccionBoletos = document.querySelector('.boletos-sub-label');
-    if (seccionBoletos) {
+    // Guía de scroll: baja lo justo para dejar la fecha arriba y los
+    // boletos visibles abajo, sin ocultar el selector por si cambian de día.
+    var anclaFecha = document.getElementById('fechas-fecha-wrap')
+        || document.getElementById('fecha-seleccionada-texto');
+    if (anclaFecha) {
         setTimeout(function () {
-            seccionBoletos.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            anclaFecha.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 60);
     }
 }

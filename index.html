@@ -1426,6 +1426,71 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     /* Pregunta destacada (sede / ubicación) */
     .faq-destacado summary { font-weight: 600; }
     .faq-destacado[open] summary { margin-bottom: 0.25rem; }
+    #faq-lista details.faq-oculta { display: none; }
+    .btn-faq-mas {
+      display: block; width: 100%; margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      border: 1px dashed rgba(212, 175, 55, 0.45);
+      background: rgba(212, 175, 55, 0.08);
+      color: rgba(212, 175, 55, 0.95);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .btn-faq-mas:hover {
+      background: rgba(212, 175, 55, 0.16);
+      border-color: rgba(212, 175, 55, 0.7);
+      color: #fff;
+    }
+    .grupos-promo-online {
+      margin-bottom: 1.5rem;
+    }
+    .grupos-institucional {
+      margin-top: 1.5rem; padding-top: 1.5rem;
+      border-top: 1px solid rgba(212, 175, 55, 0.22);
+    }
+    .grupos-institucional-texto {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.15rem; line-height: 1.5;
+      color: rgba(241, 234, 217, 0.92);
+      margin-bottom: 1rem;
+    }
+    @media (min-width: 640px) {
+      .grupos-institucional-texto { font-size: 1.25rem; }
+    }
+    .btn-grupos {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.65rem 1.25rem;
+      font-size: 0.875rem; letter-spacing: 0.04em;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .btn-grupos--wa {
+      border: 1px solid rgba(212, 175, 55, 0.55);
+      background: rgba(212, 175, 55, 0.18);
+      color: rgba(212, 175, 55, 0.98);
+    }
+    .btn-grupos--wa:hover {
+      background: rgba(212, 175, 55, 0.28);
+      border-color: rgba(212, 175, 55, 0.85);
+      color: #fff;
+    }
+    .btn-grupos--mail {
+      border: 1px solid rgba(212, 175, 55, 0.45);
+      background: rgba(0, 0, 0, 0.25);
+      color: rgba(241, 234, 217, 0.94);
+    }
+    .btn-grupos--mail:hover {
+      background: rgba(212, 175, 55, 0.12);
+      border-color: rgba(212, 175, 55, 0.75);
+      color: rgba(212, 175, 55, 0.98);
+    }
+    .btn-grupos--compra {
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      background: transparent;
+      color: rgba(212, 175, 55, 0.92);
+      text-decoration: underline; text-underline-offset: 4px;
+    }
+    .btn-grupos--compra:hover { color: #fff; border-color: rgba(212, 175, 55, 0.65); }
     /* Fotos Odila y Ariel: filtro kafkiano (grises, sepia suave, saturación baja) */
     .foto-equipo-kafka img {
       filter: grayscale(0.5) sepia(0.15) saturate(0.6) contrast(1.08) brightness(0.94);
@@ -3513,8 +3578,8 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
 </svg>
 <h2 class="seccion-heading-v4 mb-3 sm:mb-4 text-center font-display text-2xl sm:text-3xl md:text-4xl text-white">Preguntas Frecuentes</h2>
 </div>
-<div class="mx-auto max-w-3xl divide-y divide-accent-gold/20 contenedor-texto-scroll">
-<details class="group py-3 sm:py-4 faq-destacado">
+<div id="faq-lista" class="mx-auto max-w-3xl divide-y divide-accent-gold/20 contenedor-texto-scroll">
+<details class="group py-3 sm:py-4 faq-destacado faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base font-semibold text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Hay funciones en este momento?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3527,7 +3592,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
               </p>
 </div>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Cómo me entero de fechas y boletos?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3538,7 +3603,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
                 La venta en línea ya está abierta en <a href="/boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a>: elige fecha, tipo de boleto y paga en el sitio. También puedes seguir <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">@elgorilateatro</a> en Instagram para novedades y avisos de temporada.
               </p>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Dónde se presenta la obra?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3551,7 +3616,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
               </p>
 </div>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿A qué hora debo llegar?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3564,7 +3629,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
               </p>
 </div>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Hay estacionamiento?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3577,7 +3642,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
               </p>
 </div>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿De qué trata la obra y cuánto dura?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3588,7 +3653,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
                 Es un <strong>monólogo</strong> basado en <em>Un informe para la Academia</em>, de Franz Kafka, con Humberto Dupeyron. Dura aproximadamente <strong>1 hora 20 minutos</strong>, <strong>sin intermedio</strong>. Más en la sección <a href="#sinopsis" class="text-accent-gold hover:text-white underline">Sinopsis</a>.
               </p>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Es apta para menores?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3599,7 +3664,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
                 Recomendamos la obra para público de <strong>12 años en adelante</strong>.
               </p>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Cómo recibo mi boleto?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3610,7 +3675,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
                 Al comprar en línea recibes tu boleto por <strong>correo electrónico</strong> con código <strong>QR</strong> (CERT-). Preséntalo en la puerta, impreso o en tu celular. Si compras en taquilla, te entregamos el certificado en el momento.
               </p>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Qué formas de pago aceptan?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3621,7 +3686,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
                 En el sitio web: <strong>tarjeta</strong> (pago en línea). En <strong>taquilla</strong> el día de la función: <strong>tarjeta o efectivo</strong>, sujeto a disponibilidad.
               </p>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Hay descuentos?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3632,7 +3697,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
 Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Tarifa <strong>credencial $280</strong> (−30%) para INAPAM, estudiante y maestro. Si compras <strong>5 o más boletos generales</strong>, el <strong>20% de descuento</strong> se aplica automáticamente, sin necesidad de código. Si van en <strong>pareja</strong>, el código <strong>ESPEJO</strong> deja 2 boletos generales en $600 total (se ingresa al pagar). En esta taquilla <strong>no hay cargo por servicio</strong>; también puedes comprar en Ticketmaster o Teatrando (esas plataformas pueden cobrar cargos propios).
               </p>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Puedo comprar en taquilla el día de la función?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3643,7 +3708,7 @@ Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Ta
                 Sí, <strong>sujeto a disponibilidad</strong>. En taquilla aceptamos <strong>tarjeta y efectivo</strong>. Te recomendamos comprar con anticipación en línea para asegurar tu lugar.
               </p>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Puedo cambiar mi boleto de fecha?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3654,7 +3719,7 @@ Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Ta
                 Si necesitas mover tu boleto a otra función, escríbenos a <a href="mailto:elgorilateatro@gmail.com" class="text-accent-gold hover:text-white underline">elgorilateatro@gmail.com</a> con tu <strong>folio</strong> y te orientamos.
               </p>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Puedo reservar para un grupo (escuela, empresa)?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3665,7 +3730,7 @@ Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Ta
                 Para <strong>grupos de más de 10 personas</strong>, escríbenos por <a href="https://wa.me/5215671311191?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20grupo%20o%20escuela%20en%20El%20Gorila." target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">WhatsApp</a>, a <a href="mailto:elgorilateatro@gmail.com" class="text-accent-gold hover:text-white underline">elgorilateatro@gmail.com</a> o en <a href="#grupos" class="text-accent-gold hover:text-white underline">Escuelas y grupos</a>. Con <strong>5 o más boletos generales</strong> el <strong>20% de descuento</strong> se aplica automáticamente al comprar en línea.
               </p>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Hay accesibilidad?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3676,7 +3741,7 @@ Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Ta
                 Sí. El teatro cuenta con acceso por una <strong>puerta especial para sillas de ruedas</strong>. Si necesitas apoyo, avísanos con anticipación en <a href="#contacto" class="text-accent-gold hover:text-white underline">Contacto</a>.
               </p>
 </details>
-<details class="group py-3 sm:py-4">
+<details class="group py-3 sm:py-4 faq-item">
 <summary class="flex cursor-pointer list-none items-center justify-between font-body text-sm sm:text-base text-accent-gold hover:text-white transition-colors touch-manipulation" style="-webkit-tap-highlight-color: transparent;">
 <span>¿Puedo tomar fotos o grabar?</span>
 <span class="transition-transform group-open:rotate-180">
@@ -3688,6 +3753,7 @@ Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Ta
               </p>
 </details>
 </div>
+<button type="button" id="faq-ver-mas" class="btn-faq-mas mx-auto max-w-3xl w-full" hidden>Más preguntas frecuentes</button>
 </section>
 
 <section id="grupos" class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 section-with-bg" aria-labelledby="grupos-heading">
@@ -3696,13 +3762,18 @@ Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Ta
 <p class="font-body text-text-dark/90 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-4">
 Una obra que se discute al salir — identidad, libertad y el costo de pertenecer. Pensada para aulas, empresas y salidas culturales.
 </p>
-<p class="font-body text-text-dark/80 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto mb-6">
-Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <strong class="text-accent-gold">20% de descuento</strong> se aplica automáticamente al comprar en línea. Para grupos de más de 10 personas, escríbenos y te armamos la función.
+<p class="font-body text-text-dark/80 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto grupos-promo-online">
+Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <strong class="text-accent-gold">20% de descuento</strong> se aplica automáticamente al comprar en línea.
+</p>
+<div class="grupos-institucional max-w-2xl mx-auto">
+<p class="grupos-institucional-texto">
+¿Te interesa llevar <em>El Gorila</em> a tu aula o empresa? Escríbenos y platicamos — para <strong class="text-accent-gold">grupos de más de 10 personas</strong> te armamos la función.
 </p>
 <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-<a href="https://wa.me/5215671311191?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20grupo%20o%20escuela%20en%20El%20Gorila." class="inline-flex items-center gap-2 px-5 py-2.5 border border-accent-gold/50 bg-accent-gold/15 text-accent-gold text-sm sm:text-base tracking-wide transition-colors hover:bg-accent-gold/25 hover:border-accent-gold/70" target="_blank" rel="noopener noreferrer">WhatsApp grupos</a>
-<a href="mailto:elgorilateatro@gmail.com?subject=Reserva%20grupo%20%2F%20escuela%20—%20El%20Gorila" class="inline-flex items-center gap-2 px-5 py-2.5 border border-accent-gold/30 text-text-dark/90 text-sm sm:text-base tracking-wide transition-colors hover:border-accent-gold/60 hover:text-accent-gold">Escribir por correo</a>
-<a href="/boletos.html" class="link-venta-boletos inline-flex items-center gap-2 px-5 py-2.5 text-accent-gold/90 text-sm sm:text-base tracking-wide underline underline-offset-4 hover:text-accent-gold">Comprar 5+ en línea</a>
+<a href="https://wa.me/5215671311191?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20grupo%20o%20escuela%20en%20El%20Gorila." class="btn-grupos btn-grupos--wa" target="_blank" rel="noopener noreferrer">WhatsApp grupos</a>
+<a href="mailto:elgorilateatro@gmail.com?subject=Grupos%20y%20escuelas%20—%20El%20Gorila%20(sitio%20web)&amp;body=Hola%2C%20me%20interesa%20llevar%20El%20Gorila%20a%20mi%20aula%2Fempresa.%0A%0AInstitución%3A%20%0APersonas%20aprox.%3A%20%0AFecha%20preferida%3A%20" class="btn-grupos btn-grupos--mail">elgorilateatro@gmail.com</a>
+<a href="/boletos.html#fechas-fecha-wrap" class="link-venta-boletos btn-grupos btn-grupos--compra">Comprar 5+ en línea</a>
+</div>
 </div>
 </div>
 </section>
@@ -4461,6 +4532,38 @@ Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <st
   if (p === '/' || p === '/index.html') {
     try { history.replaceState(null, '', slug + location.search + location.hash); } catch (e) {}
   }
+})();
+</script>
+<script>
+(function () {
+  var lista = document.getElementById('faq-lista');
+  var btn = document.getElementById('faq-ver-mas');
+  if (!lista || !btn) return;
+  var items = Array.from(lista.querySelectorAll('.faq-item'));
+  var paso = 5;
+  var visibles = paso;
+
+  function actualizar() {
+    items.forEach(function (el, i) {
+      el.classList.toggle('faq-oculta', i >= visibles);
+    });
+    if (visibles >= items.length) {
+      btn.hidden = true;
+    } else {
+      btn.hidden = false;
+      var restantes = items.length - visibles;
+      btn.textContent = restantes <= paso
+        ? 'Ver todas las preguntas'
+        : 'Más preguntas frecuentes';
+    }
+  }
+
+  btn.addEventListener('click', function () {
+    visibles = Math.min(visibles + paso, items.length);
+    actualizar();
+  });
+
+  actualizar();
 })();
 </script>
 </body></html>
