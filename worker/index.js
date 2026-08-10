@@ -278,6 +278,68 @@ async function enviarEmailsVenta(venta, tid, env) {
   return { adminOk, compradorOk };
 }
 
+/**
+ * Aviso AL OPERADOR cuando el boleto no le llegó al comprador.
+ *
+ * Es la vía más rápida para enterarse: el punto rojo del panel hay que ir a
+ * buscarlo, este correo llega solo. Los dos se mantienen a propósito.
+ *
+ * OJO con el límite de esto: si el correo del comprador falló porque Resend está
+ * caído o topado de ritmo, este aviso probablemente también falle — sale por el
+ * mismo proveedor. Sirve sobre todo para el caso más común (correo mal escrito o
+ * rechazado por el destinatario), y por eso NO sustituye al punto rojo del panel
+ * ni al log `venta.email_comprador_fallo`.
+ */
+async function avisarBoletoNoEnviado(venta, tid, env, origen = 'compra') {
+  // Sin correo registrado (taquilla/efectivo) no había nada que enviar.
+  if (!venta?.email) return false;
+
+  const cert     = venta.certificado || venta.codigo || '—';
+  const funcion  = venta.funcionNombre || venta.fecha || '—';
+  const nombre   = venta.nombre || 'Sin nombre';
+  const cantidad = venta.cantidad || 0;
+
+  const fila = (etiqueta, valor) => `
+    <tr>
+      <td style="padding:6px 12px 6px 0;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8a7760;white-space:nowrap;">${etiqueta}</td>
+      <td style="padding:6px 0;font-family:Georgia,serif;font-size:15px;color:#1a1411;">${valor}</td>
+    </tr>`;
+
+  return enviarEmail(
+    adminNotifyEmail(env),
+    `⚠️ NO LLEGÓ EL BOLETO — ${cert} (${nombre})`,
+    `<div style="background:#f1ead9;padding:24px;font-family:Georgia,serif;">
+      <p style="margin:0 0 4px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#D43A1A;">
+        Boleto no entregado
+      </p>
+      <p style="margin:0 0 18px;font-size:17px;color:#1a1411;line-height:1.5;">
+        Se cobró la venta pero <strong>el correo con el boleto no se pudo enviar</strong>.
+        Esta persona no tiene su entrada.
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="background:#e8dfc8;padding:14px 18px;border:1px solid #c9b896;">
+        ${fila('Referencia', `<strong>${cert}</strong>`)}
+        ${fila('Comprador', nombre)}
+        ${fila('Correo', `<strong>${venta.email}</strong>`)}
+        ${fila('Función', funcion)}
+        ${fila('Entradas', cantidad)}
+        ${fila('Origen', origen)}
+      </table>
+      <p style="margin:18px 0 0;font-size:16px;color:#3a2e26;line-height:1.6;">
+        <strong>Qué hacer:</strong> abre el panel, busca <strong>${cert}</strong> en Ventas
+        (aparece con un punto rojo) y usa <em>«Reenviar boleto»</em>.
+        Si el correo está mal escrito, usa <em>«Corregir y reenviar»</em>.
+      </p>
+      <p style="margin:14px 0 0;">
+        <a href="https://elgorilateatro.com.mx/admin.html"
+           style="display:inline-block;padding:12px 24px;background:#D43A1A;color:#fff;text-decoration:none;font-family:Georgia,serif;font-size:16px;">
+          Abrir el panel
+        </a>
+      </p>
+    </div>`,
+    env,
+  );
+}
+
 async function enviarEmailReagendado(venta, tid, env) {
   if (!venta.email) return { compradorOk: false, sinEmail: true };
   const config        = await getVenueConfig(tid, env);
@@ -3163,9 +3225,11 @@ async function handleWebhook(request, env, ctx) {
       };
       await env.VENTAS.put(ventaKey, JSON.stringify(venta));
       if (!emailResult.compradorOk && venta.email) {
-        // Queda anotado en la venta (emailsEnviados.comprador=false) y visible en
-        // el admin para reenviar a mano desde la ficha de la venta.
+        // Tres avisos, a propósito: log (para wrangler tail), punto rojo en el
+        // panel (emailsEnviados.comprador=false) y correo al operador, que es la
+        // vía más rápida porque llega sola sin ir a buscarla.
         logError('venta.email_comprador_fallo', { sessionId: truncateId(sessionId), certificado: venta.certificado });
+        await avisarBoletoNoEnviado(venta, tid, env, 'compra en línea');
       }
     } catch (e) { logError('venta.emails', { error: e.message }); }
 
@@ -3516,6 +3580,9 @@ async function handleEnviarBoletoCompra(tid, id, request, env) {
   await env.INVENTARIO.put(rlKey, String(retries + 1), { expirationTtl: 86400 });
 
   if (!emailResult.compradorOk && venta.email) {
+    // El comprador ve el error en pantalla, pero avisamos igual: si se va sin
+    // insistir, este correo es lo único que deja rastro fuera del panel.
+    await avisarBoletoNoEnviado(venta, tid, env, 'reenvío pedido por el comprador');
     return json({
       ok: false,
       error: 'No se pudo enviar el correo al comprador. Revisa spam o escribe a elgorilateatro@gmail.com',
@@ -4538,6 +4605,11 @@ async function handleVentaManual(tid, request, env, ctx) {
   };
   await env.VENTAS.put(kv(canonical, `venta:${sessionId}`), JSON.stringify(venta));
 
+  if (!emailEnviado && venta.email) {
+    logError('venta.email_comprador_fallo', { sessionId: truncateId(sessionId), certificado: venta.certificado });
+    ctx.waitUntil(avisarBoletoNoEnviado(venta, canonical, env, 'venta en taquilla'));
+  }
+
   ctx.waitUntil(registrarMetricaVenta(env, metricaFromVenta({
     tid: canonical,
     venta,
@@ -4732,6 +4804,14 @@ async function handleReagendar(tid, request, env) {
       reagendaEn: new Date().toISOString(),
     };
     await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+
+    if (!emailEnviado) {
+      // Aquí NO se toca emailsEnviados.comprador (su boleto original sí llegó),
+      // así que el panel no lo pinta de rojo. El correo es el único aviso: esta
+      // persona no se enteró de que le cambiaron la fecha.
+      logError('venta.email_reagenda_fallo', { certificado: venta.certificado, fechaDestino });
+      await avisarBoletoNoEnviado(venta, canonical, env, `aviso de reagenda a ${fechaDestino}`);
+    }
   }
 
   const audit = await registrarAuditoria(env, {
