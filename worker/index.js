@@ -127,6 +127,23 @@ async function checkRateLimit(ip, env) {
   return true;
 }
 
+/**
+ * Límite por IP para endpoints públicos que ESCRIBEN en KV.
+ * Sin esto, un bot puede quemar la cuota diaria de escrituras de KV — y cuando
+ * esa cuota se agota, las que fallan son las ventas reales. Además evita que se
+ * inyecten correos falsos en listas que el sistema después notifica por correo.
+ * Ventana de 15 min, igual que checkRateLimit.
+ */
+async function limitePorIp(request, env, prefijo, maximo) {
+  const ip      = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const ventana = Math.floor(Date.now() / 900000);
+  const key     = `rl:${prefijo}:${ip}:${ventana}`;
+  const actual  = parseInt((await env.INVENTARIO.get(key)) || '0', 10) || 0;
+  if (actual >= maximo) return false;
+  await env.INVENTARIO.put(key, String(actual + 1), { expirationTtl: 900 });
+  return true;
+}
+
 // ─── EMAIL VÍA RESEND ────────────────────────────────────────────────────────
 
 /** Correo operativo del teatro (avisos admin, reply-to). */
@@ -166,6 +183,16 @@ function formatFechaCompra(iso) {
   } catch { return iso; }
 }
 
+// Resend limita el ritmo de envío (del orden de 2 peticiones/segundo). Cada
+// venta manda 2 correos (comprador + aviso admin), así que con más de una venta
+// por segundo empiezan los 429. Sin reintento, ese 429 = boleto que nunca llega.
+// Por eso: reintentar 429 y 5xx con espera creciente, respetando Retry-After.
+const EMAIL_MAX_INTENTOS   = 4;
+const EMAIL_ESPERAS_MS     = [400, 1200, 3000]; // entre intentos 1-2, 2-3, 3-4
+
+const dormir = ms => new Promise(r => setTimeout(r, ms));
+
+/** Un intento. Devuelve {ok, reintentable, esperaMs}. */
 async function _enviarEmailResend(to, subject, html, env, from, opts = {}) {
   try {
     const payload = {
@@ -187,13 +214,33 @@ async function _enviarEmailResend(to, subject, html, env, from, opts = {}) {
         toDomain: maskEmail(to),
         err: errBody.slice(0, 200),
       });
-      return false;
+      // 429 = ritmo excedido; 5xx = fallo temporal del proveedor. Ambos se
+      // reintentan. Un 4xx distinto (correo inválido, dominio no verificado) no
+      // mejora reintentando: se corta y se registra.
+      const reintentable = res.status === 429 || res.status >= 500;
+      const ra = parseInt(res.headers.get('retry-after') || '', 10);
+      return { ok: false, reintentable, esperaMs: Number.isFinite(ra) ? ra * 1000 : null };
     }
-    return true;
+    return { ok: true };
   } catch (e) {
+    // Fallo de red hacia Resend: temporal, se reintenta.
     logError('resend.exception', { toDomain: maskEmail(to), error: e.message });
-    return false;
+    return { ok: false, reintentable: true, esperaMs: null };
   }
+}
+
+/** Envía con reintentos ante 429/5xx. true solo si Resend aceptó el correo. */
+async function _enviarConReintentos(to, subject, html, env, from, opts = {}) {
+  for (let intento = 0; intento < EMAIL_MAX_INTENTOS; intento++) {
+    const r = await _enviarEmailResend(to, subject, html, env, from, opts);
+    if (r.ok) {
+      if (intento > 0) logInfo('resend.reintento_ok', { toDomain: maskEmail(to), intento: intento + 1 });
+      return true;
+    }
+    if (!r.reintentable || intento === EMAIL_MAX_INTENTOS - 1) return false;
+    await dormir(r.esperaMs ?? EMAIL_ESPERAS_MS[intento] ?? 3000);
+  }
+  return false;
 }
 
 async function enviarEmail(to, subject, html, env, opts = {}) {
@@ -202,9 +249,9 @@ async function enviarEmail(to, subject, html, env, opts = {}) {
   // Destinos operativos: comprador + aviso admin → elgorilateatro@gmail.com (nunca otro correo).
   const verifiedFrom = EMAIL_FROM_DEFAULT;
   const primaryFrom  = env.EMAIL_FROM || verifiedFrom;
-  if (await _enviarEmailResend(to, subject, html, env, primaryFrom, opts)) return true;
+  if (await _enviarConReintentos(to, subject, html, env, primaryFrom, opts)) return true;
   if (primaryFrom !== verifiedFrom) {
-    return _enviarEmailResend(to, subject, html, env, verifiedFrom, opts);
+    return _enviarConReintentos(to, subject, html, env, verifiedFrom, opts);
   }
   return false;
 }
@@ -1760,11 +1807,23 @@ function hayCupo(inv, config, seccionCantidades) {
   return true;
 }
 
+// Un hold recién creado todavía no tiene sesión de Stripe: se crea unos
+// instantes después (reservar → crear sesión → vincularSessionAlHold). Si lo
+// desalojamos en esa ventana no hay sesión que expirar, y esa persona llega a
+// pagar de todos modos → sobreventa real. Bajo un pico eso deja de ser teórico:
+// llegan muchas reservas nuevas a la vez y todas son "recientes".
+// Por eso los holds con menos de este tiempo son intocables: si el cupo está
+// lleno de carritos frescos, la función está genuinamente llena AHORA y hay que
+// decir que no, en vez de robarle el lugar a alguien que ya va a pagar.
+const GRACIA_HOLD_MS = 90 * 1000;
+
 /** Libera holds más antiguos (sin pago) hasta abrir cupo. Devuelve sessionIds a expirar en Stripe. */
 function evictarHoldsFIFO(inv, seccionCantidades, config) {
   const sessionIds = [];
+  const ahora = Date.now();
   let work = { ...inv, holds: { ...(inv.holds || {}) } };
   const ordenados = Object.entries(work.holds)
+    .filter(([, h]) => (ahora - (h.createdAt || 0)) >= GRACIA_HOLD_MS)
     .sort((a, b) => (a[1].createdAt || 0) - (b[1].createdAt || 0));
 
   for (const [holdId, h] of ordenados) {
@@ -1808,6 +1867,272 @@ async function prepararInventarioParaVenta(tid, fecha, seccionCantidades, env, o
   return { ok: true, inv, config, evictedSessions };
 }
 
+// ─── INVENTARIO SERIALIZADO (Durable Object) ─────────────────────────────────
+// POR QUÉ EXISTE ESTO:
+// El inventario de una función vivía en UNA llave de KV con "optimistic locking"
+// (escribir y releer la versión). Eso no funciona en KV: no es linealizable y las
+// lecturas vienen de caché de edge. Dos compras simultáneas leen versión 5, ambas
+// escriben versión 6, ambas releen 6 y ambas creen que ganaron — gana la última.
+// En el camino de confirmación eso significa una venta PAGADA que no suma a
+// `vendidos`: el asiento se vendió y el inventario lo sigue mostrando libre.
+// Además KV limita ~1 escritura por segundo por llave, y cada compra escribía esa
+// misma llave 3-4 veces → techo de ~15-20 compras/min por función.
+//
+// Un Durable Object da ejecución serializada y consistencia fuerte por instancia
+// (una instancia por función). Aquí el read-modify-write sí es atómico.
+//
+// KV queda como RÉPLICA de solo lectura para que todo lo que ya leía KV (panel de
+// admin, endpoint público de funciones, reportes) siga funcionando sin cambios.
+// La réplica es best-effort: si una escritura a KV se topa con su límite de ritmo
+// se ignora, y una alarma la vuelve a volcar poco después. La verdad está en el DO.
+
+const INVENTARIO_DO_FLUSH_MS = 3000; // volcado diferido a KV tras cada mutación
+
+export class InventarioFuncion {
+  constructor(state, env) {
+    this.state = state;
+    this.env   = env;
+  }
+
+  /** Estado actual, sembrándolo desde KV la primera vez (migración sin downtime). */
+  async cargar(tid, fecha, config) {
+    let guardado = await this.state.storage.get('inv');
+    if (guardado === undefined) {
+      const raw = await this.env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+      guardado  = normalizeInventario(raw, config);
+      await this.state.storage.put('inv', guardado);
+      await this.state.storage.put('sembrado', { desde: 'kv', en: Date.now() });
+    }
+    // Re-normalizar contra la config vigente (totales de secciones pueden cambiar)
+    return normalizeInventario(JSON.stringify(guardado), config);
+  }
+
+  async guardar(tid, fecha, inv) {
+    await this.state.storage.put('inv', inv);
+    await this.state.storage.put('pendienteKV', { tid, fecha });
+    // Réplica inmediata best-effort + alarma de respaldo por si KV la rechaza.
+    await this.replicarAKV(tid, fecha, inv);
+    await this.state.storage.setAlarm(Date.now() + INVENTARIO_DO_FLUSH_MS);
+  }
+
+  async replicarAKV(tid, fecha, inv) {
+    try {
+      await this.env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify(inv));
+      await this.state.storage.delete('pendienteKV');
+    } catch (e) {
+      // Límite de ritmo de KV u otro fallo: la alarma reintenta. No es fatal:
+      // el DO ya tiene la verdad y ninguna decisión de cupo depende de KV.
+      logError('inventario.replica_kv', { teatroId: tid, fecha, error: e.message });
+    }
+  }
+
+  /** Reintenta el volcado a KV si la escritura inmediata falló. */
+  async alarm() {
+    const p = await this.state.storage.get('pendienteKV');
+    if (!p) return;
+    const inv = await this.state.storage.get('inv');
+    if (!inv) return;
+    await this.replicarAKV(p.tid, p.fecha, inv);
+  }
+
+  async fetch(request) {
+    let payload;
+    try { payload = await request.json(); }
+    catch (_) { return Response.json({ ok: false, status: 400, error: 'payload inválido' }, { status: 400 }); }
+
+    let salida;
+    // blockConcurrencyWhile garantiza exclusión mutua aunque el handler haga await.
+    // Nada de red externa aquí dentro (Stripe se llama fuera, con los sessionIds
+    // que devolvemos) para no alargar la sección crítica.
+    await this.state.blockConcurrencyWhile(async () => {
+      try {
+        salida = await this.ejecutar(payload);
+      } catch (e) {
+        logError('inventario.do', { op: payload?.op, error: e.message });
+        salida = { ok: false, status: 500, error: 'inventario no disponible', _falloDO: true };
+      }
+    });
+    return Response.json(salida);
+  }
+
+  async ejecutar(p) {
+    const { op, tid, fecha, config, seccionCantidades, reservaId, sessionId, holdTtl } = p;
+    let inv = await this.cargar(tid, fecha, config);
+
+    // Todas las operaciones parten de un estado saneado: holds vencidos fuera y
+    // reservados recalculados desde los holds vivos.
+    inv = recalcReservadosDesdeHolds(purgarHoldsVencidos(inv), config);
+
+    switch (op) {
+      case 'leer':
+        return { ok: true, inv };
+
+      case 'reservar': {
+        if (inv.bloqueado) return { ok: false, status: 409, error: 'Ventas cerradas para esta función.' };
+
+        let evictedSessions = [];
+        if (!hayCupo(inv, config, seccionCantidades)) {
+          const ev = evictarHoldsFIFO(inv, seccionCantidades, config);
+          inv = ev.inv;
+          evictedSessions = ev.sessionIds;
+        }
+        if (!hayCupo(inv, config, seccionCantidades)) {
+          return { ok: false, status: 409, error: 'No hay suficientes lugares para completar tu compra.', evictedSessions };
+        }
+
+        const now = Date.now();
+        inv.holds = { ...(inv.holds || {}) };
+        inv.holds[reservaId] = {
+          seccionCantidades,
+          createdAt: now,
+          expiresAt: now + (holdTtl || RESERVA_TTL) * 1000,
+          sessionId: null,
+        };
+        inv = recalcReservadosDesdeHolds({ ...inv, version: (inv.version ?? 0) + 1 }, config);
+        await this.guardar(tid, fecha, inv);
+        return { ok: true, evictedSessions };
+      }
+
+      case 'vincularSession': {
+        const holds = { ...(inv.holds || {}) };
+        if (!holds[reservaId]) return { ok: true, sinHold: true };
+        holds[reservaId] = { ...holds[reservaId], sessionId };
+        inv = { ...inv, holds, version: (inv.version ?? 0) + 1 };
+        await this.guardar(tid, fecha, inv);
+        return { ok: true };
+      }
+
+      case 'liberar': {
+        const holds = { ...(inv.holds || {}) };
+        if (reservaId && holds[reservaId]) {
+          delete holds[reservaId];
+        } else if (seccionCantidades) {
+          // Respaldo heredado: quitar el primer hold que coincida en cantidades
+          for (const [hid, h] of Object.entries(holds)) {
+            if (JSON.stringify(h.seccionCantidades) === JSON.stringify(seccionCantidades)) {
+              delete holds[hid];
+              break;
+            }
+          }
+        }
+        inv = recalcReservadosDesdeHolds({ ...inv, holds, version: (inv.version ?? 0) + 1 }, config);
+        await this.guardar(tid, fecha, inv);
+        return { ok: true };
+      }
+
+      case 'confirmar': {
+        // Camino del webhook de Stripe: el pago YA ocurrió. Nunca se rechaza por
+        // cupo — sobrevender aquí es un error de negocio a resolver a mano, pero
+        // perder la venta del registro es peor. Se avisa en logs si pasa.
+        const holds = { ...(inv.holds || {}) };
+        if (reservaId && holds[reservaId]) delete holds[reservaId];
+
+        const secciones = { ...inv.secciones };
+        let sobreventa = false;
+        for (const [secId, cant] of Object.entries(seccionCantidades)) {
+          const sInv = secciones[secId] || { total: CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
+          const nuevosVendidos = (sInv.vendidos || 0) + cant;
+          if (nuevosVendidos > (sInv.total ?? CAPACIDAD_DEFAULT)) sobreventa = true;
+          secciones[secId] = { ...sInv, vendidos: nuevosVendidos };
+        }
+        inv = recalcReservadosDesdeHolds({ ...inv, holds, secciones, version: (inv.version ?? 0) + 1 }, config);
+        await this.guardar(tid, fecha, inv);
+        if (sobreventa) logError('inventario.sobreventa', { teatroId: tid, fecha, seccionCantidades });
+        return { ok: true, sobreventa };
+      }
+
+      case 'ventaDirecta': {
+        if (inv.bloqueado) return { ok: false, status: 409, error: 'Ventas cerradas para esta función.' };
+
+        let evictedSessions = [];
+        if (!hayCupo(inv, config, seccionCantidades)) {
+          const ev = evictarHoldsFIFO(inv, seccionCantidades, config);
+          inv = ev.inv;
+          evictedSessions = ev.sessionIds;
+        }
+        if (!hayCupo(inv, config, seccionCantidades)) {
+          return { ok: false, status: 409, error: 'No hay suficientes lugares disponibles.', evictedSessions };
+        }
+
+        const secciones = { ...inv.secciones };
+        for (const [secId, cant] of Object.entries(seccionCantidades)) {
+          const sInv = secciones[secId] || { total: CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
+          secciones[secId] = { ...sInv, vendidos: (sInv.vendidos || 0) + cant };
+        }
+        inv = recalcReservadosDesdeHolds({ ...inv, secciones, version: (inv.version ?? 0) + 1 }, config);
+        await this.guardar(tid, fecha, inv);
+        return { ok: true, evictedSessions };
+      }
+
+      case 'liberarVendidos': {
+        // Reagendamiento: devuelve cupo ya pagado a la función origen.
+        const secciones = { ...(inv.secciones || {}) };
+        for (const [secId, cant] of Object.entries(seccionCantidades)) {
+          const sInv = secciones[secId] || { total: CAPACIDAD_DEFAULT, vendidos: 0, reservados: 0 };
+          secciones[secId] = { ...sInv, vendidos: Math.max(0, (sInv.vendidos || 0) - cant) };
+        }
+        inv = recalcReservadosDesdeHolds({ ...inv, secciones, version: (inv.version ?? 0) + 1 }, config);
+        await this.guardar(tid, fecha, inv);
+        return { ok: true };
+      }
+
+      case 'reemplazar': {
+        // Edición desde admin: se impone el objeto completo que manda el panel.
+        const nuevo = recalcReservadosDesdeHolds(
+          normalizeInventario(JSON.stringify(p.inv), config), config);
+        nuevo.version = (inv.version ?? 0) + 1;
+        await this.guardar(tid, fecha, nuevo);
+        return { ok: true, inv: nuevo };
+      }
+
+      default:
+        return { ok: false, status: 400, error: `op desconocida: ${op}` };
+    }
+  }
+}
+
+/** Instancia de inventario de UNA función. Una llave lógica = una instancia. */
+function stubInventario(tid, fecha, env) {
+  const nombre = `${resolveTid(tid)}:funcion:${fecha}`;
+  return env.INVENTARIO_DO.get(env.INVENTARIO_DO.idFromName(nombre));
+}
+
+/**
+ * Llama al DO de inventario. Devuelve null si el DO no está disponible, para que
+ * el llamador caiga al camino KV heredado en vez de dejar de vender.
+ */
+async function opInventario(tid, fecha, env, payload) {
+  if (!env.INVENTARIO_DO) return null;
+  try {
+    const config = payload.config || await getVenueConfig(tid, env);
+    const res = await stubInventario(tid, fecha, env).fetch('https://inventario/op', {
+      method:  'POST',
+      headers: { 'content-type': 'application/json' },
+      body:    JSON.stringify({ tid, fecha, config, ...payload }),
+    });
+    if (!res.ok) throw new Error(`DO respondió ${res.status}`);
+    const out = await res.json();
+    if (out && out._falloDO) return null;
+    return out;
+  } catch (e) {
+    logError('inventario.do_indisponible', { teatroId: tid, fecha, op: payload?.op, error: e.message });
+    return null; // → respaldo KV
+  }
+}
+
+/**
+ * Lectura de inventario para DECIDIR (no para mostrar): va al DO, que es la
+ * fuente de verdad. Cae a KV solo si el DO no responde. Para listados masivos
+ * sigue sirviendo leer KV directo: es réplica de a lo más unos segundos.
+ */
+async function leerInventarioFuerte(tid, fecha, env, config) {
+  const cfg = config || await getVenueConfig(tid, env);
+  const r   = await opInventario(tid, fecha, env, { op: 'leer', config: cfg });
+  if (r?.ok) return r.inv;
+  const raw = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+  return recalcReservadosDesdeHolds(purgarHoldsVencidos(normalizeInventario(raw, cfg)), cfg);
+}
+
 const UTM_KEYS = ['source', 'medium', 'campaign', 'content', 'term'];
 
 function sanitizarUTM(raw) {
@@ -1836,6 +2161,18 @@ function sumDisponiblesSecciones(seccionesMap) {
 }
 
 async function reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, ctx, holdTtl = RESERVA_TTL) {
+  const r = await opInventario(tid, fecha, env, {
+    op: 'reservar', seccionCantidades, reservaId, holdTtl,
+  });
+  if (r) {
+    if (r.evictedSessions?.length && ctx) ctx.waitUntil(expirarSesionesStripe(r.evictedSessions, env));
+    return r.ok ? { ok: true } : { ok: false, status: r.status, error: r.error };
+  }
+  return reservarOptimistaKV(tid, fecha, seccionCantidades, reservaId, env, ctx, holdTtl);
+}
+
+/** Respaldo heredado sobre KV. Solo corre si el DO no está disponible. */
+async function reservarOptimistaKV(tid, fecha, seccionCantidades, reservaId, env, ctx, holdTtl = RESERVA_TTL) {
   const config = await getVenueConfig(tid, env);
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
@@ -1875,6 +2212,13 @@ async function reservarOptimista(tid, fecha, seccionCantidades, reservaId, env, 
 }
 
 async function vincularSessionAlHold(tid, fecha, reservaId, sessionId, env) {
+  const r = await opInventario(tid, fecha, env, { op: 'vincularSession', reservaId, sessionId });
+  if (r) return;
+  return vincularSessionAlHoldKV(tid, fecha, reservaId, sessionId, env);
+}
+
+/** Respaldo heredado sobre KV. Solo corre si el DO no está disponible. */
+async function vincularSessionAlHoldKV(tid, fecha, reservaId, sessionId, env) {
   const config = await getVenueConfig(tid, env);
   const invRaw = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
   if (!invRaw) return;
@@ -1887,6 +2231,13 @@ async function vincularSessionAlHold(tid, fecha, reservaId, sessionId, env) {
 }
 
 async function liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env) {
+  const r = await opInventario(tid, fecha, env, { op: 'liberar', seccionCantidades, reservaId });
+  if (r) return;
+  return liberarReservaOptimistaKV(tid, fecha, seccionCantidades, reservaId, env);
+}
+
+/** Respaldo heredado sobre KV. Solo corre si el DO no está disponible. */
+async function liberarReservaOptimistaKV(tid, fecha, seccionCantidades, reservaId, env) {
   const config = await getVenueConfig(tid, env);
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
@@ -1920,6 +2271,13 @@ async function liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId,
 }
 
 async function confirmarVentaOptimista(tid, fecha, seccionCantidades, reservaId, env) {
+  const r = await opInventario(tid, fecha, env, { op: 'confirmar', seccionCantidades, reservaId });
+  if (r) return;
+  return confirmarVentaOptimistaKV(tid, fecha, seccionCantidades, reservaId, env);
+}
+
+/** Respaldo heredado sobre KV. Solo corre si el DO no está disponible. */
+async function confirmarVentaOptimistaKV(tid, fecha, seccionCantidades, reservaId, env) {
   const config = await getVenueConfig(tid, env);
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
@@ -1951,6 +2309,16 @@ async function confirmarVentaOptimista(tid, fecha, seccionCantidades, reservaId,
 
 /** Venta inmediata (efectivo / taquilla) — sin hold; solo incrementa vendidos. */
 async function aplicarVentaDirecta(tid, fecha, seccionCantidades, env, ctx) {
+  const r = await opInventario(tid, fecha, env, { op: 'ventaDirecta', seccionCantidades });
+  if (r) {
+    if (r.evictedSessions?.length && ctx) ctx.waitUntil(expirarSesionesStripe(r.evictedSessions, env));
+    return r.ok ? { ok: true } : { ok: false, status: r.status, error: r.error };
+  }
+  return aplicarVentaDirectaKV(tid, fecha, seccionCantidades, env, ctx);
+}
+
+/** Respaldo heredado sobre KV. Solo corre si el DO no está disponible. */
+async function aplicarVentaDirectaKV(tid, fecha, seccionCantidades, env, ctx) {
   const config = await getVenueConfig(tid, env);
   for (let intento = 0; intento < 3; intento++) {
     if (intento > 0) await new Promise(r => setTimeout(r, 50 + Math.random() * 150));
@@ -2271,16 +2639,17 @@ async function handleDisponibilidad(tid, request, env) {
   }
 
   const config = await getVenueConfig(tid, env);
-  const raw    = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
-  let inv      = normalizeInventario(raw, config);
-  const antes  = JSON.stringify(inv.holds || {});
-  inv          = recalcReservadosDesdeHolds(purgarHoldsVencidos(inv), config);
-  if (JSON.stringify(inv.holds || {}) !== antes) {
-    await env.INVENTARIO.put(kv(tid, `funcion:${fecha}`), JSON.stringify({
-      ...inv,
-      version: (inv.version ?? 0) + 1,
-    }));
-  }
+  // Endpoint de SOLO LECTURA, público y sin autenticar: es el más fácil de
+  // martillar. Por eso lee la réplica en KV y NO el Durable Object: un DO ejecuta
+  // en serie, así que un bot pegándole aquí encolaría peticiones y le metería
+  // latencia a las compras reales de esa misma función.
+  // La réplica va como mucho unos segundos atrás, que para MOSTRAR disponibilidad
+  // es de sobra; la decisión real de cupo la toma el DO al reservar.
+  // Tampoco se escribe nada aquí (antes sí): escribir KV a mano pisaría la
+  // réplica que mantiene el DO. Los holds vencidos se purgan en memoria solo
+  // para el cálculo que se muestra.
+  const raw = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
+  const inv = recalcReservadosDesdeHolds(purgarHoldsVencidos(normalizeInventario(raw, config)), config);
 
   const seccionesDisp = {};
   for (const s of config.secciones) {
@@ -2396,8 +2765,8 @@ async function handleCheckout(tid, request, env, ctx) {
   }
 
   if (seccionCantidades.galeria) {
-    const prepG = await prepararInventarioParaVenta(tid, fecha, { platea: 0 }, env);
-    const plateaQ = cupoSeccion(prepG.inv, 'platea', config);
+    const invG    = await leerInventarioFuerte(tid, fecha, env, config);
+    const plateaQ = cupoSeccion(invG, 'platea', config);
     if (plateaQ > 0) {
       return json({
         error: 'No hay lugar disponible en esta función.',
@@ -2662,14 +3031,24 @@ async function handleWebhook(request, env, ctx) {
   const ventaKey    = kv(tid, `venta:${sessionId}`);
   const lockKey     = kv(tid, `lock:webhook:${sessionId}`);
 
-  if (await env.INVENTARIO.get(lockKey)) return new Response('ok', { status: 200 });
-
+  // 1) ¿La venta ya quedó registrada? Eso sí es "entregado": 200 definitivo.
   const existingNew    = await env.VENTAS.get(ventaKey);
   const existingLegacy = (!existingNew && tid === 'gorila') ? await env.VENTAS.get(`venta:${sessionId}`) : null;
   if (existingNew || existingLegacy) return new Response('ok', { status: 200 });
 
-  await env.INVENTARIO.put(lockKey, '1', { expirationTtl: 900 });
-  if (await env.VENTAS.get(ventaKey)) return new Response('ok', { status: 200 });
+  // 2) ¿Hay otro intento del mismo webhook en curso? Pedir reintento, NUNCA 200.
+  //    Antes aquí se respondía 200: si el intento en curso moría a media
+  //    ejecución (Resend caído, KV lento, cualquier excepción), Stripe daba el
+  //    webhook por entregado y dejaba de reintentar. Resultado: el cliente pagó,
+  //    la venta nunca se registró y el boleto nunca salió. Con 409 Stripe vuelve
+  //    a intentarlo y la venta se recupera sola.
+  if (await env.INVENTARIO.get(lockKey)) {
+    return new Response('procesando, reintentar', { status: 409 });
+  }
+
+  // 3) Marca de "en proceso" con TTL corto (no 15 min): si este intento muere a
+  //    medias, la marca expira sola y el siguiente reintento puede completarla.
+  await env.INVENTARIO.put(lockKey, '1', { expirationTtl: 120 });
 
   const fecha         = meta.fecha;
   const cantidad      = parseInt(meta.cantidad, 10);
@@ -2767,17 +3146,29 @@ async function handleWebhook(request, env, ctx) {
     } catch (e) { logError('fiscal.acumulado', { error: e.message, teatroId: tid }); }
   })());
 
-  // Emails (comprador + aviso admin)
-  const emailResult = await enviarEmailsVenta(venta, tid, env);
-  venta.emailsEnviados = {
-    admin:     emailResult.adminOk,
-    comprador: emailResult.compradorOk,
-    en:        new Date().toISOString(),
-  };
-  await env.VENTAS.put(ventaKey, JSON.stringify(venta));
-
+  // La venta YA está registrada arriba. Correos y Meta CAPI salen de la ruta
+  // crítica: con reintentos, los correos pueden tardar segundos y no queremos
+  // que Stripe se quede esperando la respuesta del webhook (si expira, reintenta
+  // y aunque es idempotente, añade carga justo en el pico).
+  // Van encadenados en UN solo waitUntil, no en dos: ambos releen y reescriben
+  // la venta, y en paralelo el último en escribir borraría el campo del otro.
   const capiEventId = purchaseEventId(sessionId, gen.certificado);
   ctx.waitUntil((async () => {
+    try {
+      const emailResult = await enviarEmailsVenta(venta, tid, env);
+      venta.emailsEnviados = {
+        admin:     emailResult.adminOk,
+        comprador: emailResult.compradorOk,
+        en:        new Date().toISOString(),
+      };
+      await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+      if (!emailResult.compradorOk && venta.email) {
+        // Queda anotado en la venta (emailsEnviados.comprador=false) y visible en
+        // el admin para reenviar a mano desde la ficha de la venta.
+        logError('venta.email_comprador_fallo', { sessionId: truncateId(sessionId), certificado: venta.certificado });
+      }
+    } catch (e) { logError('venta.emails', { error: e.message }); }
+
     try {
       const capiResult = await sendMetaCapiPurchase(venta, env, {
         eventId:  capiEventId,
@@ -4054,8 +4445,8 @@ async function handleVentaManual(tid, request, env, ctx) {
   }
 
   if (seccionCantidades.galeria) {
-    const prepG     = await prepararInventarioParaVenta(tid, fecha, { platea: 0 }, env);
-    const plateaQ   = cupoSeccion(prepG.inv, 'platea', config);
+    const invG      = await leerInventarioFuerte(tid, fecha, env, config);
+    const plateaQ   = cupoSeccion(invG, 'platea', config);
     if (plateaQ > 0) {
       return json({ error: 'La galería solo se abre cuando se agote la platea.' }, 409, request);
     }
@@ -4177,6 +4568,13 @@ async function handleVentaManual(tid, request, env, ctx) {
 
 /** Libera cupo vendido (reagendamiento). */
 async function liberarVendidos(tid, fecha, seccionCantidades, env) {
+  const r = await opInventario(tid, fecha, env, { op: 'liberarVendidos', seccionCantidades });
+  if (r) return { ok: !!r.ok };
+  return liberarVendidosKV(tid, fecha, seccionCantidades, env);
+}
+
+/** Respaldo heredado sobre KV. Solo corre si el DO no está disponible. */
+async function liberarVendidosKV(tid, fecha, seccionCantidades, env) {
   const config = await getVenueConfig(tid, env);
   for (let intento = 0; intento < 3; intento++) {
     const invRaw  = await env.INVENTARIO.get(kv(tid, `funcion:${fecha}`));
@@ -5028,6 +5426,12 @@ async function handleInformeFunciones(tid, request, env) {
 // ─── HANDLER: LISTA DE ESPERA ─────────────────────────────────────────────────
 
 async function handleListaEspera(tid, request, env) {
+  // Escribe en KV y alimenta una lista que luego se notifica por correo:
+  // sin límite, es un vector para quemar cuota de KV y para inyectar correos.
+  if (!await limitePorIp(request, env, 'lespera', 8)) {
+    return json({ error: 'Demasiadas solicitudes. Intenta en unos minutos.' }, 429, request);
+  }
+
   let body;
   try { body = await request.json(); } catch { return json({ error: 'JSON inválido.' }, 400, request); }
 
@@ -5246,6 +5650,11 @@ async function handleReporte(request, env, ctx) {
 // ─── PRÓXIMAMENTE: REGISTRO DE CORREOS ───────────────────────────────────────
 
 async function handleProximamente(request, env) {
+  // Mismo motivo que lista-espera: POST público que escribe en KV.
+  if (!await limitePorIp(request, env, 'prox', 8)) {
+    return json({ error: 'Demasiadas solicitudes. Intenta en unos minutos.' }, 429, request);
+  }
+
   let body;
   try { body = await request.json(); } catch { return json({ error: 'JSON inválido.' }, 400, request); }
 

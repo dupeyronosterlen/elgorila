@@ -11,9 +11,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate"/>
-<meta name="description" content="El Gorila con Humberto Dupeyrón · monólogo basado en Kafka. Solo 9 sábados jul–sep 2026 · Teatro Wilberto Cantón, CDMX. Boletos en línea."/>
+<!-- Los metas los leen crawlers que NO ejecutan JS (WhatsApp, Facebook), así que
+     no pueden llevar conteo de funciones ni rango de fechas: caducarían solos.
+     El conteo vivo ("6 sábados") va en el copy visible, vía js/temporada-copy.js. -->
+<meta name="description" content="El Gorila con Humberto Dupeyrón · monólogo basado en Kafka. Temporada 2026, sábados 18:00 · Teatro Wilberto Cantón, CDMX. Boletos en línea."/>
 <meta property="og:title" content="El Gorila — obra de teatro con Humberto Dupeyrón en CDMX"/>
-<meta property="og:description" content="Monólogo con Humberto Dupeyrón basado en Kafka. 9 sábados, 25 jul–19 sep · Teatro Wilberto Cantón, CDMX. Desde $400."/>
+<meta property="og:description" content="Monólogo con Humberto Dupeyrón basado en Kafka. Temporada 2026, sábados 18:00 · Teatro Wilberto Cantón, CDMX. Desde $400."/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://elgorilateatro.com.mx/"/>
 <meta property="og:image" content="https://elgorilateatro.com.mx/img/programa/portada-v4.jpg"/>
@@ -23,7 +26,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta property="og:locale" content="es_MX"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="El Gorila — obra de teatro con Humberto Dupeyrón en CDMX"/>
-<meta name="twitter:description" content="El Gorila con Humberto Dupeyrón · Kafka. 9 sábados, 25 jul–19 sep · Wilberto Cantón, CDMX. Desde $400."/>
+<meta name="twitter:description" content="El Gorila con Humberto Dupeyrón · Kafka. Temporada 2026, sábados 18:00 · Wilberto Cantón, CDMX. Desde $400."/>
 <meta name="twitter:image" content="https://elgorilateatro.com.mx/img/programa/portada-v4.jpg"/>
 <meta name="twitter:image:alt" content="EL GORILA — cartel de temporada 2026"/>
 <title>El Gorila — obra de teatro con Humberto Dupeyrón en CDMX | 2026</title>
@@ -117,12 +120,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2?v=2" crossorigin/>
+<!-- Solo se precarga Lora: Inter e IM Fell quedaron sin uso al entrar la tipografía v3
+     (Cormorant/EB Garamond/JetBrains los sobreescriben con !important). Sus @font-face
+     siguen abajo como fallback, pero sin preload ya no se descargan (107 KB menos). -->
 <link rel="preload" as="font" type="font/woff2" href="fonts/lora-latin.woff2?v=2" crossorigin/>
-<link rel="preload" as="font" type="font/woff2" href="fonts/im-fell-english-latin.woff2" crossorigin/>
-<!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo -->
-<link rel="preload" as="image" href="img/programa/portada-v1-hero.webp" type="image/webp" fetchpriority="high"/>
-<link rel="preload" as="image" href="img/programa/portada-v1-hero.jpg" fetchpriority="high"/>
+<!-- Prioridad de carga en orden de visualización: 1 header, 2 hero, 3 cartel informativo
+     Solo se precarga el WebP: precargar además el JPG descargaba 79 KB que el <picture>
+     nunca usa. El JPG sigue como fallback en <source>/<img> para navegadores sin WebP. -->
+<link rel="preload" as="image" href="img/programa/portada-v1-hero.webp" type="image/webp"
+      imagesrcset="img/programa/portada-v1-hero-sm.webp 960w, img/programa/portada-v1-hero.webp 1280w"
+      imagesizes="100vw" fetchpriority="high"/>
 <style>
     body {
       padding-top: 0;
@@ -3248,7 +3255,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       "name": "¿Hay funciones en este momento?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Sí: solo 9 sábados en Teatro Wilberto Cantón, CDMX, a las 18:00, del 25 de julio al 19 de septiembre. Compra anticipada en elgorilateatro.com.mx/boletos.html."
+        "text": "Sí: temporada limitada en Teatro Wilberto Cantón, CDMX, sábados a las 18:00. Compra anticipada en elgorilateatro.com.mx/boletos.html."
       }
     },
     {
@@ -3264,7 +3271,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       "name": "¿Dónde se presenta la obra?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Teatro Wilberto Cantón · José María Velasco 59 · San José Insurgentes. 9 funciones, sábados 18:00, del 25 de julio al 19 de septiembre."
+        "text": "Teatro Wilberto Cantón · José María Velasco 59 · San José Insurgentes. Temporada 2026, sábados a las 18:00."
       }
     },
     {
@@ -3528,7 +3535,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 Kafka y Humberto Dupeyrón: la libertad negociada, la máscara que salva, la perseverancia de seguir hablando cuando el cuerpo ya aprendió otro idioma.
 </p>
 <p class="font-body text-text-dark/70 text-sm sm:text-base leading-relaxed mb-6 sm:mb-8">
-Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados, 18:00 · Wilberto Cantón · desde $400.
+Improvisación, historia y un monólogo que no cierra la pregunta — <span data-temporada-conteo>6 sábados</span>, 18:00 · Wilberto Cantón · desde $400.
 </p>
 <div class="flex justify-center">
 <a href="/boletos.html" class="link-venta-boletos cta-scene-blood inline-flex items-center gap-2 px-6 py-2.5 text-sm sm:text-base tracking-wide transition-colors">Conseguir entradas</a>
@@ -3606,7 +3613,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
 </summary>
 <div class="mt-3 pl-4 border-l-2 border-accent-gold/40 bg-black/40 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/25">
 <p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
-                Sí: <strong>solo 9 sábados</strong> a las <strong>18:00</strong> en <strong>Teatro Wilberto Cantón</strong>, del <strong>25 de julio al 19 de septiembre</strong>. Compra anticipada en <a href="/boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a> o sigue avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">Instagram</a>.
+                Sí: <strong data-temporada-conteo-solo>solo 6 sábados</strong> a las <strong>18:00</strong> en <strong>Teatro Wilberto Cantón</strong>, <strong data-temporada-rango>del 15 de agosto al 19 de septiembre</strong>. Compra anticipada en <a href="/boletos.html" class="text-accent-gold hover:text-white underline">elgorilateatro.com.mx/boletos.html</a> o sigue avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">Instagram</a>.
               </p>
 </div>
 </details>
@@ -3630,7 +3637,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — 9 sábados
 </summary>
 <div class="mt-3 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
 <p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed">
-                En <strong>Teatro Wilberto Cantón · José María Velasco 59 · San José Insurgentes</strong>: <strong>9 funciones</strong>, todos los sábados a las 18:00, del 25 de julio al 19 de septiembre.
+                En <strong>Teatro Wilberto Cantón · José María Velasco 59 · San José Insurgentes</strong>: quedan <strong data-temporada-conteo>6 sábados</strong>, a las 18:00, <span data-temporada-rango>del 15 de agosto al 19 de septiembre</span>.
               </p>
 </div>
 </details>
@@ -3940,14 +3947,19 @@ Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <st
 </div>
 </div>
 <!-- Barra fija de compra -->
-<a class="barra-compra-fija link-venta-boletos" href="/boletos.html" aria-label="Conseguir entradas — desde $400 · 9 sábados">
+<a class="barra-compra-fija link-venta-boletos" href="/boletos.html" aria-label="Conseguir entradas — desde $400 · 6 sábados">
   <span class="barra-compra-titulo">Conseguir entradas</span>
   <span class="barra-compra-meta" aria-hidden="true">
-    <span class="barra-compra-precio">Desde $400</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo">9 sábados</span>
+    <span class="barra-compra-precio">Desde $400</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo" data-temporada-conteo>6 sábados</span>
   </span>
 </a>
 <script src="js/config.js"></script>
 <script src="js/rutas.js"></script>
+<!-- fechas.js = única fuente de verdad de la temporada; temporada-copy.js rellena
+     el conteo vivo ("6 sábados") y el rango en el copy de oferta de esta página.
+     Deben ir ANTES del script de la barra fija, que lee FechasManager. -->
+<script src="js/fechas.js"></script>
+<script src="js/temporada-copy.js"></script>
 <script>
   (function () {
     function hrefBoletosVenta() {
@@ -4132,12 +4144,20 @@ Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <st
       var lista = (typeof window.PRECIO_GENERAL_TEMPORADA === 'number') ? window.PRECIO_GENERAL_TEMPORADA : 400;
       var vigente = (typeof window.precioGeneralVigente === 'function') ? window.precioGeneralVigente() : lista;
       var preventa = (typeof window.esPreventaVigente === 'function') ? window.esPreventaVigente() : false;
+      /* Conteo vivo de funciones que quedan (fechas.js). Se recalcula solo al
+         pasar cada sábado; si fechas.js no cargó, cae al respaldo del HTML. */
+      var aforoTxt = '6 sábados';
+      try {
+        if (window.FechasManager && window.FechasManager.resumenTemporada) {
+          aforoTxt = window.FechasManager.resumenTemporada().conteo;
+        }
+      } catch (_) {}
       var precioHtml = preventa
-        ? '<span class="barra-compra-precio-tachado">$' + lista + '</span><span class="barra-compra-precio-promo">Desde $' + vigente + '</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo">9 sábados</span>'
-        : '<span class="barra-compra-precio">Desde $' + vigente + '</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo">9 sábados</span>';
+        ? '<span class="barra-compra-precio-tachado">$' + lista + '</span><span class="barra-compra-precio-promo">Desde $' + vigente + '</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo" data-temporada-conteo>' + aforoTxt + '</span>'
+        : '<span class="barra-compra-precio">Desde $' + vigente + '</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo" data-temporada-conteo>' + aforoTxt + '</span>';
       if (urlVenta) links.forEach(function(a) {
         a.href = urlVenta;
-        a.setAttribute('aria-label', 'Conseguir entradas — desde $' + vigente + ' · 9 sábados');
+        a.setAttribute('aria-label', 'Conseguir entradas — desde $' + vigente + ' · ' + aforoTxt);
         a.removeAttribute('data-fuera-temporada');
         var tit = a.querySelector('.barra-compra-titulo');
         if (tit) tit.textContent = 'Conseguir entradas';

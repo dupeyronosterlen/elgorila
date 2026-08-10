@@ -26,3 +26,10 @@ agencia/campana/
 
 # Previews / artefactos locales
 preview/
+wip/
+
+# Originales de cámara sin optimizar (~184 MB). El sitio solo sirve los .webp
+# derivados; ninguna página referencia esta carpeta. Un `git add -A` los subiría
+# al repo (que ya pesa 1.8 GB) y al sitio publicado. Editar aquí, publicar webp.
+img/personaje-aislado/
+img/muestras/

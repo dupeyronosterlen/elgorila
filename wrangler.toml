@@ -17,6 +17,21 @@ binding = "VENTAS"
 id = "1a9c033a4cca4347b05ab8fc5b2f8ba2"
 preview_id = "8342e8b9abe14759ae1e6ea07d8bbd8c"
 
+# ─── Durable Object: inventario por función ──────────────────────────────────
+# El inventario NO puede vivir en KV: KV no es linealizable y limita ~1 escritura
+# por segundo por llave. Dos compras simultáneas se pisaban entre sí (ver el
+# comentario largo en worker/index.js, clase InventarioFuncion).
+# Una instancia por "{teatro}:funcion:{fecha}" → escrituras serializadas.
+# KV queda como réplica de solo lectura para admin/reportes/endpoint público.
+[[durable_objects.bindings]]
+name = "INVENTARIO_DO"
+class_name = "InventarioFuncion"
+
+# SQLite-backed: disponible en el plan gratuito de Workers.
+[[migrations]]
+tag = "v1-inventario-do"
+new_sqlite_classes = ["InventarioFuncion"]
+
 # ─── Secrets ──────────────────────────────────────────────────────────────────
 # JWT_SECRET, STRIPE_SECRET_KEY y STRIPE_WEBHOOK_SECRET NO van aquí.
 # Definirlos en [vars] — aunque sea con valor vacío — hace que wrangler los

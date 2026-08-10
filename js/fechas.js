@@ -108,6 +108,48 @@ const FechasManager = {
     return { regulares: activas, especiales: [] };
   },
 
+  /**
+   * Resumen de lo que QUEDA de temporada, para el copy de oferta del sitio
+   * (barra de compra, FAQ, banners CTA). Se deriva de FUNCIONES_TEMPORADA, así
+   * que alargar la temporada = agregar fechas ahí y todo el copy se actualiza
+   * solo; al pasar cada función el conteo baja sin tocar nada.
+   *
+   * - Excluye funciones atenuadas (prensa/invitación): no son oferta al público.
+   * - Dice "sábados" solo si TODO lo que queda cae en sábado; si se agregan
+   *   miércoles u otros días, cambia a "funciones" en vez de mentir.
+   */
+  resumenTemporada() {
+    const MESES = ['enero','febrero','marzo','abril','mayo','junio',
+                   'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const parse = iso => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); };
+    const largo = iso => { const f = parse(iso); return `${f.getDate()} de ${MESES[f.getMonth()]}`; };
+
+    const fns = this.obtenerFunciones().regulares.filter(f => !f.atenuada);
+    const n   = fns.length;
+    const soloSabados = n > 0 && fns.every(f => parse(f.fecha_iso).getDay() === 6);
+    const sust = soloSabados ? 'sábados' : 'funciones';
+
+    let conteo;
+    if (n === 0)      conteo = 'Temporada finalizada';
+    else if (n === 1) conteo = soloSabados ? 'último sábado' : 'última función';
+    else              conteo = `${n} ${sust}`;
+
+    return {
+      n,
+      conteo,
+      soloSabados,
+      // "solo 6 sábados" / "última función" — para frases que ya traen el "solo"
+      conteoConSolo: n === 0 ? 'Temporada finalizada'
+                   : n === 1 ? conteo
+                   : `solo ${conteo}`,
+      rango: n >= 2 ? `del ${largo(fns[0].fecha_iso)} al ${largo(fns[n - 1].fecha_iso)}`
+           : n === 1 ? `el ${largo(fns[0].fecha_iso)}`
+           : '',
+      primera: n ? fns[0].fecha_iso : null,
+      ultima:  n ? fns[n - 1].fecha_iso : null,
+    };
+  },
+
   obtenerFuncionesEspeciales() { return []; },
   guardarFuncionesEspeciales() {},
   crearFuncionEspecial()       { return null; },
@@ -157,6 +199,11 @@ async function sincronizarFuncionesActivas() {
       }
     });
   } catch (_) { /* sin conexión: se mantiene la config local como respaldo */ }
+  // El backend pudo desactivar fechas: avisar para que el copy de oferta
+  // (barra de compra, FAQ, banners) se recalcule con el conteo ya sincronizado.
+  try {
+    window.dispatchEvent(new CustomEvent('temporada:sincronizada'));
+  } catch (_) { /* navegador sin CustomEvent: el copy ya quedó con la config local */ }
 }
 
 if (typeof window !== 'undefined') {
