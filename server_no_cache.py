@@ -64,7 +64,7 @@ class NoCacheHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(405)
         self.end_headers()
 
-PORT = 8000
+PORT = int(os.environ.get('PORT', 8000))
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 

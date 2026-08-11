@@ -66,10 +66,27 @@ async function cargarConfirmacion() {
 
     // --- Stripe: si hay session_id, obtener venta del backend (reintentar si webhook tarda) ---
     if (sessionId && window.API_BASE) {
+        // Con session_id el comprador YA pagó: fuera el formulario de pago,
+        // que verlo otra vez parece que la compra no se hizo.
+        mostrarEsperandoConfirmacion();
         for (let intento = 0; intento < 6; intento++) {
             try {
                 const tid = typeof window.teatroIdFromUrl === 'function' ? window.teatroIdFromUrl() : (window.TEATRO_ID || 'wilberto');
                 const res = await fetch(`${window.API_BASE}/api/${tid}/venta/` + encodeURIComponent(sessionId));
+
+                // 410 = reembolsada o cancelada. Es una respuesta definitiva: no
+                // tiene caso reintentar ni caer al localStorage, que mostraría una
+                // pantalla de "compra exitosa" con un boleto que ya no sirve.
+                if (res.status === 410) {
+                    let msg = 'Este boleto fue cancelado o reembolsado.';
+                    try {
+                        const data = await res.json();
+                        if (data && data.error) msg = data.error;
+                    } catch (_) {}
+                    mostrarBoletoInvalido(msg);
+                    return;
+                }
+
                 if (res.ok) {
                     const venta = await res.json();
                     let local = null;
@@ -79,7 +96,9 @@ async function cargarConfirmacion() {
                         : null;
                     ordenCompra = {
                         estado: 'completada',
-                        email: (local && local.email) || venta.email || '',
+                        // El correo del API manda: el local puede ser de una compra
+                        // anterior, y con Stripe el comprador lo captura allá.
+                        email: venta.email || (local && local.email) || '',
                         nombre: (local && local.nombre) || '',
                         numeroOrden: venta.certificado || venta.codigo || (local && local.numeroOrden) || sessionId,
                         certificado: venta.certificado || venta.codigo,
@@ -109,11 +128,12 @@ async function cargarConfirmacion() {
     // --- Modo localStorage (simulado o fallback) ---
     const ordenGuardada = localStorage.getItem('orden_compra');
     if (!ordenGuardada) {
+        // Con session_id el comprador YA pagó: nunca se le devuelve a la taquilla.
         if (sessionId) {
-            alert('La venta se está procesando. Si ya pagaste, revisa tu correo. Si no, intenta de nuevo.');
-        } else {
-            alert('No hay una orden de compra. Redirigiendo a la página de boletos...');
+            mostrarPagoSinBoletos();
+            return;
         }
+        alert('No hay una orden de compra. Redirigiendo a la página de boletos...');
         window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
         return;
     }
@@ -133,8 +153,48 @@ async function cargarConfirmacion() {
 }
 
 // Mostrar formulario de pago
+/** Muestra una sola tarjeta y esconde las demás (pago / espera / inválido / éxito). */
+function mostrarSoloTarjeta(idVisible) {
+    ['contenedor-pago', 'contenedor-espera', 'contenedor-invalido', 'contenedor-exito'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', id !== idVisible);
+    });
+}
+
+/** "Confirmando tu pago…" mientras el webhook de Stripe registra la venta. */
+function mostrarEsperandoConfirmacion() {
+    mostrarSoloTarjeta('contenedor-espera');
+}
+
+/**
+ * Se agotaron los reintentos y no hay boletos que mostrar. El comprador ya pagó,
+ * así que NO se le manda de vuelta a la taquilla: se le dice qué pasó y a dónde
+ * escribir. El boleto le llega por correo en cuanto el webhook entre.
+ */
+function mostrarPagoSinBoletos() {
+    const titulo = document.getElementById('espera-titulo');
+    const texto  = document.getElementById('espera-texto');
+    const ayuda  = document.getElementById('espera-ayuda');
+    if (titulo) titulo.textContent = 'Tu pago se registró';
+    if (texto) {
+        texto.innerHTML = 'Estamos tardando más de lo normal en generar tus boletos. '
+            + '<strong>Tu lugar está apartado</strong> y los recibirás por correo en unos minutos. '
+            + 'Revisa también tu carpeta de correo no deseado.';
+    }
+    if (ayuda) ayuda.classList.remove('hidden');
+    mostrarSoloTarjeta('contenedor-espera');
+}
+
+/** Boleto reembolsado o cancelado: respuesta definitiva del servidor. */
+function mostrarBoletoInvalido(mensaje) {
+    const p = document.getElementById('invalido-mensaje');
+    if (p && mensaje) p.textContent = mensaje;
+    mostrarSoloTarjeta('contenedor-invalido');
+}
+
 function mostrarFormularioPago() {
     if (!ordenCompra) return;
+    mostrarSoloTarjeta('contenedor-pago');
 
     const subtotal       = ordenCompra.subtotal       || ordenCompra.total || 0;
     const total          = ordenCompra.total          || 0;
@@ -252,11 +312,7 @@ function procesarPago() {
 
 // Mostrar pantalla de éxito
 function mostrarExito() {
-    const contenedorPago = document.getElementById('contenedor-pago');
-    const contenedorExito = document.getElementById('contenedor-exito');
-
-    if (contenedorPago) contenedorPago.classList.add('hidden');
-    if (contenedorExito) contenedorExito.classList.remove('hidden');
+    mostrarSoloTarjeta('contenedor-exito');
 
     // Único punto de conversión purchase (GA4 + Meta).
     if (window.ElGorilaAnalytics && ordenCompra) {
