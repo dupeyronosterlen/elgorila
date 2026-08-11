@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html class="dark" lang="es">
 <head>
-<!-- Google Tag Manager: se inyecta hasta que la página termina de cargar (el tracking puede esperar a que elijan asientos) -->
+<!-- Google Tag Manager — en <head> (no defer a load: PageView/pixel/GA4 deben medir todo el tráfico de pauta) -->
 <script>
 window.dataLayer = window.dataLayer || [];
-window.addEventListener('load', function () {
-  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','GTM-P4BDXRN9');
-});
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-P4BDXRN9');
 </script>
 <!-- End Google Tag Manager -->
+<script src="js/utm.js"></script>
 <script src="js/analytics.js" data-meta="1" data-viewcontent="boletos"></script>
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
@@ -1502,7 +1501,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 
 <script src="js/rutas.js"></script>
-<script src="js/utm.js"></script>
 <script src="js/config.js"></script>
 <script>
 (function() {
