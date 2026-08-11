@@ -164,13 +164,219 @@ a   { color: inherit; }
 .sp + .sd--mid { border-top: none; }
 #main-content {
   border-top: none;
-  padding-top: max(7.75rem, calc(6.5rem + env(safe-area-inset-top)));
+  padding-top: max(6.5rem, calc(5.25rem + env(safe-area-inset-top)));
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
 }
 @media (max-width: 767px) {
   #main-content {
-    padding-top: max(5.75rem, calc(5rem + env(safe-area-inset-top)));
+    padding-top: max(4.75rem, calc(4.25rem + env(safe-area-inset-top)));
   }
 }
+
+/* ── PREVIEW BOFU ─────────────────────────────────────────── */
+.preview-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 250;
+  background: #f5c518; color: #1a1411;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+  text-align: center; padding: 6px 10px;
+  border-bottom: 2px solid #1a1411;
+}
+.preview-banner a { color: #1a1411; font-weight: 600; text-decoration: underline; }
+body { padding-top: 0; }
+.logo-gorila-sello img { height: 3rem !important; }
+.logo-37-sello img { height: 4.5rem !important; }
+#main-content {
+  border-top: none;
+  padding-top: max(5rem, calc(4.25rem + env(safe-area-inset-top)));
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (max-width: 767px) {
+  #main-content { padding-top: max(4.25rem, calc(3.75rem + env(safe-area-inset-top))); }
+}
+
+.bofu-urgencia {
+  display: inline-flex; align-items: center; gap: .4em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: #ffb4a8;
+  background: rgba(212,58,26,.15); border: 1px solid rgba(212,58,26,.4);
+  padding: 4px 9px; margin-bottom: 10px;
+}
+.bofu-title-compact {
+  font-family: var(--display); font-size: 28px; font-weight: 500;
+  line-height: 1.05; color: var(--d-fg); margin: 0 0 10px;
+}
+.bofu-title-compact em { font-style: italic; color: var(--gold); }
+.bofu-chips {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px;
+}
+.bofu-chip {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .07em;
+  text-transform: uppercase; padding: 4px 7px;
+  border: 1px solid rgba(217,155,58,.35); color: var(--d-soft);
+}
+.bofu-reviews {
+  margin: 18px 0 0; padding-top: 14px;
+  border-top: 1px solid var(--d-faint);
+}
+.bofu-reviews-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 8px; display: block;
+}
+.bofu-review {
+  padding: 8px 10px; margin-bottom: 6px;
+  border-left: 2px solid var(--gold); background: rgba(217,155,58,.05);
+  font-size: 14px; line-height: 1.4; color: var(--d-soft);
+}
+.bofu-review:last-child { margin-bottom: 0; }
+.bofu-review strong { color: var(--gold); font-size: 10px; letter-spacing: .06em; }
+.bofu-asientos-nota {
+  font-family: var(--cuerpo); font-size: 14px; line-height: 1.45;
+  color: var(--d-soft); margin: -4px 0 14px; padding: 10px 12px;
+  border: 1px solid var(--d-faint); background: rgba(0,0,0,.2);
+}
+.bofu-logistica {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+  line-height: 1.5; color: var(--d-soft); margin: 16px 0 0; text-align: center;
+}
+.bofu-logistica a { color: var(--gold); text-decoration: underline; }
+.bofu-codigos-linea {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--d-faint);
+  font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
+  line-height: 1.5; color: rgba(241,234,217,.55); text-align: center;
+}
+.bofu-codigos-linea strong { color: var(--gold); font-weight: 600; }
+.bofu-codigos-linea.hidden { display: none; }
+#promo-grupo-banner:not(.hidden) {
+  margin-top: 10px; padding: 10px 12px;
+  border: 1px solid rgba(217,155,58,.35);
+  background: rgba(217,155,58,.08);
+  font-family: var(--cuerpo); font-size: 15px; line-height: 1.45;
+  color: var(--d-soft); text-align: center;
+}
+#promo-grupo-banner:not(.hidden) strong { color: var(--gold); }
+.barra-reserva-fija {
+  position: fixed; left: 0; right: 0;
+  bottom: 0;
+  z-index: 55; display: flex;
+  align-items: center; justify-content: center;
+  padding: 16px 20px max(16px, env(safe-area-inset-bottom, 0px));
+  border: none; border-top: 1px solid rgba(241,234,217,.12);
+  cursor: pointer;
+  background: var(--red); color: #fff;
+  font-family: var(--cuerpo); font-size: 18px; font-weight: 600;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.35);
+  transition: opacity .15s;
+}
+.barra-reserva-fija:hover:not(:disabled) { opacity: .92; }
+.barra-reserva-fija:disabled {
+  opacity: .45; cursor: not-allowed;
+  background: #3a2e26;
+}
+.barra-reserva-fija.oculta-checkout {
+  display: none !important;
+}
+body.checkout-abierto #main-content {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+}
+body.checkout-abierto .barra-reserva-spacer {
+  display: none;
+}
+/* Solo sticky abajo — el botón inline queda oculto (main.js lo sigue usando) */
+#btn-continuar {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  padding: 0 !important; margin: -1px !important;
+  overflow: hidden !important; clip: rect(0,0,0,0) !important;
+  white-space: nowrap !important; border: 0 !important;
+}
+.barra-reserva-spacer {
+  height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+.ichk-trust-row {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 14px;
+  margin: 10px 0 4px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: rgba(26,20,17,.55);
+}
+.ichk-cupon-details summary {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--cuerpo); font-size: 16px; font-weight: 600;
+  letter-spacing: .01em; text-transform: none;
+  color: #1a56db;
+  background: rgba(26, 86, 219, .08);
+  border: 1px dashed rgba(26, 86, 219, .55);
+  border-radius: 0;
+  cursor: pointer;
+  padding: 12px 16px;
+  list-style: none;
+  text-align: center;
+  transition: background .15s, border-color .15s, color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ichk-cupon-details summary:hover {
+  color: #1e40af;
+  background: rgba(26, 86, 219, .14);
+  border-color: rgba(26, 86, 219, .75);
+}
+.ichk-cupon-details[open] summary {
+  color: #1e40af;
+  border-style: solid;
+  margin-bottom: 4px;
+}
+.ichk-cupon-details summary::-webkit-details-marker { display: none; }
+.ayuda-colapsada { border-top: 1px solid var(--d-faint); }
+.ayuda-colapsada .faq-item { border-color: var(--d-faint); }
+.ayuda-colapsada .faq-summary { font-size: 17px; }
+.logo-gorila-sello a, .logo-37-sello a { pointer-events: none; cursor: default; }
+#fechas-progressive-ui { margin-top: 10px; }
+#fechas-progressive-ui:empty { display: none; }
+
+/* Banner cupón URL (victoria visual) */
+.cupon-url-banner {
+  display: none; margin: 12px 0 14px; padding: 12px 14px;
+  border: 1px solid rgba(217,155,58,.55);
+  background: linear-gradient(135deg, rgba(217,155,58,.18) 0%, rgba(217,155,58,.08) 100%);
+  border-left: 3px solid var(--gold);
+}
+.cupon-url-banner.visible { display: block; }
+.cupon-url-kicker {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+}
+.cupon-url-titulo {
+  font-family: var(--cuerpo); font-size: 16px; line-height: 1.4;
+  color: var(--d-fg); margin: 0 0 6px;
+}
+.cupon-url-precios {
+  font-family: var(--display); font-size: 22px; color: var(--d-fg);
+}
+.cupon-url-tachado {
+  text-decoration: line-through; opacity: .45; margin-right: 8px; font-size: 18px;
+}
+.cupon-url-nota {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+  color: var(--d-soft); margin-top: 6px;
+}
+
+/* Logos de pago */
+.ichk-trust-logos {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 10px 14px; margin: 12px 0 6px;
+}
+.ichk-trust-logo {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; height: 28px; padding: 0 8px;
+  background: #fff; border: 1px solid rgba(26,20,17,.12); border-radius: 3px;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: .04em; color: #1a1411; text-transform: uppercase;
+}
+.ichk-trust-logo--stripe { color: #635bff; }
+.ichk-trust-logo--visa { color: #1a1f71; font-style: italic; }
+.ichk-trust-logo--mc { color: #eb001b; }
+.ichk-trust-logo--oxxo { background: #ffd100; color: #1a1411; font-weight: 700; }
 
 /* ── CABECERA DE PORTADA (compacta) ──────────────────────── */
 .cover-section {
@@ -486,22 +692,8 @@ a   { color: inherit; }
   letter-spacing: .12em; text-transform: uppercase; color: var(--gold);
 }
 
-/* ── BOTÓN CONTINUAR ─────────────────────────────────────── */
-#btn-continuar {
-  display: block; width: 100%;
-  margin-top: 22px; padding: 20px 24px;
-  background: var(--red) !important;
-  color: #fff !important;
-  font-family: var(--cuerpo) !important;
-  font-size: 22px !important; font-weight: 600 !important;
-  letter-spacing: .01em !important;
-  text-align: center; border: none !important;
-  border-radius: 0 !important; cursor: pointer;
-  transition: opacity .15s; line-height: 1.2;
-  -webkit-tap-highlight-color: transparent;
-}
-#btn-continuar:disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
-#btn-continuar:not(:disabled):hover { opacity: .88; }
+/* ── BOTÓN CONTINUAR (oculto visualmente; sticky abajo es el CTA) ── */
+/* Estilos sr-only definidos arriba en .barra-reserva-fija block */
 
 /* ── SINOPSIS (papel) ────────────────────────────────────── */
 .sinopsis-texto {
@@ -1008,39 +1200,46 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </a>
 </div>
 
-<!-- ══ ADQUIERE TUS BOLETOS — oscuro-mid ══════════════════════ -->
+<!-- ══ TAQUILLA BOFU ═══════════════════════════════════════════ -->
 <section class="sd--mid" id="main-content">
   <div class="inner">
-    <div class="sec-head">
-      <span class="sec-num">Franz Kafka · Monólogo · 1h 20min</span>
-      <h2 class="sec-title">Adquiere tus<br><em>entradas</em></h2>
-      <p class="sec-sede">Teatro Wilberto Cantón · San José Insurgentes, CDMX</p>
-      <p class="badge-temporada" id="badge-temporada-boletos" hidden><span class="badge-temporada-dot" aria-hidden="true"></span><span id="badge-temporada-boletos-texto"></span></p>
-      <p id="badge-temporada-boletos-nota" hidden style="font-family:var(--display);font-style:italic;font-size:15px;letter-spacing:.02em;color:var(--gold);margin-top:3px;"><span data-temporada-conteo-solo data-temporada-cap>Solo 6 sábados</span>.</p>
-    </div>
+    <p class="bofu-urgencia" role="status">
+      <span aria-hidden="true">●</span>
+      <span data-temporada-conteo-solo data-temporada-cap>Solo 6 sábados</span> · sáb 18:00 · desde $400
+    </p>
 
-    <div class="hook-boletos">
-      <img src="img/BOLETOS/hook-humberto.jpg" alt="Humberto Dupeyrón en El Gorila de Franz Kafka" loading="lazy">
-      <div class="hook-boletos-fade">
-        <p>&ldquo;¿Cuánto de domesticados estamos nosotros también?&rdquo;</p>
-      </div>
-    </div>
+    <h1 class="bofu-title-compact">Elige tu <em>función</em></h1>
 
-    <div class="rule"></div>
+    <div class="bofu-chips" aria-hidden="true">
+      <span class="bofu-chip">80 min</span>
+      <span class="bofu-chip">Wilberto Cantón</span>
+      <span class="bofu-chip">Sin cargo por servicio</span>
+    </div>
 
     <div id="banner-invitacion" class="invitacion-banner hidden" aria-live="polite"></div>
 
-    <!-- Fechas -->
+    <!-- 1. FECHAS (primero — BOFU) -->
     <div id="fechas-fecha-wrap">
-    <span class="fecha-sub-label">Selecciona una fecha</span>
-    <div id="botones-fecha"><!-- JS --></div>
-    <div id="fechas-progressive-ui" aria-live="polite"></div>
+      <span class="fecha-sub-label">Selecciona una fecha</span>
+      <div id="botones-fecha"><!-- JS --></div>
+      <div id="fechas-progressive-ui" aria-live="polite" hidden></div>
     </div>
     <p id="fecha-seleccionada-texto" hidden aria-live="polite"></p>
     <div id="mensaje-agotado" class="hidden" aria-live="polite">Esta función está agotada.</div>
 
-    <!-- Tipos de boleto -->
+    <div id="cupon-url-banner" class="cupon-url-banner" aria-live="polite" hidden>
+      <div class="cupon-url-kicker">Código detectado</div>
+      <p class="cupon-url-titulo" id="cupon-url-titulo"></p>
+      <p class="cupon-url-precios" id="cupon-url-precios"></p>
+      <p class="cupon-url-nota">Se confirma al pagar. Elige fecha y boletos primero.</p>
+    </div>
+
+    <!-- 2. BOLETOS -->
     <span class="boletos-sub-label">Boletos</span>
+
+    <p class="bofu-asientos-nota">
+      <strong>Acceso general.</strong> Eliges asiento al llegar (llega 30 min antes · 17:30 para función de 18:00).
+    </p>
 
     <!-- General -->
     <div class="ticket-fila">
@@ -1089,13 +1288,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span id="total-precio">$0.00 MXN</span>
       </div>
       <div id="promo-grupo-banner" class="promo-grupo-banner hidden" aria-live="polite"></div>
+      <p class="bofu-codigos-linea" id="bofu-codigos-linea">
+        Códigos al pagar: <strong>ESPEJO</strong> (2 generales $600) · <strong>GRUPO20</strong> (5+ generales −20%)
+      </p>
     </div>
 
-    <button id="btn-continuar" type="button" onclick="irAConfirmacion()" disabled>
+    <!-- 3. Prueba social -->
+    <div class="bofu-reviews" aria-label="Opiniones del público">
+      <span class="bofu-reviews-label">Quien ya fue</span>
+      <div class="bofu-review"><strong>★★★★★</strong> «La mejor obra de teatro que he visto en mi vida.»</div>
+      <div class="bofu-review"><strong>★★★★★</strong> «Reí mucho y también lloré. Actuación colosal.»</div>
+    </div>
+
+    <p class="bofu-logistica">
+      Teatro Wilberto Cantón · Velasco 59, San José Insurgentes ·
+      <a href="https://www.google.com/maps/search/?api=1&amp;query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX" target="_blank" rel="noopener noreferrer">Maps</a>
+    </p>
+
+    <div class="barra-reserva-spacer" aria-hidden="true"></div>
+
+    <button id="btn-continuar" type="button" onclick="irAConfirmacion()" disabled aria-hidden="true" tabindex="-1">
       Selecciona una fecha
     </button>
   </div>
 </section>
+
+<button type="button" id="barra-reserva-fija" class="barra-reserva-fija" disabled aria-label="Reservar boletos">
+  Selecciona una fecha
+</button>
 
 <!-- ══ PANEL INLINE: CONFIRMAR Y PAGAR ════════════════════════
      Aparece al presionar "Continuar" — sin cambio de página.
@@ -1148,30 +1368,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       ← Cambiar mis entradas
     </button>
 
-    <!-- Cupón de descuento (opcional) -->
-    <div class="ichk-cupon-wrap">
-      <label class="ichk-label" for="ichk-cupon-input">
-        ¿Tienes un cupón?
-        <span class="ichk-hint">Opcional — ingresa el código y pulsa Aplicar</span>
-      </label>
-      <div class="ichk-cupon-fila">
-        <input
-          type="text"
-          id="ichk-cupon-input"
-          class="ichk-input"
-          placeholder="Código"
-          autocomplete="off"
-          spellcheck="false"
-          maxlength="32"
-        >
-        <button type="button" id="btn-aplicar-cupon" class="ichk-btn-cupon" onclick="aplicarCuponInline()">Aplicar</button>
+    <!-- Cupón colapsado -->
+    <details class="ichk-cupon-details ichk-cupon-wrap">
+      <summary>¿Tienes un código promocional?</summary>
+      <div style="padding-top:8px;">
+        <div class="ichk-cupon-fila">
+          <input
+            type="text"
+            id="ichk-cupon-input"
+            class="ichk-input"
+            placeholder="ESPEJO o GRUPO20"
+            autocomplete="off"
+            spellcheck="false"
+            maxlength="32"
+            style="height:48px;font-size:16px;"
+          >
+          <button type="button" id="btn-aplicar-cupon" class="ichk-btn-cupon" onclick="aplicarCuponInline()">Aplicar</button>
+        </div>
+        <div id="ichk-cupon-msg" aria-live="polite"></div>
       </div>
-      <div id="ichk-cupon-msg" aria-live="polite"></div>
-    </div>
+    </details>
 
     <!-- Nombre y correo se piden una sola vez en el pago seguro (Stripe). -->
     <p class="ichk-hint" style="margin-top:4px;line-height:1.5">
-      En el siguiente paso escribes tu <strong>nombre y correo</strong> — ahí te llega tu boleto digital con QR.
+      En el siguiente paso escribes tu <strong>nombre y correo</strong> — ahí te llega tu boleto digital con QR al instante.
     </p>
 
     <!-- Mensaje de error -->
@@ -1183,141 +1403,60 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span class="ichk-flecha" aria-hidden="true">→</span>
     </button>
 
+    <div class="ichk-trust-logos" aria-label="Métodos de pago aceptados">
+      <span class="ichk-trust-logo ichk-trust-logo--stripe">stripe</span>
+      <span class="ichk-trust-logo ichk-trust-logo--visa">VISA</span>
+      <span class="ichk-trust-logo ichk-trust-logo--mc">Mastercard</span>
+      <span class="ichk-trust-logo ichk-trust-logo--oxxo">OXXO</span>
+    </div>
     <!-- Nota de seguridad -->
     <p class="ichk-seguridad" aria-label="Pago seguro">
-      🔒 Tarjeta o OXXO · Procesado por Stripe · Conexión cifrada
+      🔒 Compra 100% segura · Conexión cifrada · Procesado por Stripe
     </p>
     <p style="font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:rgba(26,20,17,.45);text-align:center;margin-top:-6px;">
       Pago en OXXO disponible hasta 48 hrs antes de la función
     </p>
     <p style="font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:rgba(26,20,17,.42);text-align:center;margin-top:8px;line-height:1.45;">
       Esta taquilla no cobra cargo por servicio.
-      También en <a href="https://www.ticketmaster.com.mx" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;">Ticketmaster</a>
-      y <a href="https://teatrando.com.mx" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;">Teatrando</a>
-      (pueden aplicar cargos de esas plataformas).
     </p>
     <p class="ichk-terminos">Al continuar, aceptas los <a href="/terminos.html" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a> y la <a href="/privacidad.html" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.</p>
 
   </div>
 </section>
 
-<!-- ══ 3. SINOPSIS — papel ════════════════════════════════════ -->
-<section class="sp" id="seccion-sinopsis">
+<!-- ══ AYUDA COLAPSADA (no compite con la taquilla) ═══════════ -->
+<section class="sd ayuda-colapsada" id="ayuda-boletos">
   <div class="inner">
     <div class="sec-head">
-      <span class="sec-num">La obra</span>
-      <h2 class="sec-title"><em>Sinopsis</em></h2>
-    </div>
-    <div class="rule"></div>
-    <img alt="Imagen de sinopsis" id="imagen-sinopsis" src="img/SINOPSIS/mobile/1.webp" loading="lazy" decoding="async">
-    <p class="sinopsis-texto">Peter es un simio capturado en la selva africana que, para sobrevivir en cautiverio, aprendió a comportarse como humano. Hoy, convertido en artista de variedades, sube al escenario a dar un informe ante una academia científica sobre cómo logró esa transformación.</p>
-    <p class="sinopsis-texto">Lo cuenta con humor crudo y sin filtros —afilado, mexicano— cómo dejó de ser animal para "encajar" en un mundo que no le pidió permiso. La palabra no adorna: piensa, confronta y expone preguntas esenciales sobre la obediencia, la identidad y el precio de pertenecer.</p>
-    <p class="sinopsis-texto">Verlo actuar incomoda: es escuchar a alguien que aprendió a hablar, pensar y actuar como nosotros… y que, desde esa lucidez, nos regresa la mirada y nos pregunta cuánto de "domesticados" estamos nosotros también.</p>
-  </div>
-</section>
-
-<!-- ══ 4. FAQ — oscuro ════════════════════════════════════════ -->
-<section class="sd" id="faq">
-  <div class="inner">
-    <div class="sec-head">
-      <span class="sec-num">Información</span>
-      <h2 class="sec-title">Preguntas<br><em>frecuentes</em></h2>
+      <span class="sec-num">Opcional</span>
+      <h2 class="sec-title">¿Necesitas<br><em>ayuda?</em></h2>
     </div>
     <div class="rule"></div>
 
     <details class="faq-item">
-      <summary class="faq-summary">
-        <span>¿Hay descuentos disponibles?</span>
-        <span class="faq-chevron" aria-hidden="true">+</span>
-      </summary>
-      <p class="faq-resp">Hay tres formas de obtener descuento:</p>
-      <ul class="faq-resp" style="margin-top:8px;padding-left:1.2em;">
-        <li><strong>Con credencial</strong> (INAPAM, estudiante o maestro): tarifa fija <strong>$280</strong> (−30%) — elige esa fila; no usa cupón.</li>
-        <li><strong>Grupo</strong>: <strong>5+ generales</strong>, todos generales → −20% se aplica automáticamente.</li>
-        <li><strong>Pareja</strong>: código <strong>ESPEJO</strong> — 2 boletos generales por $600 total, se ingresa en el pago.</li>
+      <summary class="faq-summary"><span>Sinopsis breve</span><span class="faq-chevron" aria-hidden="true">+</span></summary>
+      <p class="faq-resp">Un simio obligado a «humanizarse» para sobrevivir comparece ante una academia. Humberto Dupeyrón lleva este monólogo de Kafka 37 años — humor afilado y una pregunta incómoda sobre cuánto de «domesticados» estamos nosotros.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-summary"><span>¿Hay descuentos?</span><span class="faq-chevron" aria-hidden="true">+</span></summary>
+      <ul class="faq-resp" style="padding-left:1.2em;">
+        <li>Credencial (INAPAM, estudiante, maestro): <strong>$280</strong> en su fila.</li>
+        <li>Código <strong>ESPEJO</strong>: 2 generales por $600.</li>
+        <li>Código <strong>GRUPO20</strong>: 5+ generales −20%.</li>
       </ul>
     </details>
 
     <details class="faq-item">
-      <summary class="faq-summary">
-        <span>¿Qué pasa si la función se cancela o cambia de fecha?</span>
-        <span class="faq-chevron" aria-hidden="true">+</span>
-      </summary>
-      <p class="faq-resp">Si la producción cancela o reprograma la función, te contactamos por correo y se ofrece reembolso completo o cambio de fecha.</p>
+      <summary class="faq-summary"><span>¿Cómo llego al teatro?</span><span class="faq-chevron" aria-hidden="true">+</span></summary>
+      <p class="faq-resp">Teatro Wilberto Cantón — José María Velasco 59, San José Insurgentes, CDMX. Estacionamiento propio. Funciones sábados 18:00 — llega 30 min antes.</p>
+      <p class="faq-resp" style="margin-top:10px;"><a href="https://www.google.com/maps/search/?api=1&amp;query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:underline;">Abrir en Google Maps ↗</a></p>
     </details>
 
     <details class="faq-item">
-      <summary class="faq-summary">
-        <span>¿A qué hora debo llegar?</span>
-        <span class="faq-chevron" aria-hidden="true">+</span>
-      </summary>
-      <p class="faq-resp">Te recomendamos llegar <strong>30 minutos antes</strong>: a las <strong>17:30</strong> para funciones de <strong>18:00</strong>. El acceso a la sala abre a las <strong>17:55</strong>. Al llegar, pásate por <strong>taquilla</strong> para la selección de asientos.</p>
+      <summary class="faq-summary"><span>¿Cómo recibo mis boletos?</span><span class="faq-chevron" aria-hidden="true">+</span></summary>
+      <p class="faq-resp">Al completar el pago recibes tu boleto digital con QR por correo. Muéstralo en tu celular al llegar.</p>
     </details>
-
-    <details class="faq-item">
-      <summary class="faq-summary">
-        <span>¿Cuánto dura la función?</span>
-        <span class="faq-chevron" aria-hidden="true">+</span>
-      </summary>
-      <p class="faq-resp">Aproximadamente <strong>1 hora 20 minutos, sin intermedio</strong>.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary class="faq-summary">
-        <span>¿Hay estacionamiento?</span>
-        <span class="faq-chevron" aria-hidden="true">+</span>
-      </summary>
-      <p class="faq-resp">Sí, el <strong>Teatro Wilberto Cantón</strong> cuenta con estacionamiento propio para el público.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary class="faq-summary">
-        <span>¿Cómo recibo mis boletos?</span>
-        <span class="faq-chevron" aria-hidden="true">+</span>
-      </summary>
-      <p class="faq-resp">Tus boletos llegan por correo electrónico en formato digital (QR) justo después de completar tu compra. Solo debes mostrarlos en tu celular al llegar al teatro.</p>
-    </details>
-  </div>
-</section>
-
-<!-- ══ 5. TEATRO — papel ══════════════════════════════════════ -->
-<section class="sp">
-  <div class="inner">
-    <div class="sec-head">
-      <span class="sec-num">Sede</span>
-      <h2 class="sec-title">Cómo<br><em>llegar</em></h2>
-    </div>
-    <div class="rule"></div>
-
-    <div class="mapa-titulo">
-      <span>Teatro Wilberto Cantón</span>
-      <span class="mapa-badge">Ubicación</span>
-    </div>
-    <div class="mapa-teatro-wrap">
-      <iframe title="Mapa de ubicación — Teatro Wilberto Cantón" id="mapa-teatro-iframe" data-src="https://www.google.com/maps?q=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX&output=embed" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
-      <noscript><iframe title="Mapa de ubicación — Teatro Wilberto Cantón" src="https://www.google.com/maps?q=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX&output=embed" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></noscript>
-    </div>
-
-    <div class="mapa-direccion">
-      <span class="mapa-direccion-texto">Teatro Wilberto Cantón — José María Velasco 59, San José Insurgentes, CDMX, CP 03900</span>
-      <a class="mapa-direccion-link" href="https://www.google.com/maps/search/?api=1&query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX" target="_blank" rel="noopener noreferrer">
-        Ver en Google Maps ↗
-      </a>
-    </div>
-
-    <div class="contacto-bloque">
-      <div class="sec-head" style="margin-bottom:12px;">
-        <span class="sec-num">Contacto</span>
-      </div>
-      <div class="contacto-items">
-        <a class="contacto-item contacto-item--link" href="mailto:elgorilateatro@gmail.com">
-          <span class="contacto-icon">
-            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </span>
-          <span class="contacto-val">elgorilateatro@gmail.com</span>
-        </a>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -1332,22 +1471,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <a class="footer-link" href="mailto:elgorilateatro@gmail.com">elgorilateatro@gmail.com</a>
     </div>
     <div style="text-align:center;display:flex;flex-direction:column;gap:8px;">
-      <a class="footer-link" href="/funciones.html" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">
-        <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Funciones y fechas
-      </a>
-      <a class="footer-link" href="/sobre-la-obra.html" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">
-        <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Sobre la obra
-      </a>
-      <a class="footer-link" href="/presskit/presskit2026.html" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">
-        <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Presskit
-      </a>
-      <a class="footer-link" href="#faq" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">
-        <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Preguntas frecuentes
-      </a>
+      <a class="footer-link" href="/sobre-la-obra.html" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">Sobre la obra</a>
     </div>
     <div style="text-align:right;">
       <div class="footer-brand">EL GORILA</div>
@@ -1385,6 +1509,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   if (window.VENTA_PUBLICA_ABIERTA !== false) return;
   var q = new URLSearchParams(window.location.search);
   if (q.get('preview') === '1' || q.get('dev') === '1') return;
+  if (/boletos-preview\.html$/i.test(location.pathname)) return;
   window.location.replace(window.INSTAGRAM_BOLETOS_URL || 'https://www.instagram.com/elgorilateatro');
 })();
 </script>
@@ -1613,150 +1738,258 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script src="js/invitacion-boletos.js"></script>
 
-<!-- Fechas: 3 visibles → «Ver más fechas»; con fecha elegida → «Ver menos» -->
+<!-- BOFU: fechas visibles, preselección, sticky, cupón URL banner -->
 <script>
 (function() {
-  var wrap = document.getElementById('fechas-fecha-wrap');
-  var fechaTexto = document.getElementById('fecha-seleccionada-texto');
-  var colapsado = false;
-  var stepIndex = 0;
-  var items = [];
-  var steps = [];
+  var preseleccionHecha = false;
+  var fallbackIntentado = false;
+  var fechasExpandidas = false;
+  var FECHAS_OCULTAS_INICIAL = 3;
 
-  function flattenItems(container) {
-    var out = [];
-    Array.from(container.children).forEach(function(el) {
-      var mes = el.getAttribute('data-fecha-mes')
-        || (el.querySelector('[data-fecha-mes]') && el.querySelector('[data-fecha-mes]').getAttribute('data-fecha-mes'))
-        || (el.querySelector('[data-fecha-clave]') && el.querySelector('[data-fecha-clave]').getAttribute('data-fecha-clave').slice(0, 7));
-      if (!mes) return;
-      out.push({ el: el, mes: mes, idx: out.length });
-    });
-    return out;
-  }
-
-  function buildSteps(list) {
-    if (!list.length) return [];
-    var out = [];
-    var batch = 3;
-    for (var i = 0; i < list.length; i += batch) {
-      var maxIdx = Math.min(i + batch - 1, list.length - 1);
-      out.push({
-        maxIdx: maxIdx,
-        btn: maxIdx < list.length - 1 ? 'Ver más fechas \u2192' : null
-      });
+  var CUPONES_URL = {
+    ESPEJO: {
+      titulo: 'ESPEJO activo — 2 boletos generales',
+      requiere: { general: 2, total: 2, soloGeneral: true },
+      precioFinal: 600,
+      precioLista: 800
+    },
+    GRUPO20: {
+      titulo: 'GRUPO20 — 20% en 5+ generales',
+      requiere: { general: 5, total: null, soloGeneral: true },
+      porcentaje: 0.20
     }
-    return out;
+  };
+
+  function codigoUrl() {
+    return (new URLSearchParams(location.search).get('cupon') || '').trim().toUpperCase();
   }
 
-  function hayFechaSeleccionada() {
-    return fechaTexto && !fechaTexto.hidden && fechaTexto.textContent.trim().length > 0;
+  function leerQty(id) {
+    var el = document.getElementById(id);
+    return el ? (parseInt(el.textContent, 10) || 0) : 0;
   }
 
-  function setColapsado(val) {
-    colapsado = val;
-    if (wrap) wrap.classList.toggle('fechas-menu-colapsado', colapsado);
-    renderControles();
+  function pintarBannerCuponUrl() {
+    var codigo = codigoUrl();
+    var banner = document.getElementById('cupon-url-banner');
+    var titulo = document.getElementById('cupon-url-titulo');
+    var precios = document.getElementById('cupon-url-precios');
+    if (!banner || !codigo || !CUPONES_URL[codigo]) {
+      if (banner) { banner.hidden = true; banner.classList.remove('visible'); }
+      return;
+    }
+    var cfg = CUPONES_URL[codigo];
+    var gen = leerQty('cantidad-general');
+    var cred = leerQty('cantidad-estudiante') > 0;
+    var total = gen + leerQty('cantidad-estudiante') + leerQty('cantidad-inapam') + leerQty('cantidad-maestro');
+
+    titulo.textContent = cfg.titulo;
+
+    if (codigo === 'ESPEJO') {
+      if (gen === 2 && total === 2 && !cred) {
+        precios.innerHTML = '<span class="cupon-url-tachado">$800</span><strong>$600 MXN</strong>';
+      } else {
+        precios.textContent = 'Agrega 2 boletos generales para $600 total';
+      }
+    } else if (codigo === 'GRUPO20') {
+      var sub = gen * 400;
+      if (gen >= 5 && total === gen && !cred) {
+        var fin = Math.round(sub * (1 - cfg.porcentaje));
+        precios.innerHTML = '<span class="cupon-url-tachado">$' + sub + '</span><strong>$' + fin + ' MXN</strong>';
+      } else {
+        precios.textContent = 'Agrega 5+ generales (todos generales) para −20%';
+      }
+    }
+
+    banner.hidden = false;
+    banner.classList.add('visible');
   }
 
-  function crearBtn(texto, claseExtra, onClick) {
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'btn-fechas-toggle' + (claseExtra ? ' ' + claseExtra : '');
-    btn.textContent = texto;
-    btn.addEventListener('click', onClick);
-    return btn;
+  function actualizarVisibilidadBarra() {
+    var sticky = document.getElementById('barra-reserva-fija');
+    var panel = document.getElementById('inline-checkout');
+    if (!sticky || !panel) return;
+    var abierto = window.getComputedStyle(panel).display !== 'none';
+    sticky.classList.toggle('oculta-checkout', abierto);
+    document.body.classList.toggle('checkout-abierto', abierto);
   }
 
-  function applyStep(index) {
-    if (!items.length || !steps.length) return;
-    stepIndex = index;
-    var maxIdx = steps[stepIndex].maxIdx;
-    items.forEach(function(it, i) {
-      it.el.style.display = i <= maxIdx ? '' : 'none';
-    });
-    renderControles();
-  }
-
-  function renderControles() {
+  function aplicarFechasProgressivas() {
+    var c = document.getElementById('botones-fecha');
     var ui = document.getElementById('fechas-progressive-ui');
+    if (!c) return;
+
+    var items = Array.from(c.children);
+    if (!items.length) return;
+
+    var ocultas = FECHAS_OCULTAS_INICIAL;
+    var hayOcultas = items.length > ocultas;
+
+    items.forEach(function(el, i) {
+      var hide = hayOcultas && !fechasExpandidas && i >= items.length - ocultas;
+      el.style.display = hide ? 'none' : '';
+    });
+
     if (!ui) return;
     ui.innerHTML = '';
 
-    if (colapsado) {
-      ui.appendChild(crearBtn('Ver fechas \u2192', '', function() {
-        setColapsado(false);
-        applyStep(stepIndex);
-      }));
-      return;
-    }
-
-    if (steps[stepIndex] && steps[stepIndex].btn && stepIndex < steps.length - 1) {
-      ui.appendChild(crearBtn(steps[stepIndex].btn, '', function() {
-        applyStep(stepIndex + 1);
-      }));
-    }
-
-    if (hayFechaSeleccionada()) {
-      ui.appendChild(crearBtn('Ver menos', 'btn-fechas-toggle--menos', function() {
-        setColapsado(true);
-      }));
+    if (hayOcultas && !fechasExpandidas) {
+      var btnMas = document.createElement('button');
+      btnMas.type = 'button';
+      btnMas.className = 'btn-fechas-toggle';
+      btnMas.textContent = 'Ver ' + ocultas + ' fechas más \u2192';
+      btnMas.addEventListener('click', function() {
+        fechasExpandidas = true;
+        aplicarFechasProgressivas();
+      });
+      ui.appendChild(btnMas);
+      ui.hidden = false;
+    } else if (hayOcultas && fechasExpandidas) {
+      var btnMenos = document.createElement('button');
+      btnMenos.type = 'button';
+      btnMenos.className = 'btn-fechas-toggle btn-fechas-toggle--menos';
+      btnMenos.textContent = 'Ver menos fechas';
+      btnMenos.addEventListener('click', function() {
+        fechasExpandidas = false;
+        aplicarFechasProgressivas();
+      });
+      ui.appendChild(btnMenos);
+      ui.hidden = false;
+    } else {
+      ui.hidden = true;
     }
   }
 
-  function procesarFechas() {
-    var container = document.getElementById('botones-fecha');
-    if (!container) return;
-    items = flattenItems(container);
-    steps = buildSteps(items);
-    if (!items.length || !steps.length) return;
+  function preseleccionarProxima() {
+    if (preseleccionHecha) return;
+    var c = document.getElementById('botones-fecha');
+    if (!c) return;
+    var iso = null;
+    try {
+      if (window.FechasManager && typeof FechasManager.resumenTemporada === 'function') {
+        iso = FechasManager.resumenTemporada().primera;
+      }
+    } catch (_) {}
+    var btn = iso
+      ? c.querySelector('button[data-fecha-clave="' + iso + '"]:not([disabled])')
+      : null;
+    if (!btn) btn = c.querySelector('button[data-fecha-clave]:not([disabled])');
+    if (!btn) return;
+    preseleccionHecha = true;
+    btn.click();
+  }
 
-    if (stepIndex >= steps.length) stepIndex = Math.max(0, steps.length - 1);
+  function fallbackFechasLocales() {
+    if (fallbackIntentado) return;
+    var c = document.getElementById('botones-fecha');
+    if (!c || c.children.length > 0) return;
+    if (typeof cargarFechas !== 'function') return;
+    fallbackIntentado = true;
+    cargarFechas();
+    aplicarFechasProgressivas();
+    preseleccionarProxima();
+  }
 
-    if (colapsado) {
-      renderControles();
+  function simplificarPromoBanner() {
+    var el = document.getElementById('promo-grupo-banner');
+    var linea = document.getElementById('bofu-codigos-linea');
+    if (!el) return;
+    if (el.classList.contains('hidden') || !el.textContent.trim()) {
+      if (linea) linea.classList.remove('hidden');
       return;
     }
+    if (linea) linea.classList.add('hidden');
+    el.style.color = '';
+    var t = el.textContent;
+    if (t.indexOf('ESPEJO') > -1 && t.indexOf('Pareja') > -1) {
+      el.innerHTML = '2 generales → código <strong>ESPEJO</strong> al pagar ($600 total)';
+    } else if (t.indexOf('GRUPO20') > -1 && t.indexOf('Grupo') > -1) {
+      el.innerHTML = '5+ generales → código <strong>GRUPO20</strong> al pagar (−20%)';
+    } else if (t.indexOf('Con 5 generales') > -1) {
+      el.innerHTML = 'Con 5 generales → código <strong>GRUPO20</strong> al pagar (−20%)';
+    }
+  }
 
-    var maxIdx = steps[stepIndex].maxIdx;
-    items.forEach(function(it, i) {
-      it.el.style.display = i <= maxIdx ? '' : 'none';
-    });
-    renderControles();
+  function syncCtaCopy() {
+    var btn = document.getElementById('btn-continuar');
+    var sticky = document.getElementById('barra-reserva-fija');
+    if (!btn || !sticky) return;
+
+    var texto = btn.textContent.trim();
+    if (texto.indexOf('Continuar') === 0) {
+      texto = texto.replace(/^Continuar/, 'Reservar');
+    } else if (texto.indexOf('Selecciona al menos') === 0) {
+      texto = 'Elige al menos 1 boleto';
+    }
+
+    sticky.textContent = texto;
+    sticky.disabled = btn.disabled;
+    sticky.setAttribute('aria-label', btn.disabled ? texto : 'Reservar: ' + texto);
+
+    simplificarPromoBanner();
+    pintarBannerCuponUrl();
+    actualizarVisibilidadBarra();
+  }
+
+  function aplicarCuponUrl() {
+    var codigo = codigoUrl();
+    if (!codigo) return;
+    var det = document.querySelector('.ichk-cupon-details');
+    var input = document.getElementById('ichk-cupon-input');
+    if (det) det.open = true;
+    if (input) input.value = codigo;
+    pintarBannerCuponUrl();
+  }
+
+  function onFechasListas() {
+    aplicarFechasProgressivas();
+    preseleccionarProxima();
+    syncCtaCopy();
+    fallbackFechasLocales();
   }
 
   document.addEventListener('DOMContentLoaded', function() {
     var c = document.getElementById('botones-fecha');
-    if (!c) return;
-
-    new MutationObserver(function() {
-      procesarFechas();
-    }).observe(c, { childList: true });
-
-    if (fechaTexto) {
-      new MutationObserver(function() {
-        renderControles();
-      }).observe(fechaTexto, { attributes: true, attributeFilter: ['hidden'], childList: true, characterData: true, subtree: true });
+    if (c) {
+      new MutationObserver(onFechasListas).observe(c, { childList: true, subtree: true });
+      if (c.children.length) onFechasListas();
     }
 
-    c.addEventListener('click', function(ev) {
-      var btn = ev.target.closest('button[data-fecha-clave]');
-      if (!btn || btn.disabled) return;
-      setTimeout(renderControles, 0);
+    window.addEventListener('temporada:sincronizada', onFechasListas);
+    window.addEventListener('taquilla:checkout-toggle', actualizarVisibilidadBarra);
+    window.addEventListener('load', function() {
+      setTimeout(onFechasListas, 400);
+      setTimeout(fallbackFechasLocales, 2000);
+      actualizarVisibilidadBarra();
     });
 
-    if (c.children.length > 0) procesarFechas();
+    var btn = document.getElementById('btn-continuar');
+    if (btn) new MutationObserver(syncCtaCopy).observe(btn, { childList: true, characterData: true, subtree: true });
+
+    var sticky = document.getElementById('barra-reserva-fija');
+    if (sticky) sticky.addEventListener('click', function() {
+      if (!sticky.disabled && typeof irAConfirmacion === 'function') irAConfirmacion();
+    });
+
+    var promoBanner = document.getElementById('promo-grupo-banner');
+    if (promoBanner) {
+      new MutationObserver(simplificarPromoBanner).observe(promoBanner, {
+        childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['class']
+      });
+    }
+
+    aplicarCuponUrl();
+    syncCtaCopy();
+
+    var origCambiar = window.cambiarCantidad;
+    if (typeof origCambiar === 'function') {
+      window.cambiarCantidad = function(tipo, delta) {
+        origCambiar(tipo, delta);
+        setTimeout(syncCtaCopy, 0);
+      };
+    }
   });
 })();
-</script>
-<script>
-// Mapa: se carga hasta el final, después de todo lo demás (incluido el tracking).
-window.addEventListener('load', function () {
-  setTimeout(function () {
-    var mapa = document.getElementById('mapa-teatro-iframe');
-    if (mapa && mapa.dataset.src) mapa.src = mapa.dataset.src;
-  }, 0);
-});
 </script>
 </body>
 </html>

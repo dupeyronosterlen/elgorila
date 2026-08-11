@@ -61,20 +61,8 @@ function tieneBoletosCredencial() {
     return TIPOS_CREDENCIAL.some(t => (cantidades[t] || 0) > 0);
 }
 
-// Promo automática: solo GRUPO20 (5+ generales, sin credencial). ESPEJO va manual al pagar.
+// GRUPO20 y ESPEJO se ingresan manualmente al pagar (sin promo automática en carrito).
 function detectarPromoAutomatica() {
-    if (precioEspecialFuncion()) return null;
-    if (tieneBoletosCredencial()) return null;
-    const gen   = cantidades.general || 0;
-    const total = totalCantidad();
-    if (gen >= CUPON_GRUPO20_MIN && gen === total) {
-        return {
-            codigo:     'GRUPO20',
-            nombre:     'Grupo 20%',
-            tipo:       'porcentaje',
-            porcentaje: Math.round(CUPON_GRUPO20_PCT * 100),
-        };
-    }
     return null;
 }
 
@@ -328,8 +316,7 @@ function refrescarDisponibilidadWorker() {
 
 // --- FUNCIÓN 3: ACTUALIZAR PANTALLA ---
 function actualizarPantalla() {
-    const promoAuto = detectarPromoAutomatica();
-    const precios   = calcularPreciosConPromo(promoAuto);
+    const precios   = calcularPreciosConPromo(null);
 
     // Cantidad por tipo
     TIPOS_BOLETO.forEach(t => {
@@ -389,13 +376,6 @@ function actualizarPantalla() {
             </div>`;
         }).join('');
 
-        if (precios.descuentoMonto > 0.01 && promoAuto) {
-            html += `<div class="flex justify-between text-sm" style="color:#4ade80;border-top:0.5px solid rgba(241,234,217,0.10);padding-top:6px;margin-top:4px;">
-                <span>Promo ${promoAuto.codigo}</span>
-                <span>−$${precios.descuentoMonto.toFixed(2)}</span>
-            </div>`;
-        }
-
         resumenEl.innerHTML = html;
     }
 
@@ -415,23 +395,29 @@ function actualizarPantalla() {
         }
     }
     if (promoBanner) {
-        if (promoAuto?.codigo === 'GRUPO20') {
+        const gen = cantidades.general || 0;
+        if (gen === 2 && !tieneBoletosCredencial() && gen === totalCantidad()) {
             promoBanner.className = 'promo-grupo-banner';
-            promoBanner.style.color = '#4ade80';
+            promoBanner.style.color = 'rgba(217,155,58,.75)';
             promoBanner.innerHTML =
-                `✓ Promo <strong>GRUPO20</strong> activa — −${Math.round(CUPON_GRUPO20_PCT * 100)}% en ${cantidades.general} generales`;
+                'Pareja: ingresa el código <strong>ESPEJO</strong> al pagar — 2 generales por <strong>$600</strong> total';
         } else if (
-            cantidades.general >= CUPON_GRUPO20_HINT_MIN
-            && cantidades.general < CUPON_GRUPO20_MIN
+            gen >= CUPON_GRUPO20_MIN
+            && gen === totalCantidad()
             && !tieneBoletosCredencial()
         ) {
             promoBanner.className = 'promo-grupo-banner';
-            promoBanner.style.color = 'rgba(217,155,58,.6)';
+            promoBanner.style.color = 'rgba(217,155,58,.75)';
             promoBanner.innerHTML =
-                `Agrega ${CUPON_GRUPO20_MIN - cantidades.general} general(es) más para activar <strong>GRUPO20</strong> (−20%)`;
-        } else if (cantidades.general >= CUPON_GRUPO20_MIN && tieneBoletosCredencial()) {
+                `Grupo: ingresa <strong>GRUPO20</strong> al pagar — −${Math.round(CUPON_GRUPO20_PCT * 100)}% en ${gen} generales`;
+        } else if (gen >= CUPON_GRUPO20_HINT_MIN && gen < CUPON_GRUPO20_MIN && !tieneBoletosCredencial()) {
             promoBanner.className = 'promo-grupo-banner';
-            promoBanner.style.color = 'rgba(217,155,58,.6)';
+            promoBanner.style.color = 'rgba(217,155,58,.55)';
+            promoBanner.innerHTML =
+                `Con ${CUPON_GRUPO20_MIN} generales puedes usar el código <strong>GRUPO20</strong> al pagar (−20%)`;
+        } else if (gen >= CUPON_GRUPO20_MIN && tieneBoletosCredencial()) {
+            promoBanner.className = 'promo-grupo-banner';
+            promoBanner.style.color = 'rgba(217,155,58,.55)';
             promoBanner.innerHTML =
                 '<strong>GRUPO20</strong> aplica solo cuando todos los boletos son generales. Las credenciales van en tarifa aparte ($280).';
         } else {
@@ -513,8 +499,7 @@ function irAConfirmacion() {
     // Si reservaId sigue null, significa que no hay lugares disponibles (ya se mostró alerta).
     if (!reservaId) return false;
 
-    const promoAuto = detectarPromoAutomatica();
-    const precios   = calcularPreciosConPromo(promoAuto);
+    const precios = calcularPreciosConPromo(null);
 
     const orden = {
         fecha:          nombreFecha,
@@ -524,21 +509,10 @@ function irAConfirmacion() {
         cantidadTotal:  cantTotal,
         subtotal:       precios.subtotal,
         total:          precios.total,
-        descuentoMonto: precios.descuentoMonto > 0 ? precios.descuentoMonto : 0,
+        descuentoMonto: 0,
         reservaId,
         timestamp:      Date.now(),
     };
-
-    if (promoAuto) {
-        orden.codigoCupon          = promoAuto.codigo;
-        orden.cuponNombre          = promoAuto.nombre;
-        orden.cuponTipo            = promoAuto.tipo;
-        orden.cuponPorcentaje      = promoAuto.porcentaje || 0;
-        orden.cuponTotalMxn        = promoAuto.totalMxn || null;
-        orden.cuponDescuentoMonto  = precios.descuentoMonto;
-        orden.promoAutomatica      = true;
-        orden.promoManual          = false;
-    }
 
     try {
         localStorage.setItem('orden_compra', JSON.stringify(orden));
@@ -598,6 +572,7 @@ function mostrarCheckoutInline(orden) {
     // Mostrar panel y desplazar (nombre y correo se piden en Stripe).
     panel.style.display = '';
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    try { window.dispatchEvent(new CustomEvent('taquilla:checkout-toggle')); } catch (_) {}
 
     // begin_checkout/InitiateCheckout se dispara en procesarPagoInline (el click
     // real a Stripe): abrir el panel, editarlo o volver de un pago cancelado
@@ -608,6 +583,7 @@ function mostrarCheckoutInline(orden) {
 function editarPedido() {
     const panel = document.getElementById('inline-checkout');
     if (panel) panel.style.display = 'none';
+    try { window.dispatchEvent(new CustomEvent('taquilla:checkout-toggle')); } catch (_) {}
     navegandoACheckout = false;
     const mainContent = document.getElementById('main-content');
     if (mainContent) mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });

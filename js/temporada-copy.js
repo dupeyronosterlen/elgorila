@@ -36,6 +36,42 @@
       'data-temporada-rango':       r.rango,
     };
 
+    var proxima = '';
+    if (window.FechasManager && typeof window.FechasManager.etiquetaProximaFuncion === 'function') {
+      proxima = window.FechasManager.etiquetaProximaFuncion();
+    }
+    if (proxima) {
+      document.querySelectorAll('[data-proxima-funcion]').forEach(function (el) {
+        el.textContent = proxima;
+      });
+    }
+
+    if (window.FechasManager && typeof window.FechasManager.etiquetaCountdownProxima === 'function') {
+      var countdown = window.FechasManager.etiquetaCountdownProxima();
+      document.querySelectorAll('[data-countdown-proxima]').forEach(function (el) {
+        if (countdown) {
+          el.textContent = countdown;
+          el.hidden = false;
+        } else {
+          el.hidden = true;
+        }
+      });
+    }
+
+    if (r.n === 0) {
+      document.querySelectorAll('[data-escasez-funciones]').forEach(function (el) {
+        el.textContent = 'TEMPORADA 2026 FINALIZADA EN CDMX';
+      });
+    } else if (r.n === 1) {
+      document.querySelectorAll('[data-escasez-funciones]').forEach(function (el) {
+        el.textContent = 'QUEDA 1 FUNCIÓN EN CDMX — TEMPORADA 2026';
+      });
+    } else {
+      document.querySelectorAll('[data-escasez-funciones]').forEach(function (el) {
+        el.textContent = 'QUEDAN ' + r.n + ' FUNCIONES EN CDMX — TEMPORADA 2026';
+      });
+    }
+
     Object.keys(mapa).forEach(function (attr) {
       var valor = mapa[attr];
       // rango vacío (temporada terminada): dejar el respaldo, no vaciar la frase

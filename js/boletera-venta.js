@@ -49,12 +49,6 @@
   }
 
   function detectarPromoAutomatica() {
-    if (tieneCredencial()) return null;
-    const gen = cantidades.general || 0;
-    const total = totalCantidad();
-    if (gen >= CUPON_GRUPO20_MIN && gen === total) {
-      return { codigo: 'GRUPO20', nombre: 'Grupo 20%', tipo: 'porcentaje', porcentaje: 20 };
-    }
     return null;
   }
 
@@ -171,18 +165,21 @@
 
     const hint = document.getElementById('bol-promo-hint');
     if (hint) {
-      const promo = detectarPromoAutomatica();
-      if (promo?.codigo === 'GRUPO20' && cuponAplicado?.automatica) {
+      const gen = cantidades.general || 0;
+      const total = totalCantidad();
+      if (cuponAplicado && !cuponAplicado.automatica) {
+        hint.style.display = 'none';
+        hint.innerHTML = '';
+      } else if (gen === 2 && !tieneCredencial() && gen === total) {
         hint.style.display = '';
-        hint.innerHTML = `✓ Promo <strong>GRUPO20</strong> activa — −20% en ${cantidades.general} generales`;
-      } else if (
-        cantidades.general >= CUPON_GRUPO20_HINT_MIN
-        && cantidades.general < CUPON_GRUPO20_MIN
-        && !tieneCredencial()
-      ) {
+        hint.innerHTML = 'Pareja: código <strong>ESPEJO</strong> al pagar — 2 generales por <strong>$600</strong>';
+      } else if (gen >= CUPON_GRUPO20_MIN && gen === total && !tieneCredencial()) {
         hint.style.display = '';
-        hint.innerHTML = `Agrega ${CUPON_GRUPO20_MIN - cantidades.general} general(es) más para <strong>GRUPO20</strong> (−20%)`;
-      } else if (cantidades.general >= CUPON_GRUPO20_MIN && tieneCredencial()) {
+        hint.innerHTML = `Grupo: código <strong>GRUPO20</strong> al pagar — −20% en ${gen} generales`;
+      } else if (gen >= CUPON_GRUPO20_HINT_MIN && gen < CUPON_GRUPO20_MIN && !tieneCredencial()) {
+        hint.style.display = '';
+        hint.innerHTML = `Con ${CUPON_GRUPO20_MIN} generales usa <strong>GRUPO20</strong> al pagar (−20%)`;
+      } else if (gen >= CUPON_GRUPO20_MIN && tieneCredencial()) {
         hint.style.display = '';
         hint.innerHTML = '<strong>GRUPO20</strong> aplica solo cuando todos los boletos son generales.';
       } else {
