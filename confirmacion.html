@@ -299,6 +299,26 @@ body::before {
 .pasos-lista li .material-symbols-outlined { color: var(--gold); flex-shrink: 0; margin-top: 3px; font-size: 20px; }
 .pasos-lista li p { font-family: var(--cuerpo); font-size: 18px; line-height: 1.72; color: var(--ink-dim); }
 
+/* Ayuda (correo) — arriba del botón de WhatsApp */
+.ayuda-bloque {
+  border: 1px solid var(--gold-faint);
+  background: rgba(212,175,55,0.04);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.ayuda-titulo {
+  font-family: var(--cuerpo); font-size: 17px; font-weight: 600;
+  color: var(--ink); margin-bottom: 6px;
+}
+.ayuda-texto {
+  font-family: var(--cuerpo); font-size: 16px; line-height: 1.6; color: var(--ink-dim);
+}
+.ayuda-mail {
+  color: var(--gold); text-decoration: underline; word-break: break-word;
+}
+.ayuda-mail:hover { color: var(--ink); }
+
 /* WhatsApp container */
 #btn-whatsapp-container:not(.hidden) {
   margin-bottom: 12px;
@@ -485,6 +505,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <p>Presenta el código QR en la entrada del teatro el día de la función. ¡Disfruta del espectáculo!</p>
 </li>
 </ul>
+
+      <!-- Ayuda: correo primero, WhatsApp abajo (el botón verde que ya estaba) -->
+      <div class="ayuda-bloque">
+        <div class="ayuda-titulo">¿Necesitas ayuda con tus entradas?</div>
+        <p class="ayuda-texto">
+          Escríbenos a
+          <a class="ayuda-mail" href="mailto:elgorilateatro@gmail.com?subject=Ayuda%20con%20mis%20entradas%20%E2%80%94%20EL%20GORILA">elgorilateatro@gmail.com</a>
+          con tu número de orden y te respondemos.
+        </p>
+</div>
 
       <div id="btn-whatsapp-container" class="hidden"></div>
       <a class="cta-volver" href="/">Volver al inicio</a>

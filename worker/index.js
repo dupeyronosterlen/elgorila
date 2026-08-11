@@ -3598,6 +3598,11 @@ async function handleEnviarBoletoCompra(tid, id, request, env) {
   }, 200, request);
 }
 
+/** ¿El identificador es un session_id de Stripe (liga privada del comprador)? */
+function esSessionIdStripe(id) {
+  return typeof id === 'string' && /^cs_(test|live)_[A-Za-z0-9]+$/.test(id.trim());
+}
+
 async function handleVenta(tid, id, request, env) {
   // Rate-limit anti-enumeración: solo cuenta folios NO encontrados, así el escáner
   // de la puerta (muchos folios VÁLIDOS desde una IP) nunca se ve afectado.
@@ -3652,6 +3657,14 @@ async function handleVenta(tid, id, request, env) {
     resp.boletos = (v.boletos || []).map(b => ({
       cert: b.cert, folio: b.folio || null, numero: b.numero, tipo: b.tipo, seccion: b.seccion, usado: !!b.usado,
     }));
+
+    // El correo del comprador viaja SOLO cuando la consulta trae el session_id de
+    // Stripe: esa liga es privada, se la da Stripe al comprador al terminar de
+    // pagar y sirve para que confirmacion.html muestre a qué correo se envió el
+    // boleto. Por certificado NO se devuelve: ese código va en el QR y se reenvía
+    // por WhatsApp, así que ahí el correo del comprador sí se filtraría.
+    if (esSessionIdStripe(id) && v.email) resp.email = v.email;
+
     return json(resp, 200, request);
   } catch { return json({ error: 'Error al obtener la venta.' }, 500, request); }
 }
