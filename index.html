@@ -1449,72 +1449,65 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       border-color: rgba(212, 175, 55, 0.7);
       color: #fff;
     }
-    .grupos-promo-online {
-      margin-top: 1.25rem; margin-bottom: 0.75rem;
-      font-size: 0.9375rem; line-height: 1.55;
-      color: rgba(241, 234, 217, 0.88);
+    .promo-urgencia {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      margin-bottom: 1rem;
+      padding: 0.35rem 0.85rem;
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #ffb4a8;
+      background: rgba(212, 58, 26, 0.18);
+      border: 1px solid rgba(212, 58, 26, 0.45);
+      border-radius: 999px;
     }
-    .grupos-institucional-texto {
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.2rem; line-height: 1.5;
-      color: rgba(241, 234, 217, 0.96);
-      margin: 1rem auto 1.1rem;
+    .promo-cards {
+      display: grid; gap: 0.85rem;
+      margin: 1.25rem auto 1.5rem;
       max-width: 36rem;
     }
     @media (min-width: 640px) {
-      .grupos-institucional-texto { font-size: 1.35rem; }
+      .promo-cards { grid-template-columns: 1fr 1fr; }
     }
-    .grupos-contacto-btns {
-      display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-      gap: 0.75rem 1rem;
-      margin-bottom: 0.25rem;
+    .promo-card {
+      padding: 1rem 1.1rem;
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.28);
+      text-align: left;
     }
-    .btn-grupos {
+    .promo-card-codigo {
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 0.95rem; font-weight: 700; letter-spacing: 0.12em;
+      color: #e8c658;
+      margin-bottom: 0.35rem;
+    }
+    .promo-card-desc {
+      font-size: 0.9rem; line-height: 1.5;
+      color: rgba(241, 234, 217, 0.9);
+    }
+    .promo-nota {
+      font-size: 0.82rem; line-height: 1.55;
+      color: rgba(241, 234, 217, 0.72);
+      max-width: 36rem; margin: 0 auto 1.25rem;
+    }
+    .btn-promo-boletera {
       display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-      padding: 0.72rem 1.35rem;
-      font-size: 0.9rem; font-weight: 600; letter-spacing: 0.03em;
+      padding: 0.8rem 1.5rem;
+      font-size: 0.95rem; font-weight: 600; letter-spacing: 0.04em;
       border-radius: 2px;
-      transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
-    }
-    .btn-grupos:hover { transform: translateY(-1px); }
-    .btn-grupos--wa {
       border: 1px solid #d4af37;
       background: linear-gradient(180deg, rgba(212, 175, 55, 0.42) 0%, rgba(212, 175, 55, 0.28) 100%);
       color: #fff8e8;
+      text-decoration: none;
       box-shadow: 0 4px 18px rgba(212, 175, 55, 0.28);
+      transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
     }
-    .btn-grupos--wa:hover {
+    .btn-promo-boletera:hover {
+      transform: translateY(-1px);
       background: linear-gradient(180deg, rgba(232, 198, 88, 0.55) 0%, rgba(212, 175, 55, 0.38) 100%);
       border-color: #e8c658;
       color: #fff;
       box-shadow: 0 6px 22px rgba(212, 175, 55, 0.38);
-    }
-    .btn-grupos--mail {
-      border: 1px solid rgba(212, 175, 55, 0.75);
-      background: rgba(212, 175, 55, 0.14);
-      color: #f5e6c0;
-      box-shadow: 0 3px 14px rgba(0, 0, 0, 0.22);
-    }
-    .btn-grupos--mail:hover {
-      background: rgba(212, 175, 55, 0.26);
-      border-color: #d4af37;
-      color: #fff;
-      box-shadow: 0 5px 18px rgba(212, 175, 55, 0.22);
-    }
-    .btn-grupos--compra {
-      display: inline-flex;
-      margin-top: 0.35rem;
-      border: 1px solid rgba(212, 175, 55, 0.55);
-      background: rgba(212, 175, 55, 0.1);
-      color: #e8c658;
-      text-decoration: none;
-      box-shadow: 0 2px 12px rgba(212, 175, 55, 0.15);
-    }
-    .btn-grupos--compra:hover {
-      background: rgba(212, 175, 55, 0.22);
-      border-color: #d4af37;
-      color: #fff8e8;
-      box-shadow: 0 4px 16px rgba(212, 175, 55, 0.28);
     }
     /* Fotos Odila y Ariel: filtro kafkiano (grises, sepia suave, saturación baja) */
     .foto-equipo-kafka img {
@@ -3327,7 +3320,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       "name": "¿Hay descuentos?",
       "acceptedAnswer": {
         "@type": "Answer",
-"text": "Precio de temporada: generales $400. Tarifa credencial $280 (−30%) para INAPAM, estudiante y maestro. Comprando 5 o más generales, el 20% de descuento se aplica automáticamente. En pareja, el código ESPEJO deja 2 boletos generales en $600 total (se ingresa al pagar). Esta taquilla no cobra cargo por servicio; Ticketmaster y Teatrando pueden aplicar cargos propios."
+"text": "Precio de temporada: generales $400. Tarifa credencial $280 (−30%) para INAPAM, estudiante y maestro. Código ESPEJO: 2 boletos generales por $600 total. Código GRUPO20: 5 o más generales (sin credenciales) con 20% de descuento. Los códigos se ingresan al pagar en la taquilla. Esta taquilla no cobra cargo por servicio; Ticketmaster y Teatrando pueden aplicar cargos propios."
       }
     },
     {
@@ -3351,7 +3344,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       "name": "¿Puedo reservar para un grupo (escuela, empresa)?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Grupos de más de 10: WhatsApp o elgorilateatro@gmail.com. Con 5 o más boletos generales, el 20% de descuento se aplica automáticamente al comprar en línea."
+        "text": "Grupos de más de 10: WhatsApp o elgorilateatro@gmail.com. Para 5 o más generales usa el código GRUPO20 al pagar en la taquilla."
       }
     },
     {
@@ -3719,7 +3712,7 @@ Improvisación, historia y un monólogo que no cierra la pregunta — <span data
 </span>
 </summary>
 <p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
-Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Tarifa <strong>credencial $280</strong> (−30%) para INAPAM, estudiante y maestro. Si compras <strong>5 o más boletos generales</strong>, el <strong>20% de descuento</strong> se aplica automáticamente, sin necesidad de código. Si van en <strong>pareja</strong>, el código <strong>ESPEJO</strong> deja 2 boletos generales en $600 total (se ingresa al pagar). En esta taquilla <strong>no hay cargo por servicio</strong>; también puedes comprar en Ticketmaster o Teatrando (esas plataformas pueden cobrar cargos propios).
+Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Tarifa <strong>credencial $280</strong> (−30%) para INAPAM, estudiante y maestro. En <strong>pareja</strong>, código <strong>ESPEJO</strong> — 2 generales por <strong>$600</strong> total. En <strong>grupo</strong> (5+ generales, todos generales), código <strong>GRUPO20</strong> — <strong>20% de descuento</strong>. Los códigos se ingresan al pagar en la <a href="/boletos.html" class="text-accent-gold hover:text-white underline">taquilla en línea</a>. Ver <a href="#promociones" class="text-accent-gold hover:text-white underline">promociones activas</a>. En esta taquilla <strong>no hay cargo por servicio</strong>; también puedes comprar en Ticketmaster o Teatrando (esas plataformas pueden cobrar cargos propios).
               </p>
 </details>
 <details class="group py-3 sm:py-4 faq-item">
@@ -3752,7 +3745,7 @@ Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Ta
 </span>
 </summary>
 <p class="mt-3 font-body text-text-dark/90 pl-4 border-l-2 border-accent-gold/30 bg-black/30 backdrop-blur-sm rounded-r-lg p-3 border border-accent-gold/20">
-                Para <strong>grupos de más de 10 personas</strong>, escríbenos por <a href="https://wa.me/5215671311191?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20grupo%20o%20escuela%20en%20El%20Gorila." target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">WhatsApp</a>, a <a href="mailto:elgorilateatro@gmail.com" class="text-accent-gold hover:text-white underline">elgorilateatro@gmail.com</a> o en <a href="#grupos" class="text-accent-gold hover:text-white underline">Escuelas y grupos</a>. Con <strong>5 o más boletos generales</strong> el <strong>20% de descuento</strong> se aplica automáticamente al comprar en línea.
+                Para <strong>grupos de más de 10 personas</strong>, escríbenos por <a href="https://wa.me/5215671311191?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20grupo%20o%20escuela%20en%20El%20Gorila." target="_blank" rel="noopener noreferrer" class="text-accent-gold hover:text-white underline">WhatsApp</a>, a <a href="mailto:elgorilateatro@gmail.com" class="text-accent-gold hover:text-white underline">elgorilateatro@gmail.com</a> o en <a href="#contacto" class="text-accent-gold hover:text-white underline">Contacto</a>. Para <strong>5 a 10 generales</strong>, usa el código <strong>GRUPO20</strong> en la <a href="/boletos.html" class="text-accent-gold hover:text-white underline">taquilla</a> al pagar.
               </p>
 </details>
 <details class="group py-3 sm:py-4 faq-item">
@@ -3781,23 +3774,30 @@ Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Ta
 <button type="button" id="faq-ver-mas" class="btn-faq-mas mx-auto max-w-3xl w-full" hidden>Más preguntas frecuentes</button>
 </section>
 
-<section id="grupos" class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 section-with-bg" aria-labelledby="grupos-heading">
+<!-- Promociones activas -->
+<section id="promociones" class="mb-8 sm:mb-10 scroll-mt-24 mt-6 sm:mt-8 rounded-lg bg-rich-dark/85 p-4 sm:p-6 md:p-8 backdrop-blur-md border border-accent-gold/20 section-with-bg" aria-labelledby="promociones-heading">
 <div class="mx-auto max-w-3xl text-center">
-<h2 id="grupos-heading" class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Escuelas y grupos</h2>
-<p class="font-body text-text-dark/90 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-2">
-Una obra que se discute al salir — identidad, libertad y el costo de pertenecer. Pensada para aulas, empresas y salidas culturales.
+<h2 id="promociones-heading" class="seccion-heading-v4 mb-3 sm:mb-4 font-display text-2xl sm:text-3xl md:text-4xl text-white tracking-wide">Promociones activas</h2>
+<p class="font-body text-text-dark/90 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto mb-2">
+Cupos promocionales limitados por función. Ingresa el código al pagar en nuestra taquilla en línea.
 </p>
-<p class="grupos-institucional-texto">
-¿Te interesa llevar <em>El Gorila</em> a tu aula o empresa? Escríbenos y platicamos — para <strong class="text-accent-gold">grupos de más de 10 personas</strong> te armamos la función.
+<p class="promo-urgencia" role="status">
+<span aria-hidden="true">●</span> Máx. 10 boletos por compra · solo 5 grupos promocionales por función
 </p>
-<div class="grupos-contacto-btns max-w-2xl mx-auto">
-<a href="https://wa.me/5215671311191?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20grupo%20o%20escuela%20en%20El%20Gorila." class="btn-grupos btn-grupos--wa" target="_blank" rel="noopener noreferrer">WhatsApp grupos</a>
-<a href="mailto:elgorilateatro@gmail.com?subject=Grupos%20y%20escuelas%20—%20El%20Gorila%20(sitio%20web)&amp;body=Hola%2C%20me%20interesa%20llevar%20El%20Gorila%20a%20mi%20aula%2Fempresa.%0A%0AInstitución%3A%20%0APersonas%20aprox.%3A%20%0AFecha%20preferida%3A%20" class="btn-grupos btn-grupos--mail">elgorilateatro@gmail.com</a>
+<div class="promo-cards">
+<div class="promo-card">
+<div class="promo-card-codigo">ESPEJO</div>
+<p class="promo-card-desc"><strong>2 boletos generales</strong> por <strong class="text-accent-gold">$600</strong> total. Exactamente 2 generales en el carrito — sin credenciales.</p>
 </div>
-<p class="font-body text-text-dark/80 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto grupos-promo-online">
-Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <strong class="text-accent-gold">20% de descuento</strong> se aplica automáticamente al comprar en línea.
+<div class="promo-card">
+<div class="promo-card-codigo">GRUPO20</div>
+<p class="promo-card-desc"><strong>5 o más generales</strong> (todos generales) — <strong class="text-accent-gold">20% de descuento</strong>. No combina con tarifa credencial ($280).</p>
+</div>
+</div>
+<p class="promo-nota">
+Los códigos se escriben en el paso de pago, después de elegir fecha y boletos. Cuando se agotan los cupos promocionales de una función, el código puede dejar de aplicar — conviene reservar pronto.
 </p>
-<a href="/boletos.html#fechas-fecha-wrap" class="link-venta-boletos btn-grupos btn-grupos--compra">Comprar 5+ en línea</a>
+<a href="/boletos.html#fechas-fecha-wrap" class="link-venta-boletos btn-promo-boletera">Ir a la taquilla en línea →</a>
 </div>
 </section>
 
@@ -3914,6 +3914,12 @@ Con <strong class="text-accent-gold">5 o más boletos generales</strong>, el <st
 <path d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" stroke-linecap="round" stroke-linejoin="round"></path>
 </svg>
 <span>Sobre la obra</span>
+</a>
+<a class="flex items-center gap-2 transition-colors hover:text-accent-gold" href="/historia-del-gorila.html">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Historia del monólogo</span>
 </a>
 <a class="flex items-center gap-2 transition-colors hover:text-accent-gold" href="/presskit/presskit2026.html">
 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
