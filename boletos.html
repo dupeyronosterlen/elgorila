@@ -1890,24 +1890,38 @@ document.addEventListener('DOMContentLoaded', function() {
     preseleccionarProxima();
   }
 
+  // El HTML que este bloque escribió por última vez en el banner. Sirve para no
+  // volver a reescribir lo ya simplificado: el MutationObserver se dispara con
+  // cada innerHTML y, sin este candado, el texto "Con 5 generales" se reescribía
+  // a sí mismo en bucle infinito y congelaba la página al 3er boleto general.
+  var promoBannerYaSimplificado = '';
+
   function simplificarPromoBanner() {
     var el = document.getElementById('promo-grupo-banner');
     var linea = document.getElementById('bofu-codigos-linea');
     if (!el) return;
     if (el.classList.contains('hidden') || !el.textContent.trim()) {
+      promoBannerYaSimplificado = '';
       if (linea) linea.classList.remove('hidden');
       return;
     }
     if (linea) linea.classList.add('hidden');
-    el.style.color = '';
+    if (el.innerHTML === promoBannerYaSimplificado) return;
+    if (el.style.color) el.style.color = '';
+
     var t = el.textContent;
+    var nuevo = null;
     if (t.indexOf('ESPEJO') > -1 && t.indexOf('Pareja') > -1) {
-      el.innerHTML = '2 generales → código <strong>ESPEJO</strong> al pagar ($600 total)';
+      nuevo = '2 generales → código <strong>ESPEJO</strong> al pagar ($600 total)';
     } else if (t.indexOf('GRUPO20') > -1 && t.indexOf('Grupo') > -1) {
-      el.innerHTML = '5+ generales → código <strong>GRUPO20</strong> al pagar (−20%)';
+      nuevo = '5+ generales → código <strong>GRUPO20</strong> al pagar (−20%)';
     } else if (t.indexOf('Con 5 generales') > -1) {
-      el.innerHTML = 'Con 5 generales → código <strong>GRUPO20</strong> al pagar (−20%)';
+      nuevo = 'Con 5 generales → código <strong>GRUPO20</strong> al pagar (−20%)';
     }
+    if (!nuevo || nuevo === el.innerHTML) return;
+
+    promoBannerYaSimplificado = nuevo;
+    el.innerHTML = nuevo;
   }
 
   function syncCtaCopy() {
