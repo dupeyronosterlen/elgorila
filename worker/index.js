@@ -149,6 +149,9 @@ async function limitePorIp(request, env, prefijo, maximo) {
 /** Correo operativo del teatro (avisos admin, reply-to). */
 const EMAIL_OPERATIVO = 'elgorilateatro@gmail.com';
 const EMAIL_FROM_DEFAULT = 'El Gorila Teatro <boletos@elgorilateatro.com.mx>';
+// Canal rápido de ayuda al comprador, junto al correo operativo.
+const WHATSAPP_AYUDA_URL = 'https://wa.me/5215671311191?text=' +
+  encodeURIComponent('Hola, necesito ayuda con mi compra de boletos de EL GORILA.');
 
 function adminNotifyEmail(env) {
   const v = env.ADMIN_NOTIFY_EMAIL;
@@ -1013,11 +1016,26 @@ function htmlBoleto(venta, funcionNombre, config, opts = {}) {
     </p>
   </td></tr>
 
+  <!-- Ayuda: correo monitoreado + WhatsApp -->
+  <!-- Antes decía "responde a este correo". Las respuestas llegan a
+       boletos@elgorilateatro.com.mx y caen en spam, así que un comprador con un
+       problema quedaba enterrado ahí. Se manda al correo que sí se lee. -->
+  <tr><td style="background:#f1ead9;padding:22px 28px;border-top:1px solid #c9b896;text-align:center;">
+    <p style="margin:0 0 14px;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#3a2e26;">
+      <strong>¿Necesitas ayuda con tus entradas?</strong><br>
+      Escríbenos a
+      <a href="mailto:${EMAIL_OPERATIVO}?subject=Ayuda%20con%20mis%20entradas%20%E2%80%94%20EL%20GORILA" style="color:#8a5a10;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
+      o por WhatsApp.
+    </p>
+    <a href="${WHATSAPP_AYUDA_URL}" style="display:inline-block;background:#128C7E;color:#fff;padding:13px 22px;text-decoration:none;font-family:Georgia,serif;font-size:16px;border-radius:2px;">
+      Escríbenos por WhatsApp →
+    </a>
+  </td></tr>
+
   <!-- Pie -->
   <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
     <p style="margin:0;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.55);">
-      ¿Dudas? Responde a este correo o escribe a
-      <a href="mailto:${EMAIL_OPERATIVO}" style="color:#d99b3a;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
+      EL GORILA · ${config.venue || 'Teatro Wilberto Cantón'}
     </p>
   </td></tr>
 
