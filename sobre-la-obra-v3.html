@@ -558,6 +558,17 @@
       .hero-video {
         object-position: center 22%;
       }
+      /* Hero video: sin blur ni zoom — el bitrate ya es bajo */
+      .hero-video {
+        transform: none;
+        filter: contrast(1.05) brightness(0.84) saturate(0.92);
+      }
+      .hero-media.video-armed .hero-poster img,
+      .hero-media.poster-only .hero-poster img {
+        filter: contrast(1.05) brightness(0.84) saturate(0.92);
+        transform: none;
+      }
+      .hero-media.is-playing .hero-grain { opacity: 0.04; }
       .hero-overlay {
         background: linear-gradient(180deg,
           rgba(10,7,5,0.38) 0%, rgba(8,5,4,0.58) 24%,
@@ -635,6 +646,12 @@
         font-size: clamp(0.78rem, 3.4vw, 0.88rem);
       }
       .barra-compra-meta { font-size: clamp(9px, 2.6vw, 10px); }
+      /* En vivo móvil: menos grano y filtro para que se vea más nítido */
+      .video-obra-clip {
+        filter: contrast(1.02) brightness(0.96) saturate(0.96);
+      }
+      .video-obra-grain { opacity: 0.025; }
+      .video-obra::after { box-shadow: inset 0 0 36px rgba(8,5,4,0.1); }
     }
 
     @media (min-width: 768px) {
