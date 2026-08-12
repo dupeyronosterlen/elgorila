@@ -163,7 +163,7 @@
   function pickVideoCandidates() {
     var mobile = window.matchMedia('(max-width: 767px)').matches;
     if (mobile) {
-      return ['video/tofu-hero-mobile.mp4?v=20260812-fix'];
+      return ['video/tofu-hero-mobile-v2.mp4'];
     }
     return ['video/tofu-hero-desktop.mp4', 'video/tofu-hero-desktop-lite.mp4'];
   }
