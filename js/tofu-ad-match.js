@@ -1,7 +1,7 @@
 /**
  * Ad ↔ landing match para TOFU.
- * Lee UTMs de Meta (formato agencia: espejo_tofu_01, utm_term=as-tofu-espejo, etc.)
- * y refleja el gancho en el hero — sin editar anuncios en Ads Manager.
+ * Lee UTMs de Meta y muestra en .ad-puente copy propio por línea
+ * (pulido en landing; no repite el creativo del clic).
  */
 (function () {
   'use strict';
@@ -68,13 +68,29 @@
     },
     'jaulas-tofu-3': {
       pregunta: '«¿Y tú, a qué jaula llamas libertad?»',
-      sub: 'A veces la jaula más cómoda es la que elegimos nosotros.',
+      sub: 'Las jaulas más difíciles de ver son las que nosotros mismos nos construimos.',
     },
     'jaulas-tofu-v1': {
       pregunta: '«¿Ya soy un hombre?»',
       sub: 'Primero te encierran. Luego llamas casa a tu jaula.',
     },
     'linaje-tofu-1': {
+      pregunta: '37 años en escena.',
+      sub: 'El monólogo más longevo del teatro mexicano: más de mil funciones desde 1989.',
+    },
+  };
+
+  /** Copy del puente entre Kafka y 37 años — uno por línea, no del catálogo de ads. */
+  var PUENTE_POR_LINEA = {
+    jaulas: {
+      pregunta: '«¿Y tú, a qué jaula llamas libertad?»',
+      sub: 'Las jaulas más difíciles de ver son las que nosotros mismos nos construimos.',
+    },
+    espejo: {
+      pregunta: '«No es teatro, es tu reflejo.»',
+      sub: 'Te invitamos a reconocerte.',
+    },
+    linaje: {
       pregunta: '37 años en escena.',
       sub: 'El monólogo más longevo del teatro mexicano: más de mil funciones desde 1989.',
     },
@@ -129,15 +145,18 @@
     var contentKey = normContentKey(utm.content);
     var lineaKey = lineaDesdeTerm(utm.term) || lineaDesdeCampaign(campaign);
     var linea = lineaKey ? LINEAS[lineaKey] : null;
-    var especifico = contentKey ? POR_CONTENT[contentKey] : null;
 
     if (!linea && contentKey) {
       var pref = contentKey.split('-')[0];
-      if (LINEAS[pref]) linea = LINEAS[pref];
+      if (LINEAS[pref]) {
+        lineaKey = pref;
+        linea = LINEAS[pref];
+      }
     }
 
-    var pregunta = especifico && (especifico.pregunta || especifico.bridge);
-    var sub = especifico && especifico.sub;
+    var puente = lineaKey && PUENTE_POR_LINEA[lineaKey];
+    var pregunta = puente && puente.pregunta;
+    var sub = puente && puente.sub;
     if (!pregunta && lineaKey && LINEA_DEFAULTS[lineaKey]) {
       pregunta = LINEA_DEFAULTS[lineaKey].pregunta;
       sub = LINEA_DEFAULTS[lineaKey].sub;
@@ -146,10 +165,11 @@
     return {
       campaign: campaign || 'default',
       content: contentKey,
+      contentPuente: lineaKey ? 'puente-' + lineaKey : '',
       contentRaw: utm.content || '',
       lineaKey: lineaKey || '',
       linea: linea,
-      especifico: especifico,
+      especifico: puente || null,
       pregunta: pregunta || '',
       sub: sub || '',
     };
@@ -192,6 +212,7 @@
       tofu_campaign: match.campaign,
       tofu_content: match.contentRaw || match.content,
       tofu_content_norm: match.content,
+      tofu_content_puente: match.contentPuente || match.content,
       tofu_linea: match.linea ? match.linea.label : match.lineaKey,
       tofu_matched: !!(match.especifico || match.linea),
     });
