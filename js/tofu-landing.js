@@ -49,6 +49,7 @@
       list.push({ t: Date.now(), type: type, page: 'sobre-la-obra', data: payload });
       if (list.length > MAX_EVENTS) list = list.slice(-MAX_EVENTS);
       localStorage.setItem(LANDING_EVENTS_KEY, JSON.stringify(list));
+      if (typeof window.egSinAnalytics === 'function' && window.egSinAnalytics()) return;
       window.dataLayer = window.dataLayer || [];
       var flat = Object.assign({ event: type, landing_data: payload }, atribExtras(), payload);
       flat.event = type;
@@ -114,6 +115,9 @@
         pushEvent('tofu_cta_click', meta);
         pushEvent('cta_tofu_click', meta);
         pushEvent('cta_comprar_click', meta);
+        if (bucket === 'hero') pushEvent('tofu_cta_hero', meta);
+        else if (bucket === 'medio') pushEvent('tofu_cta_medio', meta);
+        else if (bucket === 'final') pushEvent('tofu_cta_final', meta);
         a.classList.add('is-navigating');
       }, false);
     });
@@ -141,6 +145,7 @@
         if (pct >= mark && !fired[mark]) {
           fired[mark] = true;
           pushEvent('tofu_scroll', { percent: mark, page: 'sobre-la-obra' });
+          pushEvent('tofu_scroll_' + mark, { page: 'sobre-la-obra' });
         }
       });
     }
@@ -158,9 +163,9 @@
   function pickVideoCandidates() {
     var mobile = window.matchMedia('(max-width: 767px)').matches;
     if (mobile) {
-      return ['video/tofu-hero-mobile-lite.mp4', 'video/tofu-hero-mobile.mp4'];
+      return ['video/tofu-hero-mobile.mp4'];
     }
-    return ['video/tofu-hero-desktop-lite.mp4', 'video/tofu-hero-desktop.mp4'];
+    return ['video/tofu-hero-desktop-lite.mp4'];
   }
 
   function resolveVideoSrc(candidates, idx, cb) {
@@ -169,14 +174,23 @@
       return;
     }
     var url = candidates[idx];
-    fetch(url, { method: 'HEAD', cache: 'force-cache' })
-      .then(function (res) {
-        if (res.ok) cb(url);
-        else resolveVideoSrc(candidates, idx + 1, cb);
-      })
-      .catch(function () {
-        resolveVideoSrc(candidates, idx + 1, cb);
-      });
+    var probe = document.createElement('video');
+    probe.preload = 'metadata';
+    probe.muted = true;
+    probe.playsInline = true;
+    function cleanup() {
+      probe.removeAttribute('src');
+      probe.load();
+    }
+    probe.addEventListener('loadedmetadata', function () {
+      cleanup();
+      cb(url);
+    }, { once: true });
+    probe.addEventListener('error', function () {
+      cleanup();
+      resolveVideoSrc(candidates, idx + 1, cb);
+    }, { once: true });
+    probe.src = url;
   }
 
   function initHeroVideo() {
@@ -206,6 +220,7 @@
       video.autoplay = true;
       video.setAttribute('autoplay', '');
       video.playsInline = true;
+      video.setAttribute('webkit-playsinline', '');
       video.src = src;
       video.load();
       video.addEventListener('playing', onPlaying, { once: true });
@@ -334,6 +349,12 @@
     pushEvent('visit', {
       ua: navigator.userAgent.substring(0, 80),
       w: window.innerWidth,
+      page: 'sobre-la-obra',
+      utm_campaign: utm.campaign || '',
+      utm_content: utm.content || '',
+      utm_term: utm.term || '',
+    });
+    pushEvent('tofu_landing', {
       page: 'sobre-la-obra',
       utm_campaign: utm.campaign || '',
       utm_content: utm.content || '',

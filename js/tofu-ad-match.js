@@ -23,7 +23,7 @@
     },
     linaje: {
       pregunta: '37 años en escena — en vivo, sin filtro.',
-      sub: 'Una actuación legendaria que esta temporada en CDMX no se repite cada año.',
+      sub: 'Más de mil funciones desde 1989 — y sigue en cartelera cada temporada.',
     },
   };
 
@@ -76,7 +76,7 @@
     },
     'linaje-tofu-1': {
       pregunta: '37 años en escena.',
-      sub: 'El monólogo más longevo del teatro mexicano — y esta temporada no se repite cada año.',
+      sub: 'El monólogo más longevo del teatro mexicano: más de mil funciones desde 1989.',
     },
   };
 
@@ -193,6 +193,7 @@
   }
 
   function pushAttribution(match) {
+    if (typeof window.egSinAnalytics === 'function' && window.egSinAnalytics()) return;
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({
       event: 'tofu_ad_match',

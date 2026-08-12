@@ -17,16 +17,15 @@
 (function () {
   window.dataLayer = window.dataLayer || [];
 
-  // Desarrollo local: no contaminar el píxel ni GA4 de producción.
-  // El desglose por URL del píxel mostraba eventos desde localhost/127.0.0.1.
-  // Se silencian los envíos, NO la API: el resto del sitio sigue llamando a
-  // ElGorilaAnalytics con normalidad y el checkout local no se rompe.
-  var _egHost = location.hostname;
-  var ES_LOCAL = _egHost === 'localhost' || _egHost === '127.0.0.1' ||
-                 _egHost === '' || _egHost.slice(-6) === '.local';
-  if (ES_LOCAL && window.console && console.info) {
-    console.info('[analytics] entorno local: no se envían eventos a GA4 ni Meta');
+  // Sin medición: eg-sin-analytics.js (local, Cursor, opt-out equipo) o fallback.
+  function sinMedicion() {
+    if (typeof window.egSinAnalytics === 'function') return window.egSinAnalytics();
+    if (window._egNoAnalytics === true) return true;
+    var h = location.hostname;
+    return location.protocol === 'file:' || !h || h === 'localhost' || h === '127.0.0.1' ||
+           h.slice(-6) === '.local';
   }
+  var NO_TRACK = sinMedicion();
 
   // Página que declara `data-viewcontent="<nombre>"` en el <script> dispara
   // ViewContent / view_item al cargar. Necesario para optimizar campañas de
@@ -71,7 +70,7 @@
   // Siempre adjunta eg_* para que GA4 no pierda el ad/adset aunque el page_view
   // haya llegado sin UTM en la URL (atribución last-touch desde localStorage).
   function pushEcommerce(eventName, ecommerce, extra) {
-    if (ES_LOCAL) return;
+    if (NO_TRACK) return;
     window.dataLayer.push({ ecommerce: null });
     var payload = Object.assign({ event: eventName }, atribucionFields(), extra || {});
     if (ecommerce) payload.ecommerce = ecommerce;
@@ -200,7 +199,7 @@
   // reintento de 250ms y el evento se pierde en silencio (fix 2026-08-07,
   // encontrado al ver más Purchase que InitiateCheckout en AS-P2).
   function trackMeta(eventName, payload, eventId) {
-    if (ES_LOCAL) return Promise.resolve(false);
+    if (NO_TRACK) return Promise.resolve(false);
     var p = payload || {};
     var params = {};
     if (p.value != null) {
@@ -252,7 +251,7 @@
     catalogContentId: catalogContentId,
 
     grupoGrande: function (cantidad) {
-      if (ES_LOCAL) return;
+      if (NO_TRACK) return;
       window.dataLayer.push({ ecommerce: null });
       window.dataLayer.push(Object.assign({ event: 'grupo_grande', cantidad: cantidad }, atribucionFields()));
     },
@@ -341,7 +340,7 @@
 
       // 2) Meta Pixel directo (fbq) con reintento SOLO para fbq (GTM lo carga async).
       function sendMeta() {
-        if (ES_LOCAL) return true;
+        if (NO_TRACK) return true;
         if (typeof fbq !== 'function') return false;
         try {
           var cat = metaCatalogParams(orden);

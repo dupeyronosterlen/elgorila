@@ -122,20 +122,22 @@
   };
 
   // dataLayer: GTM lee esto en page_view y en eventos ecommerce
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({
-    event: 'eg_attribution',
-    eg_attribution: atribucion,
-    // Alias planos (más fáciles como DLV en GTM)
-    eg_source: atribucion.source,
-    eg_medium: atribucion.medium,
-    eg_campaign: atribucion.campaign,
-    eg_ad: atribucion.content,
-    eg_adset: atribucion.term,
-    eg_touch: atribucion.touch,
-    eg_page_type: atribucion.page_type,
-    eg_production: atribucion.production,
-    eg_venue: atribucion.venue,
-    eg_market: atribucion.market,
-  });
+  if (!(typeof window.egSinAnalytics === 'function' ? window.egSinAnalytics() : window._egNoAnalytics)) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'eg_attribution',
+      eg_attribution: atribucion,
+      // Alias planos (más fáciles como DLV en GTM)
+      eg_source: atribucion.source,
+      eg_medium: atribucion.medium,
+      eg_campaign: atribucion.campaign,
+      eg_ad: atribucion.content,
+      eg_adset: atribucion.term,
+      eg_touch: atribucion.touch,
+      eg_page_type: atribucion.page_type,
+      eg_production: atribucion.production,
+      eg_venue: atribucion.venue,
+      eg_market: atribucion.market,
+    });
+  }
 })();

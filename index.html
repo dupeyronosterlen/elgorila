@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html class="dark" lang="es"><head>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-P4BDXRN9');</script>
+<!-- Google Tag Manager (js/gtm.js respeta ?eg_no_track=1 del equipo) -->
+<script src="/js/eg-sin-analytics.js"></script>
+<script src="/js/gtm.js"></script>
 <!-- End Google Tag Manager -->
 <script src="js/analytics.js"></script>
 <meta charset="utf-8"/>
@@ -4463,6 +4460,7 @@ Los códigos se escriben en el paso de pago, después de elegir fecha y boletos.
         list.push({ t: Date.now(), type: type, data: payload });
         if (list.length > MAX_EVENTS) list = list.slice(-MAX_EVENTS);
         localStorage.setItem(LANDING_EVENTS_KEY, JSON.stringify(list));
+        if (typeof window.egSinAnalytics === 'function' && window.egSinAnalytics()) return;
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push({ event: type, landing_data: payload });
       } catch (e) {}
