@@ -83,8 +83,8 @@
   /** Copy del puente entre Kafka y 37 años — uno por línea, no del catálogo de ads. */
   var PUENTE_POR_LINEA = {
     jaulas: {
-      pregunta: '«¿A qué renuncias cada día para pertenecer?»',
-      sub: 'No siempre te encierran. A veces aprendes a encerrarte tú.',
+      pregunta: '«¿Y tú, a qué jaula llamas libertad?»',
+      sub: 'A veces, las jaulas más difíciles de ver son las que nosotros mismos nos construimos.',
     },
     espejo: {
       pregunta: '«No es teatro, es tu reflejo.»',
