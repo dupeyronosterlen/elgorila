@@ -6,7 +6,7 @@
 <script src="/js/gtm.js"></script>
 <!-- End Google Tag Manager -->
 <script src="js/utm.js"></script>
-<script src="js/analytics.js" data-meta="1" data-viewcontent="boletos"></script>
+<script src="js/analytics.js?v=20260812vc" data-meta="1" data-viewcontent="boletos"></script>
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
 <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
@@ -1090,13 +1090,27 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   border-top: 1px solid var(--d-faint);
 }
 .bol-footer-inner {
-  max-width: 540px; margin: 0 auto; padding: 32px 28px 28px;
+  max-width: 960px; margin: 0 auto; padding: 32px 28px 28px;
   display: grid; grid-template-columns: 1fr 1fr 1fr;
   gap: 16px; align-items: start;
 }
 @media (max-width: 500px) {
   .bol-footer-inner { grid-template-columns: 1fr; gap: 18px; text-align: center; }
 }
+.footer-nav-col {
+  display: flex; flex-direction: column; gap: 8px;
+  align-items: center; text-align: center;
+}
+@media (min-width: 501px) {
+  .footer-nav-col { align-items: flex-start; text-align: left; }
+}
+.footer-admin-link {
+  display: inline-block; margin-top: 10px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+  color: rgba(241,234,217,.45); text-decoration: none;
+  transition: color .15s;
+}
+.footer-admin-link:hover { color: var(--gold); }
 .footer-col-label {
   font-family: var(--mono); font-size: 12px;
   letter-spacing: .22em; text-transform: uppercase;
@@ -1485,7 +1499,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-<!-- ══ FOOTER — oscuro ═══════════════════════════════════════ -->
+<!-- ══ FOOTER — oscuro (misma navegación que index) ═══════════ -->
 <footer class="bol-footer">
   <div class="bol-footer-inner">
     <div>
@@ -1493,14 +1507,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Contacto
       </div>
-      <a class="footer-link" href="mailto:elgorilateatro@gmail.com">elgorilateatro@gmail.com</a>
+      <a class="footer-link" href="mailto:elgorilateatro@gmail.com" data-footer-dest="email">elgorilateatro@gmail.com</a>
     </div>
-    <div style="text-align:center;display:flex;flex-direction:column;gap:8px;">
-      <a class="footer-link" href="/sobre-la-obra.html" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">Sobre la obra</a>
+    <div class="footer-nav-col">
+      <a class="footer-link" href="/funciones.html" data-footer-dest="funciones">Funciones y fechas</a>
+      <a class="footer-link" href="/sobre-la-obra.html" data-footer-dest="sobre_obra">Sobre la obra</a>
+      <a class="footer-link" href="/historia-del-gorila.html" data-footer-dest="historia">Historia del monólogo</a>
+      <a class="footer-link" href="/presskit/presskit2026.html" data-footer-dest="presskit">Presskit</a>
+      <a class="footer-link" href="#ayuda-boletos" data-footer-dest="faq">Preguntas frecuentes</a>
     </div>
     <div style="text-align:right;">
       <div class="footer-brand">EL GORILA</div>
       <div class="footer-copy">© 2026. Todos los derechos reservados.</div>
+      <a id="footer-admin-link" href="/admin.html" class="footer-admin-link" data-footer-dest="admin">Administrador</a>
     </div>
     <div class="footer-social">
       <a href="https://www.facebook.com/p/El-Gorila-100088695462813/" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="Facebook">
@@ -1542,6 +1561,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/temporada-copy.js"></script>
 <script src="js/imagenes.js"></script>
 <script src="js/main.js"></script>
+<script src="js/mofu-boletos.js?v=20260812"></script>
 <script>
 (function() {
   var wrap = document.getElementById('logo-37-wrap');
