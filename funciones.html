@@ -621,27 +621,52 @@ ul { padding-left: 1.35rem; margin-bottom: 14px; }
 .info-grid dd { color: var(--d-soft); margin: 0 0 8px; }
 .site-footer {
   margin-top: 48px;
-  padding-top: 24px;
+  padding: 28px 0 8px;
   border-top: 0.5px solid rgba(217,155,58,.25);
   text-align: center;
 }
-.site-footer p {
-  font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: .1em;
-  color: var(--d-muted);
+.site-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.5rem;
+  margin-bottom: 1rem;
 }
-.site-footer a {
-  display: inline-block;
-  margin-top: 12px;
+.site-footer-nav a {
   font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: .14em;
+  font-size: 12px;
+  letter-spacing: .12em;
   text-transform: uppercase;
   text-decoration: none;
   color: var(--gold-dim);
 }
-.site-footer a:hover { text-decoration: underline; color: var(--d-fg); }
+.site-footer-nav a:hover { text-decoration: underline; color: var(--d-fg); }
+.site-footer-sep {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--d-muted);
+  opacity: 0.45;
+  user-select: none;
+}
+.site-footer-contact {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  margin-bottom: 0.65rem;
+}
+.site-footer-contact a {
+  color: var(--gold);
+  text-decoration: none;
+}
+.site-footer-contact a:hover { text-decoration: underline; }
+.site-footer p.site-footer-copy {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .1em;
+  color: var(--d-muted);
+  margin: 0;
+}
 @media (max-width: 520px) {
   .calendario th:nth-child(3), .calendario td:nth-child(3) { display: none; }
 }
@@ -726,10 +751,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <p>Para más contexto sobre la obra, visita la <a href="/">página principal</a>. Términos de compra en <a href="/terminos.html">terminos.html</a>.</p>
 </main>
 
-<footer class="site-footer">
-  <p>© 2026 EL GORILA Teatro</p>
-  <a href="/">Volver al inicio</a>
+<footer class="site-footer" aria-label="Pie de página">
+  <nav class="site-footer-nav" aria-label="Enlaces principales">
+    <a href="/">Inicio</a>
+    <span class="site-footer-sep" aria-hidden="true">·</span>
+    <a href="/boletos.html#fechas-fecha-wrap">Boletos</a>
+    <span class="site-footer-sep" aria-hidden="true">·</span>
+    <a href="/sobre-la-obra.html">Sobre la obra</a>
+    <span class="site-footer-sep" aria-hidden="true">·</span>
+    <a href="/historia-del-gorila.html">Historia del monólogo</a>
+    <span class="site-footer-sep" aria-hidden="true">·</span>
+    <a href="/presskit/presskit2026.html">Prensa</a>
+  </nav>
+  <p class="site-footer-contact"><a href="mailto:elgorilateatro@gmail.com">elgorilateatro@gmail.com</a></p>
+  <p class="site-footer-copy">© 2026 EL GORILA Teatro</p>
 </footer>
 </div>
+<script src="js/rutas.js"></script>
 </body>
 </html>
