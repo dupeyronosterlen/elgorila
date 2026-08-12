@@ -170,13 +170,46 @@
     });
   }
 
-  // GTM carga el Meta Pixel de forma asíncrona (11 tags que procesar). Si esto
-  // se llama antes de que `fbq` exista (ej. ViewContent en DOMContentLoaded,
-  // que casi siempre gana la carrera), se reintenta igual que ya hace
-  // purchase() — antes se perdía el evento en silencio (fix 2026-08-06:
-  // auditoría mostró 104 Landing Page View reales vs solo 3 ViewContent,
-  // ~97% de pérdida por esta carrera, no por falta de tráfico real).
+  // Pixel ID canónico (mismo que GTM Tag 1 / Zaraz). Z1 (ago 2026): Zaraz
+  // manda PageView; GTM Tag 1 quedó en init-only. Si fbq no existe (Tag 1
+  // pausado o carrera), analytics.js inicializa el pixel AQUÍ sin PageView —
+  // si no, ViewContent/ATC/IC mueren en silencio y se cae la pauta VC.
+  var META_PIXEL_ID = '24471801772518505';
+
+  function ensureMetaPixel() {
+    if (typeof fbq === 'function') return true;
+    try {
+      var f = window;
+      var b = document;
+      if (!f.fbq) {
+        var n = f.fbq = function () {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = true;
+        n.version = '2.0';
+        n.queue = [];
+        var t = b.createElement('script');
+        t.async = true;
+        t.src = 'https://connect.facebook.net/en_US/fbevents.js';
+        var s = b.getElementsByTagName('script')[0];
+        if (s && s.parentNode) s.parentNode.insertBefore(t, s);
+        else (b.head || b.documentElement).appendChild(t);
+      }
+      fbq('init', META_PIXEL_ID);
+      // NO fbq('track','PageView') — dueño = Zaraz (Z1).
+      return typeof fbq === 'function';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Si fbq aún no cargó (script async), reintenta como purchase().
+  // Fix 2026-08-06: VC se perdía ~97% por carrera GTM. Fix 2026-08-12: Z1
+  // pausó Tag 1 y Zaraz no expone fbq → ensureMetaPixel() restaura init.
   function fireMetaPixel(eventName, params, eventId) {
+    ensureMetaPixel();
     if (typeof fbq !== 'function') return false;
     try {
       if (eventId) {
