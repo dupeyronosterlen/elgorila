@@ -38,6 +38,9 @@
 /css/tailwind.css
   Cache-Control: public, max-age=31536000, immutable
 
+/css/fonts-funnel.css
+  Cache-Control: public, max-age=31536000, immutable
+
 # Fuentes: contenido estable (se versionan con ?v=) → cache largo inmutable
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
