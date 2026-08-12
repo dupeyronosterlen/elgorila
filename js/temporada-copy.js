@@ -107,6 +107,13 @@
       });
     });
 
+    document.querySelectorAll('.barra-compra-fija [data-temporada-conteo]').forEach(function (el) {
+      var a = el.closest('.barra-compra-fija');
+      if (a) {
+        a.setAttribute('aria-label', 'Ver fechas — ' + el.textContent + '. Desde $400. Credencial $280');
+      }
+    });
+
     // aria-label de los CTA de venta: se arma aparte porque lleva precio.
     document.querySelectorAll('.link-venta-boletos[aria-label]').forEach(function (a) {
       a.setAttribute('aria-label', a.getAttribute('aria-label').replace(/\d+\s+sábados|solo\s+\d+\s+sábados|último sábado|\d+\s+funciones|última función/i, r.conteo));

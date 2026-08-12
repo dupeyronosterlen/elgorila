@@ -2,6 +2,7 @@
  * Ad ↔ landing match para TOFU.
  * Lee UTMs de Meta y muestra en .ad-puente copy propio por línea
  * (pulido en landing; no repite el creativo del clic).
+ * Linaje: sin puente propio — elige al azar uno de los 6 (espejo + jaulas).
  */
 (function () {
   'use strict';
@@ -80,21 +81,56 @@
     },
   };
 
-  /** Copy del puente entre Kafka y 37 años — uno por línea, no del catálogo de ads. */
-  var PUENTE_POR_LINEA = {
-    jaulas: {
-      pregunta: '«¿Y tú, a qué jaula llamas libertad?»',
-      sub: 'A veces, las jaulas más difíciles de ver son las que nosotros mismos nos construimos.',
-    },
-    espejo: {
+  /** Espejo TOFU-1/2/3 — copy del puente (activo: tofu-1 en PUENTE_POR_LINEA). */
+  var PUENTE_ESPEJO = {
+    1: {
       pregunta: '«No es teatro, es tu reflejo.»',
       sub: 'Te invitamos a reconocerte.',
     },
-    linaje: {
-      pregunta: '37 años en escena.',
-      sub: 'El monólogo más longevo del teatro mexicano: más de mil funciones desde 1989.',
+    2: {
+      pregunta: '«¿Quién eres cuando dejas de fingir?»',
+      sub: 'Reconocerte empieza cuando sueltas la versión que compraste.',
+    },
+    3: {
+      pregunta: '«¿Y tú, qué tan bueno eres para imitar?»',
+      sub: 'Imitar no es un engaño. A veces es la única salida.',
     },
   };
+
+  /** Jaulas TOFU-1/2/3 — copy del puente (activo: tofu-3 en PUENTE_POR_LINEA). */
+  var PUENTE_JAULAS = {
+    1: {
+      pregunta: '«¿Cómo escapamos de las jaulas que no se pueden ver?»',
+      sub: 'Las de barrotes se reconocen. Las otras las confundimos con libertad.',
+    },
+    2: {
+      pregunta: '«¿A qué renuncias cada día para pertenecer?»',
+      sub: 'No siempre te encierran. A veces aprendes a encerrarte tú.',
+    },
+    3: {
+      pregunta: '«¿Y tú, a qué jaula llamas libertad?»',
+      sub: 'A veces, las jaulas más difíciles de ver son las que nosotros mismos nos construimos.',
+    },
+  };
+
+  /** Copy del puente entre Kafka y 37 años — uno por línea, no del catálogo de ads. */
+  var PUENTE_POR_LINEA = {
+    jaulas: PUENTE_JAULAS[3],
+    espejo: PUENTE_ESPEJO[1],
+  };
+
+  var PUENTE_LINAJE_POOL = [
+    { id: 'espejo-1', puente: PUENTE_ESPEJO[1] },
+    { id: 'espejo-2', puente: PUENTE_ESPEJO[2] },
+    { id: 'espejo-3', puente: PUENTE_ESPEJO[3] },
+    { id: 'jaulas-1', puente: PUENTE_JAULAS[1] },
+    { id: 'jaulas-2', puente: PUENTE_JAULAS[2] },
+    { id: 'jaulas-3', puente: PUENTE_JAULAS[3] },
+  ];
+
+  function elegirPuenteLinaje() {
+    return PUENTE_LINAJE_POOL[Math.floor(Math.random() * PUENTE_LINAJE_POOL.length)];
+  }
 
   function norm(s) {
     return String(s || '')
@@ -155,6 +191,14 @@
     }
 
     var puente = lineaKey && PUENTE_POR_LINEA[lineaKey];
+    var contentPuente = lineaKey ? 'puente-' + lineaKey : '';
+
+    if (lineaKey === 'linaje') {
+      var linajePick = elegirPuenteLinaje();
+      puente = linajePick.puente;
+      contentPuente = 'puente-linaje-' + linajePick.id;
+    }
+
     var pregunta = puente && puente.pregunta;
     var sub = puente && puente.sub;
     if (!pregunta && lineaKey && LINEA_DEFAULTS[lineaKey]) {
@@ -165,7 +209,7 @@
     return {
       campaign: campaign || 'default',
       content: contentKey,
-      contentPuente: lineaKey ? 'puente-' + lineaKey : '',
+      contentPuente: contentPuente,
       contentRaw: utm.content || '',
       lineaKey: lineaKey || '',
       linea: linea,

@@ -180,10 +180,14 @@
     .hero-top { position: relative; z-index: 3; width: 100%; max-width: none; text-align: left; margin-top: -0.3rem; }
     .hero-top-fijo {
       font-family: var(--display); font-size: clamp(1.14rem, 3.24vw, 1.36rem);
-      font-style: italic; font-weight: 400; letter-spacing: 0.02em;
+      font-style: normal; font-weight: 400; letter-spacing: 0.02em;
       color: var(--gold-light); text-align: right; line-height: 1.4;
       text-shadow: 0 1px 6px rgba(0,0,0,0.9); max-width: 36ch;
       margin-left: auto; margin-right: 0;
+    }
+    .hero-top-longevo {
+      font-style: italic;
+      font-size: 1.15em;
     }
     .hero-inner {
       position: relative; z-index: 3; max-width: 620px; margin: 0 auto; width: 100%;
@@ -548,17 +552,22 @@
 
     .barra-compra-fija {
       position: fixed; left: 0.5rem; right: 0.5rem; bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
-      z-index: 90; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center;
-      gap: 0.3rem 0.65rem; padding: 1rem 1.25rem; min-height: 56px;
+      z-index: 90; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0.2rem; padding: 0.85rem 1.25rem 0.9rem; min-height: 56px;
       background: linear-gradient(180deg, var(--scene-blood) 0%, var(--blood) 58%, var(--blood-deep) 100%);
       border: 1px solid rgba(241,234,217,0.35); color: var(--cream);
       font-family: var(--mono); font-weight: 600; font-size: 0.9rem; letter-spacing: 0.08em;
       text-transform: uppercase; text-align: center;
       box-shadow: 0 10px 32px rgba(212,58,26,0.45); transition: transform 0.15s;
     }
+    .barra-compra-principal { line-height: 1.25; }
     .barra-compra-fija:hover { transform: translateY(-2px); }
     .barra-compra-fija:active { transform: translateY(0) scale(0.98); }
-    .barra-compra-meta { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 0.3rem 0.5rem; font-size: 10.5px; letter-spacing: 0.1em; opacity: 0.95; }
+    .barra-compra-meta {
+      display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center;
+      gap: 0.3rem 0.5rem; font-size: 10.5px; font-weight: 500; letter-spacing: 0.1em;
+      opacity: 0.95; line-height: 1.2;
+    }
     .barra-compra-meta-sep { opacity: 0.5; }
 
     .footer { border-top: 1px solid var(--gold-border); padding: 2.25rem 1.25rem; text-align: center; font-size: 0.85rem; color: var(--cream-50); }
@@ -574,15 +583,25 @@
         padding: 0.55rem 0.85rem; line-height: 1.55; gap: 0.35rem;
       }
       .hero {
-        min-height: max(calc(100dvh - var(--site-header-height, 5.75rem)), fit-content);
-        min-height: max(calc(100svh - var(--site-header-height, 5.75rem)), fit-content);
-        justify-content: flex-start; gap: 0;
-        padding: 1rem 1.15rem calc(4.75rem + env(safe-area-inset-bottom, 0px));
-        overflow: visible;
+        --hero-video-h: clamp(22rem, 64svh, 32rem);
+        min-height: var(--hero-video-h);
+        height: var(--hero-video-h);
+        justify-content: flex-start;
+        gap: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      .hero-media {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--hero-video-h);
+        bottom: auto;
       }
       .hero-poster img,
       .hero-video {
-        object-position: center 28%;
+        object-position: center 22%;
       }
       /* Hero móvil: mismo look cálido + viñeta en todo el contorno */
       .hero-video,
@@ -593,20 +612,30 @@
       }
       .hero-media.is-playing .hero-grain { opacity: 0.04; }
       .hero-overlay {
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--hero-video-h);
+        bottom: auto;
         box-shadow:
           inset 0 0 52px rgba(8,5,4,0.36),
           inset 0 0 88px rgba(8,5,4,0.14);
         background:
-          radial-gradient(ellipse 108% 94% at 50% 42%, transparent 38%, rgba(6,4,3,0.42) 100%),
+          radial-gradient(ellipse 108% 94% at 50% 38%, transparent 42%, rgba(6,4,3,0.38) 100%),
           linear-gradient(180deg,
-            rgba(10,7,5,0.18) 0%, rgba(8,5,4,0.26) 24%,
-            rgba(6,4,3,0.5) 52%, rgba(18,13,11,0.92) 82%, var(--dark) 100%);
+            rgba(10,7,5,0.1) 0%, rgba(8,5,4,0.14) 30%,
+            rgba(6,4,3,0.38) 58%, rgba(18,13,11,0.94) 86%, var(--dark) 100%);
       }
       .hero-top {
+        position: absolute;
+        top: 1rem;
+        left: 1.15rem;
+        right: 1.15rem;
+        z-index: 4;
         margin-top: 0;
         flex-shrink: 0;
-        width: 100%;
-        align-self: flex-start;
+        width: auto;
+        align-self: auto;
       }
       .hero-top-fijo {
         display: block;
@@ -617,14 +646,22 @@
         max-width: 28ch;
       }
       .hero-inner {
-        margin-top: auto;
-        padding-top: 1rem;
+        position: absolute;
+        z-index: 3;
+        left: 1.15rem;
+        right: 1.15rem;
+        top: var(--hero-video-h);
+        transform: translateY(-100%);
+        margin-top: 0;
+        padding: 0 0 0.5rem;
         max-width: none;
-        display: flex; flex-direction: column; gap: 0.85rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
         flex-shrink: 0;
       }
       .hero-title {
-        font-size: clamp(1.28rem, 5.4vw, 1.68rem);
+        font-size: clamp(1.34rem, 5.67vw, 1.76rem);
         line-height: 1.28; margin-bottom: 0;
         text-wrap: pretty; max-width: none;
       }
@@ -634,7 +671,7 @@
       }
       .hero-br-mobile { display: inline; }
       .hero-dek {
-        font-size: clamp(1.02rem, 4.2vw, 1.22rem);
+        font-size: clamp(1.17rem, 4.83vw, 1.4rem);
         line-height: 1.36; margin-bottom: 0;
         max-width: none; text-wrap: pretty;
       }
@@ -666,11 +703,12 @@
       .proof-quote-author { flex-basis: 100%; text-align: center; margin-top: 0.15rem; }
       .barra-compra-fija {
         left: 0.35rem; right: 0.35rem;
-        padding: 0.9rem 0.75rem; gap: 0;
+        padding: 0.8rem 0.75rem 0.85rem; gap: 0.15rem;
         font-size: clamp(0.82rem, 3.6vw, 0.92rem);
-        justify-content: center;
       }
-      .barra-compra-meta { display: none; }
+      .barra-compra-meta {
+        font-size: clamp(9px, 2.6vw, 10px);
+      }
       /* En vivo móvil: más luz, casi sin grano */
       .video-obra-clip {
         filter: contrast(1.02) brightness(1.06) saturate(0.98);
@@ -820,11 +858,12 @@
   </div>
   <div class="hero-overlay"></div>
   <div class="hero-top">
-    <p class="hero-top-fijo">El monólogo más longevo de México · sábados 6&nbsp;pm</p>
+    <p class="hero-top-fijo"><em class="hero-top-longevo">El monólogo más longevo de México</em> · sábados 6&nbsp;pm</p>
   </div>
   <div class="hero-inner">
     <h1 class="hero-title">
-      Un gorila que aprendió a ser humano para poder sobrevivir.
+      Un gorila que aprendió a ser humano<br class="hero-br-mobile" aria-hidden="true" />
+      para poder sobrevivir.
       <span class="hero-title-q">¿Y tú, le llamarías a eso «libertad»?</span>
     </h1>
     <p class="hero-dek">
@@ -843,7 +882,6 @@
 <div class="datos-strip">
   <div class="datos-inner">
     <span>1 actor</span>
-    <span>80 min · sin intermedio</span>
     <span>Sábados 18:00</span>
     <span>Entrada general <b>$400</b></span>
     <span>INAPAM · estudiante · maestro <b>$280</b></span>
@@ -856,8 +894,6 @@
       <span>37 años en escena</span>
       <span class="proof-dot" aria-hidden="true">·</span>
       <span>+1.000 funciones</span>
-      <span class="proof-dot" aria-hidden="true">·</span>
-      <span>Desde 1989</span>
     </p>
     <span class="proof-vrule" aria-hidden="true"></span>
     <blockquote class="proof-quote" id="proof-quote" aria-live="polite">
@@ -1100,12 +1136,11 @@
   <p style="margin-top:0.5rem">© 2026 El Gorila · <a href="mailto:elgorilateatro@gmail.com">elgorilateatro@gmail.com</a></p>
 </footer>
 
-<a class="barra-compra-fija link-venta-boletos" href="/boletos.html#fechas-fecha-wrap" data-cta-position="sticky-bar" aria-label="Ver fechas y boletos — desde $400">
-  <span>Ver fechas y boletos</span>
+<a class="barra-compra-fija link-venta-boletos" href="/boletos.html#fechas-fecha-wrap" data-cta-position="sticky-bar" aria-label="Ver fechas — 6 sábados. Desde $400. Credencial $280">
+  <span class="barra-compra-principal">Ver fechas — <span data-temporada-conteo>6 sábados</span></span>
   <span class="barra-compra-meta" aria-hidden="true">
     <span>Desde $400</span><span class="barra-compra-meta-sep">·</span>
-    <span>Credencial $280</span><span class="barra-compra-meta-sep">·</span>
-    <span data-temporada-conteo>6 sábados</span>
+    <span>Credencial $280</span>
   </span>
 </a>
 
@@ -1115,7 +1150,7 @@
 <script src="js/analytics.js" data-viewcontent="sobre-la-obra"></script>
 <script src="js/fechas.js" defer></script>
 <script src="js/temporada-copy.js" defer></script>
-<script src="js/tofu-ad-match.js?v=20260812r" defer></script>
+<script src="js/tofu-ad-match.js?v=20260812s" defer></script>
 <script src="js/tofu-landing.js?v=20260812c" defer></script>
 <script>
   /* Fotos dinámicas: cada <img data-pool="..."> sortea una de su grupo en cada
