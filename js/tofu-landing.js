@@ -165,7 +165,7 @@
     if (mobile) {
       return ['video/tofu-hero-mobile.mp4'];
     }
-    return ['video/tofu-hero-desktop-lite.mp4'];
+    return ['video/tofu-hero-desktop.mp4', 'video/tofu-hero-desktop-lite.mp4'];
   }
 
   function resolveVideoSrc(candidates, idx, cb) {

@@ -130,24 +130,28 @@
          instantáneos al armarse el video. Ahora acompañan al fundido. */
       transition: filter 0.7s ease, transform 0.7s ease;
     }
+    .hero-video {
+      width: 100%; height: 100%; object-fit: cover; object-position: center center;
+      transform: scale(1.04);
+      filter: contrast(1.08) brightness(0.9) saturate(0.84) sepia(0.13);
+      will-change: transform, filter;
+    }
     .hero-media.video-armed .hero-poster img,
     .hero-media.poster-only .hero-poster img {
-      filter: contrast(1.22) brightness(0.58) saturate(0.47) sepia(0.17); transform: scale(1.1);
+      filter: contrast(1.08) brightness(0.9) saturate(0.84) sepia(0.13);
+      transform: scale(1.04);
     }
     .hero-media.is-playing .hero-poster {
       opacity: 0; visibility: hidden; pointer-events: none;
       transition: opacity 0.7s ease, visibility 0s linear 0.7s;
     }
     .hero-media.poster-only .hero-video-wrap { display: none; }
-    .hero-video-wrap { position: absolute; inset: 0; overflow: hidden; background: var(--dark-mid); opacity: 0; transition: opacity 0.7s ease; }
-    .hero-media.is-playing .hero-video-wrap { opacity: 1; }
-    .hero-video {
-      width: 100%; height: 100%; object-fit: cover; object-position: center center;
-      transform: scale(1.1);
-      filter: contrast(1.29) brightness(0.56) saturate(0.45) sepia(0.2) blur(0.5px);
-      will-change: transform, filter;
+    .hero-video-wrap {
+      position: absolute; inset: 0; overflow: hidden; background: var(--dark-mid);
+      opacity: 0; transition: opacity 0.7s ease;
     }
-    .hero-media.is-playing .hero-grain { opacity: 0.22; }
+    .hero-media.is-playing .hero-video-wrap { opacity: 1; }
+    .hero-media.is-playing .hero-grain { opacity: 0.1; }
     .hero-grain {
       position: absolute; inset: 0; pointer-events: none; z-index: 1;
       opacity: 0.11; mix-blend-mode: overlay;
@@ -164,10 +168,15 @@
     /* Suelo sólido bajo el copy: aquí es donde antes se encimaba el texto
        con lo que pasara en el video. */
     .hero-overlay {
-      position: absolute; inset: 0; z-index: 2;
-      background: linear-gradient(180deg,
-        rgba(10,7,5,0.20) 0%, rgba(8,5,4,0.42) 32%,
-        rgba(6,4,3,0.86) 62%, rgba(18,13,11,0.99) 92%, var(--dark) 100%);
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      box-shadow:
+        inset 0 0 72px rgba(8,5,4,0.48),
+        inset 0 0 120px rgba(8,5,4,0.22);
+      background:
+        radial-gradient(ellipse 105% 92% at 50% 44%, transparent 38%, rgba(6,4,3,0.52) 100%),
+        linear-gradient(180deg,
+          rgba(10,7,5,0.28) 0%, rgba(8,5,4,0.34) 28%,
+          rgba(6,4,3,0.62) 58%, rgba(18,13,11,0.96) 88%, var(--dark) 100%);
     }
     /* Zona de arriba: mensaje del anuncio o línea fija */
     .hero-top { position: relative; z-index: 3; width: 100%; max-width: none; text-align: left; margin-top: -0.3rem; }
@@ -378,13 +387,14 @@
       position: absolute; inset: 0; width: 100%; height: 100%;
       object-fit: cover; object-position: center center;
       display: block; z-index: 0;
-      filter: contrast(1.06) brightness(0.9) saturate(0.88) sepia(0.05);
+      transform: scale(1.03);
+      filter: contrast(1.08) brightness(0.9) saturate(0.84) sepia(0.13);
     }
     .video-obra-tint {
       position: absolute; inset: 0; z-index: 1; pointer-events: none;
       background: linear-gradient(175deg,
-        rgba(217,155,58,0.03) 0%, transparent 42%,
-        rgba(10,7,5,0.09) 100%);
+        rgba(217,155,58,0.06) 0%, transparent 38%,
+        rgba(10,7,5,0.12) 100%);
       mix-blend-mode: soft-light;
     }
     .video-obra-grain {
@@ -395,7 +405,10 @@
     }
     .video-obra::after {
       content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
-      box-shadow: inset 0 0 52px rgba(8,5,4,0.18);
+      box-shadow:
+        inset 0 0 72px rgba(8,5,4,0.48),
+        inset 0 0 120px rgba(8,5,4,0.22);
+      background: radial-gradient(ellipse 100% 88% at 50% 50%, transparent 42%, rgba(6,4,3,0.35) 100%);
     }
     .video-obra-clip--desktop { display: none; }
     .video-obra.sin-video { display: none; }
@@ -564,21 +577,23 @@
       .hero-video {
         object-position: center 22%;
       }
-      /* Hero video móvil: más brillo, sin blur ni zoom */
-      .hero-video {
-        transform: none;
-        filter: contrast(1.03) brightness(1.08) saturate(0.97);
-      }
+      /* Hero móvil: mismo look cálido + viñeta en todo el contorno */
+      .hero-video,
       .hero-media.video-armed .hero-poster img,
       .hero-media.poster-only .hero-poster img {
-        filter: contrast(1.03) brightness(1.08) saturate(0.97);
-        transform: none;
+        transform: scale(1.02);
+        filter: contrast(1.06) brightness(0.94) saturate(0.86) sepia(0.11);
       }
-      .hero-media.is-playing .hero-grain { opacity: 0.03; }
+      .hero-media.is-playing .hero-grain { opacity: 0.05; }
       .hero-overlay {
-        background: linear-gradient(180deg,
-          rgba(10,7,5,0.22) 0%, rgba(8,5,4,0.38) 24%,
-          rgba(6,4,3,0.72) 52%, rgba(18,13,11,0.94) 82%, var(--dark) 100%);
+        box-shadow:
+          inset 0 0 56px rgba(8,5,4,0.42),
+          inset 0 0 96px rgba(8,5,4,0.18);
+        background:
+          radial-gradient(ellipse 108% 94% at 50% 42%, transparent 36%, rgba(6,4,3,0.5) 100%),
+          linear-gradient(180deg,
+            rgba(10,7,5,0.24) 0%, rgba(8,5,4,0.32) 24%,
+            rgba(6,4,3,0.58) 52%, rgba(18,13,11,0.94) 82%, var(--dark) 100%);
       }
       .hero-top {
         margin-top: 0;
@@ -652,13 +667,17 @@
         font-size: clamp(0.78rem, 3.4vw, 0.88rem);
       }
       .barra-compra-meta { font-size: clamp(9px, 2.6vw, 10px); }
-      /* En vivo móvil: más luz, casi sin grano */
+      /* En vivo móvil: mismo filtro y viñeta perimetral */
       .video-obra-clip {
-        filter: contrast(1.02) brightness(1.06) saturate(0.98);
+        transform: scale(1.02);
+        filter: contrast(1.06) brightness(0.94) saturate(0.86) sepia(0.11);
       }
-      .video-obra-grain { opacity: 0.02; }
-      .video-obra-tint { opacity: 0.65; }
-      .video-obra::after { box-shadow: inset 0 0 28px rgba(8,5,4,0.08); }
+      .video-obra-grain { opacity: 0.04; }
+      .video-obra::after {
+        box-shadow:
+          inset 0 0 56px rgba(8,5,4,0.42),
+          inset 0 0 96px rgba(8,5,4,0.18);
+      }
     }
 
     @media (min-width: 768px) {
@@ -723,18 +742,21 @@
       .video-obra::before { aspect-ratio: 16 / 9; }
       .video-obra-clip--mobile { display: none; }
       .video-obra-clip--desktop { display: block; }
-      /* Filtro ~26% en desktop (+20% sobre el base móvil) */
+      /* Mismo filtro cálido + viñeta perimetral que el hero */
       .video-obra-clip {
-        filter: contrast(1.072) brightness(0.88) saturate(0.856) sepia(0.06);
+        transform: scale(1.04);
+        filter: contrast(1.08) brightness(0.9) saturate(0.84) sepia(0.13);
       }
       .video-obra-tint {
         background: linear-gradient(175deg,
-          rgba(217,155,58,0.036) 0%, transparent 42%,
-          rgba(10,7,5,0.108) 100%);
+          rgba(217,155,58,0.06) 0%, transparent 38%,
+          rgba(10,7,5,0.12) 100%);
       }
-      .video-obra-grain { opacity: 0.066; }
+      .video-obra-grain { opacity: 0.055; }
       .video-obra::after {
-        box-shadow: inset 0 0 52px rgba(8,5,4,0.216);
+        box-shadow:
+          inset 0 0 72px rgba(8,5,4,0.48),
+          inset 0 0 120px rgba(8,5,4,0.22);
       }
       .reviews { gap: 1.15rem; }
       .review-card { padding: 1.45rem 1.6rem; }
