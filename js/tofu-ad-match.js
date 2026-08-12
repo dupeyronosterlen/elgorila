@@ -83,8 +83,8 @@
   /** Copy del puente entre Kafka y 37 años — uno por línea, no del catálogo de ads. */
   var PUENTE_POR_LINEA = {
     jaulas: {
-      pregunta: '«¿Cómo escapamos de las jaulas que no se pueden ver?»',
-      sub: 'A veces, las de barrotes se reconocen. Las otras las confundimos con libertad.',
+      pregunta: '«¿A qué renuncias cada día para pertenecer?»',
+      sub: 'El trabajo, la reunión, el tono correcto: cada mañana algo queda afuera.',
     },
     espejo: {
       pregunta: '«No es teatro, es tu reflejo.»',
