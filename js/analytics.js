@@ -34,18 +34,60 @@
   var _egScript = document.currentScript;
   var _egViewContent = _egScript && _egScript.getAttribute('data-viewcontent');
 
+  function atribucionActual() {
+    if (typeof window.obtenerAtribucion === 'function') {
+      try { return window.obtenerAtribucion() || {}; } catch (e) { /* ignore */ }
+    }
+    if (typeof window.obtenerUTM === 'function') {
+      try {
+        var u = window.obtenerUTM() || {};
+        return {
+          source: u.source || '', medium: u.medium || '', campaign: u.campaign || '',
+          content: u.content || '', term: u.term || '',
+        };
+      } catch (e) { /* ignore */ }
+    }
+    return {};
+  }
+
+  function atribucionFields() {
+    var a = atribucionActual();
+    return {
+      eg_source: a.source || '',
+      eg_medium: a.medium || '',
+      eg_campaign: a.campaign || '',
+      eg_ad: a.content || '',
+      eg_adset: a.term || '',
+      eg_touch: a.touch || '',
+      eg_page_type: a.page_type || '',
+      eg_production: a.production || 'el-gorila',
+      eg_venue: a.venue || 'wilberto',
+      eg_market: a.market || 'cdmx',
+    };
+  }
+
   // Empuja un evento de ecommerce al dataLayer para que lo recoja GTM.
   // Limpia `ecommerce` antes (evita que items de un push previo se mezclen).
-  function pushEcommerce(eventName, ecommerce) {
+  // Siempre adjunta eg_* para que GA4 no pierda el ad/adset aunque el page_view
+  // haya llegado sin UTM en la URL (atribución last-touch desde localStorage).
+  function pushEcommerce(eventName, ecommerce, extra) {
     if (ES_LOCAL) return;
     window.dataLayer.push({ ecommerce: null });
-    var payload = { event: eventName };
+    var payload = Object.assign({ event: eventName }, atribucionFields(), extra || {});
     if (ecommerce) payload.ecommerce = ecommerce;
     window.dataLayer.push(payload);
   }
 
+  function fechaOrden(orden) {
+    if (!orden) return '';
+    if (orden.fechaIso && /^\d{4}-\d{2}-\d{2}$/.test(String(orden.fechaIso))) return String(orden.fechaIso);
+    if (orden.fecha && /^\d{4}-\d{2}-\d{2}$/.test(String(orden.fecha))) return String(orden.fecha);
+    return '';
+  }
+
   function mapItems(orden) {
     if (!orden || !Array.isArray(orden.items)) return [];
+    var fecha = fechaOrden(orden);
     return orden.items.map(function (i) {
       var precio = i.precio;
       if (precio == null) {
@@ -53,9 +95,15 @@
           ? (typeof window.precioGeneralVigente === 'function' ? window.precioGeneralVigente() : 400)
           : (window.PRECIO_CREDENCIAL || 280);
       }
+      var tipo = i.tipo || 'general';
+      var catalogId = fecha ? ('gorila-' + fecha) : tipo;
       return {
-        item_id: i.tipo,
-        item_name: (i.tipo || '').charAt(0).toUpperCase() + (i.tipo || '').slice(1),
+        item_id: catalogId,
+        item_name: 'El Gorila — ' + tipo.charAt(0).toUpperCase() + tipo.slice(1),
+        item_category: 'teatro',
+        item_category2: 'el-gorila',
+        item_variant: tipo,
+        item_list_name: fecha || undefined,
         quantity: i.cantidad,
         price: precio,
         currency: 'MXN',
@@ -70,6 +118,11 @@
       items: mapItems(orden),
       coupon: orden && orden.codigoCupon ? orden.codigoCupon : undefined,
     };
+  }
+
+  function funcionExtra(orden) {
+    var fecha = fechaOrden(orden);
+    return fecha ? { eg_funcion_fecha: fecha } : {};
   }
 
   function purchaseEventId(orden, transactionId) {
@@ -201,18 +254,33 @@
     grupoGrande: function (cantidad) {
       if (ES_LOCAL) return;
       window.dataLayer.push({ ecommerce: null });
-      window.dataLayer.push({ event: 'grupo_grande', cantidad: cantidad });
+      window.dataLayer.push(Object.assign({ event: 'grupo_grande', cantidad: cantidad }, atribucionFields()));
     },
 
     viewContent: function (opts) {
       opts = opts || {};
       var ids = catalogContentIds(opts.content_ids || []);
+      var contentName = opts.content_name || 'landing';
       pushEcommerce('view_item', {
-        items: ids.map(function (id) {
-          return { item_id: id, item_name: opts.content_name || id };
-        }),
-      });
-      var meta = { content_name: opts.content_name || '' };
+        items: ids.length
+          ? ids.map(function (id) {
+              return {
+                item_id: id,
+                item_name: 'El Gorila — ' + contentName,
+                item_category: 'teatro',
+                item_category2: 'el-gorila',
+                item_variant: contentName,
+              };
+            })
+          : [{
+              item_id: contentName,
+              item_name: 'El Gorila — ' + contentName,
+              item_category: 'teatro',
+              item_category2: 'el-gorila',
+              item_variant: contentName,
+            }],
+      }, { eg_content_name: contentName });
+      var meta = { content_name: contentName };
       if (ids.length) {
         meta.content_type = 'product';
         meta.content_ids = ids;
@@ -223,7 +291,7 @@
 
     addToCart: function (orden) {
       var p = ecommercePayload(orden);
-      pushEcommerce('add_to_cart', p);
+      pushEcommerce('add_to_cart', p, funcionExtra(orden));
       var cat = metaCatalogParams(orden);
       trackMeta('AddToCart', Object.assign({ value: p.value, currency: p.currency }, cat));
     },
@@ -232,7 +300,7 @@
     // de redirigir a Stripe, para darle al pixel una ventana real de disparo.
     beginCheckout: function (orden) {
       var p = ecommercePayload(orden);
-      pushEcommerce('begin_checkout', p);
+      pushEcommerce('begin_checkout', p, funcionExtra(orden));
       var cat = metaCatalogParams(orden);
       return waitBriefly(
         trackMeta('InitiateCheckout', Object.assign({ value: p.value, currency: p.currency }, cat)),
@@ -242,7 +310,7 @@
 
     addPaymentInfo: function (orden) {
       var p = ecommercePayload(orden);
-      pushEcommerce('add_payment_info', p);
+      pushEcommerce('add_payment_info', p, funcionExtra(orden));
       var cat = metaCatalogParams(orden);
       trackMeta('AddPaymentInfo', Object.assign({ value: p.value, currency: p.currency }, cat));
     },
@@ -268,7 +336,7 @@
       }
 
       // 1) GA4 + Google Ads vía GTM (dataLayer) — exactamente una vez.
-      pushEcommerce('purchase', p);
+      pushEcommerce('purchase', p, funcionExtra(orden));
       markSent();
 
       // 2) Meta Pixel directo (fbq) con reintento SOLO para fbq (GTM lo carga async).
