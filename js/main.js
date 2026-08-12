@@ -615,6 +615,24 @@ window.addEventListener('pageshow', function (e) {
 });
 
 // --- CARGAR FECHAS DINÁMICAS ---
+function nivelOcupacionFecha(funcion) {
+    if (typeof funcion.vendidos_sync !== 'number') return 'neutro';
+    var v = funcion.vendidos_sync;
+    if (v < 50) return 'verde';
+    if (v < 80) return 'neutro';
+    if (v < 100) return 'amarillo';
+    return 'naranja';
+}
+
+function etiquetaOcupacionFecha(funcion) {
+    if (funcion.etiqueta) return funcion.etiqueta;
+    var nivel = nivelOcupacionFecha(funcion);
+    if (nivel === 'amarillo') return 'Alta demanda';
+    if (nivel === 'naranja') return 'Quedan pocos lugares';
+    if (funcion.estreno) return 'Estreno';
+    return '';
+}
+
 function cargarFechas() {
     if (typeof FechasManager === 'undefined') return;
 
@@ -631,9 +649,10 @@ function cargarFechas() {
         const partesNombre   = funcion.nombre.split(/\s*[—–-]\s*/);
         const fechaCorta     = partesNombre[0] || funcion.nombre;
         const hora           = partesNombre[1] || '18:00 hrs';
-        const textoEtiqueta  = funcion.etiqueta || (funcion.estreno ? 'Estreno' : '');
+        const textoEtiqueta  = etiquetaOcupacionFecha(funcion);
+        const ocupacionNivel = bloqueada || esAgotada ? '' : nivelOcupacionFecha(funcion);
         const estrenoTag     = textoEtiqueta
-            ? `<span class="fecha-estreno-tag">${textoEtiqueta}</span>`
+            ? `<span class="fecha-ocupacion-tag fecha-ocupacion-tag--${ocupacionNivel || 'neutro'}">${textoEtiqueta}</span>`
             : '';
         const claveStr       = funcion.clave;
         const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
@@ -666,6 +685,9 @@ function cargarFechas() {
         if (funcion.atenuada && !bloqueada && !esSeleccionada) estiloBoton += ' opacity: 0.55; filter: saturate(0.75);';
         // Fecha destacada: marcada en rojo, sin texto adicional
         if (funcion.destacada && !bloqueada && !esSeleccionada) estiloBoton += ' border-color: #d43a1a; box-shadow: 0 0 0 2px rgba(212, 58, 26, 0.35);';
+        if (ocupacionNivel === 'verde' && !bloqueada && !esSeleccionada) estiloBoton += ' box-shadow: 0 0 0 2px rgba(72, 160, 96, 0.35);';
+        if (ocupacionNivel === 'amarillo' && !bloqueada && !esSeleccionada) estiloBoton += ' box-shadow: 0 0 0 2px rgba(217, 175, 58, 0.45);';
+        if (ocupacionNivel === 'naranja' && !bloqueada && !esSeleccionada) estiloBoton += ' border-color: #e85a20; box-shadow: 0 0 0 2px rgba(232, 90, 32, 0.45);';
 
         const mesIso = claveStr.slice(0, 7);
         html += `
@@ -675,6 +697,7 @@ function cargarFechas() {
                 data-fecha-mes="${mesIso}"
                 ${funcion.atenuada ? 'data-fecha-atenuada="1"' : ''}
                 ${funcion.destacada ? 'data-fecha-destacada="1"' : ''}
+                ${ocupacionNivel ? `data-fecha-ocupacion="${ocupacionNivel}"` : ''}
                 onclick="${bloqueada ? '' : `seleccionarFecha('${claveStr}', '${nombreStr}', ${JSON.stringify(funcion).replace(/"/g, '&quot;')})`}"
                 class="${claseBoton}"
                 ${bloqueada ? 'disabled' : ''}

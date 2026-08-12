@@ -18,7 +18,9 @@
 <link rel="preconnect" href="https://www.googletagmanager.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap"></noscript>
 <!-- Tailwind compilado (sin CDN en runtime) -->
 <link rel="stylesheet" href="css/tailwind.css"/>
 <style>
@@ -188,12 +190,22 @@ body { padding-top: 0; }
 }
 
 .bofu-urgencia {
-  display: inline-flex; align-items: center; gap: .4em;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: .35em .5em;
   font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
   text-transform: uppercase; color: #ffb4a8;
   background: rgba(212,58,26,.15); border: 1px solid rgba(212,58,26,.4);
-  padding: 4px 9px; margin-bottom: 10px;
+  padding: 6px 10px; margin-bottom: 10px;
 }
+.bofu-urgencia-sep { opacity: .45; }
+.bofu-about-link {
+  margin: -4px 0 12px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.bofu-about-link a {
+  color: var(--gold); border-bottom: 1px solid rgba(217,155,58,.35);
+}
+.bofu-about-link a:hover { color: var(--d-fg); }
 .bofu-title-compact {
   font-family: var(--display); font-size: 28px; font-weight: 500;
   line-height: 1.05; color: var(--d-fg); margin: 0 0 10px;
@@ -575,6 +587,20 @@ body.checkout-abierto .barra-reserva-spacer {
   color: var(--red);
   pointer-events: none;
 }
+.fecha-ocupacion-tag {
+  position: absolute;
+  left: 0; right: 0; bottom: 5px;
+  display: block;
+  margin: 0;
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .1em; text-transform: uppercase;
+  line-height: 1;
+  pointer-events: none;
+}
+.fecha-ocupacion-tag--verde { color: #6fcf8f; }
+.fecha-ocupacion-tag--neutro { color: var(--red); }
+.fecha-ocupacion-tag--amarillo { color: #e8c84a; }
+.fecha-ocupacion-tag--naranja { color: #ff8c42; }
 
 /* ── SECCIÓN: TIPOS DE BOLETO ────────────────────────────── */
 .boletos-sub-label {
@@ -659,6 +685,10 @@ body.checkout-abierto .barra-reserva-spacer {
 .promo-grupo-banner.hidden { display: none; }
 
 /* Mensajes de disponibilidad */
+/* PENDIENTE: badge de ocupación por función en calendario/fecha
+   · <50 vendidos: verde · 50–79: neutro · 80–99: amarillo · 100+: naranja
+   · Eventos especiales vía `etiqueta` en fechas.js: «Develación de placa», etc.
+   · Implementado en main.js (nivelOcupacionFecha) — sin mostrar números al público */
 #disponibilidad-info { margin-top: 10px; }
 #seccion-venta-info { margin-top: 8px; }
 .seccion-venta-aviso {
@@ -1197,11 +1227,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section class="sd--mid" id="main-content">
   <div class="inner">
     <p class="bofu-urgencia" role="status">
-      <span aria-hidden="true">●</span>
-      <span data-temporada-conteo-solo data-temporada-cap>Solo 6 sábados</span> · sáb 18:00 · desde $400
+      <span data-escasez-funciones>Quedan 6 sábados — cupo limitado</span>
+      <span class="bofu-urgencia-sep" aria-hidden="true">·</span>
+      <span>sáb 18:00</span>
+      <span class="bofu-urgencia-sep" aria-hidden="true">·</span>
+      <span>desde $400</span>
     </p>
 
     <h1 class="bofu-title-compact">Elige tu <em>función</em></h1>
+    <p class="bofu-about-link"><a href="/sobre-la-obra.html">¿Primera vez? Conoce la obra</a></p>
 
     <div class="bofu-chips" aria-hidden="true">
       <span class="bofu-chip">80 min</span>
@@ -1290,7 +1324,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="bofu-reviews" aria-label="Opiniones del público">
       <span class="bofu-reviews-label">Quien ya fue</span>
       <div class="bofu-review"><strong>★★★★★</strong> «La mejor obra de teatro que he visto en mi vida.»</div>
-      <div class="bofu-review"><strong>★★★★★</strong> «Reí mucho y también lloré. Actuación colosal.»</div>
+      <div class="bofu-review"><strong>★★★★★</strong> «Reí mucho y también lloré.»</div>
     </div>
 
     <p class="bofu-logistica">

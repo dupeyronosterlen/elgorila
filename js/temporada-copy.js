@@ -26,6 +26,29 @@
     try { return FM.resumenTemporada(); } catch (_) { return null; }
   }
 
+  /** Conteo para barra de escasez: baja el mismo sábado a las 20:00. */
+  function conteoEscasez() {
+    var FM = window.FechasManager;
+    var lista = window.FUNCIONES_TEMPORADA;
+    if (!FM || !Array.isArray(lista) || typeof FM.pasadaParaConteoOferta !== 'function') return null;
+    var fns = lista.filter(function (f) {
+      return f.activa !== false && !f.atenuada && !FM.pasadaParaConteoOferta(f.fecha_iso, f);
+    });
+    var soloSabados = fns.length > 0 && fns.every(function (f) {
+      var p = f.fecha_iso.split('-').map(Number);
+      return new Date(p[0], p[1] - 1, p[2]).getDay() === 6;
+    });
+    return { n: fns.length, soloSabados: soloSabados };
+  }
+
+  function textoEscasez(n, soloSabados) {
+    if (n === 0) return 'Temporada finalizada en CDMX';
+    var sust = soloSabados ? 'sábado' : 'función';
+    var sustPl = soloSabados ? 'sábados' : 'funciones';
+    if (n === 1) return 'Queda 1 ' + sust + ' — cupo limitado';
+    return 'Quedan ' + n + ' ' + sustPl + ' — cupo limitado';
+  }
+
   function aplicar() {
     var r = resumen();
     if (!r) return null; // sin datos: se respeta el texto de respaldo del HTML
@@ -60,15 +83,14 @@
 
     if (r.n === 0) {
       document.querySelectorAll('[data-escasez-funciones]').forEach(function (el) {
-        el.textContent = 'TEMPORADA 2026 FINALIZADA EN CDMX';
-      });
-    } else if (r.n === 1) {
-      document.querySelectorAll('[data-escasez-funciones]').forEach(function (el) {
-        el.textContent = 'QUEDA 1 FUNCIÓN EN CDMX — TEMPORADA 2026';
+        el.textContent = textoEscasez(0, false);
       });
     } else {
+      var esc = conteoEscasez();
+      var n = esc && typeof esc.n === 'number' ? esc.n : r.n;
+      var soloSabados = esc ? esc.soloSabados : r.soloSabados;
       document.querySelectorAll('[data-escasez-funciones]').forEach(function (el) {
-        el.textContent = 'QUEDAN ' + r.n + ' FUNCIONES EN CDMX — TEMPORADA 2026';
+        el.textContent = textoEscasez(n, soloSabados);
       });
     }
 

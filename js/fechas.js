@@ -105,6 +105,20 @@ const FechasManager = {
     return new Date() > new Date(y, m - 1, d, 23, 59, 59);
   },
 
+  /**
+   * Para barra de escasez: la función deja de contar el mismo día a las 20:00
+   * (dos horas después del inicio habitual a las 18:00).
+   */
+  pasadaParaConteoOferta(fecha_iso, f) {
+    const [y, m, d] = fecha_iso.split('-').map(Number);
+    const fn = f || FUNCIONES_TEMPORADA.find(x => x.fecha_iso === fecha_iso);
+    const { h: hh, min: mm } = this.horaDeFuncion(fn);
+    const show = new Date(y, m - 1, d, hh, mm);
+    if (show > new Date()) return false;
+    const cutoff = new Date(y, m - 1, d, 20, 0, 0);
+    return new Date() >= cutoff;
+  },
+
   obtenerSede(sedeId) {
     return SEDES[sedeId] || null;
   },
@@ -286,6 +300,9 @@ async function sincronizarFuncionesActivas() {
         if (typeof r.atenuada === 'boolean') f.atenuada = r.atenuada;
         if (typeof r.precio_especial === 'number') f.precio_especial = r.precio_especial;
         if (typeof r.numero_obra === 'number' && r.numero_obra > 0) f.numero_obra = r.numero_obra;
+        if (typeof r.vendidos === 'number') f.vendidos_sync = r.vendidos;
+        if (typeof r.capacidad === 'number') f.capacidad_sync = r.capacidad;
+        if (typeof r.disponibles_total === 'number') f.disponibles_sync = r.disponibles_total;
       }
     });
   } catch (_) { /* sin conexión: se mantiene la config local como respaldo */ }
