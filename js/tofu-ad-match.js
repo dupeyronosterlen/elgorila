@@ -84,7 +84,7 @@
   var PUENTE_POR_LINEA = {
     jaulas: {
       pregunta: '«¿A qué renuncias cada día para pertenecer?»',
-      sub: 'No siempre te encierran. A veces aprendes a encerrarte tú solo.',
+      sub: 'No siempre te encierran. A veces aprendes a encerrarte tú.',
     },
     espejo: {
       pregunta: '«No es teatro, es tu reflejo.»',
