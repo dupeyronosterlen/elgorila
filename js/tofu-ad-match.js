@@ -119,16 +119,8 @@
         if (v) out[k] = v;
       });
     } catch (_) {}
-    if (!out.campaign && window.obtenerUTM) {
-      try {
-        var stored = window.obtenerUTM();
-        if (stored) {
-          if (stored.campaign) out.campaign = stored.campaign;
-          if (stored.content && !out.content) out.content = stored.content;
-          if (stored.term && !out.term) out.term = stored.term;
-        }
-      } catch (_) {}
-    }
+    /* Solo UTMs en esta URL activan el puente del hero. localStorage
+       sigue sirviendo para analytics (utm.js), no para cambiar el copy. */
     return out;
   }
 
