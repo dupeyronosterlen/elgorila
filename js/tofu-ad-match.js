@@ -83,8 +83,8 @@
   /** Copy del puente entre Kafka y 37 años — uno por línea, no del catálogo de ads. */
   var PUENTE_POR_LINEA = {
     jaulas: {
-      pregunta: '«¿Y tú, a qué jaula llamas libertad?»',
-      sub: 'Las jaulas más difíciles de ver son las que nosotros mismos nos construimos.',
+      pregunta: '«¿Cómo escapamos de las jaulas que no se pueden ver?»',
+      sub: 'A veces, las de barrotes se reconocen. Las otras las confundimos con libertad.',
     },
     espejo: {
       pregunta: '«No es teatro, es tu reflejo.»',
