@@ -4,18 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EL GORILA en vivo — Humberto Dupeyrón · Boletos CDMX 2026</title>
-  <meta name="description" content="Un gorila aprendió a ser humano para poder sobrevivir. 80 min de una de las actuaciones más memorables del teatro mexicano. Temporada 2026 · Teatro Wilberto Cantón." />
+  <meta name="description" content="Un gorila aprendió a ser hombre para poder sobrevivir. 80 min de una de las actuaciones más memorables del teatro mexicano. Temporada 2026 · Teatro Wilberto Cantón." />
   <meta name="robots" content="index,follow" />
   <link rel="canonical" href="https://elgorilateatro.com.mx/sobre-la-obra.html" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Humor e ironía en vivo — EL GORILA · Humberto Dupeyrón" />
-  <meta property="og:description" content="Un gorila aprendió a ser humano para poder sobrevivir. 80 min de una de las actuaciones más memorables del teatro mexicano. Temporada 2026 · Teatro Wilberto Cantón." />
+  <meta property="og:description" content="Un gorila aprendió a ser hombre para poder sobrevivir. 80 min de una de las actuaciones más memorables del teatro mexicano. Temporada 2026 · Teatro Wilberto Cantón." />
   <meta property="og:image" content="https://elgorilateatro.com.mx/img/programa/portada-v1-hero.jpg" />
   <meta property="og:url" content="https://elgorilateatro.com.mx/sobre-la-obra.html" />
   <meta property="og:locale" content="es_MX" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Humor e ironía en vivo — EL GORILA · Humberto Dupeyrón" />
-  <meta name="twitter:description" content="Un gorila aprendió a ser humano para poder sobrevivir. 80 min de una de las actuaciones más memorables del teatro mexicano. Temporada 2026 · Teatro Wilberto Cantón." />
+  <meta name="twitter:description" content="Un gorila aprendió a ser hombre para poder sobrevivir. 80 min de una de las actuaciones más memorables del teatro mexicano. Temporada 2026 · Teatro Wilberto Cantón." />
   <meta name="twitter:image" content="https://elgorilateatro.com.mx/img/programa/portada-v1-hero.jpg" />
   <link rel="preload" as="font" type="font/woff2" href="/fonts/cormorant-garamond-latin.woff2" crossorigin />
   <link rel="preload" as="font" type="font/woff2" href="/fonts/eb-garamond-latin.woff2" crossorigin />
@@ -187,6 +187,9 @@
     }
     .hero-top-longevo {
       font-style: italic;
+      font-size: 1.15em;
+    }
+    .hero-top-horario {
       font-size: 1.15em;
     }
     .hero-inner {
@@ -540,6 +543,21 @@
     .cta-final-precio b { color: var(--gold-light); }
     .cta-final-datos { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cream-50); line-height: 2.1; margin-bottom: 1.9rem; }
     .cta-final .btn-cta-gold { margin: 0 auto; }
+    .compartir-pagina {
+      display: block; margin: 1.15rem auto 0; padding: 0.25rem 0.5rem;
+      border: none; background: none; cursor: pointer;
+      font-family: var(--mono); font-size: 10px; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--cream-50);
+      text-decoration: underline; text-underline-offset: 0.22em;
+      text-decoration-color: rgba(241,234,217,0.22);
+    }
+    .compartir-pagina:hover { color: var(--cream-80); text-decoration-color: rgba(241,234,217,0.42); }
+    .compartir-pagina-hint {
+      margin: 0.35rem auto 0; font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-light);
+      text-align: center;
+    }
+    .compartir-pagina-hint[hidden] { display: none; }
 
     .mas-wrap { padding: 3rem 1.25rem; border-top: 1px solid var(--gold-border); }
     .btn-mas {
@@ -862,11 +880,11 @@
   </div>
   <div class="hero-overlay"></div>
   <div class="hero-top">
-    <p class="hero-top-fijo"><em class="hero-top-longevo">El monólogo más longevo de México</em> · sábados 6&nbsp;pm</p>
+    <p class="hero-top-fijo"><em class="hero-top-longevo">El monólogo más longevo de México</em> · <span class="hero-top-horario">sábados 6&nbsp;pm</span></p>
   </div>
   <div class="hero-inner">
     <h1 class="hero-title">
-      <span class="hero-title-lead">Un gorila que aprendió a ser humano<br class="hero-br-mobile" aria-hidden="true" />
+      <span class="hero-title-lead">Un gorila que aprendió a ser hombre<br class="hero-br-mobile" aria-hidden="true" />
       para poder sobrevivir.</span>
       <span class="hero-title-q">¿Y tú, le llamarías a eso «libertad»?</span>
     </h1>
@@ -1132,6 +1150,10 @@
     <a href="/boletos.html#fechas-fecha-wrap" class="btn-cta-gold link-venta-boletos" data-cta-position="final">
       Reservar mi lugar →
     </a>
+    <button type="button" class="compartir-pagina" id="compartir-pagina" data-cta-position="compartir-pagina">
+      Compartir página
+    </button>
+    <p class="compartir-pagina-hint" id="compartir-pagina-hint" hidden aria-live="polite"></p>
   </div>
 </section>
 
@@ -1346,6 +1368,26 @@
       });
     }, { threshold: 0.4 });
     document.querySelectorAll('[data-bloque]').forEach(function (s) { io.observe(s); });
+  })();
+
+  (function () {
+    var btn = document.getElementById('compartir-pagina');
+    if (!btn) return;
+    var url = window.location.href.split('#')[0];
+    var texto = 'Un gorila que aprendió a ser hombre para poder sobrevivir. 80 min de una de las actuaciones más memorables del teatro mexicano.';
+    var waUrl = 'https://wa.me/?text=' + encodeURIComponent(texto + '\n\n' + url);
+
+    btn.addEventListener('click', function () {
+      if (navigator.share) {
+        navigator.share({
+          title: 'EL GORILA — Humberto Dupeyrón',
+          text: texto,
+          url: url,
+        }).catch(function () {});
+        return;
+      }
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+    });
   })();
 </script>
 
