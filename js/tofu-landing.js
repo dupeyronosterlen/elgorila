@@ -1,11 +1,45 @@
 /**
- * Landing TOFU (sobre-la-obra): video diferido, tracking de CTAs, sync temporada.
+ * Landing TOFU (sobre-la-obra): video diferido, CTAs, scroll %, sync temporada.
+ *
+ * Eventos dataLayer (GA4 vía GTM):
+ *   visit | tofu_cta_click | cta_comprar_click | tofu_scroll
+ *   tofu_video_start | tofu_video_50 | tofu_video_complete
+ * CTA: data-cta-position en el HTML (hero | medio | final | nav | …).
  */
 (function () {
   'use strict';
 
   var LANDING_EVENTS_KEY = 'elgorila_landing_events';
   var MAX_EVENTS = 500;
+  var SCROLL_MARKS = [25, 50, 75, 90];
+
+  function atribExtras() {
+    try {
+      if (typeof window.obtenerAtribucion === 'function') {
+        var a = window.obtenerAtribucion() || {};
+        return {
+          eg_campaign: a.campaign || '',
+          eg_ad: a.content || '',
+          eg_adset: a.term || '',
+          eg_source: a.source || '',
+          eg_medium: a.medium || '',
+          eg_page_type: a.page_type || 'sobre_obra',
+        };
+      }
+      if (typeof window.obtenerUTM === 'function') {
+        var u = window.obtenerUTM() || {};
+        return {
+          eg_campaign: u.campaign || '',
+          eg_ad: u.content || '',
+          eg_adset: u.term || '',
+          eg_source: u.source || '',
+          eg_medium: u.medium || '',
+          eg_page_type: 'sobre_obra',
+        };
+      }
+    } catch (_) {}
+    return { eg_page_type: 'sobre_obra' };
+  }
 
   function pushEvent(type, data) {
     try {
@@ -16,8 +50,20 @@
       if (list.length > MAX_EVENTS) list = list.slice(-MAX_EVENTS);
       localStorage.setItem(LANDING_EVENTS_KEY, JSON.stringify(list));
       window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({ event: type, landing_data: payload });
+      var flat = Object.assign({ event: type, landing_data: payload }, atribExtras(), payload);
+      flat.event = type;
+      window.dataLayer.push(flat);
     } catch (_) {}
+  }
+
+  /** Normaliza data-cta-position → bucket hero|medio|final|otros */
+  function ctaBucket(pos) {
+    pos = String(pos || '').toLowerCase();
+    if (pos === 'hero' || pos === 'hero-primary' || pos.indexOf('hero') === 0) return 'hero';
+    if (pos === 'medio' || pos === 'reviews-mid' || pos === 'mid' || pos === 'promo') return 'medio';
+    if (pos === 'final' || pos === 'cta-final') return 'final';
+    if (pos === 'nav' || pos === 'sticky-bar' || pos === 'footer' || pos === 'lib-ficha') return pos;
+    return pos || 'unknown';
   }
 
   function utmQueryString() {
@@ -58,11 +104,55 @@
       a.dataset.tofuWired = '1';
       a.addEventListener('click', function () {
         var pos = a.getAttribute('data-cta-position') || 'unknown';
-        pushEvent('cta_tofu_click', { position: pos, href: a.href || '' });
-        pushEvent('cta_comprar_click', { position: pos, href: a.href || '', source: 'sobre-la-obra' });
+        var bucket = ctaBucket(pos);
+        var meta = {
+          position: pos,
+          cta_bucket: bucket,
+          href: a.href || '',
+          source: 'sobre-la-obra',
+        };
+        pushEvent('tofu_cta_click', meta);
+        pushEvent('cta_tofu_click', meta);
+        pushEvent('cta_comprar_click', meta);
         a.classList.add('is-navigating');
       }, false);
     });
+  }
+
+  function initScrollDepth() {
+    var fired = {};
+    var ticking = false;
+
+    function measure() {
+      ticking = false;
+      var doc = document.documentElement;
+      var body = document.body;
+      var scrollTop = window.pageYOffset || doc.scrollTop || body.scrollTop || 0;
+      var docHeight = Math.max(
+        body.scrollHeight, doc.scrollHeight,
+        body.offsetHeight, doc.offsetHeight,
+        body.clientHeight, doc.clientHeight
+      );
+      var winH = window.innerHeight || doc.clientHeight || 0;
+      var trackable = docHeight - winH;
+      if (trackable <= 0) return;
+      var pct = Math.min(100, Math.round((scrollTop / trackable) * 100));
+      SCROLL_MARKS.forEach(function (mark) {
+        if (pct >= mark && !fired[mark]) {
+          fired[mark] = true;
+          pushEvent('tofu_scroll', { percent: mark, page: 'sobre-la-obra' });
+        }
+      });
+    }
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(measure);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    measure();
   }
 
   function pickVideoCandidates() {
@@ -102,6 +192,7 @@
 
     function onPlaying() {
       if (media) media.classList.add('is-playing');
+      pushEvent('tofu_video_start', { page: 'sobre-la-obra' });
     }
 
     function start(src) {
@@ -118,6 +209,20 @@
       video.src = src;
       video.load();
       video.addEventListener('playing', onPlaying, { once: true });
+
+      var hit50 = false;
+      video.addEventListener('timeupdate', function () {
+        if (!video.duration || !isFinite(video.duration)) return;
+        var p = video.currentTime / video.duration;
+        if (!hit50 && p >= 0.5) {
+          hit50 = true;
+          pushEvent('tofu_video_50', { page: 'sobre-la-obra' });
+        }
+      });
+      video.addEventListener('ended', function () {
+        pushEvent('tofu_video_complete', { page: 'sobre-la-obra' });
+      }, { once: true });
+
       var play = function () {
         video.play().catch(function () {
           if (media) {
@@ -213,6 +318,7 @@
 
   function boot() {
     wireLinks();
+    initScrollDepth();
     syncSiteHeaderOffset();
     window.addEventListener('resize', syncSiteHeaderOffset, { passive: true });
     if (typeof ResizeObserver !== 'undefined') {
