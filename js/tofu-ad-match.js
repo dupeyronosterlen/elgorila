@@ -84,7 +84,7 @@
   var PUENTE_POR_LINEA = {
     jaulas: {
       pregunta: '«¿A qué renuncias cada día para pertenecer?»',
-      sub: 'A veces, negarse a ti mismo es la jaula más difícil de abrir.',
+      sub: 'A veces, negarse a uno mismo es la jaula más difícil de cruzar.',
     },
     espejo: {
       pregunta: '«No es teatro, es tu reflejo.»',
