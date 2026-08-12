@@ -170,44 +170,48 @@
     });
   }
 
-  // Pixel ID canónico (mismo que GTM Tag 1 / Zaraz). Z1 (ago 2026): Zaraz
-  // manda PageView; GTM Tag 1 quedó en init-only. Si fbq no existe (Tag 1
-  // pausado o carrera), analytics.js inicializa el pixel AQUÍ sin PageView —
-  // si no, ViewContent/ATC/IC mueren en silencio y se cae la pauta VC.
+  // Pixel ID canónico (mismo que GTM Tag 1 / Zaraz). Z1: Zaraz = PageView.
+  // Si Tag 1 está pausado, HAY que cargar fbevents.js nosotros. Ojo: Zaraz a
+  // veces deja un `fbq` wrapper que NO es el pixel oficial — no confiar en
+  // `typeof fbq === 'function'` solo; forzar script oficial + init (sin PageView).
   var META_PIXEL_ID = '24471801772518505';
+  var _egMetaReady = false;
 
   function ensureMetaPixel() {
-    if (typeof fbq === 'function') return true;
     try {
       var f = window;
       var b = document;
-      if (!f.fbq) {
+      var hasOfficial = !!b.querySelector('script[src*="connect.facebook.net"][src*="fbevents"]');
+      if (!f.fbq || !hasOfficial) {
         var n = f.fbq = function () {
           n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
         };
         if (!f._fbq) f._fbq = n;
         n.push = n;
-        n.loaded = true;
+        n.loaded = !0;
         n.version = '2.0';
-        n.queue = [];
-        var t = b.createElement('script');
-        t.async = true;
-        t.src = 'https://connect.facebook.net/en_US/fbevents.js';
-        var s = b.getElementsByTagName('script')[0];
-        if (s && s.parentNode) s.parentNode.insertBefore(t, s);
-        else (b.head || b.documentElement).appendChild(t);
+        n.queue = n.queue || [];
+        if (!hasOfficial) {
+          var t = b.createElement('script');
+          t.async = !0;
+          t.src = 'https://connect.facebook.net/en_US/fbevents.js';
+          var s = b.getElementsByTagName('script')[0];
+          if (s && s.parentNode) s.parentNode.insertBefore(t, s);
+          else (b.head || b.documentElement).appendChild(t);
+        }
       }
+      // init es idempotente para el mismo pixel id; necesario tras Z1.
       fbq('init', META_PIXEL_ID);
-      // NO fbq('track','PageView') — dueño = Zaraz (Z1).
-      return typeof fbq === 'function';
+      _egMetaReady = true;
+      return true;
     } catch (_) {
       return false;
     }
   }
 
-  // Si fbq aún no cargó (script async), reintenta como purchase().
-  // Fix 2026-08-06: VC se perdía ~97% por carrera GTM. Fix 2026-08-12: Z1
-  // pausó Tag 1 y Zaraz no expone fbq → ensureMetaPixel() restaura init.
+  // Reintentos si el script oficial aún no cargó (carrera async).
+  // 2026-08-06: VC se perdía ~97% por carrera GTM.
+  // 2026-08-12: Z1 pausó Tag 1; Zaraz no sirve VC → self-init aquí.
   function fireMetaPixel(eventName, params, eventId) {
     ensureMetaPixel();
     if (typeof fbq !== 'function') return false;
