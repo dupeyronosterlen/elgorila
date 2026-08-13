@@ -924,7 +924,7 @@ details[open] .faq-chevron { transform: rotate(45deg); }
    Pensado para todos, pero especialmente para adultos mayores:
    fuentes grandes, contraste alto, un solo paso visible.
    ══════════════════════════════════════════════════════════ */
-#inline-checkout { scroll-margin-top: 80px; }
+#inline-checkout { scroll-margin-top: 7.5rem; }
 
 /* Indicador de pasos */
 .ichk-pasos {
@@ -1433,7 +1433,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
      Aparece al presionar "Continuar" — sin cambio de página.
      Diseño accesible y grande para toda la audiencia.
      ══════════════════════════════════════════════════════════ -->
-<section id="inline-checkout" class="sp" style="display:none;" aria-live="polite" aria-label="Confirmar pedido y pagar">
+<section id="inline-checkout" class="sp" style="display:none;" aria-hidden="true" aria-live="polite" aria-label="Confirmar pedido y pagar">
   <div class="inner">
 
     <!-- Indicador de pasos -->
@@ -1630,12 +1630,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   window.location.replace(window.INSTAGRAM_BOLETOS_URL || 'https://www.instagram.com/elgorilateatro');
 })();
 </script>
-<script src="js/inventario.js"></script>
+<script src="js/inventario.js?v=20260813-cupo"></script>
 <script src="js/fechas.js"></script>
 <script src="js/temporada-copy.js"></script>
 <script src="js/testimonios.js?v=20260813t2"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js?v=20260813-lock"></script>
+<script src="js/main.js?v=20260813-cupo"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {
@@ -1995,6 +1995,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!btn) btn = c.querySelector('button[data-fecha-clave]:not([disabled])');
     if (!btn) return;
     preseleccionHecha = true;
+    if (typeof omitirProximoScrollFecha === 'function') omitirProximoScrollFecha();
     btn.click();
   }
 

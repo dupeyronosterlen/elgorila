@@ -158,6 +158,11 @@ function crearReserva(fecha, cantidad) {
         const inventario = obtenerInventario();
         const reservas = obtenerReservas();
         
+        if (!inventario[fecha]) {
+            inventario[fecha] = { total: 325, vendidos: 0, reservados: 0 };
+            localStorage.setItem(INVENTARIO_KEY, JSON.stringify(inventario));
+        }
+
         // Verificar disponibilidad
         const disponible = inventario[fecha].total - 
                            inventario[fecha].vendidos - 
@@ -290,6 +295,10 @@ function confirmarCompra(fecha, cantidad, reservaId) {
 function obtenerDisponibilidad(fecha) {
     limpiarReservasExpiradas();
     const inventario = obtenerInventario();
+    if (!inventario[fecha]) {
+        inventario[fecha] = { total: 325, vendidos: 0, reservados: 0 };
+        localStorage.setItem(INVENTARIO_KEY, JSON.stringify(inventario));
+    }
     const reservados = calcularReservados(fecha);
     const disponible = inventario[fecha].total - 
                        inventario[fecha].vendidos - 

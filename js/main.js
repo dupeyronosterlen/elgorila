@@ -17,6 +17,11 @@ let disponibilidadInfo = null;
 let seccionActiva      = 'platea';
 let _galeriaAbierta    = false;
 let _grupoGrandeNotificado = false;
+let _confirmandoPedido = false;
+let _omitirScrollFecha = false;
+
+// Chequeo real de cupo (Worker) solo cuando esa fecha ya vendió más de esto.
+const UMBRAL_CHEQUEO_CUPO = 100;
 
 function seccionVentaConfig() {
     const map = (typeof window.seccionesVentaVigentes === 'function'
@@ -29,10 +34,21 @@ function seccionVentaConfig() {
     };
 }
 
+function funcionActual() {
+    return (window.FUNCIONES_TEMPORADA || []).find(x => x.fecha_iso === fechaIsoActual) || null;
+}
+
+function vendidosFechaActual() {
+    const f = funcionActual();
+    if (typeof f?.vendidos_sync === 'number') return f.vendidos_sync;
+    if (typeof disponibilidadInfo?.vendidos === 'number') return disponibilidadInfo.vendidos;
+    return 0;
+}
+
 // Precio especial de la función seleccionada (ej. preestreno de prensa $10/boleto).
 // Aplica a todos los tipos y desactiva promos automáticas.
 function precioEspecialFuncion() {
-    const f  = (window.FUNCIONES_TEMPORADA || []).find(x => x.fecha_iso === fechaSeleccionada);
+    const f  = funcionActual();
     const pe = Number(f?.precio_especial);
     return pe > 0 ? pe : null;
 }
@@ -223,8 +239,12 @@ function seleccionarFecha(clave, texto, funcion = null) {
         verificarDisponibilidad();
     }
 
-    // Guía de scroll: baja lo justo para dejar la fecha arriba y los
-    // boletos visibles abajo, sin ocultar el selector por si cambian de día.
+    // La preselección al cargar no debe mover la página (se siente a fallo).
+    // Si el visitante toca otra fecha, sí bajamos a los boletos.
+    if (_omitirScrollFecha) {
+        _omitirScrollFecha = false;
+        return;
+    }
     var anclaFecha = document.getElementById('fechas-fecha-wrap')
         || document.getElementById('fecha-seleccionada-texto');
     if (anclaFecha) {
@@ -308,30 +328,62 @@ function actualizarIndicadorDisponibilidad() {
     }
 }
 
-// --- DISPONIBILIDAD REAL DESDE EL WORKER (fire-and-forget) ---
+// --- DISPONIBILIDAD REAL DESDE EL WORKER ---
+function aplicarDisponibilidadWorker(data) {
+    if (!data) return;
+    const platea  = data.secciones?.platea?.disponibles ?? 0;
+    const galeria = data.secciones?.galeria?.disponibles ?? 0;
+    _galeriaAbierta = !!data.galeria_abierta || (platea === 0 && galeria > 0);
+    seccionActiva   = _galeriaAbierta ? 'galeria' : 'platea';
+    const disp      = typeof data.disponibles === 'number'
+        ? data.disponibles
+        : (_galeriaAbierta ? galeria : platea);
+    const vendidos = (data.secciones?.platea?.vendidos || 0)
+        + (data.secciones?.galeria?.vendidos || 0);
+    disponibilidadInfo = {
+        disponible: disp,
+        platea,
+        galeria,
+        galeria_abierta: _galeriaAbierta,
+        vendidos,
+        bloqueado: !!data.bloqueado,
+    };
+    const f = funcionActual();
+    if (f) f.vendidos_sync = vendidos;
+}
+
 function refrescarDisponibilidadWorker() {
     if (!fechaIsoActual || !window.API_BASE) return;
     fetch(window.teatroApi(`disponibilidad?fecha=${encodeURIComponent(fechaIsoActual)}`))
         .then(r => r.ok ? r.json() : null)
         .then(data => {
             if (!data) return;
-            const platea  = data.secciones?.platea?.disponibles ?? 0;
-            const galeria = data.secciones?.galeria?.disponibles ?? 0;
-            _galeriaAbierta = !!data.galeria_abierta || (platea === 0 && galeria > 0);
-            seccionActiva   = _galeriaAbierta ? 'galeria' : 'platea';
-            const disp      = typeof data.disponibles === 'number'
-                ? data.disponibles
-                : (_galeriaAbierta ? galeria : platea);
-            disponibilidadInfo = {
-                disponible: disp,
-                platea,
-                galeria,
-                galeria_abierta: _galeriaAbierta,
-            };
+            aplicarDisponibilidadWorker(data);
             actualizarIndicadorDisponibilidad();
             actualizarPantalla();
         })
         .catch(() => {});
+}
+
+// Pregunta cupo al Worker. null = no respondió (no bloquear la compra).
+async function consultarCupoWorker() {
+    if (!fechaIsoActual || !window.API_BASE || typeof window.teatroApi !== 'function') return null;
+    const ctrl = new AbortController();
+    const t = setTimeout(function () { ctrl.abort(); }, 4000);
+    try {
+        const r = await fetch(
+            window.teatroApi(`disponibilidad?fecha=${encodeURIComponent(fechaIsoActual)}`),
+            { signal: ctrl.signal }
+        );
+        if (!r.ok) return null;
+        const data = await r.json();
+        aplicarDisponibilidadWorker(data);
+        return data;
+    } catch (_) {
+        return null;
+    } finally {
+        clearTimeout(t);
+    }
 }
 
 // --- FUNCIÓN 3: ACTUALIZAR PANTALLA ---
@@ -484,7 +536,8 @@ function actualizarPantalla() {
 }
 
 // --- FUNCIÓN 4: IR A CHECKOUT ---
-function irAConfirmacion() {
+async function irAConfirmacion() {
+    if (_confirmandoPedido) return false;
     if (!fechaSeleccionada) {
         alert('Por favor selecciona una fecha para continuar');
         return false;
@@ -494,21 +547,63 @@ function irAConfirmacion() {
         return false;
     }
 
-    const items = TIPOS_BOLETO
-        .filter(t => cantidades[t.tipo] > 0)
-        .map(t => ({ tipo: t.tipo, cantidad: cantidades[t.tipo], seccion: seccionActiva }));
-
-    if (items.length === 0) {
+    if (totalCantidad() === 0) {
         alert('Por favor selecciona al menos un boleto');
         return false;
     }
 
     const cantTotal = totalCantidad();
-    verificarDisponibilidad();
 
-    // verificarDisponibilidad ya libera la reserva previa y crea una nueva.
-    // Si reservaId sigue null, significa que no hay lugares disponibles (ya se mostró alerta).
-    if (!reservaId) return false;
+    // Cupo real solo si esa fecha ya pasó de 100 vendidos. Debajo, no hay
+    // roundtrip extra. Si el Worker no responde, no bloqueamos: Stripe cierra.
+    if (vendidosFechaActual() > UMBRAL_CHEQUEO_CUPO) {
+        _confirmandoPedido = true;
+        const boton = document.getElementById('btn-continuar');
+        if (boton) {
+            boton.disabled = true;
+            boton.textContent = 'Revisando lugares…';
+        }
+        try {
+            const data = await consultarCupoWorker();
+            if (data) {
+                if (data.bloqueado) {
+                    alert('Las ventas para esta función están bloqueadas. La función comenzará pronto.');
+                    return false;
+                }
+                const disp = typeof data.disponibles === 'number' ? data.disponibles : null;
+                if (disp !== null && disp < cantTotal) {
+                    alert(disp <= 0
+                        ? 'Esta función ya no tiene lugares disponibles.'
+                        : `Solo quedan ${disp} lugares para esta función.`);
+                    actualizarIndicadorDisponibilidad();
+                    return false;
+                }
+            }
+        } finally {
+            _confirmandoPedido = false;
+            actualizarPantalla();
+        }
+    }
+
+    try {
+        verificarDisponibilidad();
+    } catch (e) {
+        console.error(e);
+        alert('No se pudo apartar los boletos. Intenta de nuevo.');
+        return false;
+    }
+
+    if (!reservaId) {
+        if (!(disponibilidadInfo && cantTotal > disponibilidadInfo.disponible)) {
+            alert('No se pudo apartar los boletos. Intenta de nuevo.');
+        }
+        return false;
+    }
+
+    // La sección (platea/galería) puede cambiar tras el chequeo de cupo.
+    const items = TIPOS_BOLETO
+        .filter(t => cantidades[t.tipo] > 0)
+        .map(t => ({ tipo: t.tipo, cantidad: cantidades[t.tipo], seccion: seccionActiva }));
 
     const precios = calcularPreciosConPromo(null);
 
@@ -584,9 +679,12 @@ function mostrarCheckoutInline(orden) {
     // La taquilla queda bloqueada: el pago usa la orden congelada; si la
     // selección sigue viva, el resumen y Stripe se desincronizan.
     panel.style.display = '';
+    panel.removeAttribute('aria-hidden');
     bloquearTaquilla(true);
-    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     try { window.dispatchEvent(new CustomEvent('taquilla:checkout-toggle')); } catch (_) {}
+    requestAnimationFrame(function () {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 
     // begin_checkout/InitiateCheckout se dispara en procesarPagoInline (el click
     // real a Stripe): abrir el panel, editarlo o volver de un pago cancelado
@@ -596,7 +694,10 @@ function mostrarCheckoutInline(orden) {
 // --- FUNCIÓN 6: VOLVER A EDITAR ---
 function editarPedido() {
     const panel = document.getElementById('inline-checkout');
-    if (panel) panel.style.display = 'none';
+    if (panel) {
+        panel.style.display = 'none';
+        panel.setAttribute('aria-hidden', 'true');
+    }
     bloquearTaquilla(false);
     try { window.dispatchEvent(new CustomEvent('taquilla:checkout-toggle')); } catch (_) {}
     navegandoACheckout = false;
@@ -821,6 +922,7 @@ async function enviarListaEspera() {
 window.irAConfirmacion  = irAConfirmacion;
 window.cambiarCantidad  = cambiarCantidad;
 window.seleccionarFecha = seleccionarFecha;
+window.omitirProximoScrollFecha = function () { _omitirScrollFecha = true; };
 window.renderResumenDescuentoOrden = renderResumenDescuentoOrden;
 window.mostrarCheckoutInline = mostrarCheckoutInline;
 window.editarPedido = editarPedido;
