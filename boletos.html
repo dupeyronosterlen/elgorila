@@ -221,27 +221,44 @@ body { padding-top: 0; }
   margin: 18px 0 0; padding-top: 14px;
   border-top: 1px solid var(--d-faint);
 }
-.bofu-reviews-label {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--gold); margin-bottom: 8px; display: block;
-}
 .bofu-review {
   padding: 8px 10px; margin-bottom: 6px;
   border-left: 2px solid var(--gold); background: rgba(217,155,58,.05);
   font-size: 14px; line-height: 1.4; color: var(--d-soft);
 }
 .bofu-review:last-child { margin-bottom: 0; }
-.bofu-review strong { color: var(--gold); font-size: 10px; letter-spacing: .06em; }
-.bofu-asientos-nota {
-  font-family: var(--cuerpo); font-size: 14px; line-height: 1.45;
-  color: var(--d-soft); margin: -4px 0 14px; padding: 10px 12px;
-  border: 1px solid var(--d-faint); background: rgba(0,0,0,.2);
+.bofu-review-cita { display: block; }
+.bofu-review-firma {
+  display: block; margin-top: 4px;
+  font-family: var(--mono); font-size: 11px; font-style: normal;
+  letter-spacing: .06em; color: var(--gold); opacity: .85;
 }
+.bofu-reviews .bofu-review { transition: opacity .35s; }
+.bofu-reviews.is-fading .bofu-review { opacity: 0; }
 .bofu-logistica {
   font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
-  line-height: 1.5; color: var(--d-soft); margin: 16px 0 0; text-align: center;
+  line-height: 1.5; color: var(--d-soft); margin: 16px 0 10px; text-align: center;
 }
 .bofu-logistica a { color: var(--gold); text-decoration: underline; }
+.bofu-mapa {
+  display: block;
+  margin: 0 0 8px;
+  border: 1px solid var(--d-faint);
+  background: rgba(0,0,0,.25);
+  overflow: hidden;
+}
+.bofu-mapa iframe {
+  display: block; width: 100%; height: 132px;
+  border: 0; filter: grayscale(0.35) contrast(1.05);
+}
+.bofu-mapa-etiq {
+  display: block; padding: 8px 10px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+  text-transform: uppercase; text-align: center;
+  color: var(--gold); text-decoration: none;
+  border-top: 1px solid var(--d-faint);
+}
+.bofu-mapa-etiq:hover { color: var(--d-fg); }
 .bofu-codigos-linea {
   margin-top: 10px; padding-top: 10px;
   border-top: 1px solid var(--d-faint);
@@ -284,6 +301,49 @@ body.checkout-abierto #main-content {
 }
 body.checkout-abierto .barra-reserva-spacer {
   display: none;
+}
+/* Taquilla bloqueada: el pedido ya está confirmado y el pago usa esa orden. */
+.taquilla-lock-banner {
+  display: none;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(217,155,58,.45);
+  background: rgba(217,155,58,.10);
+}
+body.taquilla-bloqueada .taquilla-lock-banner,
+body.checkout-abierto .taquilla-lock-banner {
+  display: block;
+}
+.taquilla-lock-txt {
+  font-family: var(--cuerpo);
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--d-fg);
+  margin: 0 0 12px;
+}
+.taquilla-lock-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.taquilla-lock-btn:hover { background: rgba(217,155,58,.12); }
+body.taquilla-bloqueada #main-content .inner > :not(#taquilla-lock-banner),
+body.checkout-abierto #main-content .inner > :not(#taquilla-lock-banner) {
+  opacity: 0.42;
+  filter: grayscale(0.18);
+  pointer-events: none;
+  user-select: none;
 }
 /* Solo sticky abajo — el botón inline queda oculto (main.js lo sigue usando) */
 #btn-continuar {
@@ -916,20 +976,29 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   font-size: 34px; font-weight: 500; line-height: .88;
 }
 .ichk-desc-val { color: #2a7a44; }
+.ichk-asientos-nota {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(168,149,120,.28);
+  font-family: var(--cuerpo);
+  font-size: 15px;
+  line-height: 1.45;
+  color: rgba(26,20,17,.72);
+}
 
-/* Botón "cambiar entradas" */
+/* Botón "actualizar carrito" */
 .ichk-btn-editar {
   font-family: var(--mono); font-size: 13px;
   letter-spacing: .15em; text-transform: uppercase;
-  color: rgba(26,20,17,.68);
-  background: none; border: none; cursor: pointer;
-  padding: 2px 0; margin-bottom: 28px; display: block;
-  text-decoration: underline;
-  text-decoration-color: rgba(168,149,120,.4);
-  text-underline-offset: 3px;
+  color: rgba(26,20,17,.78);
+  background: transparent;
+  border: 1px solid rgba(168,149,120,.55);
+  cursor: pointer;
+  padding: 12px 16px; margin: 0 0 22px; display: block; width: 100%;
+  text-align: center;
   -webkit-tap-highlight-color: transparent;
 }
-.ichk-btn-editar:hover { color: var(--red); }
+.ichk-btn-editar:hover { color: var(--red); border-color: var(--red); }
 
 /* Campo de correo — grande */
 .ichk-label {
@@ -1213,10 +1282,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <a href="#main-content" class="skip-link">Saltar al contenido</a>
 
-<a class="fab-whatsapp touch-manipulation" href="https://wa.me/5215671311191" target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp" title="WhatsApp">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.883 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-</a>
-
 <!-- ══ LOGOS FIJOS ═══════════════════════════════════════════ -->
 <div class="logo-gorila-sello" id="logo-gorila-wrap">
   <a href="/" aria-label="Ir al inicio">
@@ -1238,6 +1303,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- ══ TAQUILLA BOFU ═══════════════════════════════════════════ -->
 <section class="sd--mid" id="main-content">
   <div class="inner">
+    <div id="taquilla-lock-banner" class="taquilla-lock-banner" role="status">
+      <p class="taquilla-lock-txt">Fecha y boletos quedan fijos para que coincidan con el pago.</p>
+      <button type="button" class="taquilla-lock-btn" onclick="editarPedido()">Actualizar carrito</button>
+    </div>
     <p class="bofu-urgencia" role="status">
       <span data-escasez-funciones>Quedan 6 sábados — cupo limitado</span>
       <span class="bofu-urgencia-sep" aria-hidden="true">·</span>
@@ -1275,10 +1344,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- 2. BOLETOS -->
     <span class="boletos-sub-label">Boletos</span>
-
-    <p class="bofu-asientos-nota">
-      <strong>Acceso general.</strong> Asignación de lugares 30&nbsp;min antes de la función (llega 17:30 para función de 18:00).
-    </p>
 
     <!-- General -->
     <div class="ticket-fila">
@@ -1326,23 +1391,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span class="total-label">Total</span>
         <span id="total-precio">$0.00 MXN</span>
       </div>
-      <div id="promo-grupo-banner" class="promo-grupo-banner hidden" aria-live="polite"></div>
-      <p class="bofu-codigos-linea" id="bofu-codigos-linea">
-        Códigos al pagar: <strong>ESPEJO</strong> (2 generales $600) · <strong>GRUPO20</strong> (5+ generales −20%)
-      </p>
     </div>
 
     <!-- 3. Prueba social -->
-    <div class="bofu-reviews" aria-label="Opiniones del público">
-      <span class="bofu-reviews-label">Quien ya fue</span>
-      <div class="bofu-review"><strong>★★★★★</strong> «La mejor obra de teatro que he visto en mi vida.»</div>
-      <div class="bofu-review"><strong>★★★★★</strong> «Reí mucho y también lloré.»</div>
+    <div class="bofu-reviews" data-testimonios="boletos" aria-label="Opiniones del público">
+      <div class="bofu-review">
+        <span class="bofu-review-cita">«Es una obra con mucha profundidad, súper recomendada.»</span>
+        <cite class="bofu-review-firma">— H. Huerta</cite>
+      </div>
+      <div class="bofu-review">
+        <span class="bofu-review-cita">«Reí mucho y también lloré.»</span>
+        <cite class="bofu-review-firma">— S. Ruedas</cite>
+      </div>
     </div>
 
     <p class="bofu-logistica">
-      Teatro Wilberto Cantón · Velasco 59, San José Insurgentes ·
-      <a href="https://www.google.com/maps/search/?api=1&amp;query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX" target="_blank" rel="noopener noreferrer">Maps</a>
+      Teatro Wilberto Cantón · Velasco 59, San José Insurgentes
     </p>
+    <div class="bofu-mapa">
+      <iframe
+        title="Teatro Wilberto Cantón en el mapa"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        src="https://maps.google.com/maps?q=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX&amp;hl=es&amp;z=16&amp;output=embed"></iframe>
+      <a class="bofu-mapa-etiq" href="https://www.google.com/maps/search/?api=1&amp;query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX" target="_blank" rel="noopener noreferrer">Velasco 59 · Abrir mapa</a>
+    </div>
 
     <div class="barra-reserva-spacer" aria-hidden="true"></div>
 
@@ -1400,11 +1473,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span class="ichk-etiq">Total a pagar</span>
         <span class="ichk-val grande" id="ichk-total">—</span>
       </div>
+      <p class="ichk-asientos-nota">Acceso general. Asignación de lugares 40&nbsp;min antes de la función.</p>
     </div>
 
-    <!-- Enlace para volver a editar -->
+    <!-- Desbloquear taquilla y volver a elegir fecha/boletos -->
     <button type="button" class="ichk-btn-editar" onclick="editarPedido()">
-      ← Cambiar mis entradas
+      ← Actualizar carrito
     </button>
 
     <!-- Cupón colapsado -->
@@ -1559,8 +1633,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/inventario.js"></script>
 <script src="js/fechas.js"></script>
 <script src="js/temporada-copy.js"></script>
+<script src="js/testimonios.js?v=20260813t2"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js"></script>
+<script src="js/main.js?v=20260813-lock"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {
@@ -1788,7 +1863,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var preseleccionHecha = false;
   var fallbackIntentado = false;
   var fechasExpandidas = false;
-  var FECHAS_OCULTAS_INICIAL = 3;
+  var FECHAS_OCULTAS_INICIAL = 0;
 
   var CUPONES_URL = {
     ESPEJO: {
@@ -1867,7 +1942,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!items.length) return;
 
     var ocultas = FECHAS_OCULTAS_INICIAL;
-    var hayOcultas = items.length > ocultas;
+    var hayOcultas = ocultas > 0 && items.length > ocultas;
 
     items.forEach(function(el, i) {
       var hide = hayOcultas && !fechasExpandidas && i >= items.length - ocultas;

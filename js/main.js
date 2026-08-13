@@ -129,8 +129,27 @@ function calcularTotal() {
     return calcularPreciosConPromo(promo).total;
 }
 
+function checkoutInlineAbierto() {
+    const panel = document.getElementById('inline-checkout');
+    if (!panel) return false;
+    return window.getComputedStyle(panel).display !== 'none';
+}
+
+function bloquearTaquilla(locked) {
+    document.body.classList.toggle('taquilla-bloqueada', !!locked);
+    const main = document.getElementById('main-content');
+    const inner = main && main.querySelector('.inner');
+    if (!inner) return;
+    Array.prototype.forEach.call(inner.children, function (el) {
+        if (el.id === 'taquilla-lock-banner') return;
+        if (locked) el.setAttribute('inert', '');
+        else el.removeAttribute('inert');
+    });
+}
+
 // --- FUNCIÓN 1: CAMBIAR CANTIDAD POR TIPO ---
 function cambiarCantidad(tipo, delta) {
+    if (checkoutInlineAbierto()) return;
     if (!(tipo in cantidades)) return;
 
     const nueva = cantidades[tipo] + delta;
@@ -158,6 +177,7 @@ function cambiarCantidad(tipo, delta) {
 
 // --- FUNCIÓN 2: SELECCIONAR FECHA ---
 function seleccionarFecha(clave, texto, funcion = null) {
+    if (checkoutInlineAbierto()) return;
     if (funcion && funcion.bloqueada) {
         alert('Las ventas para esta función están bloqueadas. La función comenzará pronto.');
         return;
@@ -384,16 +404,7 @@ function actualizarPantalla() {
     const totalEl = document.getElementById('total-precio');
     if (totalEl) totalEl.textContent = `$${total.toFixed(2)} MXN`;
 
-    let promoBanner = document.getElementById('promo-grupo-banner');
-    if (!promoBanner && totalEl) {
-        promoBanner = document.createElement('div');
-        promoBanner.id = 'promo-grupo-banner';
-        promoBanner.className = 'promo-grupo-banner hidden';
-        const totalFila = totalEl.closest('.total-fila');
-        if (totalFila && totalFila.parentNode) {
-            totalFila.parentNode.insertBefore(promoBanner, totalFila.nextSibling);
-        }
-    }
+    const promoBanner = document.getElementById('promo-grupo-banner');
     if (promoBanner) {
         const gen = cantidades.general || 0;
         if (gen === 2 && !tieneBoletosCredencial() && gen === totalCantidad()) {
@@ -570,7 +581,10 @@ function mostrarCheckoutInline(orden) {
     if (cuponMsg) { cuponMsg.textContent = ''; cuponMsg.className = ''; }
 
     // Mostrar panel y desplazar (nombre y correo se piden en Stripe).
+    // La taquilla queda bloqueada: el pago usa la orden congelada; si la
+    // selección sigue viva, el resumen y Stripe se desincronizan.
     panel.style.display = '';
+    bloquearTaquilla(true);
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     try { window.dispatchEvent(new CustomEvent('taquilla:checkout-toggle')); } catch (_) {}
 
@@ -583,6 +597,7 @@ function mostrarCheckoutInline(orden) {
 function editarPedido() {
     const panel = document.getElementById('inline-checkout');
     if (panel) panel.style.display = 'none';
+    bloquearTaquilla(false);
     try { window.dispatchEvent(new CustomEvent('taquilla:checkout-toggle')); } catch (_) {}
     navegandoACheckout = false;
     const mainContent = document.getElementById('main-content');
@@ -809,6 +824,7 @@ window.seleccionarFecha = seleccionarFecha;
 window.renderResumenDescuentoOrden = renderResumenDescuentoOrden;
 window.mostrarCheckoutInline = mostrarCheckoutInline;
 window.editarPedido = editarPedido;
+window.bloquearTaquilla = bloquearTaquilla;
 window.abrirListaEspera   = abrirListaEspera;
 window.cerrarListaEspera  = cerrarListaEspera;
 window.enviarListaEspera  = enviarListaEspera;

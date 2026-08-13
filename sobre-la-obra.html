@@ -918,7 +918,7 @@
       <span>+1.000 funciones</span>
     </p>
     <span class="proof-vrule" aria-hidden="true"></span>
-    <blockquote class="proof-quote" id="proof-quote" aria-live="polite">
+    <blockquote class="proof-quote" id="proof-quote" data-testimonios="franja" aria-live="polite">
       <span class="proof-stars" aria-hidden="true">★★★★★</span>
       <span class="proof-quote-text">«Reí mucho y también lloré.»</span>
       <cite class="proof-quote-author">— Sandra Ruedas</cite>
@@ -1039,7 +1039,7 @@
   <div class="section-inner">
     <p class="section-kicker">¿Y es tan buena como suena?</p>
     <h2 class="section-title">Lo que dice el público</h2>
-    <div class="reviews">
+    <div class="reviews" data-testimonios="obra">
       <div class="review-card">
         <div class="review-stars" aria-label="5 estrellas">★★★★★</div>
         <p class="review-text">«La mejor obra de teatro que he visto en mi vida.»</p>
@@ -1058,7 +1058,7 @@
     </div>
     <details class="reviews-more-wrap">
       <summary>Ver más reseñas</summary>
-      <div class="reviews-more">
+      <div class="reviews-more" data-testimonios="obra-mas">
         <div class="review-card">
           <div class="review-stars" aria-label="5 estrellas">★★★★★</div>
           <p class="review-text">«Una obra bastante reflexiva y excelentemente representada por el maestro Dupeyrón.»</p>
@@ -1176,6 +1176,7 @@
 <script src="js/analytics.js?v=20260812vc2" data-viewcontent="sobre-la-obra"></script>
 <script src="js/fechas.js" defer></script>
 <script src="js/temporada-copy.js" defer></script>
+<script src="js/testimonios.js?v=20260813t"></script>
 <script src="js/tofu-ad-match.js?v=20260812s" defer></script>
 <script src="js/tofu-landing.js?v=20260812c" defer></script>
 <script>
@@ -1189,42 +1190,6 @@
       var elegido = pool[Math.floor(Math.random() * pool.length)];
       img.src = 'img/GALERIA/mobile/' + elegido + '.webp';
     });
-  })();
-
-  /* Reseña rotatoria en la franja de prueba social — una línea, citas del home. */
-  (function () {
-    var reviews = [
-      { text: 'Reí mucho y también lloré.', author: 'Sandra Ruedas' },
-      { text: 'La mejor obra de teatro que he visto en mi vida.', author: 'Bernardo Hernandez' },
-      { text: 'Excelente obra. Imperdible.', author: 'Daniel Compeán Pérez' },
-      { text: 'Fui con mi novio y se quedó en mi top 3 obras.', author: 'America Lara' },
-      { text: 'Increíble función la de hoy.', author: 'Nestor Torres' },
-      { text: '¡Excelente y muy reflexiva obra, vayan a verla!', author: 'Valencia Beatriz' },
-      { text: 'Chulada de monólogo! Me encantó.', author: 'Arturo Tirado' }
-    ];
-    var el = document.getElementById('proof-quote');
-    if (!el || reviews.length < 2) return;
-    var textEl = el.querySelector('.proof-quote-text');
-    var authorEl = el.querySelector('.proof-quote-author');
-    if (!textEl || !authorEl) return;
-
-    var idx = Math.floor(Math.random() * reviews.length);
-    function mostrar(i) {
-      textEl.textContent = '\u00AB' + reviews[i].text + '\u00BB';
-      authorEl.textContent = '\u2014 ' + reviews[i].author;
-    }
-    mostrar(idx);
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    setInterval(function () {
-      idx = (idx + 1) % reviews.length;
-      el.classList.add('is-fading');
-      setTimeout(function () {
-        mostrar(idx);
-        el.classList.remove('is-fading');
-      }, 360);
-    }, 5200);
   })();
 
   /* Video en vivo: src en HTML (móvil); desktop se carga al entrar al viewport. */
