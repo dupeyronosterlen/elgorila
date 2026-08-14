@@ -15,5 +15,6 @@ Disallow: /boleto-imprimible-blanco.html
 Disallow: /separador-boleto.html
 Disallow: /separador-boleto-muestra.html
 Disallow: /acta.html
+Disallow: /page/
 
 Sitemap: https://elgorilateatro.com.mx/sitemap.xml
