@@ -20,9 +20,8 @@
 <script src="/js/gtm.js?v=20260812gtm"></script>
   <script src="js/utm.js"></script>
   <script src="js/analytics.js" data-viewcontent="historia-del-gorila"></script>
-  <!-- Conteo/rango vivos en los CTA. La prosa histórica de la temporada
-       ("9 funciones, 25 de julio al 19 de septiembre") NO lleva estos atributos:
-       describe la temporada como fue programada, no lo que queda en venta. -->
+  <!-- Conteo/rango vivos en los CTA (JS). El HTML de respaldo es para crawlers:
+       “en temporada”, sin clavar N funciones ni fecha de cierre. -->
   <script src="js/fechas.js" defer></script>
   <script src="js/temporada-copy.js" defer></script>
   <script type="application/ld+json">
@@ -31,7 +30,7 @@
     "@type": "Play",
     "name": "El Gorila",
     "alternateName": "El Gorila de Franz Kafka",
-    "description": "Monólogo teatral interpretado por Humberto Dupeyrón, basado en 'Un informe para una Academia' de Franz Kafka. En escena desde 1989 de forma ininterrumpida.",
+    "description": "Monólogo teatral interpretado por Humberto Dupeyrón, basado en 'Un informe para una Academia' de Franz Kafka. En escena desde 1989. Actualmente en temporada en Ciudad de México.",
     "sameAs": [
       "https://www.wikidata.org/wiki/Q140469489"
     ],
@@ -45,7 +44,10 @@
     "actor": {
       "@type": "Person",
       "name": "Humberto Dupeyrón",
-      "sameAs": "https://es.wikipedia.org/wiki/Humberto_Dupeyr%C3%B3n"
+      "sameAs": [
+        "https://es.wikipedia.org/wiki/Humberto_Dupeyr%C3%B3n",
+        "https://www.wikidata.org/wiki/Q17477999"
+      ]
     },
     "director": {
       "@type": "Person",
@@ -86,6 +88,38 @@
         "position": 2,
         "name": "Historia del Gorila",
         "item": "https://elgorilateatro.com.mx/historia-del-gorila.html"
+      }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Qué es El Gorila?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Monólogo de Humberto Dupeyrón basado en «Un informe para una Academia» de Franz Kafka. El monólogo más longevo del teatro mexicano. En escena desde 1989."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuánto dura?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "1 hora 20 minutos, sin intermedio."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Dónde verla ahora?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Actualmente en temporada en Ciudad de México. Fechas y sede vigentes: https://elgorilateatro.com.mx/funciones.html"
+        }
       }
     ]
   }
@@ -218,6 +252,15 @@
     .cta-final-sub { font-family: var(--body); font-size: 1.1rem; color: var(--cream-80); margin-bottom: 0.5rem; }
     .cta-final-detail { font-family: var(--body); font-size: 0.82rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); opacity: 0.65; margin-bottom: 3rem; }
     .cta-final-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .en-resumen { max-width: 860px; margin: 0 auto 4rem; padding: 2rem 2rem 2.2rem; border: 1px solid var(--gold-border); background: var(--gold-dim); }
+    .en-resumen h2 { font-family: var(--display); font-size: 1.8rem; font-weight: 400; color: var(--gold); margin-bottom: 1rem; }
+    .en-resumen ul { font-family: var(--body); color: var(--cream-80); padding-left: 1.3rem; line-height: 1.7; }
+    .en-resumen li + li { margin-top: 0.45rem; }
+    .en-resumen a { color: var(--gold); text-decoration: underline; }
+    .faq-lista details { border-bottom: 1px solid var(--gold-border); padding: 1rem 0; }
+    .faq-lista summary { font-family: var(--display); font-size: 1.25rem; color: var(--gold); cursor: pointer; }
+    .faq-lista details p { font-family: var(--body); color: var(--cream-80); margin-top: 0.75rem; }
+    .faq-lista a { color: var(--gold); text-decoration: underline; }
 
     /* Footer */
     .footer { border-top: 1px solid var(--gold-border); padding: 3rem 2rem; text-align: center; }
@@ -277,6 +320,15 @@
   </div>
 </section>
 
+<section class="en-resumen" id="en-resumen" aria-labelledby="en-resumen-heading" style="margin-top:-2rem">
+  <h2 id="en-resumen-heading">En resumen</h2>
+  <ul>
+    <li>Monólogo de Humberto Dupeyrón, basado en «Un informe para una Academia» de Franz Kafka.</li>
+    <li>El monólogo más longevo del teatro mexicano. 37 años en escena (desde 1989).</li>
+    <li>Actualmente en temporada en Ciudad de México. Fechas: <a href="/funciones.html">funciones</a>.</li>
+  </ul>
+</section>
+
 <!-- STATS -->
 <div class="stats-wrapper">
   <div class="stats-grid">
@@ -293,7 +345,7 @@
       <div class="stat-label">Funciones</div>
     </div>
     <div class="stat-item">
-      <div class="stat-number">90'</div>
+      <div class="stat-number">80'</div>
       <div class="stat-label">Un solo actor</div>
     </div>
   </div>
@@ -321,9 +373,10 @@
     </div>
 
     <div class="cta-banner">
-      <div class="cta-banner-title">Temporada julio – septiembre 2026</div>
-      <p class="cta-banner-sub"><span data-temporada-conteo data-temporada-cap>6 sábados</span> · 18:00 · Teatro Wilberto Cantón, CDMX · Desde $400 MXN</p>
-      <a href="/boletos.html" class="btn-primary">Ver fechas y comprar boletos</a>
+      <div class="cta-banner-title">Actualmente en temporada</div>
+      <p class="cta-banner-sub"><span data-temporada-conteo data-temporada-cap>en temporada</span> · 18:00 · Teatro Wilberto Cantón, CDMX · Desde $400 MXN</p>
+      <a href="/boletos.html" class="btn-primary">Comprar boletos</a>
+      <a href="/funciones.html" class="btn-ghost" style="margin-left:0.6rem">Ver calendario</a>
     </div>
   </div>
 </section>
@@ -358,7 +411,7 @@
         <div class="timeline-dot"></div>
         <div class="timeline-content">
           <h3>Estreno · Teatro Xola, Ciudad de México</h3>
-          <p>Humberto Dupeyrón estrena <em>El Gorila</em>. Nadie imagina que esta primera función inaugura una trayectoria ininterrumpida de casi cuatro décadas.</p>
+          <p>Humberto Dupeyrón estrena <em>El Gorila</em>. Nadie imagina que esta primera función inaugura una trayectoria de casi cuatro décadas.</p>
         </div>
       </div>
       <div class="timeline-item">
@@ -390,7 +443,7 @@
         <div class="timeline-dot"></div>
         <div class="timeline-content">
           <h3>37 años · Teatro Wilberto Cantón</h3>
-          <p>La temporada 2026 inaugura en el Teatro Wilberto Cantón. Humberto Dupeyrón, a sus 80 años y con esclerosis múltiple, vuelve al escenario en un acto de voluntad pura: 9 funciones, sábados 18:00, 25 de julio al 19 de septiembre.</p>
+          <p>La temporada 2026 se presenta en el Teatro Wilberto Cantón. Humberto Dupeyrón, a sus 80 años y con esclerosis múltiple, vuelve al escenario en un acto de voluntad pura. Actualmente en temporada, sábados 18:00. Calendario vigente: <a href="/funciones.html" style="color:var(--gold);text-decoration:underline">funciones</a>.</p>
         </div>
       </div>
     </div>
@@ -413,9 +466,30 @@
       <tr><td>Idioma</td><td>Español</td></tr>
       <tr><td>Estreno</td><td>1989 · Teatro Xola, Ciudad de México</td></tr>
       <tr><td>Estreno y prensa 2026</td><td>18 jul · Teatro Wilberto Cantón</td></tr>
-      <tr><td>Temporada 2026</td><td>25 jul – 19 sep 2026 · Teatro Wilberto Cantón · Sábados 18:00</td></tr>
+      <tr><td>Temporada 2026</td><td>En temporada · sábados 18:00 · Teatro Wilberto Cantón · <a href="/funciones.html" style="color:var(--gold);text-decoration:underline">fechas vigentes</a></td></tr>
       <tr><td>Boletos</td><td>Desde $400 MXN · <a href="/boletos.html" style="color:var(--gold);text-decoration:underline">elgorilateatro.com.mx/boletos.html</a></td></tr>
     </table>
+  </div>
+</section>
+
+<section class="section" id="faq" aria-labelledby="faq-heading">
+  <div class="section-inner">
+    <p class="section-label">Preguntas</p>
+    <h2 class="section-title" id="faq-heading">Preguntas <em>frecuentes</em></h2>
+    <div class="faq-lista">
+      <details>
+        <summary>¿Qué es El Gorila?</summary>
+        <p>Monólogo de Humberto Dupeyrón basado en «Un informe para una Academia» de Franz Kafka. El monólogo más longevo del teatro mexicano. En escena desde 1989.</p>
+      </details>
+      <details>
+        <summary>¿Cuánto dura?</summary>
+        <p>1 hora 20 minutos, sin intermedio.</p>
+      </details>
+      <details>
+        <summary>¿Dónde verla ahora?</summary>
+        <p>Actualmente en temporada en Ciudad de México. Fechas y sede vigentes: <a href="/funciones.html">elgorilateatro.com.mx/funciones.html</a>.</p>
+      </details>
+    </div>
   </div>
 </section>
 
@@ -519,8 +593,8 @@
   <div class="cta-final-inner">
     <div class="gold-divider"><span>✦</span></div>
     <h2 class="cta-final-title">37 años esperándote.<br/>Llegó tu turno.</h2>
-    <p class="cta-final-sub"><span data-temporada-conteo data-temporada-cap>6 sábados</span> · 18:00 · Teatro Wilberto Cantón, CDMX</p>
-    <p class="cta-final-detail"><span data-temporada-rango data-temporada-cap>Del 15 de agosto al 19 de septiembre</span> · Boletos desde $400 MXN</p>
+    <p class="cta-final-sub"><span data-temporada-conteo data-temporada-cap>en temporada</span> · 18:00 · Teatro Wilberto Cantón, CDMX</p>
+    <p class="cta-final-detail"><span data-temporada-rango data-temporada-cap>sábados 18:00</span> · Boletos desde $400 MXN</p>
     <div class="cta-final-btns">
       <a href="/boletos.html" class="btn-primary">Comprar boletos</a>
       <a href="/funciones.html" class="btn-ghost">Ver calendario</a>
