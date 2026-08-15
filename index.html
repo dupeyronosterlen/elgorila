@@ -3977,10 +3977,10 @@ Los códigos se escriben en el paso de pago, después de elegir fecha y boletos.
 </div>
 </div>
 <!-- Barra fija de compra -->
-<a class="barra-compra-fija link-venta-boletos" href="/boletos.html" aria-label="Conseguir entradas — desde $400 · 6 sábados">
+<a class="barra-compra-fija link-venta-boletos" href="/boletos.html" aria-label="Conseguir entradas — desde $400 · en temporada">
   <span class="barra-compra-titulo">Conseguir entradas</span>
   <span class="barra-compra-meta" aria-hidden="true">
-    <span class="barra-compra-precio">Desde $400</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo" data-temporada-conteo>6 sábados</span>
+    <span class="barra-compra-precio">Desde $400</span><span class="barra-compra-meta-sep">·</span><span class="barra-compra-aforo" data-temporada-conteo>en temporada</span>
   </span>
 </a>
 <script src="js/config.js"></script>
@@ -4177,7 +4177,7 @@ Los códigos se escriben en el paso de pago, después de elegir fecha y boletos.
       var preventa = (typeof window.esPreventaVigente === 'function') ? window.esPreventaVigente() : false;
       /* Conteo vivo de funciones que quedan (fechas.js). Se recalcula solo al
          pasar cada sábado; si fechas.js no cargó, cae al respaldo del HTML. */
-      var aforoTxt = '6 sábados';
+      var aforoTxt = 'en temporada';
       try {
         if (window.FechasManager && window.FechasManager.resumenTemporada) {
           aforoTxt = window.FechasManager.resumenTemporada().conteo;
