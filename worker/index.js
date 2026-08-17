@@ -1646,7 +1646,8 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
     if (usos >= entry.max_usos) return { ok: false, error: 'Código agotado.' };
   }
 
-  const maxPorFn = Number(entry.max_usos_por_funcion) || 0;
+  let maxPorFn = Number(entry.max_usos_por_funcion) || 0;
+  if (codigo === 'ESPEJO' && maxPorFn <= 0) maxPorFn = 7;
   const fechaIso = fechaIsoCupon(fecha);
   let usosRestantesFuncion = null;
   if (maxPorFn > 0 && fechaIso) {
@@ -2781,6 +2782,22 @@ async function handleDisponibilidad(tid, request, env) {
   const galeriaAbierta = !!seccionesDisp.galeria && plateaDisp === 0 && galeriaDisp > 0;
   const disponibles_total = sumDisponiblesSecciones(seccionesDisp);
 
+  let cupones = null;
+  try {
+    const catalogo = await getCodigosDescuento(env);
+    const espejo   = catalogo.ESPEJO || {};
+    let maxEspejo  = Number(espejo.max_usos_por_funcion) || 0;
+    if (maxEspejo <= 0) maxEspejo = 7;
+    const usadosEspejo = await usosCuponEnFuncion('ESPEJO', fecha, env);
+    cupones = {
+      ESPEJO: {
+        max: maxEspejo,
+        usados: usadosEspejo,
+        restantes: Math.max(0, maxEspejo - usadosEspejo),
+      },
+    };
+  } catch { /* el contador es informativo; no tumbar disponibilidad */ }
+
   return json({
     fecha,
     secciones:      seccionesDisp,
@@ -2788,6 +2805,7 @@ async function handleDisponibilidad(tid, request, env) {
     galeria_abierta: galeriaAbierta,
     disponibles:    galeriaAbierta ? galeriaDisp : (plateaDisp || Object.values(seccionesDisp).reduce((s, x) => s + x.disponibles, 0)),
     disponibles_total,
+    cupones,
   }, 200, request);
 }
 

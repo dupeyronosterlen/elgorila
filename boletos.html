@@ -810,6 +810,24 @@ body.checkout-abierto #main-content .inner > :not(#taquilla-lock-banner) {
   text-align: left;
 }
 .promo-grupo-banner.hidden { display: none; }
+.espejo-cupo {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(217,155,58,.4);
+  background: rgba(217,155,58,.10);
+  font-family: var(--cuerpo);
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--d-fg);
+  text-align: center;
+}
+.espejo-cupo[hidden] { display: none; }
+.espejo-cupo strong { color: var(--gold); }
+.espejo-cupo.agotado {
+  border-color: rgba(241,234,217,.18);
+  background: rgba(241,234,217,.04);
+  color: var(--d-soft);
+}
 
 /* Mensajes de disponibilidad */
 /* PENDIENTE: badge de ocupación por función en calendario/fecha
@@ -1459,6 +1477,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span class="total-label">Total</span>
         <span id="total-precio">$0.00 MXN</span>
       </div>
+      <p id="espejo-cupo" class="espejo-cupo" hidden role="status"></p>
       <div id="promo-grupo-banner" class="promo-grupo-banner hidden" role="status"></div>
       <button type="button" id="btn-reservar-desktop" disabled aria-label="Reservar boletos">
         <span id="brd-texto">Selecciona una fecha</span>
@@ -1708,7 +1727,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/temporada-copy.js"></script>
 <script src="js/testimonios.js?v=20260813t2"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js?v=20260817-espejo7"></script>
+<script src="js/main.js?v=20260817-espejo7b"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {

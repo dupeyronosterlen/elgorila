@@ -350,6 +350,30 @@ function aplicarDisponibilidadWorker(data) {
     };
     const f = funcionActual();
     if (f) f.vendidos_sync = vendidos;
+    pintarEspejoCupo(data);
+}
+
+function pintarEspejoCupo(data) {
+    const el = document.getElementById('espejo-cupo');
+    if (!el) return;
+    const info = data && data.cupones && data.cupones.ESPEJO;
+    if (!info || typeof info.restantes !== 'number') {
+        el.hidden = true;
+        el.textContent = '';
+        return;
+    }
+    const n = info.restantes;
+    if (n <= 0) {
+        el.textContent = 'ESPEJO se agotó para esta función';
+        el.classList.add('agotado');
+    } else if (n === 1) {
+        el.innerHTML = '<strong>1 código restante</strong> · ESPEJO para este sábado';
+        el.classList.remove('agotado');
+    } else {
+        el.innerHTML = '<strong>' + n + ' códigos restantes</strong> · ESPEJO para este sábado';
+        el.classList.remove('agotado');
+    }
+    el.hidden = false;
 }
 
 function refrescarDisponibilidadWorker() {
