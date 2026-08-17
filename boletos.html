@@ -296,6 +296,51 @@ body { padding-top: 0; }
 .barra-reserva-fija.oculta-checkout {
   display: none !important;
 }
+/* Desktop: Reservar debajo del $400, sin sticky. Móvil conserva la barra fija. */
+#btn-reservar-desktop {
+  display: none;
+}
+@media (min-width: 768px) {
+  .barra-reserva-fija,
+  .barra-reserva-spacer {
+    display: none !important;
+  }
+  #btn-reservar-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-family: var(--cuerpo);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    transition: opacity .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #btn-reservar-desktop:hover:not(:disabled) { opacity: .92; }
+  #btn-reservar-desktop:disabled {
+    opacity: .42;
+    cursor: not-allowed;
+  }
+  #btn-reservar-desktop.oculta-checkout {
+    display: none !important;
+  }
+  #btn-reservar-desktop .brd-arrow {
+    font-size: 16px;
+    opacity: .8;
+    transition: transform .15s;
+  }
+  #btn-reservar-desktop:hover:not(:disabled) .brd-arrow {
+    transform: translateX(4px);
+  }
+}
 body.checkout-abierto #main-content {
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
 }
@@ -1414,6 +1459,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span class="total-label">Total</span>
         <span id="total-precio">$0.00 MXN</span>
       </div>
+      <button type="button" id="btn-reservar-desktop" disabled aria-label="Reservar boletos">
+        <span id="brd-texto">Selecciona una fecha</span>
+        <span class="brd-arrow" aria-hidden="true">→</span>
+      </button>
     </div>
 
     <!-- 3. Prueba social -->
@@ -1949,10 +1998,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function actualizarVisibilidadBarra() {
     var sticky = document.getElementById('barra-reserva-fija');
+    var desktop = document.getElementById('btn-reservar-desktop');
     var panel = document.getElementById('inline-checkout');
-    if (!sticky || !panel) return;
+    if (!panel) return;
     var abierto = window.getComputedStyle(panel).display !== 'none';
-    sticky.classList.toggle('oculta-checkout', abierto);
+    if (sticky) sticky.classList.toggle('oculta-checkout', abierto);
+    if (desktop) desktop.classList.toggle('oculta-checkout', abierto);
     document.body.classList.toggle('checkout-abierto', abierto);
   }
 
@@ -2070,7 +2121,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function syncCtaCopy() {
     var btn = document.getElementById('btn-continuar');
     var sticky = document.getElementById('barra-reserva-fija');
-    if (!btn || !sticky) return;
+    var desktop = document.getElementById('btn-reservar-desktop');
+    if (!btn) return;
 
     var texto = btn.textContent.trim();
     if (texto.indexOf('Continuar') === 0) {
@@ -2079,9 +2131,19 @@ document.addEventListener('DOMContentLoaded', function() {
       texto = 'Elige al menos 1 boleto';
     }
 
-    sticky.textContent = texto;
-    sticky.disabled = btn.disabled;
-    sticky.setAttribute('aria-label', btn.disabled ? texto : 'Reservar: ' + texto);
+    if (sticky) {
+      sticky.textContent = texto;
+      sticky.disabled = btn.disabled;
+      sticky.setAttribute('aria-label', btn.disabled ? texto : 'Reservar: ' + texto);
+    }
+
+    if (desktop) {
+      var txtEl = document.getElementById('brd-texto');
+      if (txtEl) txtEl.textContent = texto;
+      else desktop.textContent = texto;
+      desktop.disabled = btn.disabled;
+      desktop.setAttribute('aria-label', btn.disabled ? texto : 'Reservar: ' + texto);
+    }
 
     simplificarPromoBanner();
     pintarBannerCuponUrl();
@@ -2126,6 +2188,11 @@ document.addEventListener('DOMContentLoaded', function() {
     var sticky = document.getElementById('barra-reserva-fija');
     if (sticky) sticky.addEventListener('click', function() {
       if (!sticky.disabled && typeof irAConfirmacion === 'function') irAConfirmacion();
+    });
+
+    var desktop = document.getElementById('btn-reservar-desktop');
+    if (desktop) desktop.addEventListener('click', function() {
+      if (!desktop.disabled && typeof irAConfirmacion === 'function') irAConfirmacion();
     });
 
     var promoBanner = document.getElementById('promo-grupo-banner');
