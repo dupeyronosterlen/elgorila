@@ -849,10 +849,12 @@ async function inicializar() {
     actualizarPantalla();
 
     setInterval(() => {
+        if (checkoutInlineAbierto()) return;
         if (fechaSeleccionada) { verificarDisponibilidad(); actualizarPantalla(); }
     }, 30000);
 
     setInterval(async () => {
+        if (checkoutInlineAbierto()) return;
         if (typeof sincronizarFuncionesActivas === 'function') await sincronizarFuncionesActivas();
         cargarFechas();
     }, 60000);
