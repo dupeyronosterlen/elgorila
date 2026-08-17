@@ -463,7 +463,7 @@ function actualizarPantalla() {
             promoBanner.className = 'promo-grupo-banner';
             promoBanner.style.color = 'rgba(217,155,58,.75)';
             promoBanner.innerHTML =
-                'Pareja: ingresa el código <strong>ESPEJO</strong> al pagar — 2 generales por <strong>$600</strong> total';
+                'Pareja: ingresa el código <strong>ESPEJO</strong> al pagar — 2 generales por <strong>$600</strong> · máx. 7 por sábado';
         } else if (
             gen >= CUPON_GRUPO20_MIN
             && gen === totalCantidad()

@@ -1615,7 +1615,21 @@ function normalizarCodigoCupon(raw) {
   return raw.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 32);
 }
 
-async function validarCuponDescuento(codigoRaw, env) {
+function fechaIsoCupon(fecha) {
+  return typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : '';
+}
+
+function claveUsosCuponFuncion(codigo, fecha) {
+  return `cupon:usos:${codigo}:${fecha}`;
+}
+
+async function usosCuponEnFuncion(codigo, fecha, env) {
+  const iso = fechaIsoCupon(fecha);
+  if (!iso) return 0;
+  return parseInt((await env.INVENTARIO.get(claveUsosCuponFuncion(codigo, iso))) || '0', 10);
+}
+
+async function validarCuponDescuento(codigoRaw, env, fecha) {
   const codigo = normalizarCodigoCupon(codigoRaw);
   if (!codigo || codigo.length < 4) return { ok: false, error: 'Código inválido.' };
 
@@ -1632,6 +1646,20 @@ async function validarCuponDescuento(codigoRaw, env) {
     if (usos >= entry.max_usos) return { ok: false, error: 'Código agotado.' };
   }
 
+  const maxPorFn = Number(entry.max_usos_por_funcion) || 0;
+  const fechaIso = fechaIsoCupon(fecha);
+  let usosRestantesFuncion = null;
+  if (maxPorFn > 0 && fechaIso) {
+    const usadosFn = await usosCuponEnFuncion(codigo, fechaIso, env);
+    if (usadosFn >= maxPorFn) {
+      return {
+        ok: false,
+        error: `${entry.nombre || codigo} se agotó para esta función (máx. ${maxPorFn} por sábado). Elige otra fecha o paga precio general.`,
+      };
+    }
+    usosRestantesFuncion = maxPorFn - usadosFn;
+  }
+
   const tipo = entry.tipo || 'porcentaje';
   const base = {
     ok:           true,
@@ -1644,6 +1672,8 @@ async function validarCuponDescuento(codigoRaw, env) {
     maxGeneral:   entry.max_general != null ? Number(entry.max_general) : null,
     // Candado por función: el cupón solo aplica a esta fecha (YYYY-MM-DD)
     soloFecha:    typeof entry.solo_fecha === 'string' ? entry.solo_fecha : null,
+    maxUsosPorFuncion: maxPorFn > 0 ? maxPorFn : null,
+    usosRestantesFuncion,
   };
 
   if (tipo === 'par_fijo') {
@@ -1810,10 +1840,17 @@ function calcularLineItemsPrecio(itemsValidados, seccionMap, { cupon, sinMinimoS
   };
 }
 
-async function incrementarUsoCupon(codigo, env, referidoDe) {
+async function incrementarUsoCupon(codigo, env, referidoDe, fecha) {
   const key  = `cupon:usos:${codigo}`;
   const usos = parseInt((await env.INVENTARIO.get(key)) || '0', 10);
   await env.INVENTARIO.put(key, String(usos + 1));
+
+  const fechaIso = fechaIsoCupon(fecha);
+  if (fechaIso) {
+    const fk = claveUsosCuponFuncion(codigo, fechaIso);
+    const n  = parseInt((await env.INVENTARIO.get(fk)) || '0', 10);
+    await env.INVENTARIO.put(fk, String(n + 1));
+  }
 
   const codigos = await getCodigosDescuento(env);
   if (codigos[codigo]?.referido) {
@@ -2553,15 +2590,15 @@ async function handleValidarCupon(tid, request, env) {
   }
   if (!itemsValidados.length) return json({ error: 'Carrito inválido.' }, 400, request);
 
-  const cupon = await validarCuponDescuento(codigoRaw, env);
+  // Candado solo_fecha: si el cliente manda la fecha de la orden, se valida aquí
+  // (el candado duro está en la creación del checkout y en venta manual).
+  const fechaOrden = typeof body.fecha === 'string' ? body.fecha : '';
+  const cupon = await validarCuponDescuento(codigoRaw, env, fechaOrden);
   if (!cupon.ok) return json({ error: cupon.error }, 400, request);
 
   const reglas = validarCarritoParaCupon(cupon, itemsValidados);
   if (!reglas.ok) return json({ error: reglas.error }, 400, request);
 
-  // Candado solo_fecha: si el cliente manda la fecha de la orden, se valida aquí
-  // (el candado duro está en la creación del checkout y en venta manual).
-  const fechaOrden = typeof body.fecha === 'string' ? body.fecha : '';
   if (cupon.soloFecha && fechaOrden && fechaOrden !== cupon.soloFecha) {
     return json({ error: errorCuponSoloFecha(cupon) }, 400, request);
   }
@@ -2594,6 +2631,7 @@ async function handleValidarCupon(tid, request, env) {
     subtotal,
     descuentoMonto: Math.max(0, Math.round((subtotal - total) * 100) / 100),
     total,
+    usosRestantesFuncion: cupon.usosRestantesFuncion,
   }, 200, request);
 }
 
@@ -2858,7 +2896,7 @@ async function handleCheckout(tid, request, env, ctx) {
   // Cupón (única vía de descuento promocional; credenciales van en su fila a $280)
   let cuponAplicado = null;
   if (codigoCupon && precioEspecialCentavos <= 0) {
-    const cupon = await validarCuponDescuento(codigoCupon, env);
+    const cupon = await validarCuponDescuento(codigoCupon, env, fecha);
     if (!cupon.ok) {
       await liberarReservaOptimista(tid, fecha, seccionCantidades, reservaId, env);
       return json({ error: cupon.error }, 400, request);
@@ -3202,7 +3240,7 @@ async function handleWebhook(request, env, ctx) {
 
   if (meta.codigoCupon) {
     ctx.waitUntil(
-      incrementarUsoCupon(meta.codigoCupon, env, meta.referidoDe || null)
+      incrementarUsoCupon(meta.codigoCupon, env, meta.referidoDe || null, fecha)
         .catch(e => logError('cupon.uso', { error: e.message })),
     );
   }
@@ -4523,7 +4561,7 @@ async function handleVentaManual(tid, request, env, ctx) {
 
   let cuponAplicado = null;
   if (codigoCuponRaw && !esCortesia) {
-    const cupon = await validarCuponDescuento(codigoCuponRaw, env);
+    const cupon = await validarCuponDescuento(codigoCuponRaw, env, fecha);
     if (!cupon.ok) return json({ error: cupon.error }, 400, request);
     const reglas = validarCarritoParaCupon(cupon, itemsValidados);
     if (!reglas.ok) return json({ error: reglas.error }, 400, request);
@@ -4615,7 +4653,7 @@ async function handleVentaManual(tid, request, env, ctx) {
 
   if (cuponAplicado) {
     ctx.waitUntil(
-      incrementarUsoCupon(cuponAplicado.codigo, env, null)
+      incrementarUsoCupon(cuponAplicado.codigo, env, null, fecha)
         .catch(e => logError('cupon.uso_manual', { error: e.message })),
     );
   }
