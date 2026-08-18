@@ -22,8 +22,8 @@ window.teatroIdActivo = function teatroIdActivo() {
 
 window.TEATRO_ID = window.teatroIdActivo();
 
-/** Sitekey pública de Turnstile (login de admin.html). Vacío = no se muestra el widget. */
-window.TURNSTILE_SITEKEY = '';
+/** Sitekey pública de Turnstile (solo se usa en el login de admin.html). */
+window.TURNSTILE_SITEKEY = '0x4AAAAAAEUiokgcKxJEYqYQ';
 
 /** false = admin.html exige usuario y contraseña (recomendado en producción). */
 window.ADMIN_SIN_LOGIN = false;
