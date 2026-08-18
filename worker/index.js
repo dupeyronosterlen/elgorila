@@ -1647,7 +1647,7 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
   }
 
   let maxPorFn = Number(entry.max_usos_por_funcion) || 0;
-  if (codigo === 'ESPEJO' && maxPorFn <= 0) maxPorFn = 7;
+  if (codigo === 'ESPEJO') maxPorFn = Math.max(maxPorFn, 10);
   const fechaIso = fechaIsoCupon(fecha);
   let usosRestantesFuncion = null;
   if (maxPorFn > 0 && fechaIso) {
@@ -2787,7 +2787,7 @@ async function handleDisponibilidad(tid, request, env) {
     const catalogo = await getCodigosDescuento(env);
     const espejo   = catalogo.ESPEJO || {};
     let maxEspejo  = Number(espejo.max_usos_por_funcion) || 0;
-    if (maxEspejo <= 0) maxEspejo = 7;
+    maxEspejo = Math.max(maxEspejo, 10);
     const usadosEspejo = await usosCuponEnFuncion('ESPEJO', fecha, env);
     cupones = {
       ESPEJO: {
