@@ -1,0 +1,56 @@
+name = "elgorila-headers"
+main = "index.js"
+compatibility_date = "2026-08-18"
+workers_dev = false
+preview_urls = false
+account_id = "010612a0651e3670d9c7cf09b3934961"
+
+# Solo HTML del funnel. No /* (evitar cuota en JS/CSS/img).
+# No admin.html: ese path sigue solo con Cloudflare Access.
+[[routes]]
+pattern = "elgorilateatro.com.mx/"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/index.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/boletos.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/checkout.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/confirmacion.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/enviar-boleto.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/compartir-boleto.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/invitacion.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/funciones.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/gracias.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/encuesta.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "elgorilateatro.com.mx/acta.html*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
