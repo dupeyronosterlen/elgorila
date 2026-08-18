@@ -20,28 +20,22 @@
     return boletos.map(b => b.folio).filter(Boolean).join(' · ') || null;
   }
 
-  function pintarQR(container, url, size) {
-    if (!container || !url) return;
+  function pintarQR(container, codigo, size) {
+    if (window.ElGorilaQr && typeof window.ElGorilaQr.pintarQr === 'function') {
+      return window.ElGorilaQr.pintarQr(container, codigo, size);
+    }
+    if (!container || !codigo) return Promise.resolve();
     if (typeof QRCode === 'undefined') {
-      const data = encodeURIComponent(url);
-      container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${data}" width="${size}" height="${size}" alt="QR boleto" style="display:block;">`;
-      return;
+      container.textContent = String(codigo).trim().toUpperCase();
+      return Promise.reject(new Error('QRCode no cargado'));
     }
     container.innerHTML = '';
     const canvas = document.createElement('canvas');
     container.appendChild(canvas);
-    QRCode.toCanvas(canvas, url, {
+    return QRCode.toCanvas(canvas, codigo, {
       width: size,
       margin: 1,
-      color: { dark: '#000000', light: '#FFFFFF' },
-    }, (err) => {
-      if (err) {
-        QRCode.toDataURL(url, { width: size, margin: 1 }, (e2, dataUrl) => {
-          if (!e2) {
-            container.innerHTML = `<img src="${dataUrl}" width="${size}" height="${size}" alt="QR boleto" style="display:block;">`;
-          }
-        });
-      }
+      color: { dark: '#1a1411', light: '#f1ead9' },
     });
   }
 
@@ -81,16 +75,16 @@
     const cant = orden.cantidadTotal || orden.cantidad || 1;
     const folio = folioTaquillaOrden(orden);
     const cert = orden.numeroOrden || orden.certificado || '';
-    const qrCodigo = codigoQrBoleto(orden);
-    const qrImg = window.ElGorilaQr
-      ? ElGorilaQr.urlQrImagen(qrCodigo, 280)
-      : `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(qrCodigo)}`;
-    const imgSrc = opts.previewSrc || qrImg;
     const imgAlt = opts.fullTicket ? 'Boleto digital EL GORILA con código QR' : 'Código QR — presentar en puerta';
+    const media = opts.previewSrc
+      ? `<div class="boleto-preview">
+        <img id="boleto-preview-img" src="${opts.previewSrc}" alt="${imgAlt}" loading="eager">
+      </div>`
+      : `<div class="boleto-preview">
+        <div class="qr-box" id="qr-preview-live" aria-label="${imgAlt}"></div>
+      </div>`;
     return `
-      <div class="boleto-preview">
-        <img id="boleto-preview-img" src="${imgSrc}" alt="${imgAlt}" loading="eager">
-      </div>
+      ${media}
       <p class="boleto-meta">${cant === 1 ? '1 entrada' : cant + ' entradas'}${folio ? ' · Folio ' + folio : ''}</p>
       ${cert ? `<p class="boleto-cert">${cert}</p>` : ''}
       <button type="button" class="btn-guardar-boleto" id="btn-guardar-boleto">
@@ -118,6 +112,7 @@
     const cert = orden.numeroOrden || orden.certificado || '';
 
     container.innerHTML = htmlVistaBoleto(orden, {});
+    void pintarQR(document.getElementById('qr-preview-live'), codigoQrBoleto(orden), 280);
 
     if (!window.ElGorilaCompartirWa || !window.GenerarImagenBoleto) {
       pintarQrFallback(container, orden, cant, folio, cert);

@@ -47,6 +47,11 @@ h1 {
   border: 1px solid var(--gold-faint); background: rgba(0,0,0,.35);
 }
 .boleto-preview img { display: block; width: 100%; height: auto; }
+.boleto-preview .qr-box {
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px; background: #f1ead9;
+}
+.boleto-preview .qr-box canvas { display: block; width: 100%; height: auto; }
 .boleto-meta {
   font-family: var(--display); font-size: 20px; font-weight: 500;
   color: var(--fg); text-align: center; margin: 0 0 6px;
@@ -113,12 +118,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <p class="hint">Presenta el QR en la entrada del teatro el día de la función.</p>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script src="js/vendor/qrcode.min.js?v=20260818qr"></script>
 <script src="js/config.js"></script>
-<script src="js/qr-boleto.js"></script>
-<script src="js/generar-imagen-boleto.js"></script>
-<script src="js/compartir-wa-boleto.js"></script>
+<script src="js/qr-boleto.js?v=20260818qr"></script>
+<script src="js/generar-imagen-boleto.js?v=20260818qr"></script>
+<script src="js/compartir-wa-boleto.js?v=20260818qr"></script>
 <script src="js/api-config.js"></script>
-<script src="js/enviar-boleto.js"></script>
+<script src="js/enviar-boleto.js?v=20260818qr"></script>
 </body>
 </html>

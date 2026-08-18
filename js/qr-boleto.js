@@ -1,5 +1,7 @@
 /** QR de boleto: solo el código CERT (puerta escanea; el público no abre URLs). */
 (function (global) {
+  var QR_COLOR = { dark: '#1a1411', light: '#f1ead9' };
+
   function codigoQrPayload(codigo) {
     return (codigo || '').trim().toUpperCase();
   }
@@ -12,10 +14,40 @@
     return cert;
   }
 
-  function urlQrImagen(codigo, size = 240) {
-    const data = encodeURIComponent(codigoQrPayload(codigo));
-    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=1a1411&bgcolor=f1ead9&margin=8&data=${data}`;
+  function qrOpts(size) {
+    return {
+      width: size || 240,
+      margin: 1,
+      color: QR_COLOR,
+    };
   }
 
-  global.ElGorilaQr = { codigoQrPayload, codigoQrOficial, urlQrImagen };
+  function pintarQr(container, codigo, size) {
+    if (!container) return Promise.resolve();
+    var payload = codigoQrPayload(codigo);
+    if (!payload) return Promise.resolve();
+    if (typeof QRCode === 'undefined') {
+      container.textContent = payload;
+      return Promise.reject(new Error('QRCode no cargado'));
+    }
+    container.innerHTML = '';
+    var canvas = document.createElement('canvas');
+    container.appendChild(canvas);
+    var opts = qrOpts(size);
+    return QRCode.toCanvas(canvas, payload, opts).catch(function () {
+      return QRCode.toDataURL(payload, opts).then(function (dataUrl) {
+        container.innerHTML = '<img src="' + dataUrl + '" width="' + opts.width +
+          '" height="' + opts.width + '" alt="QR boleto" style="display:block;">';
+      });
+    });
+  }
+
+  function dataUrlQrImagen(codigo, size) {
+    if (typeof QRCode === 'undefined') {
+      return Promise.reject(new Error('QRCode no cargado'));
+    }
+    return QRCode.toDataURL(codigoQrPayload(codigo), qrOpts(size));
+  }
+
+  global.ElGorilaQr = { codigoQrPayload, codigoQrOficial, pintarQr, dataUrlQrImagen };
 })(window);

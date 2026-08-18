@@ -28,23 +28,15 @@
   }
 
   async function qrCanvas(data, size) {
-    if (typeof QRCode !== 'undefined') {
-      const c = document.createElement('canvas');
-      await QRCode.toCanvas(c, data, {
-        width: size,
-        margin: 1,
-        color: { dark: '#1a1411', light: '#f1ead9' },
-      });
-      return c;
+    if (typeof QRCode === 'undefined') {
+      throw new Error('QRCode no cargado');
     }
     const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size;
-    const payload = encodeURIComponent(data);
-    const img = await loadImage(
-      `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=1a1411&bgcolor=f1ead9&margin=8&data=${payload}`,
-    );
-    c.getContext('2d').drawImage(img, 0, 0, size, size);
+    await QRCode.toCanvas(c, data, {
+      width: size,
+      margin: 1,
+      color: { dark: '#1a1411', light: '#f1ead9' },
+    });
     return c;
   }
 

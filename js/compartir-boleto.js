@@ -157,10 +157,16 @@
       document.getElementById('preview-img').src = canvas.toDataURL('image/png');
     } catch (err) {
       console.warn('Canvas boleto:', err);
-      const qrImg = window.ElGorilaQr?.urlQrImagen?.(modo.qrCodigo, 320)
-        || `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrPayload(modo.qrCodigo))}`;
-      document.getElementById('preview-img').src = qrImg;
+      const img = document.getElementById('preview-img');
       canvasActual = null;
+      if (img && window.ElGorilaQr?.dataUrlQrImagen) {
+        try {
+          img.src = await window.ElGorilaQr.dataUrlQrImagen(modo.qrCodigo, 320);
+        } catch (e2) {
+          img.removeAttribute('src');
+          img.alt = qrPayload(modo.qrCodigo);
+        }
+      }
     }
     const folioHint = modo.folio ? ` Folio taquilla: ${modo.folio}.` : '';
     document.getElementById('modo-hint').textContent = (modo.modo === 'certificado'
