@@ -22,6 +22,8 @@ let _omitirScrollFecha = false;
 
 // Chequeo real de cupo (Worker) solo cuando esa fecha ya vendió más de esto.
 const UMBRAL_CHEQUEO_CUPO = 100;
+// Punto de demanda en el botón de fecha: solo si esa función ya pasó de esto.
+const UMBRAL_PUNTO_DEMANDA = 70;
 
 function seccionVentaConfig() {
     const map = (typeof window.seccionesVentaVigentes === 'function'
@@ -766,9 +768,6 @@ function nivelOcupacionFecha(funcion) {
 
 function etiquetaOcupacionFecha(funcion) {
     if (funcion.etiqueta) return funcion.etiqueta;
-    var nivel = nivelOcupacionFecha(funcion);
-    if (nivel === 'amarillo') return 'Alta demanda';
-    if (nivel === 'naranja') return 'Quedan pocos lugares';
     if (funcion.estreno) return 'Estreno';
     return '';
 }
@@ -780,9 +779,11 @@ function cargarFechas() {
     const botonesContainer = document.getElementById('botones-fecha');
     if (!botonesContainer) return;
 
+    const lista = [...funciones.especiales, ...funciones.regulares];
+
     let html = '';
 
-    [...funciones.especiales, ...funciones.regulares].forEach(funcion => {
+    lista.forEach(funcion => {
         const bloqueada      = funcion.bloqueada;
         const esAgotada      = funcion.agotada === true;
         const esSeleccionada = fechaSeleccionada === funcion.clave;
@@ -790,9 +791,15 @@ function cargarFechas() {
         const fechaCorta     = partesNombre[0] || funcion.nombre;
         const hora           = partesNombre[1] || '18:00 hrs';
         const textoEtiqueta  = etiquetaOcupacionFecha(funcion);
-        const ocupacionNivel = bloqueada || esAgotada ? '' : nivelOcupacionFecha(funcion);
         const estrenoTag     = textoEtiqueta
-            ? `<span class="fecha-ocupacion-tag fecha-ocupacion-tag--${ocupacionNivel || 'neutro'}">${textoEtiqueta}</span>`
+            ? `<span class="fecha-ocupacion-tag fecha-ocupacion-tag--evento">${textoEtiqueta}</span>`
+            : '';
+        const vendidosFn     = typeof funcion.vendidos_sync === 'number' ? funcion.vendidos_sync : 0;
+        const demandaVisual  = (!bloqueada && !esAgotada && vendidosFn > UMBRAL_PUNTO_DEMANDA)
+            ? 'amarillo'
+            : '';
+        const demandaBadge   = demandaVisual
+            ? `<span class="fecha-demanda-badge fecha-demanda-badge--${demandaVisual}" aria-hidden="true"></span>`
             : '';
         const claveStr       = funcion.clave;
         const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
@@ -825,9 +832,6 @@ function cargarFechas() {
         if (funcion.atenuada && !bloqueada && !esSeleccionada) estiloBoton += ' opacity: 0.55; filter: saturate(0.75);';
         // Fecha destacada: marcada en rojo, sin texto adicional
         if (funcion.destacada && !bloqueada && !esSeleccionada) estiloBoton += ' border-color: #d43a1a; box-shadow: 0 0 0 2px rgba(212, 58, 26, 0.35);';
-        if (ocupacionNivel === 'verde' && !bloqueada && !esSeleccionada) estiloBoton += ' box-shadow: 0 0 0 2px rgba(72, 160, 96, 0.35);';
-        if (ocupacionNivel === 'amarillo' && !bloqueada && !esSeleccionada) estiloBoton += ' box-shadow: 0 0 0 2px rgba(217, 175, 58, 0.45);';
-        if (ocupacionNivel === 'naranja' && !bloqueada && !esSeleccionada) estiloBoton += ' border-color: #e85a20; box-shadow: 0 0 0 2px rgba(232, 90, 32, 0.45);';
 
         const mesIso = claveStr.slice(0, 7);
         html += `
@@ -837,12 +841,14 @@ function cargarFechas() {
                 data-fecha-mes="${mesIso}"
                 ${funcion.atenuada ? 'data-fecha-atenuada="1"' : ''}
                 ${funcion.destacada ? 'data-fecha-destacada="1"' : ''}
-                ${ocupacionNivel ? `data-fecha-ocupacion="${ocupacionNivel}"` : ''}
+                ${funcion.etiqueta ? 'data-fecha-evento="1"' : ''}
+                ${demandaVisual ? `data-fecha-demanda="${demandaVisual}"` : ''}
                 onclick="${bloqueada ? '' : `seleccionarFecha('${claveStr}', '${nombreStr}', ${JSON.stringify(funcion).replace(/"/g, '&quot;')})`}"
                 class="${claseBoton}"
                 ${bloqueada ? 'disabled' : ''}
                 style="${estiloBoton}"
             >
+                ${demandaBadge}
                 <span class="block font-bold ${bloqueada ? 'opacity-60' : ''}">${fechaCorta}</span>
                 <span class="text-sm ${bloqueada ? 'opacity-60' : 'font-medium opacity-90'}">
                     ${bloqueada ? 'Ventas bloqueadas' : hora}

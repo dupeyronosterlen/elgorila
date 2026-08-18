@@ -209,6 +209,7 @@
     root.innerHTML = quotes.map(function (q) {
       var firma = firmaCorta(q.autor);
       return '<div class="bofu-review">' +
+        '<strong class="bofu-review-stars" aria-label="5 estrellas">★★★★★</strong>' +
         '<span class="bofu-review-cita">«' + esc(q.corto || q.texto) + '»</span>' +
         (firma ? '<cite class="bofu-review-firma">— ' + esc(firma) + '</cite>' : '') +
         '</div>';

@@ -227,6 +227,15 @@ body { padding-top: 0; }
   font-size: 14px; line-height: 1.4; color: var(--d-soft);
 }
 .bofu-review:last-child { margin-bottom: 0; }
+.bofu-review-stars {
+  display: block;
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: .08em;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
 .bofu-review-cita { display: block; }
 .bofu-review-firma {
   display: block; margin-top: 4px;
@@ -704,6 +713,37 @@ body.checkout-abierto #main-content .inner > :not(#taquilla-lock-banner) {
 .fecha-ocupacion-tag--neutro { color: var(--red); }
 .fecha-ocupacion-tag--amarillo { color: #e8c84a; }
 .fecha-ocupacion-tag--naranja { color: #ff8c42; }
+.fecha-ocupacion-tag--evento {
+  position: static;
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 7px;
+  color: #e8c84a;
+  border: 1px solid rgba(232, 200, 74, .5);
+  letter-spacing: .08em;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+/* Punto de demanda visual, sin texto */
+.fecha-demanda-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+.fecha-demanda-badge--amarillo {
+  background: #f0d45c;
+  box-shadow: 0 0 0 1.5px rgba(12, 10, 8, .45), 0 0 7px rgba(232, 200, 74, .75);
+}
+.fecha-demanda-badge--verde {
+  background: #9fd87a;
+  box-shadow: 0 0 0 1.5px rgba(12, 10, 8, .45), 0 0 7px rgba(143, 206, 110, .7);
+}
 
 /* ── SECCIÓN: TIPOS DE BOLETO ────────────────────────────── */
 .boletos-sub-label {
@@ -1488,10 +1528,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- 3. Prueba social -->
     <div class="bofu-reviews" data-testimonios="boletos" aria-label="Opiniones del público">
       <div class="bofu-review">
+        <strong class="bofu-review-stars" aria-label="5 estrellas">★★★★★</strong>
         <span class="bofu-review-cita">«Es una obra con mucha profundidad, súper recomendada.»</span>
         <cite class="bofu-review-firma">— H. Huerta</cite>
       </div>
       <div class="bofu-review">
+        <strong class="bofu-review-stars" aria-label="5 estrellas">★★★★★</strong>
         <span class="bofu-review-cita">«Reí mucho y también lloré.»</span>
         <cite class="bofu-review-firma">— S. Ruedas</cite>
       </div>
@@ -1723,11 +1765,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 })();
 </script>
 <script src="js/inventario.js?v=20260813-cupo"></script>
-<script src="js/fechas.js"></script>
+<script src="js/fechas.js?v=20260818-placa"></script>
 <script src="js/temporada-copy.js"></script>
-<script src="js/testimonios.js?v=20260813t2"></script>
+<script src="js/testimonios.js?v=20260817t1"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js?v=20260817-espejo10"></script>
+<script src="js/main.js?v=20260817-punto70"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {
