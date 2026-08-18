@@ -43,6 +43,7 @@ new_sqlite_classes = ["InventarioFuncion"]
 #   → Settings → Variables and Secrets → Add secret
 #
 # ADMIN_USER_UNIVERSAL / ADMIN_PASS_UNIVERSAL → cuenta compartida admin y boletera (solo en Cloudflare Secrets)
+# TURNSTILE_SECRET_KEY → verificación anti-bot del login admin (no en boletos.html). Sin este secret el login sigue igual.
 
 # Rate-limit login: 10 intentos / 15 min. Mantener "false" en temporada en vivo.
 [vars]

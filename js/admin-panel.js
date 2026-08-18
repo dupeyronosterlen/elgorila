@@ -2900,9 +2900,24 @@
       loginErrorShow('Ingresa usuario y contraseña');
       return;
     }
-    const resultado = await AuthManager.autenticarAdmin(usuarioId, password);
+    let turnstileToken = '';
+    if (window.TURNSTILE_SITEKEY && window.turnstile) {
+      const t0 = Date.now();
+      while (Date.now() - t0 < 3500) {
+        try { turnstileToken = window.turnstile.getResponse(window._egTurnstileId) || ''; } catch (_) {}
+        if (turnstileToken) break;
+        await new Promise(r => setTimeout(r, 150));
+      }
+      if (!turnstileToken) {
+        loginErrorShow('Espera un segundo y vuelve a entrar.');
+        try { window.turnstile.reset(window._egTurnstileId); } catch (_) {}
+        return;
+      }
+    }
+    const resultado = await AuthManager.autenticarAdmin(usuarioId, password, turnstileToken);
     if (!resultado.exito) {
       loginErrorShow(resultado.error || 'Credenciales incorrectas');
+      try { window.turnstile?.reset?.(window._egTurnstileId); } catch (_) {}
       return;
     }
     document.getElementById('login-screen')?.classList.add('hidden');

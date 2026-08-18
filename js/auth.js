@@ -102,13 +102,17 @@ const AuthManager = {
     // ─── AUTENTICACIÓN (server-side vía secrets) ─────────────────────────────
 
     // Admin login vía secrets del Worker — token 12 h en localStorage
-    async autenticarAdmin(usuarioId, password) {
+    async autenticarAdmin(usuarioId, password, turnstileToken) {
         if (!window.API_BASE) return { exito: false, error: 'API no configurada.' };
         try {
             const res = await fetch(window.API_BASE + '/api/admin/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario: usuarioId.trim(), password }),
+                body: JSON.stringify({
+                    usuario: usuarioId.trim(),
+                    password,
+                    turnstileToken: turnstileToken || '',
+                }),
             });
             const data = await res.json();
             if (!res.ok || !data.token) return { exito: false, error: data.error || 'Credenciales incorrectas.' };

@@ -32,6 +32,7 @@ import {
   logInfo, logError, maskEmail, truncateId, sanitizeObject,
   metricaFromVenta, registrarMetricaVenta, registrarMetricaCheckout, listMetricasDias,
 } from './logs.js';
+import { qrPngBytes } from './qr-png.js';
 
 // ─── CORS + HELPERS ──────────────────────────────────────────────────────────
 
@@ -131,6 +132,50 @@ async function verificarFirmaStripe(rawBody, sigHeader, secret) {
 }
 
 // ─── RATE LIMITING (GLOBAL — sin prefijo tid) ─────────────────────────────────
+
+const TURNSTILE_HOSTS_OK = new Set(['elgorilateatro.com.mx', 'www.elgorilateatro.com.mx']);
+
+/** Turnstile solo en POST /api/admin/login. Sin secreto configurado no bloquea (temporada). */
+async function verificarTurnstileLogin(request, env, token) {
+  const secret = env.TURNSTILE_SECRET_KEY;
+  if (!secret) return { ok: true, skipped: true };
+
+  const raw = typeof token === 'string' ? token.trim() : '';
+  if (!raw) {
+    return { ok: false, error: 'Falta la verificación anti-bot. Recarga e intenta de nuevo.' };
+  }
+
+  let data;
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret,
+        response: raw,
+        remoteip: request.headers.get('CF-Connecting-IP') || undefined,
+      }),
+    });
+    data = await res.json();
+  } catch (e) {
+    logError('turnstile.exception', { error: e.message });
+    return { ok: false, error: 'No se pudo verificar. Intenta de nuevo.' };
+  }
+
+  if (!data?.success) {
+    const codes = Array.isArray(data?.['error-codes']) ? data['error-codes'] : [];
+    logError('turnstile.fail', { codes: codes.slice(0, 4) });
+    return { ok: false, error: 'Verificación anti-bot fallida. Recarga e intenta de nuevo.' };
+  }
+
+  const host = (data.hostname || '').replace(/^www\./, '');
+  if (host && !TURNSTILE_HOSTS_OK.has(host) && !TURNSTILE_HOSTS_OK.has(data.hostname)) {
+    logError('turnstile.host', { hostname: host });
+    return { ok: false, error: 'Verificación anti-bot inválida.' };
+  }
+
+  return { ok: true };
+}
 
 async function checkRateLimit(ip, env) {
   const ventana = Math.floor(Date.now() / 900000);
@@ -605,6 +650,7 @@ function urlVerificarBoleto(codigo) {
 }
 
 const SITIO_BASE = 'https://elgorilateatro.com.mx';
+const API_PUBLIC_BASE = 'https://elgorila-api.dupeyronosterlen.workers.dev';
 /** Reseña pública (Google Maps · Teatro Wilberto Cantón). Filtro suave en copy: solo si la noche gustó. */
 const URL_RESENA_GOOGLE = 'https://www.google.com/maps/search/?api=1&query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX';
 const CUPONES_REFERIDO = new Set(['INVITADO25', 'REGALO25', 'OTRA50', 'MANADA15']);
@@ -742,8 +788,46 @@ function urlQrBoleto(codigo, size = 148) {
   return urlQrData(codigoQrPayload(codigo), size);
 }
 
+function qrPngPermitido(data) {
+  if (esCodigoCert(data)) return true;
+  return typeof data === 'string' && (data === SITIO_BASE || data.startsWith(`${SITIO_BASE}/`));
+}
+
 function urlQrData(data, size = 148) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=1a1411&bgcolor=f1ead9&margin=8&data=${encodeURIComponent(data)}`;
+  const payload = String(data || '');
+  const s = Number.isFinite(size) ? size : 148;
+  return `${API_PUBLIC_BASE}/api/wilberto/qr.png?c=${encodeURIComponent(payload)}&s=${s}`;
+}
+
+function handleQrPng(request) {
+  const url = new URL(request.url);
+  const raw = (url.searchParams.get('c') || url.searchParams.get('data') || '').trim();
+  if (!raw) return json({ error: 'Falta código.' }, 400, request);
+  const payload = esCodigoCert(raw) ? codigoQrPayload(raw) : raw;
+  if (!qrPngPermitido(payload)) {
+    return json({ error: 'Código no permitido.' }, 400, request);
+  }
+  let size = parseInt(url.searchParams.get('s') || '148', 10);
+  if (!Number.isFinite(size)) size = 148;
+  size = Math.min(320, Math.max(80, size));
+  const pngHeaders = {
+    'Content-Type': 'image/png',
+    'Cache-Control': 'public, max-age=604800, immutable',
+    ...corsHeaders(request),
+  };
+  if (request.method === 'HEAD') {
+    return new Response(null, { status: 200, headers: pngHeaders });
+  }
+  try {
+    const bytes = qrPngBytes(payload, { width: size });
+    return new Response(bytes, {
+      status: 200,
+      headers: pngHeaders,
+    });
+  } catch (e) {
+    logError('qr.png', { error: e.message });
+    return json({ error: 'No se pudo generar el QR.' }, 500, request);
+  }
 }
 
 function esCodigoCert(codigo) {
@@ -4256,6 +4340,13 @@ async function handleAdminLogin(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
 
+  const ts = await verificarTurnstileLogin(
+    request,
+    env,
+    body?.turnstileToken || body?.['cf-turnstile-response'],
+  );
+  if (!ts.ok) return json({ error: ts.error }, 403, request);
+
   const { usuario, password } = body || {};
   if (!usuario || !password) return json({ error: 'Faltan usuario o contraseña.' }, 400, request);
 
@@ -6024,6 +6115,7 @@ export default {
 
     if (method === 'GET'  && sub === 'funciones')      return handleFunciones(tid, request, env);
     if (method === 'GET'  && sub === 'disponibilidad') return handleDisponibilidad(tid, request, env);
+    if ((method === 'GET' || method === 'HEAD') && (sub === 'qr' || sub === 'qr.png')) return handleQrPng(request);
     if (method === 'POST' && sub === 'checkout')       return handleCheckout(tid, request, env, ctx);
     if (method === 'POST' && sub === 'validar-cupon')  return handleValidarCupon(tid, request, env);
     if (method === 'POST' && sub === 'lista-espera')   return handleListaEspera(tid, request, env);
