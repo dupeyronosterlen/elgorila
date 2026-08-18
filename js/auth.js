@@ -144,7 +144,7 @@ const AuthManager = {
             const res = await fetch(`${window.API_BASE}/api/admin/acceso/validar?token=${encodeURIComponent(token)}`);
             const data = await res.json().catch(() => ({}));
             if (!res.ok || !data.ok) return { ok: false, error: data.error || 'Enlace inválido o expirado.' };
-            sessionStorage.setItem('elgorila_acceso_token', token);
+            sessionStorage.setItem('elgorila_acceso_token', data.token || token);
             sessionStorage.setItem('elgorila_acceso_sesion', JSON.stringify({
                 usuarioId: data.email || data.telefono || data.usuario,
                 email:     data.email || null,

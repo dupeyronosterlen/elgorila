@@ -35,17 +35,32 @@ import {
 
 // ─── CORS + HELPERS ──────────────────────────────────────────────────────────
 
-const ALLOWED_ORIGINS = new Set([
+const PROD_ORIGINS = new Set([
   'https://elgorilateatro.com.mx',
   'https://www.elgorilateatro.com.mx',
+]);
+
+const DEV_ORIGINS = new Set([
   'http://localhost:3000',
   'http://localhost:8787',
   'http://127.0.0.1:5500',
 ]);
 
+function workerEsLocal(request) {
+  try {
+    const host = new URL(request.url).hostname;
+    return host === 'localhost' || host === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
 function corsHeaders(request) {
-  const origin       = request.headers.get('Origin') || '';
-  const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : 'https://elgorilateatro.com.mx';
+  const origin = request.headers.get('Origin') || '';
+  const permitDev = workerEsLocal(request) && DEV_ORIGINS.has(origin);
+  const allowedOrigin = (PROD_ORIGINS.has(origin) || permitDev)
+    ? origin
+    : 'https://elgorilateatro.com.mx';
   return {
     'Access-Control-Allow-Origin':  allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -3629,7 +3644,7 @@ async function handleEnviarBoletoCompra(tid, id, request, env) {
     return json({
       ok:          true,
       alreadySent: true,
-      emailEnviado: venta.email || null,
+      enviado:     true,
     }, 200, request);
   }
 
@@ -3661,9 +3676,9 @@ async function handleEnviarBoletoCompra(tid, id, request, env) {
 
   return json({
     ok: true,
-    emailEnviado: venta.email || null,
-    adminOk:      emailResult.adminOk,
-    compradorOk:  emailResult.compradorOk,
+    enviado:     !!emailResult.compradorOk,
+    adminOk:     emailResult.adminOk,
+    compradorOk: emailResult.compradorOk,
   }, 200, request);
 }
 
@@ -4062,8 +4077,17 @@ async function handleAdminAccesoCrear(request, env) {
     exp,
   }, env.JWT_SECRET);
 
-  const url = `${SITIO_BASE}/admin.html?acceso=${encodeURIComponent(token)}&view=boletera`;
+  // El JWT no va en la URL del correo (Referer, historial, logs). Un pase opaco
+  // sí sobrevive a clientes de mail que recortan el hash; ?acceso=JWT sigue
+  // válido unas horas para enlaces ya enviados.
+  const pase = crypto.randomUUID().replace(/-/g, '');
+  const url  = `${SITIO_BASE}/admin.html?view=boletera&pase=${pase}`;
 
+  await env.VENTAS.put(
+    `acceso-pase:${pase}`,
+    JSON.stringify({ token, email, nombre, exp }),
+    { expirationTtl: ACCESO_TAQUILLA_TTL },
+  );
   await env.VENTAS.put(
     `acceso-taquilla:${email}`,
     JSON.stringify({ nombre, email, exp }),
@@ -4086,11 +4110,16 @@ async function handleAdminAccesoCrear(request, env) {
     meta:      { nombre, email, exp, emailEnviado },
   });
 
-  return json({ ok: true, token, exp, url, nombre, email, emailEnviado }, 200, request);
+  return json({ ok: true, exp, url, nombre, email, emailEnviado }, 200, request);
 }
 
 async function handleAdminAccesoLogin(request, env) {
   if (!env.JWT_SECRET) return json({ error: 'Configuración incompleta.' }, 500, request);
+
+  const loginRateLimitOff = env.DISABLE_LOGIN_RATE_LIMIT === 'true' || env.DISABLE_LOGIN_RATE_LIMIT === '1';
+  if (!loginRateLimitOff && !await limitePorIp(request, env, 'taqlogin', 10)) {
+    return json({ error: 'Demasiados intentos. Espera 15 minutos.' }, 429, request);
+  }
 
   let body;
   try { body = await request.json(); } catch { return json({ error: 'Cuerpo inválido.' }, 400, request); }
@@ -4150,10 +4179,20 @@ async function handleAdminAccesoLogin(request, env) {
 
 async function handleAdminAccesoValidar(request, env) {
   if (!env.JWT_SECRET) return json({ error: 'Configuración incompleta.' }, 500, request);
-  const tokenRaw = new URL(request.url).searchParams.get('token') || '';
+  const q = new URL(request.url).searchParams;
+  const tokenRaw = q.get('token') || q.get('pase') || '';
   if (!tokenRaw) return json({ error: 'Falta token.' }, 400, request);
 
-  const payload = await verifyJWT(tokenRaw, env.JWT_SECRET);
+  let jwt = tokenRaw;
+  if (!tokenRaw.includes('.')) {
+    const raw = await env.VENTAS.get(`acceso-pase:${tokenRaw}`);
+    if (!raw) return json({ error: 'Enlace inválido o expirado.' }, 401, request);
+    let grant;
+    try { grant = JSON.parse(raw); } catch { return json({ error: 'Enlace inválido o expirado.' }, 401, request); }
+    jwt = grant.token || '';
+  }
+
+  const payload = await verifyJWT(jwt, env.JWT_SECRET);
   if (!payload || payload.purpose !== 'acceso_email') {
     return json({ error: 'Enlace inválido o expirado.' }, 401, request);
   }
@@ -4172,6 +4211,7 @@ async function handleAdminAccesoValidar(request, env) {
 
   return json({
     ok:       true,
+    token:    jwt,
     usuario:  payload.email || payload.telefono || payload.usuario,
     email:    payload.email || null,
     telefono: payload.telefono || null,

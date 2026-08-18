@@ -2917,13 +2917,14 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(location.search);
-    const acceso = params.get('acceso');
+    const acceso = params.get('pase') || params.get('acceso');
     const viewParam = params.get('view');
 
     if (acceso) {
       const r = await AuthManager.validarAccesoEmail(acceso);
       if (r.ok) {
         params.delete('acceso');
+        params.delete('pase');
         const qs = params.toString();
         history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : ''));
         document.getElementById('login-screen')?.classList.add('hidden');

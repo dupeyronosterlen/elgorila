@@ -19,15 +19,30 @@ scripts/patch-cupon-prueba99.js
 
 # Documentos internos (estrategia, finanzas, operación, credenciales).
 # El repo es la raíz del sitio: TODO lo commiteado queda PÚBLICO en
-# https://elgorilateatro.com.mx/<ruta>. Nada interno va aquí dentro.
+# https://elgorilateatro.com.mx/<ruta>. No existe carpeta "secreta" en GitHub Pages:
+# si está en git, está en internet. private/ es solo local (nunca commit).
 docs-internos/
+private/
 agencia/campana/
 .wrangler/
 
-# Previews / artefactos locales
+# Previews / artefactos locales — no son el funnel de venta.
 preview/
 wip/
 .backups/
+boletos-preview.html
+mapa-asientos-preview.html
+css/mapa-asientos-preview.css
+js/mapa-asientos-preview.js
+js/mapa-asientos-data.js
+css/separador-hibrido.css
+js/separador-hibrido.js
+separador-hibrido.html
+separador-hibrido-imprimible.html
+separador-*.pdf
+separador-*.zip
+boleto-el-gorila-folio-*.png
+boleto-el-gorila-folio-*.pdf
 
 # Originales de cámara sin optimizar (~184 MB). El sitio solo sirve los .webp
 # derivados; ninguna página referencia esta carpeta. Un `git add -A` los subiría
