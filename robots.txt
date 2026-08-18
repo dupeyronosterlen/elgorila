@@ -18,5 +18,15 @@ Disallow: /acta.html
 Disallow: /private/
 Disallow: /docs-internos/
 Disallow: /page/
+Disallow: /archive/
+Disallow: /boletos/
+Disallow: /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/
+Disallow: /sobre-la-obra-preview.html
+Disallow: /sobre-la-obra-v3.html
+Disallow: /boletera.html
+Disallow: /fechas.html
+Disallow: /gracias.html
+Disallow: /presskit.html
+Disallow: /presskit/index.html
 
 Sitemap: https://elgorilateatro.com.mx/sitemap.xml
