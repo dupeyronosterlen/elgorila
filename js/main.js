@@ -668,6 +668,31 @@ async function irAConfirmacion() {
     }
 }
 
+function desplazarACheckoutInline(panel) {
+    if (!panel) return;
+    const movil = window.matchMedia('(max-width: 767px)').matches;
+
+    const alinear = function () {
+        if (!movil) {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
+        const y = panel.getBoundingClientRect().top + window.pageYOffset;
+        const html = document.documentElement;
+        const prev = html.style.scrollBehavior;
+        html.style.scrollBehavior = 'auto';
+        window.scrollTo(0, Math.max(0, y));
+        html.style.scrollBehavior = prev;
+    };
+
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            alinear();
+            if (movil) setTimeout(alinear, 350);
+        });
+    });
+}
+
 // --- FUNCIÓN 5: MOSTRAR CHECKOUT INLINE ---
 function mostrarCheckoutInline(orden) {
     const panel = document.getElementById('inline-checkout');
@@ -708,9 +733,7 @@ function mostrarCheckoutInline(orden) {
     panel.removeAttribute('aria-hidden');
     bloquearTaquilla(true);
     try { window.dispatchEvent(new CustomEvent('taquilla:checkout-toggle')); } catch (_) {}
-    requestAnimationFrame(function () {
-        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    desplazarACheckoutInline(panel);
 
     // begin_checkout/InitiateCheckout se dispara en procesarPagoInline (el click
     // real a Stripe): abrir el panel, editarlo o volver de un pago cancelado
