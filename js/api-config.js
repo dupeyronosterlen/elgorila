@@ -1,17 +1,22 @@
 /**
  * Configuración de la API de boletera
- * En producción: añade <meta name="api-base" content="https://elgorila-api.dupeyronosterlen.workers.dev">
- * o define window.API_BASE_URL antes de cargar este script
+ * En el sitio público la API vive en el mismo origen (/api/…).
+ * Meta api-base y workers.dev son respaldo para previews / local.
  */
 (function() {
   const meta = document.querySelector('meta[name="api-base"]');
   const fromMeta = meta ? meta.getAttribute('content')?.trim() : '';
   const fromWindow = typeof window.API_BASE_URL === 'string' ? window.API_BASE_URL.trim() : '';
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const host = (window.location.hostname || '').toLowerCase();
+  const isLocal = host === 'localhost' || host === '127.0.0.1';
+  const isProd = host === 'elgorilateatro.com.mx' || host === 'www.elgorilateatro.com.mx';
+  const workersDev = 'https://elgorila-api.dupeyronosterlen.workers.dev';
 
-  const API_BASE = fromWindow || fromMeta || (isLocal ? 'http://localhost:3001' : '');
+  const API_BASE = isProd
+    ? window.location.origin
+    : (fromWindow || fromMeta || (isLocal ? 'http://localhost:8787' : workersDev));
 
-  window.API_BASE = window.API_BASE || API_BASE;
+  window.API_BASE = isProd ? window.location.origin : (window.API_BASE || API_BASE);
   window.API_DISPONIBLE = !!window.API_BASE;
 
   const ALIASES = { gorila: 'wilberto', elgorila: 'wilberto' };

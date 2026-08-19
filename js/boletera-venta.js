@@ -248,12 +248,18 @@
     setMsg('Verificando…', true);
 
     try {
-      const res = await fetch(window.teatroApi('validar-cupon'), {
+      const payload = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ codigo, items: itemsParaApi(seccion) }),
-      });
-      const data = await res.json();
+      };
+      const fetchJson = window.egFetchJson;
+      const { res, data } = fetchJson
+        ? await fetchJson(window.teatroApi('validar-cupon'), payload, 12000)
+        : await (async () => {
+            const r = await fetch(window.teatroApi('validar-cupon'), payload);
+            return { res: r, data: await r.json() };
+          })();
       if (!res.ok) {
         setMsg(data.error || 'Código no válido.', false);
         cuponAplicado = null;
@@ -276,8 +282,8 @@
         : `✓ ${data.nombre} (−${data.porcentaje}%)`;
       setMsg(okMsg, true);
       actualizarUi();
-    } catch (_) {
-      setMsg('Error de conexión.', false);
+    } catch (err) {
+      setMsg((err && err.message) || 'Error de conexión.', false);
     } finally {
       if (btn) btn.disabled = false;
     }

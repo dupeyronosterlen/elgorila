@@ -1,6 +1,21 @@
 name = "elgorila-api"
 main = "worker/index.js"
 compatibility_date = "2025-06-01"
+account_id = "010612a0651e3670d9c7cf09b3934961"
+# Sin esto, añadir [[routes]] infiere workers_dev=false y Stripe deja de
+# alcanzar el webhook en *.workers.dev (error 1042).
+workers_dev = true
+preview_urls = true
+
+# Misma zona que el sitio. Así el navegador llama a /api en elgorilateatro.com.mx
+# y no a *.workers.dev (algunos ISPs interceptan o cuelgan ese host).
+[[routes]]
+pattern = "elgorilateatro.com.mx/api/*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+[[routes]]
+pattern = "www.elgorilateatro.com.mx/api/*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"
 
 # ─── KV Namespaces ────────────────────────────────────────────────────────────
 # Después de ejecutar los comandos de creación (ver README de Phase 2A),

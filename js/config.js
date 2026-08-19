@@ -1,6 +1,48 @@
 // URL base del Worker API. Debe cargarse antes que auth.js y cualquier script
 // que haga fetch al backend.
-window.API_BASE = 'https://elgorila-api.dupeyronosterlen.workers.dev';
+// En el sitio público usamos el mismo origen (elgorilateatro.com.mx/api/…)
+// para no depender de *.workers.dev: algunos ISPs (p. ej. Izzi) lo interceptan
+// o lo dejan colgado, y el botón de pagar se queda en «Un momento…».
+(function () {
+  var WORKERS_DEV = 'https://elgorila-api.dupeyronosterlen.workers.dev';
+  var host = '';
+  try { host = String(window.location.hostname || '').toLowerCase(); } catch (e) {}
+  var isProd = host === 'elgorilateatro.com.mx' || host === 'www.elgorilateatro.com.mx';
+  window.API_BASE = isProd ? window.location.origin : WORKERS_DEV;
+})();
+
+window.egFetchJson = async function egFetchJson(url, opts, timeoutMs) {
+  var ctrl = new AbortController();
+  var ms = typeof timeoutMs === 'number' ? timeoutMs : 15000;
+  var timer = setTimeout(function () { ctrl.abort(); }, ms);
+  var redMsg = 'La conexión tardó demasiado o tu red bloqueó el pago. Prueba con datos móviles (sin Wi‑Fi) e intenta de nuevo.';
+  try {
+    var res = await fetch(url, Object.assign({}, opts || {}, { signal: ctrl.signal }));
+    var ct = String(res.headers.get('content-type') || '').toLowerCase();
+    if (ct.indexOf('application/json') === -1) {
+      var err = new Error(redMsg);
+      err.code = 'INTERCEPT';
+      throw err;
+    }
+    var data = await res.json();
+    return { res: res, data: data };
+  } catch (err) {
+    if (err && err.code === 'INTERCEPT') throw err;
+    if (err && (err.name === 'AbortError' || err.code === 'TIMEOUT')) {
+      var timeoutErr = new Error(redMsg);
+      timeoutErr.code = 'TIMEOUT';
+      throw timeoutErr;
+    }
+    if (err && (err.name === 'TypeError' || err.message === 'Failed to fetch')) {
+      var netErr = new Error(redMsg);
+      netErr.code = 'NETWORK';
+      throw netErr;
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+};
 
 /** Teatro activo (Teatro Wilberto Cantón). CCC se conserva sin funciones. */
 window.TEATRO_ID = 'wilberto';

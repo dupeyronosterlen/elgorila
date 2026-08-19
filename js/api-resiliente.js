@@ -14,6 +14,7 @@
   }
 
   function esReintentable(status, err) {
+    if (err && (err.code === 'INTERCEPT' || err.name === 'AbortError' || err.code === 'TIMEOUT')) return false;
     if (!enLinea()) return true;
     if (err && (err.name === 'TypeError' || err.message === 'Failed to fetch')) return true;
     if (status === 429 || status === 502 || status === 503 || status === 504) return true;
@@ -28,6 +29,9 @@
     if (res && res.status === 401) return 'Sesión expirada. Vuelve a entrar a taquilla.';
     if (res && res.status === 409) return (data && data.error) || 'Sin cupo o conflicto de inventario.';
     if (res && res.status === 503) return 'Servidor ocupado. Espera unos segundos e intenta otra vez.';
+    if (err && (err.name === 'AbortError' || err.code === 'TIMEOUT')) {
+      return 'La conexión tardó demasiado. Prueba con datos móviles (sin Wi‑Fi) e intenta de nuevo.';
+    }
     if (err && (err.name === 'TypeError' || err.message === 'Failed to fetch')) {
       return 'No se pudo contactar al servidor. Revisa la red e intenta de nuevo.';
     }
@@ -50,14 +54,24 @@
       try {
         const headers = { ...(opts.headers || {}) };
         if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
-        const res = await fetch(url, { ...opts, headers });
+        const timeoutMs = cfg?.timeoutMs ?? 15000;
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), timeoutMs);
+        let res;
+        try {
+          res = await fetch(url, { ...opts, headers, signal: opts.signal || ctrl.signal });
+        } finally {
+          clearTimeout(t);
+        }
         lastRes = res;
         let data = null;
         const ct = res.headers.get('content-type') || '';
         if (ct.includes('application/json')) {
           data = await res.json().catch(() => ({}));
         } else {
-          data = {};
+          const intercept = new Error('Tu red interceptó la conexión. Prueba con datos móviles e intenta de nuevo.');
+          intercept.code = 'INTERCEPT';
+          throw intercept;
         }
         lastData = data;
         if (res.ok) return { res, data };
@@ -69,6 +83,7 @@
         }
       } catch (err) {
         lastErr = err;
+        if (err.code === 'INTERCEPT' || err.name === 'AbortError' || err.code === 'TIMEOUT') throw err;
         if (err.status && !esReintentable(err.status, err)) throw err;
         if (i === retries - 1) break;
       }

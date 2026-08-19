@@ -650,7 +650,7 @@ function urlVerificarBoleto(codigo) {
 }
 
 const SITIO_BASE = 'https://elgorilateatro.com.mx';
-const API_PUBLIC_BASE = 'https://elgorila-api.dupeyronosterlen.workers.dev';
+const API_PUBLIC_BASE = 'https://elgorilateatro.com.mx';
 /** Reseña pública (Google Maps · Teatro Wilberto Cantón). Filtro suave en copy: solo si la noche gustó. */
 const URL_RESENA_GOOGLE = 'https://www.google.com/maps/search/?api=1&query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX';
 const CUPONES_REFERIDO = new Set(['INVITADO25', 'REGALO25', 'OTRA50', 'MANADA15']);

@@ -54,3 +54,8 @@ zone_id = "c810a86aac2ff1050510debbc192f7fd"
 [[routes]]
 pattern = "elgorilateatro.com.mx/acta.html*"
 zone_id = "c810a86aac2ff1050510debbc192f7fd"
+
+# Reescribe API_BASE en el JS vivo (GitHub Pages puede tardar en actualizar).
+[[routes]]
+pattern = "elgorilateatro.com.mx/js/config.js*"
+zone_id = "c810a86aac2ff1050510debbc192f7fd"

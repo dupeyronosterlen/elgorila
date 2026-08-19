@@ -105,14 +105,15 @@ async function procesarPago() {
     // --- CHECKOUT: llamar al Worker ---
     if (window.API_BASE) {
         const btn = document.getElementById('btn-pagar');
-        if (btn) { btn.disabled = true; btn.querySelector('span:last-child').textContent = 'Procesando...'; }
+        const btnTxt = btn && btn.querySelector('span:last-child');
+        if (btn) { btn.disabled = true; if (btnTxt) btnTxt.textContent = 'Procesando...'; }
         try {
             if (!ordenCompra.fechaIso || !/^\d{4}-\d{2}-\d{2}$/.test(ordenCompra.fechaIso)) {
                 alert('Falta la fecha de la función. Regresa a boletos y elige el día otra vez.');
                 window.irA ? window.irA('/boletos.html') : (window.location.href = '/boletos.html');
                 return;
             }
-            const res = await fetch(window.teatroApi('checkout'), {
+            const payload = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -120,8 +121,14 @@ async function procesarPago() {
                     fecha: ordenCompra.fechaIso,
                     utm: (typeof window.obtenerUTM === 'function' ? window.obtenerUTM() : {}),
                 }),
-            });
-            const data = await res.json();
+            };
+            const fetchJson = window.egFetchJson;
+            const { data } = fetchJson
+                ? await fetchJson(window.teatroApi('checkout'), payload, 20000)
+                : await (async function () {
+                    const res = await fetch(window.teatroApi('checkout'), payload);
+                    return { data: await res.json() };
+                })();
             if (data.url) {
                 window.location.href = data.url;
                 return;
@@ -129,9 +136,10 @@ async function procesarPago() {
             alert(data.error || 'Error al procesar el pago. Intenta de nuevo.');
         } catch (err) {
             console.error(err);
-            alert('Error de conexión. Verifica tu internet e intenta de nuevo.');
+            alert((err && err.message) || 'Error de conexión. Verifica tu internet e intenta de nuevo.');
+        } finally {
+            if (btn) { btn.disabled = false; if (btnTxt) btnTxt.textContent = 'Continuar al pago'; }
         }
-        if (btn) { btn.disabled = false; btn.querySelector('span:last-child').textContent = 'Continuar al pago'; }
         return;
     }
 
