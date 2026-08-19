@@ -3735,7 +3735,7 @@ async function handleEnviarBoletoCompra(tid, id, request, env) {
   const rlKey     = kv(tid, `emailRetry:${sessionId}`);
   const retries   = parseInt((await env.INVENTARIO.get(rlKey)) || '0', 10);
   if (retries >= 5) {
-    return json({ error: 'Límite de reenvíos alcanzado. Escribe a elgorilateatro@gmail.com' }, 429, request);
+    return json({ error: 'Límite de reenvíos alcanzado. Escribe a contacto@elgorilateatro.com.mx' }, 429, request);
   }
 
   const emailResult = await enviarEmailsVenta(venta, tid, env);
@@ -3753,7 +3753,7 @@ async function handleEnviarBoletoCompra(tid, id, request, env) {
     await avisarBoletoNoEnviado(venta, tid, env, 'reenvío pedido por el comprador');
     return json({
       ok: false,
-      error: 'No se pudo enviar el correo al comprador. Revisa spam o escribe a elgorilateatro@gmail.com',
+      error: 'No se pudo enviar el correo al comprador. Revisa spam o escribe a contacto@elgorilateatro.com.mx',
       adminOk: emailResult.adminOk,
     }, 502, request);
   }

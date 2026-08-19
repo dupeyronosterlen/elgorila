@@ -545,7 +545,7 @@ function actualizarPantalla() {
     if (grupoLeyenda) {
         if (esGrupoGrande) {
             grupoLeyenda.className = 'text-xs text-yellow-400 mt-2 text-center';
-            grupoLeyenda.innerHTML = 'Para grupos grandes contáctanos: <a href="mailto:elgorilateatro@gmail.com" class="underline">elgorilateatro@gmail.com</a>';
+            grupoLeyenda.innerHTML = 'Para grupos grandes contáctanos: <a href="mailto:contacto@elgorilateatro.com.mx" class="underline">contacto@elgorilateatro.com.mx</a>';
         } else {
             grupoLeyenda.className = 'hidden';
             grupoLeyenda.innerHTML = '';
