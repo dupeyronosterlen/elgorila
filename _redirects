@@ -48,7 +48,7 @@
 /gracias                   /index.html   301
 /gracias/                  /index.html   301
 
-# Encuesta legacy → acta (query ?t= se conserva)
-/encuesta                   /acta.html                    301
-/encuesta/                  /acta.html                    301
-/encuesta.html              /acta.html                    301
+# Encuesta legacy: NO va a acta (acta aún no está armada; P-16 en docs-internos/PENDIENTES.md)
+/encuesta                   /index.html                   301
+/encuesta/                  /index.html                   301
+/encuesta.html              /index.html                   301
