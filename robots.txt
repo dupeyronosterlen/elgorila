@@ -28,5 +28,18 @@ Disallow: /fechas.html
 Disallow: /gracias.html
 Disallow: /presskit.html
 Disallow: /presskit/index.html
+Disallow: /agencia/
+Disallow: /scripts/
+Disallow: /worker/
+Disallow: /worker-headers/
+Disallow: /codigos-qr/
+Disallow: /config.json
+Disallow: /package.json
+Disallow: /package-lock.json
+Disallow: /wrangler.toml
+Disallow: /server_no_cache.py
+Disallow: /tailwind.config.js
+Disallow: /.claude/
+Disallow: /.vscode/
 
 Sitemap: https://elgorilateatro.com.mx/sitemap.xml
