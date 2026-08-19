@@ -24,6 +24,10 @@ scripts/patch-cupon-prueba99.js
 docs-internos/
 private/
 agencia/campana/
+agencia/*.csv
+agencia/*.json
+.claude/
+.vscode/
 .wrangler/
 
 # Previews / artefactos locales — no son el funnel de venta.
