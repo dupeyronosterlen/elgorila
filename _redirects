@@ -1,4 +1,5 @@
-# Netlify (y similares): la slug amigable sirve el mismo index sin 404 al refrescar
+# GitHub Pages ignora este archivo. Las redirecciones reales están en stubs HTML
+# (archivo.html y carpeta/index.html). Esto queda como mapa de URLs legacy.
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre    /index.html   200
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/   /index.html   200
 /el-gorila-el-monologo-sobre-la-domesticacion-del-hombre/boletos.html   /boletos.html   301
