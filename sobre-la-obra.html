@@ -934,10 +934,7 @@
     <p class="section-kicker">La obra</p>
     <h2 class="section-title">¿Qué es El Gorila?</h2>
     <figure class="figura">
-      <picture>
-        <source srcset="img/programa/portada-v1-hero.webp" type="image/webp" />
-        <img src="img/programa/portada-v1-hero.jpg" alt="El Gorila en escena" width="1280" height="720" loading="lazy" decoding="async" />
-      </picture>
+      <img src="img/obra-premisa/hero.webp" data-pool="hero,02,044,068,072" data-pool-dir="img/obra-premisa/" alt="El Gorila en escena" width="1280" height="720" loading="lazy" decoding="async" />
       <figcaption>El Gorila · temporada en curso</figcaption>
     </figure>
     <div class="prosa">
@@ -1194,8 +1191,9 @@
     document.querySelectorAll('img[data-pool]').forEach(function (img) {
       var pool = (img.getAttribute('data-pool') || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
       if (pool.length < 2) return;
+      var dir = (img.getAttribute('data-pool-dir') || 'img/GALERIA/mobile/').replace(/\/?$/, '/');
       var elegido = pool[Math.floor(Math.random() * pool.length)];
-      img.src = 'img/GALERIA/mobile/' + elegido + '.webp';
+      img.src = dir + elegido + '.webp';
     });
   })();
 
