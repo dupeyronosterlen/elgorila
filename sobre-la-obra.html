@@ -379,8 +379,7 @@
     }
 
     .figura { margin-bottom: 1.75rem; border: 1px solid var(--gold-border); overflow: hidden; }
-    .figura img { width: 100%; aspect-ratio: 4/3; object-fit: cover;
-      filter: contrast(1.06) brightness(0.97) saturate(0.9) sepia(0.1); }
+    .figura img { width: 100%; aspect-ratio: 16/9; object-fit: cover; object-position: center 22%; }
     /* El retrato del presskit es vertical: se le respeta el formato */
     .figura-retrato img { aspect-ratio: 4/5; object-position: center 22%; }
     .figura figcaption {
@@ -449,8 +448,7 @@
     .galeria-scroll::-webkit-scrollbar { height: 4px; }
     .galeria-scroll::-webkit-scrollbar-thumb { background: var(--gold-border); }
     .galeria-item { flex: 0 0 auto; width: min(70vw, 280px); scroll-snap-align: center; border: 1px solid var(--gold-border); background: var(--dark); overflow: hidden; }
-    .galeria-item img { width: 100%; height: clamp(280px, 54vw, 370px); object-fit: cover;
-      filter: contrast(1.06) brightness(0.97) saturate(0.9) sepia(0.1); }
+    .galeria-item img { width: 100%; height: clamp(280px, 54vw, 370px); object-fit: cover; }
     .galeria-item.wide { width: min(84vw, 390px); }
 
     /* Reseñas */
@@ -936,7 +934,10 @@
     <p class="section-kicker">La obra</p>
     <h2 class="section-title">¿Qué es El Gorila?</h2>
     <figure class="figura">
-      <img src="img/GALERIA/mobile/03.webp" data-pool="03,025,034,039,046,048,053" alt="El Gorila en escena" width="600" height="450" loading="lazy" decoding="async" />
+      <picture>
+        <source srcset="img/programa/portada-v1-hero.webp" type="image/webp" />
+        <img src="img/programa/portada-v1-hero.jpg" alt="El Gorila en escena" width="1280" height="720" loading="lazy" decoding="async" />
+      </picture>
       <figcaption>El Gorila · temporada en curso</figcaption>
     </figure>
     <div class="prosa">
@@ -1184,7 +1185,7 @@
 <script src="js/temporada-copy.js" defer></script>
 <script src="js/testimonios.js?v=20260813t"></script>
 <script src="js/tofu-ad-match.js?v=20260812s" defer></script>
-<script src="js/tofu-landing.js?v=20260821v" defer></script>
+<script src="js/tofu-landing.js?v=20260821w" defer></script>
 <script>
   /* Fotos dinámicas: cada <img data-pool="..."> sortea una de su grupo en cada
      visita. El src del HTML es el respaldo si esto no corre. Se ejecuta antes de

@@ -160,7 +160,7 @@
     measure();
   }
 
-  var HERO_VIDEO_V = '20260821v';
+  var HERO_VIDEO_V = '20260821w';
 
   function pickVideoCandidates() {
     var bust = '?v=' + HERO_VIDEO_V;
@@ -168,10 +168,9 @@
     if (mobile) {
       return ['video/tofu-hero-mobile-v2.mp4' + bust];
     }
-    /* Lite primero: pesa menos y autoplay falla menos. El full es respaldo. */
     return [
-      'video/tofu-hero-desktop-lite.mp4' + bust,
-      'video/tofu-hero-desktop.mp4' + bust
+      'video/tofu-hero-desktop.mp4' + bust,
+      'video/tofu-hero-desktop-lite.mp4' + bust
     ];
   }
 
