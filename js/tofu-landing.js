@@ -160,37 +160,19 @@
     measure();
   }
 
+  var HERO_VIDEO_V = '20260821v';
+
   function pickVideoCandidates() {
+    var bust = '?v=' + HERO_VIDEO_V;
     var mobile = window.matchMedia('(max-width: 767px)').matches;
     if (mobile) {
-      return ['video/tofu-hero-mobile-v2.mp4'];
+      return ['video/tofu-hero-mobile-v2.mp4' + bust];
     }
-    return ['video/tofu-hero-desktop.mp4', 'video/tofu-hero-desktop-lite.mp4'];
-  }
-
-  function resolveVideoSrc(candidates, idx, cb) {
-    if (idx >= candidates.length) {
-      cb(null);
-      return;
-    }
-    var url = candidates[idx];
-    var probe = document.createElement('video');
-    probe.preload = 'metadata';
-    probe.muted = true;
-    probe.playsInline = true;
-    function cleanup() {
-      probe.removeAttribute('src');
-      probe.load();
-    }
-    probe.addEventListener('loadedmetadata', function () {
-      cleanup();
-      cb(url);
-    }, { once: true });
-    probe.addEventListener('error', function () {
-      cleanup();
-      resolveVideoSrc(candidates, idx + 1, cb);
-    }, { once: true });
-    probe.src = url;
+    /* Lite primero: pesa menos y autoplay falla menos. El full es respaldo. */
+    return [
+      'video/tofu-hero-desktop-lite.mp4' + bust,
+      'video/tofu-hero-desktop.mp4' + bust
+    ];
   }
 
   function initHeroVideo() {
@@ -200,58 +182,75 @@
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       if (media) media.classList.add('poster-only');
-      video.remove();
       return;
     }
 
+    var candidates = pickVideoCandidates();
+    var idx = 0;
+    var started = false;
+
     function onPlaying() {
-      if (media) media.classList.add('is-playing');
-      pushEvent('tofu_video_start', { page: 'sobre-la-obra' });
+      if (media) {
+        media.classList.remove('poster-only');
+        media.classList.add('is-playing');
+      }
+      if (!started) {
+        started = true;
+        pushEvent('tofu_video_start', { page: 'sobre-la-obra' });
+      }
     }
 
-    function start(src) {
-      if (!src) {
+    function playNow() {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.setAttribute('muted', '');
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      var p = video.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+
+    function loadCandidate(i) {
+      if (i >= candidates.length) {
         if (media) media.classList.add('poster-only');
-        video.remove();
         return;
       }
+      idx = i;
       if (media) media.classList.add('video-armed');
       video.muted = true;
       video.autoplay = true;
+      video.loop = true;
       video.setAttribute('autoplay', '');
+      video.setAttribute('loop', '');
       video.playsInline = true;
       video.setAttribute('webkit-playsinline', '');
-      video.src = src;
+      video.src = candidates[i];
       video.load();
-      video.addEventListener('playing', onPlaying, { once: true });
-
-      var hit50 = false;
-      video.addEventListener('timeupdate', function () {
-        if (!video.duration || !isFinite(video.duration)) return;
-        var p = video.currentTime / video.duration;
-        if (!hit50 && p >= 0.5) {
-          hit50 = true;
-          pushEvent('tofu_video_50', { page: 'sobre-la-obra' });
-        }
-      });
-      video.addEventListener('ended', function () {
-        pushEvent('tofu_video_complete', { page: 'sobre-la-obra' });
-      }, { once: true });
-
-      var play = function () {
-        video.play().catch(function () {
-          if (media) {
-            media.classList.remove('video-armed', 'is-playing');
-            media.classList.add('poster-only');
-          }
-          video.remove();
-        });
-      };
-      if (video.readyState >= 2) play();
-      else video.addEventListener('canplay', play, { once: true });
     }
 
-    resolveVideoSrc(pickVideoCandidates(), 0, start);
+    video.addEventListener('playing', onPlaying);
+    video.addEventListener('canplay', playNow);
+    video.addEventListener('error', function () {
+      loadCandidate(idx + 1);
+    });
+
+    var hit50 = false;
+    video.addEventListener('timeupdate', function () {
+      if (!video.duration || !isFinite(video.duration)) return;
+      var p = video.currentTime / video.duration;
+      if (!hit50 && p >= 0.5) {
+        hit50 = true;
+        pushEvent('tofu_video_50', { page: 'sobre-la-obra' });
+      }
+    });
+    video.addEventListener('ended', function () {
+      pushEvent('tofu_video_complete', { page: 'sobre-la-obra' });
+    }, { once: true });
+
+    loadCandidate(0);
+    document.addEventListener('touchstart', playNow, { once: true, passive: true });
+    document.addEventListener('click', playNow, { once: true });
   }
 
   function refreshCountdown() {
