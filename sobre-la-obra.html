@@ -131,12 +131,9 @@
     .hero-video {
       width: 100%; height: 100%; object-fit: cover; object-position: center center;
       transform: scale(1.04);
-      filter: contrast(1.08) brightness(0.9) saturate(0.84) sepia(0.13);
-      will-change: transform, filter;
     }
     .hero-media.video-armed .hero-poster img,
     .hero-media.poster-only .hero-poster img {
-      filter: contrast(1.08) brightness(0.9) saturate(0.84) sepia(0.13);
       transform: scale(1.04);
     }
     .hero-media.is-playing .hero-poster {
@@ -156,7 +153,7 @@
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       background-size: 180px 180px;
     }
-    @media (prefers-reduced-motion: no-preference) {
+    @media (prefers-reduced-motion: no-preference) and (min-width: 768px) {
       .hero-grain { animation: hero-grain-drift 12s steps(8) infinite; }
       @keyframes hero-grain-drift {
         0%,100% { transform: translate(0,0); } 25% { transform: translate(-2%,1%); }
@@ -417,7 +414,6 @@
       position: absolute; inset: 0; width: 100%; height: 100%;
       object-fit: cover; object-position: center center;
       display: block; z-index: 0;
-      filter: contrast(1.06) brightness(0.9) saturate(0.88) sepia(0.05);
     }
     .video-obra-tint {
       position: absolute; inset: 0; z-index: 1; pointer-events: none;
@@ -427,10 +423,7 @@
       mix-blend-mode: soft-light;
     }
     .video-obra-grain {
-      position: absolute; inset: 0; z-index: 2; pointer-events: none;
-      opacity: 0.055; mix-blend-mode: overlay;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 170px 170px;
+      display: none;
     }
     .video-obra::after {
       content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
@@ -626,7 +619,6 @@
       .hero-media.video-armed .hero-poster img,
       .hero-media.poster-only .hero-poster img {
         transform: scale(1.02);
-        filter: contrast(1.04) brightness(1.07) saturate(0.92) sepia(0.08);
       }
       .hero-media.is-playing .hero-grain { opacity: 0.04; }
       .hero-overlay {
@@ -731,11 +723,6 @@
       .barra-compra-meta {
         font-size: clamp(9px, 2.6vw, 10px);
       }
-      /* En vivo móvil: más luz, casi sin grano */
-      .video-obra-clip {
-        filter: contrast(1.02) brightness(1.06) saturate(0.98);
-      }
-      .video-obra-grain { opacity: 0.02; }
       .video-obra-tint { opacity: 0.65; }
       .video-obra::after { box-shadow: inset 0 0 28px rgba(8,5,4,0.08); }
     }
@@ -804,16 +791,11 @@
       .video-obra::before { aspect-ratio: 16 / 9; }
       .video-obra-clip--mobile { display: none; }
       .video-obra-clip--desktop { display: block; }
-      /* Filtro ~26% en desktop (+20% sobre el base móvil) */
-      .video-obra-clip {
-        filter: contrast(1.072) brightness(0.88) saturate(0.856) sepia(0.06);
-      }
       .video-obra-tint {
         background: linear-gradient(175deg,
           rgba(217,155,58,0.036) 0%, transparent 42%,
           rgba(10,7,5,0.108) 100%);
       }
-      .video-obra-grain { opacity: 0.066; }
       .video-obra::after {
         box-shadow: inset 0 0 52px rgba(8,5,4,0.216);
       }
@@ -1103,7 +1085,7 @@
     <p class="section-kicker">¿Cuándo?</p>
     <h2 class="section-title">Funciones</h2>
     <div class="funcion-datos">
-      <div class="funcion-fila"><span class="funcion-k">Temporada</span><span class="funcion-v" data-temporada-rango>Del 15 de agosto al 19 de septiembre</span></div>
+      <div class="funcion-fila"><span class="funcion-k">Temporada</span><span class="funcion-v">Del 25 de julio al 19 de septiembre</span></div>
       <div class="funcion-fila"><span class="funcion-k">Día y hora</span><span class="funcion-v">Sábados · 18:00</span></div>
       <div class="funcion-fila"><span class="funcion-k">Próxima</span><span class="funcion-v" data-proxima-funcion>Próximo sábado · 18:00</span></div>
       <div class="funcion-fila"><span class="funcion-k">Sede</span><span class="funcion-v">Teatro Wilberto Cantón<br />San José Insurgentes</span></div>
@@ -1170,15 +1152,15 @@
   </span>
 </a>
 
-<script src="js/utm.js"></script>
-<script src="js/config.js"></script>
-<script src="js/rutas.js"></script>
-<script src="js/analytics.js?v=20260812vc2" data-viewcontent="sobre-la-obra"></script>
+<script src="js/utm.js" defer></script>
+<script src="js/config.js" defer></script>
+<script src="js/rutas.js" defer></script>
+<script src="js/analytics.js?v=20260812vc2" data-viewcontent="sobre-la-obra" defer></script>
 <script src="js/fechas.js" defer></script>
 <script src="js/temporada-copy.js" defer></script>
-<script src="js/testimonios.js?v=20260813t"></script>
+<script src="js/testimonios.js?v=20260813t" defer></script>
 <script src="js/tofu-ad-match.js?v=20260812s" defer></script>
-<script src="js/tofu-landing.js?v=20260821w" defer></script>
+<script src="js/tofu-landing.js?v=20260823v" defer></script>
 <script>
   /* Fotos dinámicas: cada <img data-pool="..."> sortea una de su grupo en cada
      visita. El src del HTML es el respaldo si esto no corre. Se ejecuta antes de
@@ -1193,7 +1175,8 @@
     });
   })();
 
-  /* Video en vivo: src en HTML (móvil); desktop se carga al entrar al viewport. */
+  /* Video en vivo: se pide y reproduce solo cuando entra al viewport.
+     No se llama load() (reinicia la descarga y traba el clip). */
   (function () {
     var wrap = document.getElementById('video-obra');
     if (!wrap) return;
@@ -1205,6 +1188,7 @@
     var mobileClip = document.getElementById('video-en-vivo-mobile');
     var desktopClip = document.getElementById('video-en-vivo-desktop');
     if (!mobileClip && !desktopClip) return;
+    var visible = false;
 
     function esMobile() {
       return window.matchMedia('(max-width: 767px)').matches;
@@ -1212,6 +1196,10 @@
 
     function clipActivo() {
       return esMobile() ? mobileClip : desktopClip;
+    }
+
+    function heroVideo() {
+      return document.getElementById('hero-video');
     }
 
     function preparar(clip) {
@@ -1236,16 +1224,18 @@
       clip.src = src;
     }
 
+    function pausar(clip) {
+      if (!clip) return;
+      clip.pause();
+      clip.removeAttribute('autoplay');
+    }
+
     function reproducir(clip) {
       if (!clip) return;
       var otro = clip === mobileClip ? desktopClip : mobileClip;
-      if (otro) {
-        otro.pause();
-        otro.removeAttribute('autoplay');
-      }
+      pausar(otro);
       preparar(clip);
       asegurarSrc(clip);
-      clip.load();
       var intento = function () {
         var p = clip.play();
         if (p && p.then) {
@@ -1257,30 +1247,49 @@
       else clip.addEventListener('canplay', intento, { once: true });
     }
 
-    function iniciar() {
+    function pausarHero() {
+      var h = heroVideo();
+      if (h) h.pause();
+    }
+
+    function reanudarHero() {
+      var h = heroVideo();
+      if (!h || !h.currentSrc) return;
+      var p = h.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+
+    function alEntrar() {
+      visible = true;
+      wrap.classList.add('is-playing');
+      pausarHero();
       reproducir(clipActivo());
     }
 
-    var io;
+    function alSalir() {
+      visible = false;
+      pausar(mobileClip);
+      pausar(desktopClip);
+      wrap.classList.remove('is-playing');
+      reanudarHero();
+    }
+
     if ('IntersectionObserver' in window) {
-      io = new IntersectionObserver(function (entries) {
+      new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          iniciar();
+          if (entry.isIntersecting) alEntrar();
+          else alSalir();
         });
-      }, { rootMargin: '320px', threshold: 0.01 });
-      io.observe(wrap);
-    } else {
-      iniciar();
+      }, { rootMargin: '0px', threshold: 0.25 }).observe(wrap);
     }
 
     window.addEventListener('resize', function () {
-      if (!wrap.classList.contains('is-playing')) return;
-      iniciar();
+      if (!visible) return;
+      reproducir(clipActivo());
     });
 
-    /* iOS a veces bloquea autoplay hasta el primer gesto del usuario. */
     function desbloquear() {
+      if (!visible) return;
       reproducir(clipActivo());
     }
     document.addEventListener('touchstart', desbloquear, { once: true, passive: true });
