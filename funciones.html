@@ -523,6 +523,14 @@ a:hover { color: var(--d-fg); }
   text-align: center;
   line-height: 1.5;
 }
+.doc-meta-corta {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .1em;
+  color: var(--d-muted);
+  text-align: center;
+  margin-top: 4px;
+}
 .doc-nav {
   display: flex;
   flex-wrap: wrap;
@@ -704,6 +712,8 @@ ul { padding-left: 1.35rem; margin-bottom: 14px; }
   color: rgba(241,234,217,.85);
   margin: 0;
 }
+.oculto-temporal { display: none; }
+.testimonios-funciones { margin-bottom: 8px; }
 .testimonio-funciones {
   margin: 0 0 28px;
   padding: 4px 0 4px 24px;
@@ -818,33 +828,37 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 <div class="page">
 <header class="site-header">
-  <a href="/"><img class="site-logo" src="img/LOGO/1.jpg" alt="EL GORILA Teatro" width="44" height="44"></a>
-  <p class="doc-kicker">En temporada · Ciudad de México</p>
-  <h1 class="doc-title">Funciones y boletos</h1>
-  <p class="doc-meta"><span data-temporada-conteo data-temporada-cap>en temporada</span> · 18:00 · <span>Del 25 de julio al 19 de septiembre</span> · Teatro Wilberto Cantón</p>
-  <nav class="doc-nav" aria-label="Navegación">
-    <a href="/">Inicio</a>
-    <a href="/sobre-la-obra.html">La Obra</a>
-    <a href="#calendario">Calendario</a>
-    <a href="#sede">Sede</a>
-    <a href="/boletos.html">Comprar boletos</a>
-  </nav>
+  <h1 class="sr-only">Funciones y boletos — El Gorila 2026</h1>
+  <p class="doc-title" aria-hidden="true">EL GORILA</p>
+  <p class="doc-kicker">En temporada · Teatro Wilberto Cantón · Sábados 18:00hrs</p>
 </header>
 
 <main>
-<p><strong class="kw">EL GORILA</strong> es un monólogo interpretado por <strong class="kw">Humberto Dupeyrón</strong>, basado en «Un informe para una academia» de Franz <span class="kw">Kafka</span>. Actualmente en temporada en el Teatro Wilberto Cantón, San José Insurgentes. Las fechas vigentes están en el calendario de esta página.</p>
+<!-- Escondido por ahora (Os, 25 ago) — se puede reactivar quitando esta clase.
+     Mantiene el keyword "EL GORILA" fuera de la cadena dorada por ahora. -->
+<p class="oculto-temporal"><strong class="kw">EL GORILA</strong> es un monólogo interpretado por <strong>Humberto Dupeyrón</strong>, basado en «Un informe para una academia» de Franz Kafka. Actualmente en temporada en el Teatro Wilberto Cantón, San José Insurgentes. Las fechas vigentes están en el calendario de esta página.</p>
+
+<!-- Testimonios reales (banco js/testimonios.js, tono "calma"/"calida" —
+     enfocados en LA EXPERIENCIA, no inventados). Van primero. -->
+<div class="testimonios-funciones">
+  <blockquote class="testimonio-funciones">
+    <p>&ldquo;Te olvidas del actor y ves realmente al <span class="kw">gorila</span>.&rdquo;</p>
+    <cite>— Laura Jiménez, espectadora</cite>
+  </blockquote>
+  <blockquote class="testimonio-funciones">
+    <p>&ldquo;Reí mucho y también lloré.&rdquo;</p>
+    <cite>— Sandra Ruedas, espectadora</cite>
+  </blockquote>
+  <blockquote class="testimonio-funciones">
+    <p>&ldquo;Es una experiencia en la que tus sentimientos y emociones están en un constante sube y baja.&rdquo;</p>
+    <cite>— Arturo Mozo, espectador</cite>
+  </blockquote>
+</div>
 
 <section class="deseabilidad" aria-labelledby="deseabilidad-heading">
   <h2 id="deseabilidad-heading" class="sr-only">Sobre la experiencia</h2>
-  <p>Un simio humanizado entra al escenario y explica, ante los académicos, cómo dejó de ser un animal para convertirse en algo <span class="kw">aceptable</span>. Kafka escribió el informe; Humberto Dupeyrón lo sostiene en escena desde hace <span class="kw">37 años</span>.</p>
+  <p>Un simio humanizado entra al escenario y explica, ante los académicos, cómo dejó de ser un animal para convertirse en algo <span class="kw">aceptable</span>. <span class="kw">Kafka</span> escribió el informe; <span class="kw">Humberto Dupeyrón</span> lo sostiene en escena desde hace <span class="kw">37 años</span>.</p>
 </section>
-
-<!-- Testimonio real (banco js/testimonios.js, tono "calma" — el mismo que el propio
-     banco recomienda para contexto de decisión de compra), no inventado. -->
-<blockquote class="testimonio-funciones">
-  <p>&ldquo;Te olvidas del actor y ves realmente al <span class="kw">gorila</span>.&rdquo;</p>
-  <cite>— Laura Jiménez, espectadora</cite>
-</blockquote>
 
 <div class="cta-box">
   <p>Boletos digitales con QR · general <strong class="kw">$400</strong> · INAPAM, estudiantes y maestros <strong>$280</strong></p>
