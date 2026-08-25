@@ -600,6 +600,25 @@ ul { padding-left: 1.35rem; margin-bottom: 14px; }
   color: var(--gold);
   font-weight: 500;
 }
+/* Palabras clave doradas — leídas en orden de arriba a abajo, cuentan la
+   página completa: EL GORILA · Humberto Dupeyrón · Kafka · aceptable ·
+   37 años · gorila · $400 · sábados 18:00 · Teatro Wilberto Cantón ·
+   Escoge tu sábado. */
+.kw { color: var(--gold); font-weight: 600; }
+.calendario .nota-placa { line-height: 1.5; }
+.calendario .nota-placa-titulo { color: var(--gold); font-weight: 500; }
+.calendario .nota-placa-detalle {
+  display: block;
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(241,234,217,.55);
+  margin-top: 2px;
+}
+.calendario tr.fila-pasada td {
+  color: rgba(241,234,217,.35);
+  text-decoration: line-through;
+  text-decoration-color: rgba(241,234,217,.25);
+}
 .calendario td:last-child {
   font-family: var(--mono);
   font-size: 13px;
@@ -667,15 +686,42 @@ ul { padding-left: 1.35rem; margin-bottom: 14px; }
   color: var(--d-muted);
   margin: 0;
 }
-.en-resumen {
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.deseabilidad {
   margin: 8px 0 28px;
-  padding: 20px 22px;
-  border: 1px solid rgba(217,155,58,.35);
+  padding: 22px 24px;
+  border-left: 2px solid var(--gold);
   background: var(--d-bg2);
 }
-.en-resumen h2 { margin: 0 0 12px; font-size: 22px; }
-.en-resumen h2::before { display: none; }
-.en-resumen ul { margin: 0; }
+.deseabilidad p {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 19px;
+  line-height: 1.6;
+  color: rgba(241,234,217,.85);
+  margin: 0;
+}
+.testimonio-funciones {
+  margin: 0 0 28px;
+  padding: 4px 0 4px 24px;
+  text-align: left;
+}
+.testimonio-funciones p {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--gold);
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+.testimonio-funciones cite {
+  font-style: normal;
+  font-size: 13px;
+  color: rgba(241,234,217,.5);
+}
 .faq-lista { margin: 8px 0 28px; }
 .faq-lista details { border-bottom: 0.5px solid rgba(241,234,217,.15); padding: 12px 0; }
 .faq-lista summary {
@@ -687,9 +733,30 @@ ul { padding-left: 1.35rem; margin-bottom: 14px; }
 }
 .faq-lista summary::-webkit-details-marker { display: none; }
 .faq-lista details p { margin: 10px 0 4px; }
-@media (max-width: 520px) {
-  .calendario th:nth-child(3), .calendario td:nth-child(3) { display: none; }
+
+/* === NUEVO: selector interactivo === */
+.elegir-funcion-widget { margin: 20px 0 32px; }
+.widget-sub { color: var(--d-muted, rgba(241,234,217,.6)); margin: 0 0 16px; font-size: 15px; }
+.widget-cargando { color: var(--d-muted, rgba(241,234,217,.6)); font-size: 14px; }
+.fn-grid-widget { display: flex; flex-direction: column; gap: 10px; }
+.fn-grid-widget .fn-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; text-align: left; padding: 14px 16px; background: transparent;
+  border: 1px solid rgba(217,155,58,.35); border-radius: 2px; color: inherit;
+  font-family: inherit; font-size: 15px; cursor: pointer;
 }
+.fn-grid-widget .fn-card:hover, .fn-grid-widget .fn-card.active { border-color: var(--gold); background: var(--d-bg2); }
+.fn-grid-widget .fn-date { font-family: var(--display); font-size: 19px; }
+.fn-grid-widget .fn-name { display: block; font-size: 13px; opacity: .7; margin-top: 2px; }
+.fn-grid-widget .fn-avail { font-size: 12px; color: var(--gold); white-space: nowrap; }
+.fn-grid-widget .fn-avail-warn { color: #D43A1A; }
+.fn-grid-widget .fn-etiqueta { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--gold); opacity: .85; }
+.fn-grid-widget .fn-card-pasada,
+.fn-grid-widget .sel-fn-card-pasada {
+  opacity: .4; cursor: not-allowed; border-style: dashed !important;
+}
+.fn-grid-widget .fn-avail-pasada { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: rgba(241,234,217,.5); }
+.accion-fecha-widget { margin-top: 16px; text-align: center; }
 </style>
 <script type="application/ld+json">
 {
@@ -765,45 +832,65 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </header>
 
 <main>
-<p><strong>EL GORILA</strong> es un monólogo interpretado por <strong>Humberto Dupeyrón</strong>, basado en «Un informe para una academia» de Franz Kafka. Actualmente en temporada en el Teatro Wilberto Cantón, San José Insurgentes. Las fechas vigentes están en el calendario de esta página.</p>
+<p><strong class="kw">EL GORILA</strong> es un monólogo interpretado por <strong class="kw">Humberto Dupeyrón</strong>, basado en «Un informe para una academia» de Franz <span class="kw">Kafka</span>. Actualmente en temporada en el Teatro Wilberto Cantón, San José Insurgentes. Las fechas vigentes están en el calendario de esta página.</p>
 
-<section class="en-resumen" aria-labelledby="en-resumen-heading">
-  <h2 id="en-resumen-heading">En resumen</h2>
-  <ul>
-    <li>Monólogo de Humberto Dupeyrón, basado en Kafka. 37 años en escena.</li>
-    <li>Actualmente en temporada en Ciudad de México. Sábados 18:00.</li>
-    <li>Calendario y sede en esta página. Compra en la taquilla oficial.</li>
-    <li>Historia de la obra: <a href="/historia-del-gorila.html">historia del Gorila</a>.</li>
-  </ul>
+<section class="deseabilidad" aria-labelledby="deseabilidad-heading">
+  <h2 id="deseabilidad-heading" class="sr-only">Sobre la experiencia</h2>
+  <p>Un simio humanizado entra al escenario y explica, ante los académicos, cómo dejó de ser un animal para convertirse en algo <span class="kw">aceptable</span>. Kafka escribió el informe; Humberto Dupeyrón lo sostiene en escena desde hace <span class="kw">37 años</span>.</p>
 </section>
 
+<!-- Testimonio real (banco js/testimonios.js, tono "calma" — el mismo que el propio
+     banco recomienda para contexto de decisión de compra), no inventado. -->
+<blockquote class="testimonio-funciones">
+  <p>&ldquo;Te olvidas del actor y ves realmente al <span class="kw">gorila</span>.&rdquo;</p>
+  <cite>— Laura Jiménez, espectadora</cite>
+</blockquote>
+
 <div class="cta-box">
-  <p>Boletos digitales con QR · general <strong>$400</strong> · INAPAM, estudiantes y maestros <strong>$280</strong></p>
+  <p>Boletos digitales con QR · general <strong class="kw">$400</strong> · INAPAM, estudiantes y maestros <strong>$280</strong></p>
   <a class="cta-btn" href="/boletos.html">Comprar boletos</a>
 </div>
 
 <h2 id="calendario">Calendario oficial</h2>
-<p>Todas las funciones son los <strong>sábados a las 18:00</strong>. Recomendamos llegar a las 17:30; el acceso a la sala abre a las 17:55. Al llegar, pásate por taquilla para la selección de asientos.</p>
+<p>Todas las funciones son los <strong class="kw">sábados a las 18:00</strong>. Recomendamos llegar a las 17:30; el acceso a la sala abre a las 17:55. Al llegar, pásate por taquilla para validación de tus entradas.</p>
 <table class="calendario" aria-label="Calendario de funciones EL GORILA 2026">
   <thead>
     <tr><th scope="col">Fecha</th><th scope="col">Hora</th><th scope="col">Notas</th></tr>
   </thead>
   <tbody>
-<tr id="2026-07-25"><td>Sábado 25 Jul</td><td>18:00</td><td>Estreno</td></tr>
-<tr id="2026-08-01"><td>Sábado 1 Ago</td><td>18:00</td><td>—</td></tr>
-<tr id="2026-08-08"><td>Sábado 8 Ago</td><td>18:00</td><td>—</td></tr>
-<tr id="2026-08-15"><td>Sábado 15 Ago</td><td>18:00</td><td>—</td></tr>
-<tr id="2026-08-22"><td>Sábado 22 Ago</td><td>18:00</td><td>—</td></tr>
-<tr id="2026-08-29"><td>Sábado 29 Ago</td><td>18:00</td><td>—</td></tr>
-<tr id="2026-09-05"><td>Sábado 5 Sep</td><td>18:00</td><td>—</td></tr>
-<tr id="2026-09-12"><td>Sábado 12 Sep</td><td>18:00</td><td>—</td></tr>
-<tr id="2026-09-19"><td>Sábado 19 Sep</td><td>18:00</td><td>Develación de placa</td></tr>
+<tr id="2026-07-25" data-fecha="2026-07-25"><td>Sábado 25 Jul</td><td>18:00</td><td>Estreno</td></tr>
+<tr id="2026-08-01" data-fecha="2026-08-01"><td>Sábado 1 Ago</td><td>18:00</td><td>—</td></tr>
+<tr id="2026-08-08" data-fecha="2026-08-08"><td>Sábado 8 Ago</td><td>18:00</td><td>—</td></tr>
+<tr id="2026-08-15" data-fecha="2026-08-15"><td>Sábado 15 Ago</td><td>18:00</td><td>—</td></tr>
+<tr id="2026-08-22" data-fecha="2026-08-22"><td>Sábado 22 Ago</td><td>18:00</td><td>—</td></tr>
+<tr id="2026-08-29" data-fecha="2026-08-29"><td>Sábado 29 Ago</td><td>18:00</td><td>—</td></tr>
+<tr id="2026-09-05" data-fecha="2026-09-05"><td>Sábado 5 Sep</td><td>18:00</td><td>—</td></tr>
+<tr id="2026-09-12" data-fecha="2026-09-12"><td>Sábado 12 Sep</td><td>18:00</td><td>—</td></tr>
+<tr id="2026-09-19" data-fecha="2026-09-19"><td>Sábado 19 Sep</td><td>18:00</td><td class="nota-placa"><span class="nota-placa-titulo">Develación de placa</span><span class="nota-placa-detalle">Devela esta placa: Janett Arceo<br>Padrino de ceremonias: José Luis Arévalo</span></td></tr>
   </tbody>
 </table>
+<script>
+(function () {
+  // Marca filas ya pasadas (fecha de función + 18:15, mismo corte que el
+  // selector interactivo) con clase .fila-pasada — solo estilo, no oculta nada.
+  var hoy = new Date();
+  document.querySelectorAll('table.calendario tbody tr[data-fecha]').forEach(function (tr) {
+    var partes = tr.dataset.fecha.split('-').map(Number);
+    var corte = new Date(partes[0], partes[1] - 1, partes[2], 18, 15, 0);
+    if (hoy >= corte) tr.classList.add('fila-pasada');
+  });
+})();
+</script>
+
+<!-- Fechas estáticas de siempre (tabla de arriba). Un solo botón fijo abajo,
+     sin selector interactivo — va directo a /boletos, sin fecha preseleccionada. -->
+<div class="accion-fecha-widget">
+  <a href="/boletos.html?entry_point=funciones" class="cta-btn">Escoge tu sábado</a>
+</div>
 
 <h2 id="sede">Sede y precios</h2>
 <dl class="info-grid">
-  <div><dt>Teatro</dt><dd>Teatro Wilberto Cantón</dd></div>
+  <div><dt>Teatro</dt><dd class="kw">Teatro Wilberto Cantón</dd></div>
   <div><dt>Dirección</dt><dd><a href="https://maps.google.com/?q=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+CDMX" target="_blank" rel="noopener noreferrer">José María Velasco 59, San José Insurgentes, CDMX</a></dd></div>
   <div><dt>Precio</dt><dd>General $400 · INAPAM, estudiantes y maestros $280 (credencial vigente al ingresar)</dd></div>
   <div><dt>Estacionamiento</dt><dd>Disponible en el teatro</dd></div>
@@ -826,7 +913,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </details>
 </div>
 
-<p>Historia y ficha de la obra: <a href="/historia-del-gorila.html">historia del Gorila</a>. Inicio: <a href="/">elgorilateatro.com.mx</a>. Términos de compra en <a href="/terminos.html">terminos.html</a>.</p>
 </main>
 
 <footer class="site-footer" aria-label="Pie de página">
@@ -840,11 +926,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <a href="/historia-del-gorila.html">Historia del monólogo</a>
     <span class="site-footer-sep" aria-hidden="true">·</span>
     <a href="/presskit/presskit2026.html">Prensa</a>
+    <span class="site-footer-sep" aria-hidden="true">·</span>
+    <a href="/terminos.html">Términos</a>
   </nav>
   <p class="site-footer-contact"><a href="mailto:contacto@elgorilateatro.com.mx">contacto@elgorilateatro.com.mx</a></p>
   <p class="site-footer-copy">© 2026 EL GORILA Teatro</p>
 </footer>
 </div>
 <script src="js/rutas.js"></script>
+
 </body>
 </html>
