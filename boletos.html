@@ -163,6 +163,7 @@ a   { color: inherit; }
 @media (max-width: 767px) {
   #main-content {
     padding-top: max(4.75rem, calc(4.25rem + env(safe-area-inset-top)));
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -184,7 +185,10 @@ body { padding-top: 0; }
   padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
 }
 @media (max-width: 767px) {
-  #main-content { padding-top: max(4.25rem, calc(3.75rem + env(safe-area-inset-top))); }
+  #main-content {
+    padding-top: max(4.25rem, calc(3.75rem + env(safe-area-inset-top)));
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .bofu-urgencia {
@@ -249,6 +253,9 @@ body { padding-top: 0; }
   line-height: 1.5; color: var(--d-soft); margin: 16px 0 10px; text-align: center;
 }
 .bofu-logistica a { color: var(--gold); text-decoration: underline; }
+.bofu-logistica-nombre {
+  color: var(--gold); font-weight: 700; font-size: 12px; letter-spacing: .08em;
+}
 .bofu-mapa {
   display: block;
   margin: 0 0 8px;
@@ -410,6 +417,13 @@ body.checkout-abierto #main-content .inner > :not(#taquilla-lock-banner) {
 .barra-reserva-spacer {
   height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }
+/* Mismo huérfano que .boletos-sticky-clear: sin boletos seleccionados la
+   barra fija está disabled (→ display:none) pero este spacer, al vivir al
+   final de main-content (después de reseñas/mapa), seguía reservando su
+   alto ahí abajo — el hueco grande antes de "¿Necesitas ayuda?". */
+body:has(.barra-reserva-fija:disabled) .barra-reserva-spacer {
+  height: 0.25rem;
+}
 .ichk-trust-row {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 14px;
   margin: 10px 0 4px;
@@ -444,7 +458,7 @@ body.checkout-abierto #main-content .inner > :not(#taquilla-lock-banner) {
   margin-bottom: 4px;
 }
 .ichk-cupon-details summary::-webkit-details-marker { display: none; }
-.ayuda-colapsada { border-top: 1px solid var(--d-faint); }
+.ayuda-colapsada { border-top: 1px solid var(--d-faint); padding-top: 18px; }
 .ayuda-colapsada .faq-item { border-color: var(--d-faint); }
 .ayuda-colapsada .faq-summary { font-size: 17px; }
 .logo-gorila-sello a, .logo-37-sello a { pointer-events: none; cursor: default; }
@@ -816,6 +830,12 @@ body.checkout-abierto #main-content .inner > :not(#taquilla-lock-banner) {
   .ticket-nota-credencial { font-size: 13px; margin-top: 2px; }
   .boletos-sticky-clear {
     height: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  }
+  /* Sin boletos seleccionados, la barra fija de reservar se oculta
+     (barra-reserva-fija:disabled → display:none) pero este spacer seguía
+     reservando su alto — dejaba un hueco huérfano bajo la selección/total. */
+  body:has(.barra-reserva-fija:disabled) .boletos-sticky-clear {
+    height: 0.25rem;
   }
 }
 
@@ -1552,7 +1572,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 
     <p class="bofu-logistica">
-      Teatro Wilberto Cantón · Velasco 59, San José Insurgentes
+      <span class="bofu-logistica-nombre">Teatro Wilberto Cantón</span> · Velasco 59, San José Insurgentes
     </p>
     <div class="bofu-mapa">
       <iframe
@@ -1687,7 +1707,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section class="sd ayuda-colapsada" id="ayuda-boletos">
   <div class="inner">
     <div class="sec-head">
-      <span class="sec-num">Opcional</span>
       <h2 class="sec-title">¿Necesitas<br><em>ayuda?</em></h2>
     </div>
     <div class="rule"></div>
