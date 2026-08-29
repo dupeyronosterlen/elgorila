@@ -371,36 +371,20 @@
         try { sessionStorage.setItem(storageKey, '1'); } catch (_) {}
       }
 
-      // 1) GA4 + Google Ads vía GTM (dataLayer) — exactamente una vez.
+      // GA4 + Google Ads vía GTM (dataLayer) — exactamente una vez.
       pushEcommerce('purchase', p, funcionExtra(orden));
       markSent();
 
-      // 2) Meta Pixel directo (fbq) con reintento SOLO para fbq (GTM lo carga async).
-      function sendMeta() {
-        if (NO_TRACK) return true;
-        if (typeof fbq !== 'function') return false;
-        try {
-          var cat = metaCatalogParams(orden);
-          var params = Object.assign(
-            { value: p.value, currency: p.currency || 'MXN' },
-            cat
-          );
-          if (eventId) {
-            fbq('track', 'Purchase', params, { eventID: eventId });
-          } else {
-            fbq('track', 'Purchase', params);
-          }
-          return true;
-        } catch (_) { return false; }
-      }
-
-      if (!sendMeta()) {
-        var attempts = 0;
-        var timer = setInterval(function () {
-          attempts += 1;
-          if (sendMeta() || attempts >= 24) clearInterval(timer);
-        }, 250);
-      }
+      // Meta Purchase YA NO se manda desde aquí. confirmacion.html se puede abrir
+      // varias veces para la misma orden (revisar el boleto, mostrar el QR en la
+      // función, abrir el link del correo en otro dispositivo) y el candado de
+      // localStorage/sessionStorage no sobrevive esos casos — eso duplicaba el
+      // evento Purchase en Meta (hasta 3x la misma venta real, confirmado 29 ago
+      // 2026). La venta real solo ocurre una vez, en el servidor, cuando el
+      // webhook genera los boletos — por eso el Purchase de Meta vive ahora
+      // exclusivamente en el servidor (sendMetaCapiPurchase, worker/meta-capi.js),
+      // que es naturalmente exactamente-una-vez por venta sin importar cuántas
+      // veces se recargue esta página.
       return true;
     },
   };
