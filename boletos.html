@@ -1653,7 +1653,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       🔒 Compra 100% segura · Conexión cifrada · Procesado por Stripe
     </p>
     <p style="font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:rgba(26,20,17,.45);text-align:center;margin-top:-6px;">
-      Pago en OXXO disponible hasta 48 hrs antes de la función
+      Pago en OXXO disponible hasta 24 hrs antes de la función
     </p>
     <p style="font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:rgba(26,20,17,.42);text-align:center;margin-top:8px;line-height:1.45;">
       Esta taquilla no cobra cargo por servicio.
@@ -1943,6 +1943,7 @@ async function procesarPagoInline() {
           codigoCupon: orden.codigoCupon || undefined,
           referidoDe:  orden.referidoDe || undefined,
           utm:         (typeof window.obtenerUTM === 'function' ? window.obtenerUTM() : {}),
+          fbclid:      (typeof window.obtenerFbclid === 'function' ? window.obtenerFbclid() : {}),
         }),
       };
       const fetchJson = window.egFetchJson;

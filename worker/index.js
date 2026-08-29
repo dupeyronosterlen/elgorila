@@ -2357,6 +2357,17 @@ function sanitizarUTM(raw) {
   return out;
 }
 
+// _fbc/_fbp del navegador (cookies del Pixel de Meta) — se guardan en la
+// metadata de la sesión de Stripe para que el Purchase server-side (CAPI) los
+// pueda mandar de vuelta y Meta empareje la venta con el clic real del anuncio.
+function sanitizarFbclid(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  if (typeof raw.fbc === 'string' && raw.fbc.trim()) out.fbc = raw.fbc.trim().substring(0, 300);
+  if (typeof raw.fbp === 'string' && raw.fbp.trim()) out.fbp = raw.fbp.trim().substring(0, 300);
+  return out;
+}
+
 // ─── OPTIMISTIC LOCKING (zone-aware) ─────────────────────────────────────────
 // seccionCantidades = { platea: 2, galeria: 1 }
 
@@ -2925,6 +2936,7 @@ async function handleCheckout(tid, request, env, ctx) {
   const modoEmbebido = checkoutMode === 'embedded';
   const referidoDe = typeof referidoDeRaw === 'string' ? referidoDeRaw.trim().toUpperCase() : '';
   const utmClean = sanitizarUTM(body.utm);
+  const fbclidClean = sanitizarFbclid(body.fbclid);
   const emailRaw = typeof body.email === 'string' ? body.email.trim().toLowerCase().substring(0, 254) : '';
   const emailOk  = emailRaw && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw) ? emailRaw : '';
   const nombreRaw = typeof body.nombre === 'string' ? body.nombre.trim().substring(0, 120) : '';
@@ -3065,9 +3077,9 @@ async function handleCheckout(tid, request, env, ctx) {
   const canonical = resolveTid(tid);
   const baseUrl   = 'https://elgorilateatro.com.mx';
 
-  // OXXO disponible solo si faltan más de 48 hrs para la función (18:00 CDMX)
+  // OXXO disponible solo si faltan más de 24 hrs para la función (18:00 CDMX)
   const fechaFuncionMs  = new Date(`${fecha}T18:00:00-06:00`).getTime();
-  const oxxoDisponible  = (fechaFuncionMs - Date.now()) > 48 * 60 * 60 * 1000;
+  const oxxoDisponible  = (fechaFuncionMs - Date.now()) > 24 * 60 * 60 * 1000;
   // Si hay OXXO: voucher vence en min(24h, hasta 2h antes de la función); si no, TTL normal
   const oxxoMaxMs       = Math.min(Date.now() + 24 * 60 * 60 * 1000, fechaFuncionMs - 2 * 60 * 60 * 1000);
   const sessionTtl      = oxxoDisponible ? Math.floor((oxxoMaxMs - Date.now()) / 1000) : RESERVA_TTL;
@@ -3113,6 +3125,11 @@ async function handleCheckout(tid, request, env, ctx) {
   for (const k of Object.keys(utmClean)) {
     params.set(`metadata[utm_${k}]`, utmClean[k]);
   }
+
+  // _fbc/_fbp como metadata de Stripe — se leen de vuelta en el webhook para
+  // mandarlos en el Purchase de Meta CAPI (ver sendMetaCapiPurchase).
+  if (fbclidClean.fbc) params.set('metadata[fbc]', fbclidClean.fbc);
+  if (fbclidClean.fbp) params.set('metadata[fbp]', fbclidClean.fbp);
 
   // Line items con precio dinámico desde config
   lineRows.forEach(({ item, seccionConfig, unitCentavos, cuponAplicado: cuponEnLinea }, idx) => {
@@ -3301,6 +3318,11 @@ async function handleWebhook(request, env, ctx) {
     if (val) utm[k] = val;
   }
 
+  // _fbc/_fbp guardados en el checkout — se mandan de vuelta a Meta CAPI abajo
+  // para que la compra se pueda emparejar con el clic real del anuncio.
+  const fbc = meta.fbc || null;
+  const fbp = meta.fbp || null;
+
   // Método REAL usado (no la lista de métodos ofrecidos): OXXO se confirma por
   // async_payment_succeeded; la tarjeta en línea por checkout.session.completed.
   const metodoPago = esAsyncPago ? 'oxxo' : 'card';
@@ -3326,6 +3348,8 @@ async function handleWebhook(request, env, ctx) {
     estado:       'completada',
     usado:        false,
     utm,
+    fbc,
+    fbp,
     metodoPago,
     codigoCupon:  meta.codigoCupon || null,
     cuponPct:     meta.cuponPct ? parseInt(meta.cuponPct, 10) : null,
@@ -3405,6 +3429,8 @@ async function handleWebhook(request, env, ctx) {
       const capiResult = await sendMetaCapiPurchase(venta, env, {
         eventId:  capiEventId,
         clientIp: request.headers.get('CF-Connecting-IP') || undefined,
+        fbc:      venta.fbc || undefined,
+        fbp:      venta.fbp || undefined,
       });
       if (capiResult.ok || capiResult.skipped) {
         const raw = await env.VENTAS.get(ventaKey);

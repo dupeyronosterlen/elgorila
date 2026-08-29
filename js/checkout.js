@@ -120,6 +120,7 @@ async function procesarPago() {
                     items: ordenCompra.items,
                     fecha: ordenCompra.fechaIso,
                     utm: (typeof window.obtenerUTM === 'function' ? window.obtenerUTM() : {}),
+                    fbclid: (typeof window.obtenerFbclid === 'function' ? window.obtenerFbclid() : {}),
                 }),
             };
             const fetchJson = window.egFetchJson;

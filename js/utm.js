@@ -105,6 +105,34 @@
     }
   };
 
+  // _fbc / _fbp: cookies que pone el Pixel de Meta. Se mandan al Worker en el
+  // checkout para que el Purchase server-side (CAPI) pueda emparejar la venta
+  // con el clic real del anuncio — sin esto Meta solo puede adivinar por email
+  // (match rate bajo e inconsistente, confirmado 29 ago 2026).
+  function leerCookie(nombre) {
+    try {
+      var match = document.cookie.match(new RegExp('(?:^|; )' + nombre + '=([^;]*)'));
+      return match ? decodeURIComponent(match[1]) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  window.obtenerFbclid = function () {
+    var fbc = leerCookie('_fbc');
+    if (!fbc) {
+      // Si el usuario llega con fbclid en la URL pero el Pixel aún no puso la
+      // cookie _fbc (carga tardía de GTM), lo reconstruimos con el formato
+      // oficial de Meta: fb.1.<timestamp_ms>.<fbclid>
+      try {
+        var fbclid = new URLSearchParams(window.location.search).get('fbclid');
+        if (fbclid) fbc = 'fb.1.' + Date.now() + '.' + fbclid;
+      } catch (e) { /* ignore */ }
+    }
+    var fbp = leerCookie('_fbp');
+    return { fbc: fbc || null, fbp: fbp || null };
+  };
+
   window.obtenerAtribucion = function () {
     var fresh = window.obtenerUTM() || {};
     return {
