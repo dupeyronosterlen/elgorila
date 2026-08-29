@@ -364,43 +364,8 @@ body.checkout-abierto .barra-reserva-spacer {
   display: none;
 }
 /* Taquilla bloqueada: el pedido ya está confirmado y el pago usa esa orden. */
-.taquilla-lock-banner {
-  display: none;
-  margin: 0 0 18px;
-  padding: 14px 16px;
-  border: 1px solid rgba(217,155,58,.45);
-  background: rgba(217,155,58,.10);
-}
-body.taquilla-bloqueada .taquilla-lock-banner,
-body.checkout-abierto .taquilla-lock-banner {
-  display: block;
-}
-.taquilla-lock-txt {
-  font-family: var(--cuerpo);
-  font-size: 16px;
-  line-height: 1.4;
-  color: var(--d-fg);
-  margin: 0 0 12px;
-}
-.taquilla-lock-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 12px 16px;
-  background: transparent;
-  border: 1px solid var(--gold);
-  color: var(--gold);
-  font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.taquilla-lock-btn:hover { background: rgba(217,155,58,.12); }
-body.taquilla-bloqueada #main-content .inner > :not(#taquilla-lock-banner),
-body.checkout-abierto #main-content .inner > :not(#taquilla-lock-banner) {
+body.taquilla-bloqueada #main-content .inner > *,
+body.checkout-abierto #main-content .inner > * {
   opacity: 0.42;
   filter: grayscale(0.18);
   pointer-events: none;
@@ -461,7 +426,6 @@ body:has(.barra-reserva-fija:disabled) .barra-reserva-spacer {
 .ayuda-colapsada { border-top: 1px solid var(--d-faint); padding-top: 18px; }
 .ayuda-colapsada .faq-item { border-color: var(--d-faint); }
 .ayuda-colapsada .faq-summary { font-size: 17px; }
-.logo-gorila-sello a, .logo-37-sello a { pointer-events: none; cursor: default; }
 #fechas-progressive-ui { margin-top: 10px; }
 #fechas-progressive-ui:empty { display: none; }
 
@@ -1462,10 +1426,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- ══ TAQUILLA BOFU ═══════════════════════════════════════════ -->
 <section class="sd--mid" id="main-content">
   <div class="inner">
-    <div id="taquilla-lock-banner" class="taquilla-lock-banner" role="status">
-      <p class="taquilla-lock-txt">Fecha y boletos quedan fijos para que coincidan con el pago.</p>
-      <button type="button" class="taquilla-lock-btn" onclick="editarPedido()">Actualizar carrito</button>
-    </div>
     <p class="bofu-urgencia" role="status">
       <span data-escasez-funciones>Quedan 6 sábados — cupo limitado</span>
       <span class="bofu-urgencia-sep" aria-hidden="true">·</span>
@@ -1551,7 +1511,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <p id="espejo-cupo" class="espejo-cupo" hidden role="status"></p>
       <div id="promo-grupo-banner" class="promo-grupo-banner hidden" role="status"></div>
-      <button type="button" id="btn-reservar-desktop" disabled aria-label="Reservar boletos">
+      <button type="button" id="btn-reservar-desktop" disabled aria-label="Comprar boletos">
         <span id="brd-texto">Selecciona una fecha</span>
         <span class="brd-arrow" aria-hidden="true">→</span>
       </button>
@@ -1591,7 +1551,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-<button type="button" id="barra-reserva-fija" class="barra-reserva-fija" disabled aria-label="Reservar boletos">
+<button type="button" id="barra-reserva-fija" class="barra-reserva-fija" disabled aria-label="Comprar boletos">
   Selecciona una fecha
 </button>
 
@@ -1678,7 +1638,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- Botón de pago -->
     <button type="button" id="btn-pagar-inline" onclick="procesarPagoInline()">
-      <span id="ichk-btn-texto">Ir al pago seguro</span>
+      <span id="ichk-btn-texto">Comprar</span>
       <span class="ichk-flecha" aria-hidden="true">→</span>
     </button>
 
@@ -1998,7 +1958,7 @@ async function procesarPagoInline() {
       mostrarError((err && err.message) || 'Error de conexión. Verifica tu internet e intenta de nuevo.');
     }
     if (btnEl) btnEl.disabled = false;
-    if (textoBtn) textoBtn.textContent = 'Ir al pago seguro';
+    if (textoBtn) textoBtn.textContent = 'Comprar';
     return;
   }
 
@@ -2236,7 +2196,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var texto = btn.textContent.trim();
     if (texto.indexOf('Continuar') === 0) {
-      texto = texto.replace(/^Continuar/, 'Reservar');
+      texto = texto.replace(/^Continuar/, 'Comprar');
     } else if (texto.indexOf('Selecciona al menos') === 0) {
       texto = 'Elige al menos 1 boleto';
     }
@@ -2244,7 +2204,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sticky) {
       sticky.textContent = texto;
       sticky.disabled = btn.disabled;
-      sticky.setAttribute('aria-label', btn.disabled ? texto : 'Reservar: ' + texto);
+      sticky.setAttribute('aria-label', btn.disabled ? texto : 'Comprar: ' + texto);
     }
 
     if (desktop) {
@@ -2252,7 +2212,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (txtEl) txtEl.textContent = texto;
       else desktop.textContent = texto;
       desktop.disabled = btn.disabled;
-      desktop.setAttribute('aria-label', btn.disabled ? texto : 'Reservar: ' + texto);
+      desktop.setAttribute('aria-label', btn.disabled ? texto : 'Comprar: ' + texto);
     }
 
     simplificarPromoBanner();

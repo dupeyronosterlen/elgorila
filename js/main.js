@@ -159,7 +159,6 @@ function bloquearTaquilla(locked) {
     const inner = main && main.querySelector('.inner');
     if (!inner) return;
     Array.prototype.forEach.call(inner.children, function (el) {
-        if (el.id === 'taquilla-lock-banner') return;
         if (locked) el.setAttribute('inert', '');
         else el.removeAttribute('inert');
     });
@@ -775,7 +774,7 @@ window.addEventListener('pageshow', function (e) {
     var btn = document.getElementById('btn-pagar-inline');
     if (btn) btn.disabled = false;
     var txt = document.getElementById('ichk-btn-texto');
-    if (txt) txt.textContent = 'Ir al pago seguro';
+    if (txt) txt.textContent = 'Comprar';
     if (typeof editarPedido === 'function') editarPedido();
 });
 
