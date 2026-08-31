@@ -4,7 +4,6 @@
 
   let token = '';
   let sessionData = null;
-  let guardado = false;
   let folioActual = 'ACTA —····';
 
   // "Tira" de boletos: una compra con N boletos permite regenerar el
@@ -198,29 +197,6 @@
     const res = await fetch(window.teatroApi(`encuesta/${encodeURIComponent(token)}`));
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || 'Enlace no válido.');
-    return data;
-  }
-
-  async function apiPost(body) {
-    const res = await fetch(window.teatroApi(`encuesta/${encodeURIComponent(token)}`), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'No se pudo guardar.');
-    return data;
-  }
-
-  async function guardarSiFalta() {
-    if (guardado || !token) return sessionData;
-    const acta = leerActa();
-    const nombrePortador = ($('input-mi-nombre')?.value || '').trim();
-    if (!nombrePortador) return null;
-
-    const data = await apiPost({ acta, nombrePortador });
-    guardado = true;
-    sessionData = { ...sessionData, completada: true };
     return data;
   }
 
@@ -440,7 +416,6 @@
       return;
     }
     if (!exigirNombre()) return;
-    try { await guardarSiFalta(); } catch (_) { /* no bloquea el envío */ }
 
     const btn = $('btn-enviar-cert-wa');
     const label = btn ? btn.textContent.trim() : '';
@@ -499,7 +474,6 @@
     btn.textContent = 'Generando PDF…';
 
     try {
-      await guardarSiFalta();
       const blob = await generarPdfCertificado();
       const pdfBase64 = await blobToBase64(blob);
       btn.textContent = 'Enviando…';
@@ -549,8 +523,6 @@
       if ($('rev-salidas') && acta.salidas) $('rev-salidas').value = acta.salidas;
       if ($('rev-actitud') && acta.actitud) $('rev-actitud').value = acta.actitud;
     }
-
-    if (data.completada) guardado = true;
   }
 
   function bindUi() {
