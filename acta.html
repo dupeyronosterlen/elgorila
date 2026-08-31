@@ -625,18 +625,7 @@
     background: rgba(255,255,255,.03);
     text-align: center;
   }
-  .envio-correo-fila {
-    display: flex;
-    gap: 8px;
-  }
-  .envio-correo-input {
-    flex: 1;
-    font-size: 15px !important;
-    padding: 10px 12px !important;
-  }
   .envio-box .dl-btn.wa-btn { width: 100%; justify-content: center; box-sizing: border-box; }
-  #btn-enviar-cert-correo { flex-shrink: 0; padding: 0 18px; }
-  #btn-enviar-cert-correo.is-loading { opacity: .5; pointer-events: none; }
 
   .invita-box {
     margin-top: 26px;
@@ -991,11 +980,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.6 6.3A8.86 8.86 0 0 0 12 4a8.9 8.9 0 0 0-7.9 13l-1 3.7 3.8-1A8.9 8.9 0 0 0 12 21a8.9 8.9 0 0 0 5.6-15.7ZM12 19.5a7.4 7.4 0 0 1-3.8-1l-.3-.2-2.8.7.7-2.7-.2-.3A7.5 7.5 0 1 1 19.5 12 7.4 7.4 0 0 1 12 19.5Zm4.1-5.6c-.2-.1-1.3-.6-1.5-.7s-.4-.1-.5.1-.5.7-.6.8-.2.1-.4 0a6.1 6.1 0 0 1-1.8-1.1 6.7 6.7 0 0 1-1.2-1.5c-.1-.2 0-.3.1-.4l.3-.3a1.2 1.2 0 0 0 .2-.3.4.4 0 0 0 0-.3c0-.1-.5-1.2-.7-1.6s-.4-.4-.5-.4h-.4a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.8 2 4.7 4.7 0 0 0 1 2.5 10.8 10.8 0 0 0 4.2 3.7c.6.2 1 .4 1.4.5a3.3 3.3 0 0 0 1.5.1 2.5 2.5 0 0 0 1.6-1.1 1.9 1.9 0 0 0 .2-1.1c0-.1-.2-.1-.4-.2Z"/></svg>
       Enviar por WhatsApp →
     </button>
-    <p class="flujo-hint" style="margin:16px 0 8px;">o por correo</p>
-    <div class="envio-correo-fila">
-      <input class="flujo-input envio-correo-input" id="input-enviar-correo" type="email" placeholder="correo@ejemplo.com">
-      <button type="button" class="dl-btn" id="btn-enviar-cert-correo" data-label="Enviar">Enviar</button>
-    </div>
   </div>
 
   <div class="invita-box">
@@ -1037,8 +1021,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/config.js"></script>
 <script src="js/api-config.js"></script>
 <script src="js/vendor/html2canvas.min.js"></script>
-<script src="js/vendor/jspdf.umd.min.js"></script>
-<script src="js/acta.js?v=20260901c"></script>
+<script src="js/acta.js?v=20260901d"></script>
 
 </body>
 </html>
