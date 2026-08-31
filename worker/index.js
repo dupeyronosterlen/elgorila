@@ -206,8 +206,9 @@ async function limitePorIp(request, env, prefijo, maximo) {
 
 // ─── EMAIL VÍA RESEND ────────────────────────────────────────────────────────
 
-/** Correo operativo del teatro (avisos admin, reply-to). */
-const EMAIL_OPERATIVO = 'elgorilateatro@gmail.com';
+/** Correo operativo del teatro (avisos admin, reply-to, contacto visible al público).
+ * Cara pública = contacto@ (reenvía a elgorilateatro@gmail.com, ver centro-de-correos.md). */
+const EMAIL_OPERATIVO = 'contacto@elgorilateatro.com.mx';
 const EMAIL_FROM_DEFAULT = 'El Gorila Teatro <boletos@elgorilateatro.com.mx>';
 
 function adminNotifyEmail(env) {
@@ -1212,9 +1213,6 @@ function htmlEmailPostFuncion(venta, funcionNombre, config, opts = {}) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
 
   <tr><td style="background:#0a0706;padding:36px 28px 28px;border:1px solid rgba(241,234,217,.12);text-align:center;">
-    <p style="margin:0 0 20px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.36em;text-transform:uppercase;color:#d99b3a;">
-      Esta noche · ${funcionNombre}
-    </p>
     <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.15;font-weight:500;color:#f1ead9;">
       Gracias por acompañarnos.
     </h1>
@@ -1238,8 +1236,7 @@ function htmlEmailPostFuncion(venta, funcionNombre, config, opts = {}) {
     </a>
     <p style="margin:16px 0 0;font-family:Georgia,serif;font-size:13px;line-height:1.5;color:#6b5c4a;">
       Si algo no salió bien, escríbenos a
-      <a href="mailto:${EMAIL_OPERATIVO}" style="color:#8a5a20;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
-      — preferimos escucharte en privado.
+      <a href="mailto:${EMAIL_OPERATIVO}" style="color:#8a5a20;text-decoration:underline;">${EMAIL_OPERATIVO}</a>.
     </p>
   </td></tr>
 

@@ -103,41 +103,31 @@
     letter-spacing: 2px;
     color: #1a5c2a;
     text-transform: uppercase;
-    margin-bottom: 14px;
+    margin-bottom: 22px;
     padding-bottom: 8px;
     border-bottom: 1px solid rgba(26,92,42,.35);
   }
   .folio-banda .folio-num { font-weight: 700; letter-spacing: 1px; color: #0f3d18; }
 
-  .membrete {
-    font-family: 'Courier Prime', monospace;
-    font-size: 12px;
-    letter-spacing: 3px;
-    color: #1a4a1a;
-    border: 1.5px solid #1a5c2a;
-    padding: 4px 14px;
-    margin-bottom: 18px;
-    align-self: flex-start;
-  }
-
   .titulo-acta {
-    font-family: 'IM Fell English', Georgia, serif;
-    font-size: 24px;
-    line-height: 1.25;
-    letter-spacing: 1.5px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 2px;
     color: #1a2a1a;
     text-align: center;
     text-transform: uppercase;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
   }
   .titulo-acta .titulo-rubro {
     display: block;
     font-family: 'Courier Prime', monospace;
-    font-size: 11px;
+    font-size: 32px;
     letter-spacing: 3px;
     color: #2d7a2d;
-    margin-bottom: 8px;
-    font-weight: 400;
+    margin-bottom: 18px;
+    font-weight: 700;
   }
 
   .clausula {
@@ -156,39 +146,21 @@
     color: #0f1f0f;
     letter-spacing: 0.5px;
   }
-
-  .ficha {
-    width: 100%;
-    border: 1px solid rgba(26,92,42,.4);
-    margin: 0 0 12px;
-  }
-  .ficha-row {
-    display: flex;
-    border-bottom: 1px solid rgba(26,92,42,.25);
-  }
-  .ficha-row:last-child { border-bottom: none; }
-  .ficha-k {
-    flex: 0 0 40%;
+  .clausula--seco {
     font-family: 'Courier Prime', monospace;
-    font-size: 10px;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: #2d6a2d;
-    padding: 7px 10px;
-    background: rgba(45,106,45,0.06);
-    border-right: 1px solid rgba(26,92,42,.25);
-    display: flex;
-    align-items: center;
-  }
-  .ficha-v {
-    flex: 1;
-    font-family: 'IM Fell English', Georgia, serif;
-    font-size: 15px;
+    font-size: 14px;
+    font-weight: 400;
     color: #1a2a1a;
-    padding: 7px 12px;
-    line-height: 1.35;
+    letter-spacing: 0.3px;
+    line-height: 1.6;
+    margin-bottom: 30px;
   }
-  .ficha-v em { font-style: italic; color: #5a3a2a; }
+  .clausula--enfasis {
+    font-family: 'IM Fell English', Georgia, serif;
+    font-style: italic;
+    font-size: 18px;
+    letter-spacing: 0;
+  }
 
   .guino {
     font-family: 'IM Fell English', Georgia, serif;
@@ -202,7 +174,7 @@
   }
   .guino em { color: #8a2a18; font-style: italic; }
 
-  .firma-area { width: 200px; margin-bottom: 4px; flex-shrink: 0; }
+  .firma-area { width: 282px; height: auto; margin-top: -29px; margin-bottom: -67px; flex-shrink: 0; object-fit: contain; position: relative; z-index: 2; }
   .firma-leyenda {
     font-family: 'Courier Prime', monospace;
     font-size: 10px;
@@ -220,21 +192,12 @@
     margin-bottom: 10px;
     width: 100%;
   }
-  .campo--hero { margin-bottom: 8px; }
-  .campo-etiqueta {
-    font-family: 'Courier Prime', monospace;
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: #2d7a2d;
-    border: 1px solid #2d7a2d;
-    padding: 3px 12px;
-    margin-bottom: 6px;
-  }
+  .campo--hero { margin-bottom: 26px; }
   .campo-valor {
     font-family: 'IM Fell English', Georgia, serif;
     font-size: 26px;
     letter-spacing: 3px;
-    color: #1a2a1a;
+    color: #17245e;
     text-align: center;
     max-width: 100%;
     word-break: break-word;
@@ -244,10 +207,10 @@
     font-size: 38px;
     line-height: 1.12;
     letter-spacing: 2px;
-    color: #0f1f0f;
+    color: #17245e;
   }
   .campo-valor--placeholder {
-    color: rgba(26,42,26,.28);
+    color: rgba(23,36,94,.3);
     font-style: italic;
     font-size: 26px;
   }
@@ -260,42 +223,28 @@
     margin-top: 5px;
     text-align: center;
   }
-
-  .meta-funcion {
-    width: 100%;
-    text-align: center;
+  .conteo-certificado {
     font-family: 'Courier Prime', monospace;
-    font-size: 11px;
-    letter-spacing: 1.2px;
-    line-height: 1.45;
-    color: #2a5a2a;
-    margin: 2px 0 8px;
-    padding: 8px 10px;
-    border: 1px dashed rgba(45,122,45,.45);
-    background: rgba(45,106,45,0.04);
-  }
-  .meta-funcion strong {
-    display: block;
-    font-family: 'IM Fell English', Georgia, serif;
-    font-size: 15px;
-    letter-spacing: 1px;
-    color: #1a2a1a;
-    margin-bottom: 2px;
-    font-weight: 400;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #8a5a20;
+    border: 1px solid rgba(138,90,32,.4);
+    padding: 3px 10px;
+    margin-top: 8px;
+    text-align: center;
   }
 
   .validez {
     width: 100%;
     font-family: 'Courier Prime', monospace;
-    font-size: 10px;
-    letter-spacing: 1px;
-    line-height: 1.4;
-    color: #5a3a28;
-    text-align: center;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    padding: 6px 8px;
-    border: 1px solid rgba(138,42,24,.35);
+    font-size: 13px;
+    letter-spacing: 0.2px;
+    line-height: 1.8;
+    color: #3a4a3a;
+    text-align: justify;
+    margin-bottom: 24px;
+    padding: 0 4px;
   }
 
   .frente-footer {
@@ -307,7 +256,20 @@
     align-items: center;
     gap: 14px;
   }
-  .sello-pie { width: 74px; flex-shrink: 0; }
+  .sello-pie { width: 74px; height: 74px; object-fit: contain; flex-shrink: 0; }
+
+  .sello-gigante {
+    position: absolute;
+    width: 269px;
+    height: 269px;
+    object-fit: contain;
+    left: 604px;
+    top: 855px;
+    transform: translate(-50%, -50%) rotate(-9deg);
+    opacity: 0.82;
+    pointer-events: none;
+    z-index: 50;
+  }
   .ciudad-nombre { font-family:'IM Fell English',serif; font-size:22px; color:#1a2a1a; }
   .ciudad-sub { font-family:'IM Fell English',serif; font-style:italic; font-size:15px; color:#3a4a3a; margin-top: 2px; }
   .ciudad-diag {
@@ -327,10 +289,10 @@
     color: #2d7a2d;
     border-top: 1px solid #2d7a2d;
     border-bottom: 1px solid #2d7a2d;
-    padding: 6px 12px;
+    padding: 5px 12px;
     text-align: center;
     text-transform: uppercase;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     width: 100%;
   }
   .rev-portador {
@@ -339,7 +301,7 @@
     letter-spacing: 2px;
     color: #1a2a1a;
     text-align: center;
-    margin-bottom: 18px;
+    margin-bottom: 10px;
     min-height: 1.2em;
   }
   .rev-portador span { color: #8a2a18; }
@@ -360,10 +322,10 @@
     font-size: 15px;
     color: #4a5a4a;
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
   }
 
-  .seccion { width: 100%; margin-bottom: 16px; }
+  .seccion { width: 100%; margin-bottom: 8px; }
   .sec-titulo {
     font-family: 'Courier Prime', monospace;
     font-size: 12px;
@@ -372,43 +334,23 @@
     border-left: 3px solid #2d7a2d;
     padding-left: 10px;
     text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .cita {
-    font-family: 'IM Fell English', serif;
-    font-style: italic;
-    font-size: 15px;
-    color: #3a4a3a;
-    line-height: 1.55;
-    padding: 10px 14px;
-    border: 1px dashed #4a7a4a;
-    background: rgba(45,106,45,0.03);
-    margin-bottom: 10px;
-  }
-  .cita-attr {
-    font-family: 'Courier Prime', monospace;
-    font-size: 10px;
-    color: #6a8a6a;
-    letter-spacing: 2px;
-    text-align: right;
-    display: block;
-    margin-top: 6px;
-    font-style: normal;
+    margin-bottom: 7px;
   }
   .sec-hint {
     font-family: 'IM Fell English', serif;
     font-style: italic;
     font-size: 14px;
+    line-height: 1.4;
     color: #5a6a5a;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
     padding-left: 4px;
   }
 
   .sec-libertad {
     width: 100%;
     border-top: 2px solid #1a5c2a;
-    padding-top: 14px;
-    margin-top: 4px;
+    padding-top: 10px;
+    margin-top: 2px;
   }
   .libertad-titulo {
     font-family: 'IM Fell English', Georgia, serif;
@@ -449,17 +391,17 @@
     resize: vertical;
     font-family: 'IM Fell English', Georgia, serif;
     font-size: 17px;
-    line-height: 1.55;
+    line-height: 1.5;
     color: #1a2a1a;
-    padding: 6px 2px;
-    min-height: 64px;
+    padding: 4px 2px;
+    min-height: 44px;
     outline: none;
   }
   .revcampo::placeholder { color: rgba(74,90,74,.4); font-style: italic; font-size: 16px; }
   .revcampo-wrap {
     width: 100%;
     border-bottom: 1.5px solid rgba(74,122,74,.5);
-    margin-bottom: 6px;
+    margin-bottom: 3px;
   }
   .revcampo-wrap--final {
     border-bottom: 2px solid #1a5c2a;
@@ -603,6 +545,20 @@
     letter-spacing: 2px;
   }
   .flujo-input:focus { outline: 1px solid rgba(217,155,58,.5); }
+  .genero-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: rgba(241,234,217,.7);
+    cursor: pointer;
+    user-select: none;
+  }
+  .genero-toggle input { width: 16px; height: 16px; accent-color: #d99b3a; cursor: pointer; }
   .flujo-actions {
     display: flex;
     flex-direction: column;
@@ -625,6 +581,170 @@
     font-family: 'IM Fell English', Georgia, serif;
     font-size: 16px;
   }
+  .tira-boletos {
+    margin: -4px 0 22px;
+    text-align: center;
+  }
+  .tira-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .dl-btn.tira-btn {
+    padding: 8px 14px;
+    font-size: 10px;
+  }
+  .dl-btn.tira-btn:disabled { opacity: .3; pointer-events: none; }
+  .tira-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .tira-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(241,234,217,.25);
+    display: inline-block;
+  }
+  .tira-dots span.activo { background: #d99b3a; }
+
+  .envio-box {
+    margin-top: 26px;
+    padding: 20px 18px;
+    border: 1px solid rgba(241,234,217,.15);
+    background: rgba(255,255,255,.03);
+    text-align: center;
+  }
+  .envio-correo-fila {
+    display: flex;
+    gap: 8px;
+  }
+  .envio-correo-input {
+    flex: 1;
+    font-size: 15px !important;
+    padding: 10px 12px !important;
+  }
+  .envio-box .dl-btn.wa-btn { width: 100%; justify-content: center; box-sizing: border-box; }
+  #btn-enviar-cert-correo { flex-shrink: 0; padding: 0 18px; }
+  #btn-enviar-cert-correo.is-loading { opacity: .5; pointer-events: none; }
+
+  .invita-box {
+    margin-top: 26px;
+    padding: 20px 18px;
+    border: 1px dashed rgba(217,155,58,.4);
+    background: rgba(217,155,58,.06);
+    text-align: center;
+  }
+  .invita-divider {
+    margin: 24px 0;
+    border-top: 1px solid rgba(241,234,217,.15);
+  }
+  .butaca-box, .ig-comparte-box { text-align: center; }
+  .butaca-codigo {
+    font-family: 'Courier Prime', monospace;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: #d99b3a;
+    margin: 4px 0 10px;
+    word-break: break-all;
+  }
+  .butaca-desc {
+    font-family: 'IM Fell English', Georgia, serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(241,234,217,.7);
+    margin: 0 0 16px;
+  }
+  .dl-btn.wa-btn {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+    background: #25D366;
+    color: #06210f;
+    border-color: #25D366;
+    font-size: 12px;
+    padding: 13px 18px;
+  }
+  .dl-btn.wa-btn:hover {
+    background: #1ebe59;
+    border-color: #1ebe59;
+    color: #06210f;
+  }
+  .dl-btn.wa-btn svg { width: 16px; height: 16px; }
+
+  @media (max-width: 480px) {
+    .flujo-panel { padding: 20px 14px 26px; }
+    .butaca-codigo { font-size: 24px; letter-spacing: 2px; }
+  }
+
+  .ig-preview {
+    width: 152px;
+    aspect-ratio: 9 / 16;
+    margin: 4px auto 14px;
+    border-radius: 10px;
+    background:
+      linear-gradient(180deg, rgba(6,8,6,.55) 0%, rgba(6,8,6,.35) 40%, rgba(6,8,6,.55) 68%, rgba(6,8,6,.82) 100%),
+      url('img/ig-fondo-1.jpg') center / cover no-repeat;
+    border: 1px solid rgba(217,155,58,.35);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 18px 10px 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  }
+  .ig-preview-marca {
+    font-family: 'Courier Prime', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: #d99b3a;
+    text-align: center;
+  }
+  .ig-preview-horario {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: rgba(241,234,217,.7);
+  }
+  .ig-preview-sub {
+    font-family: 'Courier Prime', monospace;
+    font-size: 7px;
+    letter-spacing: 1.5px;
+    color: #d99b3a;
+    text-transform: uppercase;
+    margin-top: auto;
+  }
+  .dl-btn.ig-btn {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+    background: linear-gradient(90deg, #f58529, #dd2a7b, #8134af, #515bd4);
+    color: #fff;
+    border-color: transparent;
+    font-size: 12px;
+    padding: 13px 18px;
+  }
+  .dl-btn.ig-btn:hover { filter: brightness(1.08); }
+  .dl-btn.ig-btn svg { width: 16px; height: 16px; }
+  .dl-btn.ig-btn.is-loading { opacity: .6; pointer-events: none; }
+  .ig-link-fallback {
+    display: inline-block;
+    margin-top: 10px;
+    background: none;
+    border: none;
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: rgba(241,234,217,.5);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .ig-link-fallback:hover { color: #d99b3a; }
+
   .bloque-resena {
     margin-top: 28px;
     padding-top: 22px;
@@ -705,6 +825,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <p class="kicker-funcion" id="kicker-funcion"></p>
 
+<div class="flujo-campo campo-nombre-arriba" style="width:min(90vw,420px);margin:0 auto 24px;">
+  <label class="flujo-label" for="input-mi-nombre">Nombre para su certificado</label>
+  <input class="flujo-input" id="input-mi-nombre" type="text" maxlength="80" autocomplete="name" placeholder="Escriba aquí su nombre" style="text-align:center;">
+  <p class="flujo-hint" style="margin-top:8px;text-transform:none;letter-spacing:0;font-family:'IM Fell English',Georgia,serif;font-size:13px;">Este es el nombre que certifica la Academia — avalado por El Gorila.</p>
+  <label class="genero-toggle">
+    <input type="checkbox" id="chk-genero-mujer">
+    <span>Es un certificado para mujer</span>
+  </label>
+</div>
+
 <div class="label">— CERTIFICADO —</div>
 
 <div class="page-wrapper" id="pw-frente">
@@ -713,81 +843,59 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="inner">
 
     <div class="folio-banda">
-      <span>Academia de los hombres</span>
+      <span>Documento oficial · Serie H</span>
       <span class="folio-num" id="campo-folio">ACTA —····</span>
     </div>
 
-    <div class="membrete">DOCUMENTO OFICIAL · SERIE H</div>
-
     <div class="titulo-acta">
-      <span class="titulo-rubro">Certificado de condición</span>
-      Hombre destacado
+      <span class="titulo-rubro">Certificado Oficial</span>
+      <span id="titulo-genero">Hombre destacado</span>
     </div>
 
-    <p class="clausula">
-      La Academia certifica que el portador abajo nombrado
-      <strong>ha cumplido los requisitos</strong>
-      para ser reconocido como <strong>hombre</strong>
-      ante esta institución.
+    <p class="clausula clausula--seco clausula--enfasis" id="clausula-genero">
+      Este documento documenta al portador como un «hombre», destacado entre los hombres.
     </p>
 
     <div class="campo campo--hero">
-      <div class="campo-etiqueta">Conforme a su boleto</div>
       <div class="campo-valor campo-valor--hero campo-valor--placeholder" id="campo-nombre-valor">NOMBRE</div>
       <div class="campo-linea"></div>
-      <p class="campo-sub" id="campo-nombre-sub">Nombre del comprador · registro de taquilla</p>
+      <p class="conteo-certificado hidden" id="conteo-certificado">Certificado <span id="conteo-actual">1</span> de <span id="conteo-total">1</span> · uno por boleto de esta compra</p>
     </div>
 
-    <div class="ficha" aria-label="Ficha de condición">
-      <div class="ficha-row"><div class="ficha-k">Especie de origen</div><div class="ficha-v"><em>Por determinar</em></div></div>
-      <div class="ficha-row"><div class="ficha-k">Condición otorgada</div><div class="ficha-v">Hombre · grado destacado</div></div>
-      <div class="ficha-row"><div class="ficha-k">Acreditación</div><div class="ficha-v">Únicamente el presente documento</div></div>
-      <div class="ficha-row"><div class="ficha-k">Nombre artístico</div><div class="ficha-v">EL GORILA</div></div>
-    </div>
+    <p class="validez">
+      El presente instrumento se expide de conformidad con las disposiciones aplicables en la materia,
+      para los efectos administrativos a que haya lugar, sin perjuicio de lo establecido en la
+      normatividad vigente y los estatutos correspondientes de la Institución. Queda sujeto a las
+      revisiones periódicas que el propio ordenamiento contempla, en los términos y plazos que para
+      tal efecto se determinen. En consecuencia, y sin que ello implique reconocimiento adicional
+      alguno, el presente documento se sujeta a lo dispuesto en el reglamento interno vigente a la
+      fecha de su expedición, así como a las modificaciones que en su momento pudieran emitirse por
+      la autoridad correspondiente, sin que sea necesaria notificación previa al portador. Lo anterior
+      se entiende sin menoscabo de las facultades que a la Institución le confiere su marco normativo,
+      ni de las obligaciones recíprocas que del presente instrumento pudieran derivarse en el ámbito
+      de su competencia. Para todos los efectos a que haya lugar, el portador declara haber sido
+      informado del alcance del presente documento, en el entendido de que su interpretación
+      corresponde en exclusiva a la Institución, quedando a salvo los derechos que en su caso
+      procedan conforme a lo previsto en las disposiciones aplicables, mismas que se tienen aquí por
+      reproducidas para todos los efectos legales a que haya lugar.
+    </p>
 
-    <p class="validez">Sin este papel, el portador no podrá acreditar su condición de hombre ante la Academia.</p>
-
-    <p class="guino">«Aprendí a imitar a los hombres para salir de mi jaula.»</p>
-
-    <svg class="firma-area" viewBox="0 0 210 68" aria-hidden="true">
-      <path d="M18,44 C30,24 46,19 60,35 C70,46 76,31 88,23 C100,15 110,31 116,41 C122,51 128,37 144,32 C155,29 166,37 170,45"
-        fill="none" stroke="#1a3080" stroke-width="2.2" stroke-linecap="round"/>
-      <path d="M78,48 C90,58 114,62 136,52"
-        fill="none" stroke="#1a3080" stroke-width="1.3" stroke-linecap="round"/>
-      <line x1="18" y1="60" x2="192" y2="60" stroke="#2d6a2d" stroke-width="0.5"/>
-    </svg>
-    <p class="firma-leyenda">Peter el Rojo · firmante autorizado</p>
-
-    <div class="meta-funcion" id="meta-funcion">
-      <strong id="meta-fecha-titulo">Fecha de ingreso a la especie</strong>
-      <span id="meta-funcion-detalle">Teatro Wilberto Cantón · CDMX · sábados 18:00</span>
-    </div>
+    <img class="firma-area" src="img/firma-acta.png" alt="" aria-hidden="true">
+    <p class="firma-leyenda">Lic. Anónimo Gerundio · Presidente Honorario Vitalicio</p>
 
     <div class="frente-footer">
-      <svg class="sello-pie" viewBox="0 0 90 90" aria-hidden="true">
-        <circle cx="45" cy="45" r="42" fill="none" stroke="#1a5c2a" stroke-width="1.8"/>
-        <circle cx="45" cy="45" r="34" fill="none" stroke="#1a5c2a" stroke-width="0.8"/>
-        <text x="45" y="16" text-anchor="middle" font-family="Courier Prime,monospace" font-size="5" fill="#1a5c2a" letter-spacing="0.5">PODER EJECUTIVO</text>
-        <text x="45" y="23" text-anchor="middle" font-family="Courier Prime,monospace" font-size="4.5" fill="#1a5c2a">ESTADOS UNIDOS MEXICANOS</text>
-        <path d="M45,30 C45,30 35,36 31,44 C29,49 32,53 37,51 C33,57 35,63 40,61 C42,65 45,67 45,67 C45,67 48,65 50,61 C55,63 57,57 53,51 C58,53 61,49 59,44 C55,36 45,30 45,30Z" fill="#1a5c2a" opacity="0.8"/>
-        <text x="45" y="80" text-anchor="middle" font-family="Courier Prime,monospace" font-size="4.5" fill="#1a5c2a">MÉXICO D.F.</text>
-      </svg>
+      <img class="sello-pie" src="img/membrete-pie.png" alt="" aria-hidden="true">
       <div>
         <div class="ciudad-nombre">CIUDAD DE MÉXICO</div>
-        <div class="ciudad-sub">Expedida ante la Academia.</div>
-        <div class="ciudad-diag">Condición: hombre destacado · Solo válida en papel</div>
+        <div class="ciudad-sub">La ciudad de la esperanza.</div>
+        <div class="ciudad-diag" id="ciudad-fecha">Expedida el sábado, fecha por confirmar</div>
       </div>
     </div>
 
   </div>
-</div>
-</div>
 
-<div class="dl-bar dl-bar--static">
-  <button class="dl-btn" data-label="Descargar frente · PNG" onclick="descargarEstatico(this,'page-frente','acta-gorila-frente')">
-    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Descargar frente · PNG
-  </button>
+  <img class="sello-gigante" id="sello-gigante-el" src="img/sello-acta.png" alt="" aria-hidden="true">
+</div>
 </div>
 
 <div class="label">— ANEXO / EXPEDIENTE —</div>
@@ -797,44 +905,63 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="b1"></div><div class="b2"></div><div class="b3"></div>
   <div class="inner">
 
-    <div class="rev-header">Anexo obligatorio · Expediente del hombre · No archivar sin completar</div>
+    <div class="rev-header">Anexo obligatorio · Expediente <span id="expediente-genero">del hombre</span> · No archivar sin completar</div>
     <p class="rev-portador" id="rev-portador">Titular del certificado: <span id="rev-portador-nombre">—</span></p>
-
-    <div class="pregunta">¿Qué es la libertad?</div>
-    <div class="instruccion">Conteste para el expediente. La Academia no valida respuestas en blanco.</div>
-
-    <div class="revcampo-wrap">
-      <textarea class="revcampo" id="rev-libertad" rows="3" maxlength="1200" placeholder="Su respuesta…"></textarea>
-    </div>
 
     <div class="seccion">
       <div class="sec-titulo">I. · Mis jaulas</div>
-      <div class="cita">
-        «Aprendí a imitar a los hombres para salir de mi jaula.
-        Nadie me dijo que los hombres también viven enjaulados.»
-        <span class="cita-attr">— EL GORILA · INFORME PARA LA ACADEMIA</span>
-      </div>
+      <p class="sec-hint">
+        Una jaula casi nunca tiene barrotes. Hay dos que casi nadie nombra
+        porque no se sienten como encierro: la necesidad de aprobación ajena,
+        que nos hace editar quiénes somos para no incomodar a nadie; y la
+        prisa como identidad, esa urgencia que confundimos con propósito y
+        que en realidad nos impide detenernos a preguntarnos qué queremos.
+        Ninguna duele como cárcel — producen un malestar sordo, casi
+        imperceptible, hasta que por fin se sueltan y se nota cuánto pesaban.
+      </p>
+      <div class="instruccion">¿Cuáles son las suyas?</div>
       <div class="revcampo-wrap">
-        <textarea class="revcampo" id="rev-jaulas" rows="3" maxlength="1200" placeholder="¿Cuáles son las suyas?"></textarea>
+        <textarea class="revcampo" id="rev-jaulas" rows="3" maxlength="1200" placeholder="Sus jaulas…"></textarea>
       </div>
     </div>
 
     <div class="seccion">
-      <div class="sec-titulo">II. · Mis salidas</div>
-      <p class="sec-hint">Toda jaula tiene una puerta. ¿Cuáles son las suyas?</p>
+      <div class="sec-titulo">II. · La salida (que no lo es)</div>
+      <p class="sec-hint">
+        Toda jaula anuncia una puerta. Pocas veces avisa que del otro lado
+        hay otra jaula, mejor iluminada, con mejor música — vendida como si
+        fuera la libertad misma. Cambiar de trabajo, de pareja, de opinión:
+        a veces es salir. A veces es solo mudarse de celda.
+      </p>
+      <div class="instruccion">¿Qué ha confundido usted con una salida, sin serlo?</div>
       <div class="revcampo-wrap">
-        <textarea class="revcampo" id="rev-salidas" rows="3" maxlength="1200" placeholder="Sus puertas…"></textarea>
+        <textarea class="revcampo" id="rev-salidas" rows="3" maxlength="1200" placeholder="Sus falsas salidas…"></textarea>
+      </div>
+    </div>
+
+    <div class="seccion">
+      <div class="sec-titulo">III. · Mis actitudes</div>
+      <p class="sec-hint">
+        Hay actitudes que no se sienten como jaula — se sienten como sensatez,
+        como buena educación, como «así son las cosas». Esas son justo las
+        que menos se cuestionan, y las que mejor lo mantienen enfrascado
+        sin que usted lo note.
+      </p>
+      <div class="instruccion">¿Cuál es la suya?</div>
+      <div class="revcampo-wrap">
+        <textarea class="revcampo" id="rev-actitud" rows="3" maxlength="1200" placeholder="La actitud que lo enjaula…"></textarea>
       </div>
     </div>
 
     <div class="sec-libertad">
-      <div class="libertad-titulo">III. · La actitud que lo libera</div>
+      <div class="libertad-titulo">Para cerrar</div>
       <div class="libertad-desc">
-        No es un lugar. No es la ausencia de rejas.<br>
-        Es una decisión que se toma desde adentro.
+        Este certificado lo declara <span id="libertad-genero">«hombre»</span>
+        conforme al criterio de otros. De lo que acaba de nombrar aquí —
+        ¿cuánto decidió usted, y cuánto heredó sin firmarlo nunca?
       </div>
       <div class="revcampo-wrap revcampo-wrap--final">
-        <textarea class="revcampo" id="rev-actitud" rows="2" maxlength="1200" placeholder="Su decisión…"></textarea>
+        <textarea class="revcampo" id="rev-libertad" rows="3" maxlength="1200" placeholder="Su respuesta…"></textarea>
       </div>
     </div>
 
@@ -847,58 +974,60 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 </div>
 
-<div class="dl-bar dl-bar--static">
-  <button class="dl-btn" data-label="Descargar reverso · PNG" onclick="descargarEstatico(this,'page-reverso','acta-gorila-reverso')">
-    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Descargar reverso · PNG
-  </button>
-</div>
-
 <section class="flujo-panel" id="panel-flujo">
-  <h2 class="flujo-titulo">Su certificado de hombre</h2>
-  <p class="flujo-sub">El nombre sale del <strong>boleto que pagó</strong>. Este papel lo reconoce oficialmente como <em>hombre destacado</em> — ridículo, sí; por eso sirve.<br>Complete el anexo, descárguelo o imprímalo.</p>
-
-  <div class="flujo-campo">
-    <label class="flujo-label" for="input-mi-nombre">Nombre conforme a taquilla</label>
-    <input class="flujo-input" id="input-mi-nombre" type="text" maxlength="80" autocomplete="name" placeholder="Como figura en su compra">
-    <p class="flujo-hint" style="margin-top:8px;text-transform:none;letter-spacing:0;font-family:'IM Fell English',Georgia,serif;font-size:13px;">Si el boleto tiene otro nombre, corríjalo aquí. Es el que certifica la Academia.</p>
+  <div class="tira-boletos hidden" id="tira-boletos">
+    <p class="flujo-hint" style="margin-top:0;">Boleto <span id="tira-actual">1</span> de <span id="tira-total">1</span> de esta compra</p>
+    <div class="tira-nav">
+      <button type="button" class="dl-btn tira-btn" id="btn-tira-prev">← Anterior</button>
+      <span class="tira-dots" id="tira-dots"></span>
+      <button type="button" class="dl-btn tira-btn" id="btn-tira-next">Siguiente →</button>
+    </div>
   </div>
 
-  <div class="flujo-actions">
-    <button type="button" class="dl-btn prim" id="btn-descargar-mia" data-label="Descargar certificado · PNG">
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Descargar certificado · PNG
+  <div class="envio-box">
+    <p class="flujo-hint" style="margin-top:0;">Enviar este certificado</p>
+    <button type="button" class="dl-btn wa-btn" id="btn-enviar-cert-wa">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.6 6.3A8.86 8.86 0 0 0 12 4a8.9 8.9 0 0 0-7.9 13l-1 3.7 3.8-1A8.9 8.9 0 0 0 12 21a8.9 8.9 0 0 0 5.6-15.7ZM12 19.5a7.4 7.4 0 0 1-3.8-1l-.3-.2-2.8.7.7-2.7-.2-.3A7.5 7.5 0 1 1 19.5 12 7.4 7.4 0 0 1 12 19.5Zm4.1-5.6c-.2-.1-1.3-.6-1.5-.7s-.4-.1-.5.1-.5.7-.6.8-.2.1-.4 0a6.1 6.1 0 0 1-1.8-1.1 6.7 6.7 0 0 1-1.2-1.5c-.1-.2 0-.3.1-.4l.3-.3a1.2 1.2 0 0 0 .2-.3.4.4 0 0 0 0-.3c0-.1-.5-1.2-.7-1.6s-.4-.4-.5-.4h-.4a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.8 2 4.7 4.7 0 0 0 1 2.5 10.8 10.8 0 0 0 4.2 3.7c.6.2 1 .4 1.4.5a3.3 3.3 0 0 0 1.5.1 2.5 2.5 0 0 0 1.6-1.1 1.9 1.9 0 0 0 .2-1.1c0-.1-.2-.1-.4-.2Z"/></svg>
+      Enviar por WhatsApp →
     </button>
-    <button type="button" class="dl-btn" id="btn-descargar-reverso" data-label="Descargar anexo · PNG">
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Descargar anexo · PNG
-    </button>
-    <button type="button" class="dl-btn" id="btn-imprimir" data-label="Imprimir carta">
-      <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-      Imprimir certificado + anexo
-    </button>
+    <p class="flujo-hint" style="margin:16px 0 8px;">o por correo</p>
+    <div class="envio-correo-fila">
+      <input class="flujo-input envio-correo-input" id="input-enviar-correo" type="email" placeholder="correo@ejemplo.com">
+      <button type="button" class="dl-btn" id="btn-enviar-cert-correo" data-label="Enviar">Enviar</button>
+    </div>
   </div>
 
-  <p class="flujo-hint">Ceder la condición a otra persona</p>
+  <div class="invita-box">
+    <p class="flujo-hint" style="margin-top:0;">¿Quieres invitar a alguien? Te dejamos un descuento para ellos:</p>
 
-  <div class="flujo-campo">
-    <label class="flujo-label" for="input-regalo-nombre">Nombre de quien recibe el certificado</label>
-    <input class="flujo-input" id="input-regalo-nombre" type="text" maxlength="80" placeholder="Quien será hombre destacado">
+    <div class="butaca-box">
+      <div class="butaca-codigo">BUTACA37</div>
+      <p class="butaca-desc">25% de descuento en boletos generales para quien tú invites — dilo, escríbelo o compártelo.</p>
+      <button type="button" class="dl-btn wa-btn" id="btn-compartir-wa">
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17.6 6.3A8.86 8.86 0 0 0 12 4a8.9 8.9 0 0 0-7.9 13l-1 3.7 3.8-1A8.9 8.9 0 0 0 12 21a8.9 8.9 0 0 0 5.6-15.7ZM12 19.5a7.4 7.4 0 0 1-3.8-1l-.3-.2-2.8.7.7-2.7-.2-.3A7.5 7.5 0 1 1 19.5 12 7.4 7.4 0 0 1 12 19.5Zm4.1-5.6c-.2-.1-1.3-.6-1.5-.7s-.4-.1-.5.1-.5.7-.6.8-.2.1-.4 0a6.1 6.1 0 0 1-1.8-1.1 6.7 6.7 0 0 1-1.2-1.5c-.1-.2 0-.3.1-.4l.3-.3a1.2 1.2 0 0 0 .2-.3.4.4 0 0 0 0-.3c0-.1-.5-1.2-.7-1.6s-.4-.4-.5-.4h-.4a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.8 2 4.7 4.7 0 0 0 1 2.5 10.8 10.8 0 0 0 4.2 3.7c.6.2 1 .4 1.4.5a3.3 3.3 0 0 0 1.5.1 2.5 2.5 0 0 0 1.6-1.1 1.9 1.9 0 0 0 .2-1.1c0-.1-.2-.1-.4-.2Z"/></svg>
+        Compartir por WhatsApp →
+      </button>
+    </div>
+
+    <div class="invita-divider"></div>
+
+    <div class="ig-comparte-box">
+      <div class="ig-preview" id="ig-preview">
+        <span class="ig-preview-marca">EL GORILA<br><span class="ig-preview-horario">Sábados 18:00</span></span>
+        <span class="ig-preview-sub">BUTACA37 · 25% de descuento</span>
+      </div>
+      <button type="button" class="dl-btn ig-btn" id="btn-compartir-ig">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+        Compartir en Instagram →
+      </button>
+      <button type="button" class="ig-link-fallback" id="btn-copiar-link-ig">o copiar el link con tu código</button>
+    </div>
   </div>
-
-  <div class="flujo-actions">
-    <button type="button" class="dl-btn" id="btn-descargar-regalo" data-label="Descargar certificado regalo · PNG">
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Descargar con su nombre · PNG
-    </button>
-  </div>
-
-  <div class="hidden" id="regalo-link-box"></div>
 
   <div class="bloque-resena" id="bloque-resena">
     <p>Si esta noche te gustó, ¿nos dejas una reseña corta en Google? Ayuda a que más gente encuentre <em>El Gorila</em> los sábados a las 18:00.</p>
     <a class="resena-cta" href="https://www.google.com/maps/search/?api=1&amp;query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX" target="_blank" rel="noopener noreferrer">Dejar reseña →</a>
-    <p class="resena-privado">Si algo no salió bien, escríbenos a <a href="mailto:contacto@elgorilateatro.com.mx">contacto@elgorilateatro.com.mx</a> — preferimos escucharte en privado.</p>
+    <p class="resena-privado">Cualquier comentario o duda, escríbenos a <a href="mailto:contacto@elgorilateatro.com.mx">contacto@elgorilateatro.com.mx</a>.</p>
   </div>
 </section>
 
@@ -906,13 +1035,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script src="js/config.js"></script>
 <script src="js/api-config.js"></script>
-<script src="js/vendor/html2canvas.min.js?v=141"></script>
-<script src="js/acta.js?v=20260819a"></script>
-<script>
-  document.querySelectorAll('.dl-bar--static').forEach(el => {
-    if (new URLSearchParams(location.search).get('t')) el.style.display = 'none';
-  });
-</script>
+<script src="js/acta.js?v=20260831y"></script>
 
 </body>
 </html>
