@@ -263,6 +263,7 @@ async function _enviarEmailResend(to, subject, html, env, from, opts = {}) {
       html,
       reply_to: opts.replyTo || EMAIL_OPERATIVO,
     };
+    if (opts.attachments) payload.attachments = opts.attachments;
     const res = await fetch('https://api.resend.com/emails', {
       method:  'POST',
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
@@ -3619,6 +3620,85 @@ function parseActaEncuesta(body) {
   };
 }
 
+function htmlEmailCertificadoPdf(nombre) {
+  const primer = (nombre || '').trim().split(/\s+/)[0] || '';
+  const saludo = primer ? `Aquí está, ${primer}.` : 'Aquí está tu certificado.';
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tu certificado — EL GORILA</title>
+</head>
+<body style="margin:0;padding:0;background:#0a0706;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0706;padding:28px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+  <tr><td style="background:#0a0706;padding:36px 28px 28px;border:1px solid rgba(241,234,217,.12);text-align:center;">
+    <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;font-weight:500;color:#f1ead9;">
+      ${saludo}
+    </h1>
+    <p style="margin:18px auto 0;font-family:Georgia,serif;font-size:16px;line-height:1.5;color:rgba(241,234,217,.75);max-width:360px;">
+      Tu certificado de EL GORILA va adjunto en este correo, en PDF, listo para guardar o imprimir.
+    </p>
+  </td></tr>
+
+  <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
+    <p style="margin:0;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.5);">
+      <a href="mailto:${EMAIL_OPERATIVO}" style="color:#d99b3a;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+async function handleEnviarCorreoEncuesta(tid, token, request, env) {
+  const ip      = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const ventana = Math.floor(Date.now() / 900000);
+  const rlKey   = `rl:enc:correo:${ip}:${ventana}`;
+  const rl      = parseInt((await env.INVENTARIO.get(rlKey)) || '0', 10);
+  if (rl >= 10) return json({ error: 'Demasiados intentos. Espera unos minutos.' }, 429, request);
+  await env.INVENTARIO.put(rlKey, String(rl + 1), { expirationTtl: 900 });
+
+  const found = await obtenerEncuestaPorToken(tid, token, env);
+  if (!found) return json({ error: 'Este sobre no existe o ya expiró.' }, 404, request);
+  const { data } = found;
+  if (data.teatroId && data.teatroId !== resolveTid(tid)) {
+    return json({ error: 'Enlace no válido para este teatro.' }, 404, request);
+  }
+
+  let body;
+  try { body = await request.json(); } catch {
+    return json({ error: 'Cuerpo inválido.' }, 400, request);
+  }
+
+  const email = typeof body?.email === 'string' ? body.email.trim() : '';
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json({ error: 'Correo inválido.' }, 400, request);
+  }
+  const nombre = typeof body?.nombre === 'string' ? body.nombre.trim().substring(0, 120) : '';
+  const pdfBase64 = typeof body?.pdfBase64 === 'string' ? body.pdfBase64 : '';
+  if (!pdfBase64 || pdfBase64.length < 100) {
+    return json({ error: 'Falta el PDF del certificado.' }, 400, request);
+  }
+  // ~9MB de base64 ≈ 6.5MB de PDF real — de sobra para 2 páginas JPEG a escala 2.
+  if (pdfBase64.length > 9_000_000) {
+    return json({ error: 'El PDF generado es demasiado grande.' }, 400, request);
+  }
+
+  const ok = await enviarEmail(email, 'Tu certificado — EL GORILA', htmlEmailCertificadoPdf(nombre), env, {
+    attachments: [{ filename: 'certificado-el-gorila.pdf', content: pdfBase64 }],
+  });
+  if (!ok) return json({ error: 'No se pudo enviar el correo. Intenta de nuevo.' }, 502, request);
+
+  logInfo('encuesta.enviar_correo', { toDomain: maskEmail(email), tid: resolveTid(tid) });
+  return json({ ok: true }, 200, request);
+}
+
 async function handleEncuestaGet(tid, token, request, env) {
   const ip      = request.headers.get('CF-Connecting-IP') || 'unknown';
   const ventana = Math.floor(Date.now() / 900000);
@@ -3671,9 +3751,6 @@ async function handleEncuestaPost(tid, token, request, env) {
   }
 
   const acta = parseActaEncuesta(body);
-  if (!acta.libertad) {
-    return json({ error: 'Responde: ¿qué es la libertad?' }, 400, request);
-  }
 
   const nombrePortador = typeof body.nombrePortador === 'string'
     ? body.nombrePortador.trim().substring(0, 120) : '';
@@ -6155,6 +6232,11 @@ export default {
       const encToken = decodeURIComponent(encuestaMatch[1]);
       if (method === 'GET')  return handleEncuestaGet(tid, encToken, request, env);
       if (method === 'POST') return handleEncuestaPost(tid, encToken, request, env);
+    }
+
+    const encuestaCorreoMatch = sub.match(/^encuesta\/([^/]+)\/enviar-correo$/);
+    if (method === 'POST' && encuestaCorreoMatch) {
+      return handleEnviarCorreoEncuesta(tid, decodeURIComponent(encuestaCorreoMatch[1]), request, env);
     }
 
     const ventaMatch = sub.match(/^venta\/([^/]+)$/);

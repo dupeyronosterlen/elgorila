@@ -376,6 +376,54 @@
     window.open(url, '_blank', 'noopener');
   }
 
+  // ─── PDF del certificado (2 hojas: frente + anexo) ─────────────────────────
+  // Rasteriza ambas páginas tal cual se ven (html2canvas) y las mete en un PDF
+  // carta de 2 hojas (jsPDF). Se usa para adjuntar en WhatsApp/correo — un
+  // link no sirve ahí, la gente quiere el documento en la mano.
+
+  async function generarPdfCertificado() {
+    const paginas = [$('page-frente'), $('page-reverso')];
+    const wrappers = paginas.map(p => p.closest('.page-wrapper'));
+
+    // Durante la captura: sin el transform de escala responsive (el layout
+    // real siempre es 816×1056), sin resize-handle ni placeholder gris en
+    // los textareas — se ven como los llenó la persona, o vacíos y limpios.
+    paginas.forEach(p => {
+      p.classList.add('is-capturing');
+      p.dataset.prevTransform = p.style.transform;
+      p.style.transform = 'none';
+    });
+    wrappers.forEach(w => { w.dataset.prevOverflow = w.style.overflow; w.style.overflow = 'visible'; });
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: 'px', format: [816, 1056], hotfixes: ['px_scaling'] });
+
+      for (let i = 0; i < paginas.length; i++) {
+        const canvas = await window.html2canvas(paginas[i], { scale: 2, useCORS: true, backgroundColor: null });
+        const img = canvas.toDataURL('image/jpeg', 0.92);
+        if (i > 0) pdf.addPage([816, 1056], 'portrait');
+        pdf.addImage(img, 'JPEG', 0, 0, 816, 1056);
+      }
+      return pdf.output('blob');
+    } finally {
+      paginas.forEach(p => {
+        p.classList.remove('is-capturing');
+        p.style.transform = p.dataset.prevTransform || '';
+      });
+      wrappers.forEach(w => { w.style.overflow = w.dataset.prevOverflow || ''; });
+    }
+  }
+
+  function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(String(reader.result).split(',')[1] || '');
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
   // ─── Enviar el certificado (WhatsApp / correo) ─────────────────────────────
 
   function urlCertificadoActual() {
@@ -394,9 +442,41 @@
     if (!exigirNombre()) return;
     try { await guardarSiFalta(); } catch (_) { /* no bloquea el envío */ }
 
-    const { url, nombre } = urlCertificadoActual();
-    const texto = `🦍 Aquí está ${nombre ? 'el certificado de ' + nombre : 'mi certificado'} de EL GORILA:\n${url}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+    const btn = $('btn-enviar-cert-wa');
+    const label = btn ? btn.textContent.trim() : '';
+    if (btn) { btn.classList.add('is-loading'); btn.textContent = 'Generando PDF…'; }
+
+    try {
+      const { url, nombre } = urlCertificadoActual();
+      const blob = await generarPdfCertificado();
+      const archivo = new File([blob], 'certificado-el-gorila.pdf', { type: 'application/pdf' });
+      const texto = `🦍 Aquí está ${nombre ? 'el certificado de ' + nombre : 'mi certificado'} de EL GORILA.`;
+
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+        await navigator.share({ files: [archivo], text: texto, title: 'Certificado — El Gorila' });
+        return;
+      }
+
+      // WhatsApp no deja adjuntar un archivo vía el link wa.me — es un límite
+      // de la plataforma, no algo que podamos programar alrededor. Bajamos
+      // el PDF y abrimos el chat con el texto para que lo adjunten a mano.
+      const urlBlob = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = urlBlob;
+      a.download = 'certificado-el-gorila.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(urlBlob);
+
+      window.open(`https://wa.me/?text=${encodeURIComponent(texto + '\n' + url)}`, '_blank', 'noopener');
+      alert('Descargamos tu PDF — adjúntalo en el chat de WhatsApp que se abrió.');
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      alert('No se pudo generar el PDF. Intenta de nuevo.');
+    } finally {
+      if (btn) { btn.classList.remove('is-loading'); btn.textContent = label; }
+    }
   }
 
   async function enviarCertificadoCorreo(btn) {
@@ -416,19 +496,22 @@
 
     const label = btn.dataset.label || btn.textContent.trim();
     btn.classList.add('is-loading');
-    btn.textContent = 'Enviando…';
+    btn.textContent = 'Generando PDF…';
 
     try {
       await guardarSiFalta();
+      const blob = await generarPdfCertificado();
+      const pdfBase64 = await blobToBase64(blob);
+      btn.textContent = 'Enviando…';
       const res = await fetch(window.teatroApi(`encuesta/${encodeURIComponent(token)}/enviar-correo`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, nombre: ($('input-mi-nombre')?.value || '').trim() }),
+        body: JSON.stringify({ email, nombre: ($('input-mi-nombre')?.value || '').trim(), pdfBase64 }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'No se pudo enviar.');
       if (input) input.value = '';
-      alert('Certificado enviado a ' + email + '.');
+      alert('Certificado en PDF enviado a ' + email + '.');
     } catch (e) {
       alert(e.message || 'No se pudo enviar el correo.');
     } finally {
