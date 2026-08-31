@@ -64,13 +64,14 @@
     };
   }
 
-  function folioDesde(tokenStr, nombre) {
-    const base = (tokenStr || nombre || 'gorila').toString().toLowerCase()
-      .normalize('NFD').replace(/[̀-ͯ]/g, '');
-    let h = 0;
-    for (let i = 0; i < base.length; i++) h = ((h << 5) - h + base.charCodeAt(i)) | 0;
-    const n = Math.abs(h % 900000) + 100000;
-    return 'ACTA —' + String(n);
+  // Folio real: número de función (consecutivo desde el estreno del montaje,
+  // no de la temporada) + año. Ej. "1050 · 2026" — la función 1050 del
+  // montaje, sábado 29 ago 2026. Viene de data.numeroObra (backend); sin eso
+  // (preview local, tokens viejos sin el campo) cae a un placeholder.
+  function folioTexto(numeroObra, fecha) {
+    if (numeroObra == null) return 'ACTA —····';
+    const anio = (fecha && /^\d{4}/.test(fecha)) ? fecha.slice(0, 4) : new Date().getFullYear();
+    return `${numeroObra} · ${anio}`;
   }
 
   function formatearFecha(iso) {
@@ -147,7 +148,6 @@
     const nombre = $('input-mi-nombre')?.value || '';
     nombresTira[tiraIndex] = nombre;
     pintarNombreEnFrente(nombre);
-    if (token || nombre) pintarFolio(folioDesde((token || 'demo') + ':' + tiraIndex, nombre));
   }
 
   // ─── Tira de boletos (1 certificado por boleto de la compra) ───────────────
@@ -185,7 +185,6 @@
     const mi = $('input-mi-nombre');
     if (mi) mi.value = nombresTira[tiraIndex] || '';
     pintarNombreEnFrente(mi ? mi.value : '');
-    pintarFolio(folioDesde((token || 'demo') + ':' + tiraIndex, mi ? mi.value : ''));
     const chk = $('chk-genero-mujer');
     if (chk) chk.checked = generosTira[tiraIndex] === 'mujer';
     pintarGenero(chk ? chk.checked : false);
@@ -456,7 +455,7 @@
     if (mi) mi.value = nombresTira[0] || '';
 
     pintarMeta(data);
-    pintarFolio(folioDesde(token + ':0', nombresTira[0] || data.fecha || 'gorila'));
+    pintarFolio(folioTexto(data.numeroObra, data.fecha));
     syncNombrePreview();
     syncGeneroPreview();
     pintarTira();
@@ -499,7 +498,7 @@
     token = tokenFromUrl();
     bindUi();
     pintarMeta({});
-    pintarFolio(folioDesde(token || 'preview', ''));
+    pintarFolio(folioTexto(null));
     syncNombrePreview();
     syncGeneroPreview();
     pintarTira();

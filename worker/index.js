@@ -755,10 +755,12 @@ async function crearTokenEncuesta(tid, venta, env) {
   const canonical = resolveTid(tid);
   const cert      = _certificadoVenta(venta);
   const folioSobre = await generarFolioSobre(tid, venta, env);
+  const numeroObra = venta.numeroObra || await getNumeroObra(canonical, venta.fecha, env);
   const payload   = {
     sessionId:     venta.sessionId,
     certificado:   cert,
     folioSobre,
+    numeroObra,
     email:         venta.email || null,
     nombre:        venta.nombre || null,
     funcionNombre: venta.funcionNombre || venta.fecha,
@@ -3594,6 +3596,7 @@ function respuestaEncuestaPublica(data, certificado) {
     completada:    !!data.completadaEn,
     funcionNombre: data.funcionNombre || data.fecha,
     fecha:         data.fecha || null,
+    numeroObra:    data.numeroObra ?? null,
     saludo:        primer,
     nombre:        nombre || null,
     nombreBoleto:  nombreBoleto || null,
