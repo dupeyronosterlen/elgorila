@@ -28,6 +28,11 @@
     font-style: normal; font-weight: 400 700; font-display: swap;
     src: url(fonts/courier-prime-latin.woff2) format('woff2');
   }
+  @font-face {
+    font-family: 'Bebas Neue';
+    font-style: normal; font-weight: 400; font-display: swap;
+    src: url(fonts/bebas-neue.ttf) format('truetype');
+  }
   /* Special Elite no disponible localmente → IM Fell English como sustituto */
   .special-elite-fallback {
     font-family: 'IM Fell English', Georgia, serif !important;
@@ -346,42 +351,46 @@
     padding-left: 4px;
   }
 
-  .sec-libertad {
-    width: 100%;
-    border-top: 2px solid #1a5c2a;
-    padding-top: 10px;
-    margin-top: 2px;
-  }
-  .libertad-titulo {
-    font-family: 'IM Fell English', Georgia, serif;
-    font-size: 16px;
-    letter-spacing: 2px;
-    color: #1a3a1a;
-    text-align: center;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .libertad-desc {
-    font-family: 'IM Fell English', serif;
-    font-style: italic;
-    font-size: 14px;
-    color: #4a5a4a;
-    text-align: center;
-    margin-bottom: 10px;
-    line-height: 1.55;
-  }
-
-  .rev-footer {
+  .cierre-anexo {
     margin-top: auto;
-    padding-top: 12px;
+    padding-top: 14px;
+    border-top: 2px solid #1a5c2a;
+    width: 100%;
+    text-align: center;
+  }
+  .cierre-folio {
     font-family: 'Courier Prime', monospace;
     font-size: 11px;
     letter-spacing: 2px;
     color: #4a7a4a;
-    text-align: center;
-    border-top: 1px solid #4a7a4a;
-    width: 100%;
-    line-height: 1.5;
+  }
+  .cierre-casa {
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #4a7a4a;
+    margin-top: 2px;
+  }
+  .cierre-temporada {
+    font-family: 'IM Fell English', Georgia, serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: #3a4a3a;
+    margin-top: 10px;
+  }
+  .cierre-gracias {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: #3a4a3a;
+    margin-top: 6px;
+  }
+  .cierre-viva {
+    font-family: 'Bebas Neue', Georgia, serif;
+    font-size: 34px;
+    letter-spacing: 1.5px;
+    color: #1a5c2a;
+    margin-top: 10px;
   }
 
   .revcampo {
@@ -953,21 +962,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </div>
 
-    <div class="sec-libertad">
-      <div class="libertad-titulo">Para cerrar</div>
-      <div class="libertad-desc">
-        Este certificado lo declara <span id="libertad-genero">«hombre»</span>
-        conforme al criterio de otros. De lo que acaba de nombrar aquí —
-        ¿cuánto decidió usted, y cuánto heredó sin firmarlo nunca?
-      </div>
-      <div class="revcampo-wrap revcampo-wrap--final">
-        <textarea class="revcampo" id="rev-libertad" rows="3" maxlength="1200" placeholder="Su respuesta…"></textarea>
-      </div>
-    </div>
-
-    <div class="rev-footer">
-      <span id="rev-footer-folio">ACTA —····</span><br>
-      ELGORILATEATRO.COM.MX · Wilberto Cantón
+    <div class="cierre-anexo">
+      <div class="cierre-folio"><span id="rev-footer-folio">ACTA —····</span></div>
+      <div class="cierre-casa">EL GORILA TEATRO · WILBERTO CANTÓN</div>
+      <div class="cierre-temporada">Temporada · 37 años en cartelera</div>
+      <div class="cierre-gracias">Gracias por acompañarnos.</div>
+      <div class="cierre-viva">¡QUE VIVA EL TEATRO!</div>
     </div>
 
   </div>
@@ -1035,7 +1035,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script src="js/config.js"></script>
 <script src="js/api-config.js"></script>
-<script src="js/acta.js?v=20260831y"></script>
+<script src="js/acta.js?v=20260901a"></script>
 
 </body>
 </html>

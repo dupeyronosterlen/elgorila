@@ -58,7 +58,6 @@
 
   function leerActa() {
     return {
-      libertad: ($('rev-libertad')?.value || '').trim(),
       jaulas:   ($('rev-jaulas')?.value || '').trim(),
       salidas:  ($('rev-salidas')?.value || '').trim(),
       actitud:  ($('rev-actitud')?.value || '').trim(),
@@ -119,8 +118,6 @@
     }
     const e = $('expediente-genero');
     if (e) e.textContent = esMujer ? 'de la mujer' : 'del hombre';
-    const lg = $('libertad-genero');
-    if (lg) lg.textContent = esMujer ? '«mujer»' : '«hombre»';
   }
 
   function syncGeneroPreview() {
@@ -220,7 +217,7 @@
     if (guardado || !token) return sessionData;
     const acta = leerActa();
     const nombrePortador = ($('input-mi-nombre')?.value || '').trim();
-    if (!acta.libertad || !nombrePortador) return null;
+    if (!nombrePortador) return null;
 
     const data = await apiPost({ acta, nombrePortador });
     guardado = true;
@@ -228,14 +225,8 @@
     return data;
   }
 
-  function exigirNombreYLibertad() {
-    const acta = leerActa();
+  function exigirNombre() {
     const nombre = ($('input-mi-nombre')?.value || '').trim();
-    if (!acta.libertad) {
-      alert('Complete el anexo: ¿qué es, entonces, la libertad?');
-      $('rev-libertad')?.focus();
-      return null;
-    }
     if (!nombre) {
       alert('Falta el nombre para el certificado.');
       $('input-mi-nombre')?.focus();
@@ -401,7 +392,7 @@
       alert('Este certificado necesita venir de un enlace real para poder enviarse.');
       return;
     }
-    if (!exigirNombreYLibertad()) return;
+    if (!exigirNombre()) return;
     try { await guardarSiFalta(); } catch (_) { /* no bloquea el envío */ }
 
     const { url, nombre } = urlCertificadoActual();
@@ -414,7 +405,7 @@
       alert('Este certificado necesita venir de un enlace real para poder enviarse.');
       return;
     }
-    if (!exigirNombreYLibertad()) return;
+    if (!exigirNombre()) return;
 
     const input = $('input-enviar-correo');
     const email = (input?.value || '').trim();
@@ -472,7 +463,6 @@
 
     const acta = data.acta;
     if (acta) {
-      if ($('rev-libertad') && acta.libertad) $('rev-libertad').value = acta.libertad;
       if ($('rev-jaulas') && acta.jaulas) $('rev-jaulas').value = acta.jaulas;
       if ($('rev-salidas') && acta.salidas) $('rev-salidas').value = acta.salidas;
       if ($('rev-actitud') && acta.actitud) $('rev-actitud').value = acta.actitud;
