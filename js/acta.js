@@ -14,6 +14,14 @@
   let nombresTira = [''];
   let generosTira = ['hombre'];
 
+  function describirError(e) {
+    if (!e) return '';
+    if (e instanceof Error) return ` (${e.name}: ${e.message})`;
+    if (typeof e === 'string') return ` (${e})`;
+    if (e instanceof Event) return ` (evento: ${e.type})`;
+    try { return ` (${JSON.stringify(e)})`; } catch (_) { return ` (${String(e)})`; }
+  }
+
   function $(id) { return document.getElementById(id); }
 
   // El sello se ve "puesto a mano": varía un poco de posición/ángulo cada
@@ -237,7 +245,7 @@
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => resolve(img);
-      img.onerror = reject;
+      img.onerror = () => reject(new Error('No se pudo cargar la imagen de fondo (' + src + ')'));
       img.src = src;
     });
   }
@@ -301,7 +309,9 @@
     ctx.font = '18px "Courier New", monospace';
     ctx.fillText('elgorilateatro.com.mx', W / 2, H - 240);
 
-    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('canvas.toBlob devolvió null')), 'image/png');
+    });
   }
 
   async function compartirIG(btn) {
@@ -319,8 +329,14 @@
       const texto = `🦍 EL GORILA — 25% de descuento con el código ${BUTACA_CODIGO}\n${urlCompartirIG()}`;
 
       if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-        await navigator.share({ files: [archivo], text: texto, title: 'El Gorila' });
-        return;
+        try {
+          await navigator.share({ files: [archivo], text: texto, title: 'El Gorila' });
+          return;
+        } catch (shareErr) {
+          if (shareErr && shareErr.name === 'AbortError') return; // usuario canceló el share sheet
+          // Si el share nativo falla por cualquier otra razón, caemos al
+          // método de "abrir en pestaña" en vez de rendirnos.
+        }
       }
 
       // En iPhone/Safari <a download> con un blob no descarga nada — abrimos
@@ -333,8 +349,7 @@
       alert('Abrimos tu historia en otra pestaña — mantén presionada la imagen para guardarla. Ya copiamos el link con tu código al portapapeles.');
     } catch (e) {
       if (e && e.name === 'AbortError') return; // usuario canceló el share sheet
-      const detalle = (e && (e.message || e.name)) ? ` (${e.message || e.name})` : '';
-      alert('No se pudo generar la imagen. Intenta de nuevo.' + detalle);
+      alert('No se pudo generar la imagen. Intenta de nuevo.' + describirError(e));
     } finally {
       btn.classList.remove('is-loading');
       btn.textContent = label;
@@ -418,8 +433,13 @@
       const texto = `🦍 Aquí está el certificado de ${nombre} de EL GORILA.`;
 
       if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-        await navigator.share({ files: [archivo], text: texto, title: 'Certificado — El Gorila' });
-        return;
+        try {
+          await navigator.share({ files: [archivo], text: texto, title: 'Certificado — El Gorila' });
+          return;
+        } catch (shareErr) {
+          if (shareErr && shareErr.name === 'AbortError') return;
+          // Si el share nativo falla, caemos al método de "abrir en pestaña".
+        }
       }
 
       // WhatsApp no deja adjuntar un archivo vía el link wa.me — es un límite
@@ -428,13 +448,16 @@
       // eso abrimos la imagen directo en una pestaña: ahí sí se puede
       // mantener presionada la imagen para guardarla.
       const dataUrl = await blobToDataUrl(blob);
-      window.open(dataUrl, '_blank', 'noopener');
+      const abierta = window.open(dataUrl, '_blank', 'noopener');
       window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
-      alert('Abrimos tu certificado en otra pestaña — mantén presionada la imagen para guardarla, y adjúntala en el chat de WhatsApp que también se abrió.');
+      if (!abierta) {
+        alert('Tu navegador bloqueó la pestaña nueva. Si estás dentro de WhatsApp, toca "Abrir en Safari" (⋯ o el ícono de compartir arriba) y vuelve a intentar ahí.');
+      } else {
+        alert('Abrimos tu certificado en otra pestaña — mantén presionada la imagen para guardarla, y adjúntala en el chat de WhatsApp que también se abrió.');
+      }
     } catch (e) {
       if (e && e.name === 'AbortError') return;
-      const detalle = (e && (e.message || e.name)) ? ` (${e.message || e.name})` : '';
-      alert('No se pudo generar el certificado. Intenta de nuevo.' + detalle);
+      alert('No se pudo generar el certificado. Intenta de nuevo.' + describirError(e));
     } finally {
       if (btn) { btn.classList.remove('is-loading'); btn.textContent = label; }
     }
