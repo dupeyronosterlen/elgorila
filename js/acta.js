@@ -36,7 +36,19 @@
     const minTop = Math.max(limiteSuperior + mitad, MARGEN + mitad);
     const maxTop = PAGE_H - MARGEN - mitad;
 
-    const left = minLeft + Math.random() * Math.max(0, maxLeft - minLeft);
+    // Regla horizontal: el sello vive en el primer o el tercer tercio de la
+    // hoja — nunca centrado en el tercio de en medio (ahí vive la firma, y
+    // centrado ahí se la tapa entera). Puede morder un poco el tercio central
+    // (BORDE), pero no plantarse en el centro exacto.
+    const BORDE = 40;
+    const tercio1Fin = PAGE_W / 3 + BORDE;
+    const tercio3Ini = (PAGE_W * 2) / 3 - BORDE;
+    const zonaIzq = [minLeft, Math.min(tercio1Fin, maxLeft)];
+    const zonaDer = [Math.max(tercio3Ini, minLeft), maxLeft];
+    const zona = Math.random() < 0.5 ? zonaIzq : zonaDer;
+    const [zonaMin, zonaMax] = zona[0] <= zona[1] ? zona : [minLeft, maxLeft];
+
+    const left = zonaMin + Math.random() * Math.max(0, zonaMax - zonaMin);
     const top = minTop + Math.random() * Math.max(0, maxTop - minTop);
     const rot = -18 + Math.random() * 22;    // -18°–+4°
     sello.style.left = left.toFixed(0) + 'px';
