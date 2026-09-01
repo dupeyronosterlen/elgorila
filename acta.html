@@ -469,6 +469,52 @@
     stroke-linejoin: round;
   }
 
+  /* Modal para mostrar la imagen generada directamente en la página —
+     no depende de window.open/navigator.share, que en iOS Safari se
+     bloquean si ya pasó demasiado tiempo desde el toque del usuario
+     (varias operaciones async antes, como html2canvas). */
+  .img-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(6,8,6,0.92);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .img-modal.hidden { display: none; }
+  .img-modal img {
+    max-width: 100%;
+    max-height: 68vh;
+    border-radius: 4px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  }
+  .img-modal p {
+    color: #f1ead9;
+    font-family: 'Courier Prime', monospace;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    text-align: center;
+    max-width: 320px;
+    margin-top: 18px;
+    line-height: 1.5;
+  }
+  .img-modal .img-modal-cerrar {
+    margin-top: 16px;
+    padding: 10px 22px;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 6px;
+    background: transparent;
+    color: #d99b3a;
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
   @media print {
     body { background:white; padding:0; }
     .label, .dl-bar, .flujo-panel, .estado, .kicker-funcion, .bloque-resena { display:none !important; }
@@ -1026,16 +1072,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="bloque-resena" id="bloque-resena">
     <p>Si esta noche te gustó, ¿nos dejas una reseña corta en Google? Ayuda a que más gente encuentre <em>El Gorila</em> los sábados a las 18:00.</p>
     <a class="resena-cta" href="https://www.google.com/maps/search/?api=1&amp;query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX" target="_blank" rel="noopener noreferrer">Dejar reseña →</a>
-    <p class="resena-privado">Cualquier comentario o duda, escríbenos a <a href="mailto:contacto@elgorilateatro.com.mx">contacto@elgorilateatro.com.mx</a>.</p>
+    <p class="resena-privado">Cualquier comentario o duda, escríbenos a <a href="mailto:comunicaciones@elgorilateatro.com.mx">comunicaciones@elgorilateatro.com.mx</a>.</p>
   </div>
 </section>
 
 </div><!-- #contenido-acta -->
 
+<div id="img-modal" class="img-modal hidden">
+  <img id="img-modal-imagen" src="" alt="Certificado">
+  <p id="img-modal-texto"></p>
+  <button type="button" class="img-modal-cerrar" id="btn-cerrar-img-modal">Cerrar</button>
+</div>
+
 <script src="js/config.js"></script>
 <script src="js/api-config.js"></script>
 <script src="js/vendor/html2canvas.min.js"></script>
-<script src="js/acta.js?v=20260901f"></script>
+<script src="js/acta.js?v=20260901g"></script>
 
 </body>
 </html>

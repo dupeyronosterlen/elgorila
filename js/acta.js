@@ -24,6 +24,26 @@
 
   function $(id) { return document.getElementById(id); }
 
+  // Muestra la imagen generada directamente en la página (no depende de
+  // window.open/navigator.share, que iOS Safari bloquea si ya pasó
+  // demasiado tiempo desde el toque del usuario — html2canvas tarda).
+  function mostrarImagenParaGuardar(dataUrl, texto) {
+    const modal = $('img-modal');
+    const img = $('img-modal-imagen');
+    const p = $('img-modal-texto');
+    if (!modal || !img || !p) return;
+    img.src = dataUrl;
+    p.textContent = texto;
+    modal.classList.remove('hidden');
+  }
+
+  function cerrarImagenModal() {
+    const modal = $('img-modal');
+    const img = $('img-modal-imagen');
+    if (modal) modal.classList.add('hidden');
+    if (img) img.src = '';
+  }
+
   // El sello se ve "puesto a mano": varía un poco de posición/ángulo cada
   // vez que se genera un certificado, en vez de caer siempre en el mismo sitio.
   function variarSelloGigante() {
@@ -339,14 +359,13 @@
         }
       }
 
-      // En iPhone/Safari <a download> con un blob no descarga nada — abrimos
-      // la imagen directo en una pestaña para poder guardarla con "mantener
-      // presionada".
+      // En iPhone/Safari <a download> con un blob no descarga nada, y
+      // window.open/navigator.share requieren un gesto de usuario reciente
+      // que ya se perdió (html2canvas tardó) — mostramos la imagen dentro
+      // de la misma página en vez de intentar abrir algo nuevo.
       const dataUrl = await blobToDataUrl(blob);
-      window.open(dataUrl, '_blank', 'noopener');
-
       try { await navigator.clipboard.writeText(urlCompartirIG()); } catch (_) { /* no bloquea */ }
-      alert('Abrimos tu historia en otra pestaña — mantén presionada la imagen para guardarla. Ya copiamos el link con tu código al portapapeles.');
+      mostrarImagenParaGuardar(dataUrl, 'Mantén presionada la imagen para guardarla. Ya copiamos el link con tu código al portapapeles — pégalo al compartir tu historia.');
     } catch (e) {
       if (e && e.name === 'AbortError') return; // usuario canceló el share sheet
       alert('No se pudo generar la imagen. Intenta de nuevo.' + describirError(e));
@@ -444,17 +463,11 @@
 
       // WhatsApp no deja adjuntar un archivo vía el link wa.me — es un límite
       // de la plataforma. Y en iPhone/Safari el truco de <a download> con un
-      // blob no descarga nada (limitación conocida de esa plataforma) — por
-      // eso abrimos la imagen directo en una pestaña: ahí sí se puede
-      // mantener presionada la imagen para guardarla.
+      // blob no descarga nada, ni window.open/navigator.share funcionan ya
+      // (el gesto de usuario se perdió mientras html2canvas generaba la
+      // imagen) — mostramos la imagen dentro de la misma página.
       const dataUrl = await blobToDataUrl(blob);
-      const abierta = window.open(dataUrl, '_blank', 'noopener');
-      window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
-      if (!abierta) {
-        alert('Tu navegador bloqueó la pestaña nueva. Si estás dentro de WhatsApp, toca "Abrir en Safari" (⋯ o el ícono de compartir arriba) y vuelve a intentar ahí.');
-      } else {
-        alert('Abrimos tu certificado en otra pestaña — mantén presionada la imagen para guardarla, y adjúntala en el chat de WhatsApp que también se abrió.');
-      }
+      mostrarImagenParaGuardar(dataUrl, 'Mantén presionada la imagen para guardarla, y luego adjúntala en tu chat de WhatsApp.');
     } catch (e) {
       if (e && e.name === 'AbortError') return;
       alert('No se pudo generar el certificado. Intenta de nuevo.' + describirError(e));
@@ -513,6 +526,10 @@
     $('btn-enviar-cert-wa')?.addEventListener('click', () => {
       compartirCertificadoWa();
     });
+    $('btn-cerrar-img-modal')?.addEventListener('click', cerrarImagenModal);
+    $('img-modal')?.addEventListener('click', e => {
+      if (e.target.id === 'img-modal') cerrarImagenModal();
+    });
   }
 
   async function init() {
@@ -552,9 +569,6 @@
       show('estado-error');
     }
   }
-
-  window.__debugGenCert = generarImagenCertificado;
-  window.__debugGenIG = generarImagenIG;
 
   document.addEventListener('DOMContentLoaded', init);
 })();
