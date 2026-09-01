@@ -553,5 +553,8 @@
     }
   }
 
+  window.__debugGenCert = generarImagenCertificado;
+  window.__debugGenIG = generarImagenIG;
+
   document.addEventListener('DOMContentLoaded', init);
 })();
