@@ -357,6 +357,9 @@
   // 2 páginas, y es lo único que de verdad hace falta para compartir.
 
   async function generarImagenCertificado() {
+    if (typeof window.html2canvas !== 'function') {
+      throw new Error('No cargó la librería para generar la imagen (revisa tu conexión y recarga la página).');
+    }
     const page = $('page-frente');
     const wrapper = page.closest('.page-wrapper');
 
@@ -367,8 +370,10 @@
     wrapper.style.overflow = 'visible';
 
     try {
-      const canvas = await window.html2canvas(page, { scale: 2, useCORS: true, backgroundColor: '#f5f0e2' });
-      return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const canvas = await window.html2canvas(page, { scale: 1.5, useCORS: true, backgroundColor: '#f5f0e2' });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('El navegador no pudo convertir el certificado en imagen.');
+      return blob;
     } finally {
       page.classList.remove('is-capturing');
       page.style.transform = prevTransform;
@@ -414,7 +419,8 @@
       alert('Descargamos tu certificado — adjúntalo en el chat de WhatsApp que se abrió.');
     } catch (e) {
       if (e && e.name === 'AbortError') return;
-      alert('No se pudo generar el certificado. Intenta de nuevo.');
+      const detalle = (e && (e.message || e.name)) ? ` (${e.message || e.name})` : '';
+      alert('No se pudo generar el certificado. Intenta de nuevo.' + detalle);
     } finally {
       if (btn) { btn.classList.remove('is-loading'); btn.textContent = label; }
     }
