@@ -311,20 +311,18 @@
         return;
       }
 
-      const urlBlob = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = urlBlob;
-      a.download = 'el-gorila-certificado.png';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(urlBlob);
+      // En iPhone/Safari <a download> con un blob no descarga nada — abrimos
+      // la imagen directo en una pestaña para poder guardarla con "mantener
+      // presionada".
+      const dataUrl = await blobToDataUrl(blob);
+      window.open(dataUrl, '_blank', 'noopener');
 
       try { await navigator.clipboard.writeText(urlCompartirIG()); } catch (_) { /* no bloquea */ }
-      alert('Descargamos la imagen para tu historia y copiamos el link con tu código al portapapeles.');
+      alert('Abrimos tu historia en otra pestaña — mantén presionada la imagen para guardarla. Ya copiamos el link con tu código al portapapeles.');
     } catch (e) {
       if (e && e.name === 'AbortError') return; // usuario canceló el share sheet
-      alert('No se pudo generar la imagen. Intenta de nuevo.');
+      const detalle = (e && (e.message || e.name)) ? ` (${e.message || e.name})` : '';
+      alert('No se pudo generar la imagen. Intenta de nuevo.' + detalle);
     } finally {
       btn.classList.remove('is-loading');
       btn.textContent = label;
@@ -381,6 +379,15 @@
     }
   }
 
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
   async function compartirCertificadoWa() {
     if (!token) {
       alert('Este certificado necesita venir de un enlace real para poder enviarse.');
@@ -404,19 +411,14 @@
       }
 
       // WhatsApp no deja adjuntar un archivo vía el link wa.me — es un límite
-      // de la plataforma, no algo que podamos programar alrededor. Bajamos
-      // la imagen y abrimos el chat con el texto para que la adjunten a mano.
-      const urlBlob = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = urlBlob;
-      a.download = 'certificado-el-gorila.png';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(urlBlob);
-
+      // de la plataforma. Y en iPhone/Safari el truco de <a download> con un
+      // blob no descarga nada (limitación conocida de esa plataforma) — por
+      // eso abrimos la imagen directo en una pestaña: ahí sí se puede
+      // mantener presionada la imagen para guardarla.
+      const dataUrl = await blobToDataUrl(blob);
+      window.open(dataUrl, '_blank', 'noopener');
       window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
-      alert('Descargamos tu certificado — adjúntalo en el chat de WhatsApp que se abrió.');
+      alert('Abrimos tu certificado en otra pestaña — mantén presionada la imagen para guardarla, y adjúntala en el chat de WhatsApp que también se abrió.');
     } catch (e) {
       if (e && e.name === 'AbortError') return;
       const detalle = (e && (e.message || e.name)) ? ` (${e.message || e.name})` : '';
