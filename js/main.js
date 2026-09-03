@@ -22,8 +22,27 @@ let _omitirScrollFecha = false;
 
 // Chequeo real de cupo (Worker) solo cuando esa fecha ya vendió más de esto.
 const UMBRAL_CHEQUEO_CUPO = 100;
-// Punto de demanda en el botón de fecha: solo si esa función ya pasó de esto.
-const UMBRAL_PUNTO_DEMANDA = 70;
+
+// Punto de demanda en el botón de fecha: espectro continuo verde→amarillo→rojo
+// sobre boletos vendidos en boletera propia (no cuenta otros canales de venta).
+// 0-50: verde aclarando a amarillo · 50-150: meseta amarilla · 150-200: amarillo a rojo.
+// Arriba de 200 se queda en rojo tope, sin capar nada más (a propósito, Os 2 sep).
+function colorPuntoDemanda(vendidos) {
+    const v = typeof vendidos === 'number' ? vendidos : 0;
+    const HUE_VERDE = 120, HUE_AMARILLO = 50, HUE_ROJO = 0;
+    const P1 = 50, P2 = 150, P3 = 200;
+    let hue;
+    if (v <= P1) {
+        hue = HUE_VERDE + (HUE_AMARILLO - HUE_VERDE) * (v / P1);
+    } else if (v <= P2) {
+        hue = HUE_AMARILLO;
+    } else {
+        const t = Math.min((v - P2) / (P3 - P2), 1);
+        hue = HUE_AMARILLO + (HUE_ROJO - HUE_AMARILLO) * t;
+    }
+    hue = Math.round(hue);
+    return `hsl(${hue}, 72%, 56%)`;
+}
 
 function seccionVentaConfig() {
     const map = (typeof window.seccionesVentaVigentes === 'function'
@@ -779,15 +798,6 @@ window.addEventListener('pageshow', function (e) {
 });
 
 // --- CARGAR FECHAS DINÁMICAS ---
-function nivelOcupacionFecha(funcion) {
-    if (typeof funcion.vendidos_sync !== 'number') return 'neutro';
-    var v = funcion.vendidos_sync;
-    if (v < 50) return 'verde';
-    if (v < 80) return 'neutro';
-    if (v < 100) return 'amarillo';
-    return 'naranja';
-}
-
 function etiquetaOcupacionFecha(funcion) {
     if (funcion.etiqueta) return funcion.etiqueta;
     if (funcion.estreno) return 'Estreno';
@@ -817,11 +827,9 @@ function cargarFechas() {
             ? `<span class="fecha-ocupacion-tag fecha-ocupacion-tag--evento">${textoEtiqueta}</span>`
             : '';
         const vendidosFn     = typeof funcion.vendidos_sync === 'number' ? funcion.vendidos_sync : 0;
-        const demandaVisual  = (!bloqueada && !esAgotada && vendidosFn > UMBRAL_PUNTO_DEMANDA)
-            ? 'amarillo'
-            : '';
-        const demandaBadge   = demandaVisual
-            ? `<span class="fecha-demanda-badge fecha-demanda-badge--${demandaVisual}" aria-hidden="true"></span>`
+        const colorDemanda   = (!bloqueada && !esAgotada) ? colorPuntoDemanda(vendidosFn) : '';
+        const demandaBadge   = colorDemanda
+            ? `<span class="fecha-demanda-badge" style="background:${colorDemanda};box-shadow:0 0 0 1.5px rgba(12,10,8,.45), 0 0 7px ${colorDemanda}" aria-hidden="true"></span>`
             : '';
         const claveStr       = funcion.clave;
         const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
@@ -864,7 +872,6 @@ function cargarFechas() {
                 ${funcion.atenuada ? 'data-fecha-atenuada="1"' : ''}
                 ${funcion.destacada ? 'data-fecha-destacada="1"' : ''}
                 ${funcion.etiqueta ? 'data-fecha-evento="1"' : ''}
-                ${demandaVisual ? `data-fecha-demanda="${demandaVisual}"` : ''}
                 onclick="${bloqueada ? '' : `seleccionarFecha('${claveStr}', '${nombreStr}', ${JSON.stringify(funcion).replace(/"/g, '&quot;')})`}"
                 class="${claseBoton}"
                 ${bloqueada ? 'disabled' : ''}
