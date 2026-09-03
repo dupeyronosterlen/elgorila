@@ -25,20 +25,20 @@ const UMBRAL_CHEQUEO_CUPO = 100;
 
 // Punto de demanda en el botón de fecha: espectro continuo verde→amarillo→rojo
 // sobre boletos vendidos en boletera propia (no cuenta otros canales de venta).
-// 0-50: verde aclarando a amarillo · 50-150: meseta amarilla · 150-200: amarillo a rojo.
-// Arriba de 200 se queda en rojo tope, sin capar nada más (a propósito, Os 2 sep).
+// 0-60: verde a amarillo · 60-180: amarillo a rojizo · 180-280: rojizo a rojo intenso.
+// Arriba de 280 se queda en rojo tope, sin capar nada más (definido con Os 2 sep).
 function colorPuntoDemanda(vendidos) {
     const v = typeof vendidos === 'number' ? vendidos : 0;
-    const HUE_VERDE = 120, HUE_AMARILLO = 50, HUE_ROJO = 0;
-    const P1 = 50, P2 = 150, P3 = 200;
+    const HUE_VERDE = 120, HUE_AMARILLO = 50, HUE_ROJIZO = 20, HUE_ROJO = 0;
+    const P1 = 60, P2 = 180, P3 = 280;
     let hue;
     if (v <= P1) {
         hue = HUE_VERDE + (HUE_AMARILLO - HUE_VERDE) * (v / P1);
     } else if (v <= P2) {
-        hue = HUE_AMARILLO;
+        hue = HUE_AMARILLO + (HUE_ROJIZO - HUE_AMARILLO) * ((v - P1) / (P2 - P1));
     } else {
         const t = Math.min((v - P2) / (P3 - P2), 1);
-        hue = HUE_AMARILLO + (HUE_ROJO - HUE_AMARILLO) * t;
+        hue = HUE_ROJIZO + (HUE_ROJO - HUE_ROJIZO) * t;
     }
     hue = Math.round(hue);
     return `hsl(${hue}, 72%, 56%)`;
@@ -853,8 +853,8 @@ function cargarFechas() {
         }
 
         const claseBoton   = bloqueada
-            ? 'p-4 rounded-lg text-center border border-slate-700/50 bg-slate-800/40 text-slate-400 cursor-not-allowed backdrop-blur-sm'
-            : `p-3 sm:p-4 rounded-lg text-center border-2 ${esSeleccionada ? 'border-white border-4' : 'border-[#967d3d]'} bg-[#c69c3a] text-[#3e1116] transition-all duration-200 hover:bg-[#dcb048] hover:text-[#2a080d] active:bg-[#b88a2f] hover:shadow-md hover:border-[#bda056] group focus:ring-2 focus:ring-white touch-manipulation`;
+            ? 'relative p-4 rounded-lg text-center border border-slate-700/50 bg-slate-800/40 text-slate-400 cursor-not-allowed backdrop-blur-sm'
+            : `relative p-3 sm:p-4 rounded-lg text-center border-2 ${esSeleccionada ? 'border-white border-4' : 'border-[#967d3d]'} bg-[#c69c3a] text-[#3e1116] transition-all duration-200 hover:bg-[#dcb048] hover:text-[#2a080d] active:bg-[#b88a2f] hover:shadow-md hover:border-[#bda056] group focus:ring-2 focus:ring-white touch-manipulation`;
         let estiloBoton  = bloqueada ? '' : (esSeleccionada
             ? 'border: 3px solid white; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); -webkit-tap-highlight-color: transparent;'
             : '-webkit-tap-highlight-color: transparent;');
