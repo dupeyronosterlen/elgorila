@@ -23,27 +23,6 @@ let _omitirScrollFecha = false;
 // Chequeo real de cupo (Worker) solo cuando esa fecha ya vendió más de esto.
 const UMBRAL_CHEQUEO_CUPO = 100;
 
-// Punto de demanda en el botón de fecha: espectro continuo verde→amarillo→rojo
-// sobre boletos vendidos en boletera propia (no cuenta otros canales de venta).
-// 0-60: verde a amarillo · 60-180: amarillo a rojizo · 180-280: rojizo a rojo intenso.
-// Arriba de 280 se queda en rojo tope, sin capar nada más (definido con Os 2 sep).
-function colorPuntoDemanda(vendidos) {
-    const v = typeof vendidos === 'number' ? vendidos : 0;
-    const HUE_VERDE = 120, HUE_AMARILLO = 50, HUE_ROJIZO = 20, HUE_ROJO = 0;
-    const P1 = 60, P2 = 180, P3 = 280;
-    let hue;
-    if (v <= P1) {
-        hue = HUE_VERDE + (HUE_AMARILLO - HUE_VERDE) * (v / P1);
-    } else if (v <= P2) {
-        hue = HUE_AMARILLO + (HUE_ROJIZO - HUE_AMARILLO) * ((v - P1) / (P2 - P1));
-    } else {
-        const t = Math.min((v - P2) / (P3 - P2), 1);
-        hue = HUE_ROJIZO + (HUE_ROJO - HUE_ROJIZO) * t;
-    }
-    hue = Math.round(hue);
-    return `hsl(${hue}, 72%, 56%)`;
-}
-
 function seccionVentaConfig() {
     const map = (typeof window.seccionesVentaVigentes === 'function'
       ? window.seccionesVentaVigentes()
@@ -826,11 +805,6 @@ function cargarFechas() {
         const estrenoTag     = textoEtiqueta
             ? `<span class="fecha-ocupacion-tag fecha-ocupacion-tag--evento">${textoEtiqueta}</span>`
             : '';
-        const vendidosFn     = typeof funcion.vendidos_sync === 'number' ? funcion.vendidos_sync : 0;
-        const colorDemanda   = (!bloqueada && !esAgotada) ? colorPuntoDemanda(vendidosFn) : '';
-        const demandaBadge   = colorDemanda
-            ? `<span class="fecha-demanda-badge" style="background:${colorDemanda};box-shadow:0 0 0 1.5px rgba(12,10,8,.45), 0 0 7px ${colorDemanda}" aria-hidden="true"></span>`
-            : '';
         const claveStr       = funcion.clave;
         const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
 
@@ -877,7 +851,6 @@ function cargarFechas() {
                 ${bloqueada ? 'disabled' : ''}
                 style="${estiloBoton}"
             >
-                ${demandaBadge}
                 <span class="block font-bold ${bloqueada ? 'opacity-60' : ''}">${fechaCorta}</span>
                 <span class="text-sm ${bloqueada ? 'opacity-60' : 'font-medium opacity-90'}">
                     ${bloqueada ? 'Ventas bloqueadas' : hora}
