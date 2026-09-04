@@ -64,9 +64,13 @@ new_sqlite_classes = ["InventarioFuncion"]
 [vars]
 DISABLE_LOGIN_RATE_LIMIT = "false"
 
-# 13:00 UTC ≈ 7:00 CDMX (horario de verano) — correo matutino día de función
+# 13:00 UTC = 7:00 CDMX (México ya no tiene horario de verano desde 2022) —
+# correo matutino día de función, todos los días.
+# 14:00 UTC domingos = 8:00 CDMX — correo "sorpresa" post-función (certificado
+# + cupón BUTACA37 + reseña Google) a los asistentes de la función del sábado
+# anterior. Decisión de Os, 4 sep 2026.
 [triggers]
-crons = ["0 13 * * *"]
+crons = ["0 13 * * *", "0 14 * * 7"]
 
 # Workers Logs — JSON estructurado sin PII (ver worker/logs.js)
 [observability]

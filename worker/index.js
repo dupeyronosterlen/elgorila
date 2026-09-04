@@ -3992,32 +3992,15 @@ async function handleAdminVentaDetail(tid, id, request, env) {
   } catch { return json({ error: 'Error al obtener la venta.' }, 500, request); }
 }
 
-async function handleEmailPostFuncion(tid, request, env) {
-  const payload = await requireAdmin(request, env);
-  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
-  if (!PUEDE_REENVIAR.has(payload.rol)) {
-    return json({ error: 'Sin permiso para enviar correos post-función.' }, 403, request);
-  }
-
-  let body = {};
-  try { body = await request.json(); } catch {
-    return json({ error: 'Indica fecha (YYYY-MM-DD) en el cuerpo JSON.' }, 400, request);
-  }
-
-  const fecha = typeof body.fecha === 'string' ? body.fecha.trim() : '';
-  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-    return json({ error: 'Indica fecha válida (YYYY-MM-DD).' }, 400, request);
-  }
-
-  const dryRun = !!body.dryRun;
-  const forzar = !!body.forzar;
+async function ejecutarEmailPostFuncion(tid, fecha, { dryRun, forzar }, env) {
   const config = await getVenueConfig(tid, env);
 
   const hoyMx = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
   if (!dryRun && !forzar && fecha !== hoyMx) {
-    return json({
-      error: `Este envío es para asistentes del día de la función. Hoy (CDMX): ${hoyMx}. Seleccionaste: ${fecha}. Usa forzar:true solo si es intencional.`,
-    }, 400, request);
+    return {
+      status: 400,
+      body: { error: `Este envío es para asistentes del día de la función. Hoy (CDMX): ${hoyMx}. Seleccionaste: ${fecha}. Usa forzar:true solo si es intencional.` },
+    };
   }
 
   const idxResult  = await env.VENTAS.list({ prefix: kv(tid, `ventaIdx:${fecha}:`) });
@@ -4028,11 +4011,23 @@ async function handleEmailPostFuncion(tid, request, env) {
     .map(r => { try { return JSON.parse(r); } catch { return null; } })
     .filter(v => v && v.estado !== 'reembolsada' && v.email && (v.fecha === fecha || !v.fecha));
 
+  // Una persona puede tener más de una orden para la misma función (compró
+  // dos veces en vez de pedir más boletos en una sola orden) — se manda un
+  // solo correo por dirección, no uno por orden (decisión de Os, 4 sep 2026).
+  const vistosPorEmail = new Set();
+  const ventasAEnviar = [];
+  for (const v of ventas) {
+    const key = v.email.trim().toLowerCase();
+    if (vistosPorEmail.has(key)) continue;
+    vistosPorEmail.add(key);
+    ventasAEnviar.push(v);
+  }
+
   const resultados = [];
   let enviados = 0;
   let fallidos = 0;
 
-  for (const venta of ventas) {
+  for (const venta of ventasAEnviar) {
     const funcionNombre = venta.funcionNombre || venta.fecha || fecha;
     const cert          = _certificadoVenta(venta);
     const entry         = {
@@ -4096,26 +4091,95 @@ async function handleEmailPostFuncion(tid, request, env) {
     resultados.push(entry);
   }
 
-  await registrarAuditoria(env, {
-    usuarioId: payload.usuario,
-    usuario:   payload.nombre || payload.usuario,
-    rol:       payload.rol,
-    accion:    dryRun ? 'email.post_funcion.dry_run' : 'email.post_funcion',
-    teatroId:  resolveTid(tid),
-    detalles:  `Post-función ${fecha}: ${enviados} enviados, ${fallidos} fallidos, ${ventas.length} con email`,
-    meta:      { fecha, enviados, fallidos, total: ventas.length, dryRun },
-  });
+  return {
+    status: 200,
+    body: {
+      ok:       true,
+      fecha,
+      dryRun,
+      total:    ventasAEnviar.length,
+      ordenes:  ventas.length,
+      enviados,
+      fallidos,
+      omitidos: resultados.filter(r => r.omitido).length,
+      resultados,
+    },
+  };
+}
 
-  return json({
-    ok:       true,
-    fecha,
-    dryRun,
-    total:    ventas.length,
-    enviados,
-    fallidos,
-    omitidos: resultados.filter(r => r.omitido).length,
-    resultados,
-  }, 200, request);
+function diaAnterior(fechaISO) {
+  const [y, m, d] = fechaISO.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() - 1);
+  return dt.toISOString().slice(0, 10);
+}
+
+// Cron domingos 8am CDMX: manda el correo "sorpresa" post-función (certificado
+// + cupón BUTACA37 + reseña Google) solo a los asistentes de LA función del
+// sábado anterior — nunca junta gente de otras fechas. Cada función se manda
+// una sola vez (por diseño de ejecutarEmailPostFuncion + el flag
+// emailPostFuncionEnviado), así que si este cron corre más de una vez por
+// error no duplica nada. Decisión de Os, 4 sep 2026.
+async function enviarEmailsPostFuncionAutomatico(env) {
+  const hoyMx = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+  const fecha = diaAnterior(hoyMx);
+  const tids  = [...new Set([...VALID_TEATROS].map(resolveTid))];
+  const resumen = { fecha, teatros: [] };
+
+  for (const tid of tids) {
+    let esFuncionActiva = false;
+    try {
+      const raw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
+      esFuncionActiva = JSON.parse(raw || '[]').some(f => f.fecha_iso === fecha);
+    } catch { /* sin funciones activas configuradas para este tid */ }
+
+    if (!esFuncionActiva) {
+      resumen.teatros.push({ tid, omitido: 'no hay función activa esa fecha' });
+      continue;
+    }
+
+    const r = await ejecutarEmailPostFuncion(tid, fecha, { dryRun: false, forzar: true }, env);
+    resumen.teatros.push({ tid, status: r.status, ...r.body });
+  }
+
+  return resumen;
+}
+
+async function handleEmailPostFuncion(tid, request, env) {
+  const payload = await requireAdmin(request, env);
+  if (!payload) return json({ error: 'No autorizado.' }, 401, request);
+  if (!PUEDE_REENVIAR.has(payload.rol)) {
+    return json({ error: 'Sin permiso para enviar correos post-función.' }, 403, request);
+  }
+
+  let body = {};
+  try { body = await request.json(); } catch {
+    return json({ error: 'Indica fecha (YYYY-MM-DD) en el cuerpo JSON.' }, 400, request);
+  }
+
+  const fecha = typeof body.fecha === 'string' ? body.fecha.trim() : '';
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return json({ error: 'Indica fecha válida (YYYY-MM-DD).' }, 400, request);
+  }
+
+  const dryRun = !!body.dryRun;
+  const forzar = !!body.forzar;
+
+  const resultado = await ejecutarEmailPostFuncion(tid, fecha, { dryRun, forzar }, env);
+
+  if (resultado.status === 200) {
+    await registrarAuditoria(env, {
+      usuarioId: payload.usuario,
+      usuario:   payload.nombre || payload.usuario,
+      rol:       payload.rol,
+      accion:    dryRun ? 'email.post_funcion.dry_run' : 'email.post_funcion',
+      teatroId:  resolveTid(tid),
+      detalles:  `Post-función ${fecha}: ${resultado.body.enviados} enviados, ${resultado.body.fallidos} fallidos, ${resultado.body.total} correos únicos (${resultado.body.ordenes} órdenes)`,
+      meta:      resultado.body,
+    });
+  }
+
+  return json(resultado.body, resultado.status, request);
 }
 
 async function handleReenviarEmail(tid, id, request, env) {
@@ -6268,10 +6332,15 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
       try {
+        if (event.cron === '0 14 * * 7') {
+          const res = await enviarEmailsPostFuncionAutomatico(env);
+          logInfo('cron.email_post_funcion', sanitizeObject(res));
+          return;
+        }
         const res = await enviarEmailsDiaFuncion(env);
         logInfo('cron.email_dia_funcion', sanitizeObject(res));
       } catch (e) {
-        logError('cron.email_dia_funcion', { error: e.message });
+        logError('cron.scheduled', { cron: event.cron, error: e.message });
       }
     })());
   },
