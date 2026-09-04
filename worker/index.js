@@ -1258,12 +1258,6 @@ function htmlEmailPostFuncion(venta, funcionNombre, config, opts = {}) {
     </p>
   </td></tr>
 
-  <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
-    <p style="margin:0;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.5);">
-      <a href="mailto:${EMAIL_OPERATIVO}" style="color:#d99b3a;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
-    </p>
-  </td></tr>
-
 </table>
 </td></tr>
 </table>

@@ -1,7 +1,4 @@
 (function () {
-  const BUTACA_CODIGO = 'BUTACA37';
-  const SITIO_BOLETOS = 'https://elgorilateatro.com.mx/boletos.html';
-
   let token = '';
   let sessionData = null;
   let folioActual = 'ACTA —····';
@@ -233,18 +230,6 @@
     return nombre;
   }
 
-  // ─── Compartir por WhatsApp (código BUTACA37) ──────────────────────────────
-
-  function textoCompartirWa() {
-    return `🦍 Vengo de ver EL GORILA en el Teatro Wilberto Cantón — te invito con 25% de descuento.\n\n`
-      + `Código: ${BUTACA_CODIGO}\nAplícalo al comprar tus boletos aquí: ${SITIO_BOLETOS}`;
-  }
-
-  function compartirWa() {
-    const url = `https://wa.me/?text=${encodeURIComponent(textoCompartirWa())}`;
-    window.open(url, '_blank', 'noopener');
-  }
-
   // ─── Compartir el certificado por WhatsApp (imagen) ────────────────────────
   // Solo la hoja del frente, como imagen — más simple y rápido que un PDF de
   // 2 páginas, y es lo único que de verdad hace falta para compartir.
@@ -299,13 +284,15 @@
     const nombre = exigirNombre();
     if (!nombre) return;
 
-    const btn = $('btn-ver-certificado');
-    const label = btn ? btn.textContent.trim() : '';
+    const nota = $('guardar-nota');
+    const page = $('page-frente');
+    const label = nota ? nota.textContent : '';
 
     try {
       let blob = certBlobCache;
       if (!blob) {
-        if (btn) { btn.classList.add('is-loading'); btn.textContent = 'Generando…'; }
+        if (nota) nota.textContent = 'Generando…';
+        if (page) page.classList.add('is-loading');
         blob = await generarImagenCertificado();
       }
 
@@ -332,7 +319,8 @@
     } catch (e) {
       alert('No se pudo generar el certificado. Intenta de nuevo.' + describirError(e));
     } finally {
-      if (btn) { btn.classList.remove('is-loading'); btn.textContent = label; }
+      if (nota) nota.textContent = label;
+      if (page) page.classList.remove('is-loading');
     }
   }
 
@@ -374,10 +362,7 @@
     $('btn-tira-prev')?.addEventListener('click', () => irATira(tiraIndex - 1));
     $('btn-tira-next')?.addEventListener('click', () => irATira(tiraIndex + 1));
 
-    $('btn-compartir-wa')?.addEventListener('click', () => {
-      compartirWa();
-    });
-    $('btn-ver-certificado')?.addEventListener('click', () => {
+    $('page-frente')?.addEventListener('click', () => {
       verCertificadoParaGuardar();
     });
   }
