@@ -1,4 +1,7 @@
 (function () {
+  const BUTACA_CODIGO = 'BUTACA37';
+  const SITIO_BOLETOS = 'https://elgorilateatro.com.mx/boletos.html';
+
   let token = '';
   let sessionData = null;
   let folioActual = 'ACTA —····';
@@ -17,6 +20,26 @@
     if (typeof e === 'string') return ` (${e})`;
     if (e instanceof Event) return ` (evento: ${e.type})`;
     try { return ` (${JSON.stringify(e)})`; } catch (_) { return ` (${String(e)})`; }
+  }
+
+  // Muestra la imagen generada directamente en la página (no depende de
+  // window.open/navigator.share, que iOS Safari bloquea si ya pasó
+  // demasiado tiempo desde el toque del usuario — html2canvas tarda).
+  function mostrarImagenParaGuardar(dataUrl, texto) {
+    const modal = $('img-modal');
+    const img = $('img-modal-imagen');
+    const p = $('img-modal-texto');
+    if (!modal || !img || !p) return;
+    img.src = dataUrl;
+    p.textContent = texto;
+    modal.classList.remove('hidden');
+  }
+
+  function cerrarImagenModal() {
+    const modal = $('img-modal');
+    const img = $('img-modal-imagen');
+    if (modal) modal.classList.add('hidden');
+    if (img) img.src = '';
   }
 
   function $(id) { return document.getElementById(id); }
@@ -142,7 +165,6 @@
     const esMujer = !!chk?.checked;
     generosTira[tiraIndex] = esMujer ? 'mujer' : 'hombre';
     pintarGenero(esMujer);
-    preWarmCertBlob();
   }
 
   function pintarNombreEnFrente(nombre) {
@@ -165,7 +187,6 @@
     const nombre = $('input-mi-nombre')?.value || '';
     nombresTira[tiraIndex] = nombre;
     pintarNombreEnFrente(nombre);
-    preWarmCertBlob();
   }
 
   // ─── Tira de boletos (1 certificado por boleto de la compra) ───────────────
@@ -208,7 +229,6 @@
     pintarGenero(chk ? chk.checked : false);
     pintarTira();
     variarSelloGigante();
-    preWarmCertBlob();
   }
 
   // ─── API ────────────────────────────────────────────────────────────────────
@@ -228,6 +248,18 @@
       return null;
     }
     return nombre;
+  }
+
+  // ─── Compartir por WhatsApp (código BUTACA37) ──────────────────────────────
+
+  function textoCompartirWa() {
+    return `🦍 Vengo de ver EL GORILA en el Teatro Wilberto Cantón — te invito con 25% de descuento.\n\n`
+      + `Código: ${BUTACA_CODIGO}\nAplícalo al comprar tus boletos aquí: ${SITIO_BOLETOS}`;
+  }
+
+  function compartirWa() {
+    const url = `https://wa.me/?text=${encodeURIComponent(textoCompartirWa())}`;
+    window.open(url, '_blank', 'noopener');
   }
 
   // ─── Compartir el certificado por WhatsApp (imagen) ────────────────────────
@@ -259,68 +291,31 @@
     }
   }
 
-  // Se pre-genera el certificado en cuanto cambia el nombre/género, para que
-  // al tocar "Guardar" el navegador ya tenga la imagen lista y pueda abrir
-  // el share nativo (o la descarga) en el mismo instante del toque — si se
-  // genera EN ESE momento, html2canvas tarda y el sistema operativo cancela
-  // el permiso de compartir/descargar por haber pasado demasiado tiempo.
-  let certBlobCache = null;
-  let certBlobToken = 0;
-  let certPreWarmTimer = null;
-
-  function preWarmCertBlob() {
-    certBlobCache = null;
-    clearTimeout(certPreWarmTimer);
-    const miToken = ++certBlobToken;
-    certPreWarmTimer = setTimeout(async () => {
-      try {
-        const blob = await generarImagenCertificado();
-        if (miToken === certBlobToken) certBlobCache = blob;
-      } catch (_) { /* si falla, se genera de nuevo al tocar "Guardar" */ }
-    }, 500);
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   }
 
   async function verCertificadoParaGuardar() {
     const nombre = exigirNombre();
     if (!nombre) return;
 
-    const nota = $('guardar-nota');
-    const page = $('page-frente');
-    const label = nota ? nota.textContent : '';
+    const btn = $('btn-ver-certificado');
+    const label = btn ? btn.textContent.trim() : '';
+    if (btn) { btn.classList.add('is-loading'); btn.textContent = 'Generando…'; }
 
     try {
-      let blob = certBlobCache;
-      if (!blob) {
-        if (nota) nota.textContent = 'Generando…';
-        if (page) page.classList.add('is-loading');
-        blob = await generarImagenCertificado();
-      }
-
-      const archivo = new File([blob], 'certificado-el-gorila.png', { type: 'image/png' });
-
-      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-        try {
-          await navigator.share({ files: [archivo], title: 'Certificado — El Gorila' });
-          return;
-        } catch (shareErr) {
-          if (shareErr && shareErr.name === 'AbortError') return; // canceló el share sheet
-          // sigue al plan B si el share nativo falla por otra razón
-        }
-      }
-
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = 'certificado-el-gorila.png';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+      const blob = await generarImagenCertificado();
+      const dataUrl = await blobToDataUrl(blob);
+      mostrarImagenParaGuardar(dataUrl, 'Mantén presionada la imagen para guardarla en tus fotos.');
     } catch (e) {
       alert('No se pudo generar el certificado. Intenta de nuevo.' + describirError(e));
     } finally {
-      if (nota) nota.textContent = label;
-      if (page) page.classList.remove('is-loading');
+      if (btn) { btn.classList.remove('is-loading'); btn.textContent = label; }
     }
   }
 
@@ -362,8 +357,15 @@
     $('btn-tira-prev')?.addEventListener('click', () => irATira(tiraIndex - 1));
     $('btn-tira-next')?.addEventListener('click', () => irATira(tiraIndex + 1));
 
-    $('page-frente')?.addEventListener('click', () => {
+    $('btn-compartir-wa')?.addEventListener('click', () => {
+      compartirWa();
+    });
+    $('btn-ver-certificado')?.addEventListener('click', () => {
       verCertificadoParaGuardar();
+    });
+    $('btn-cerrar-img-modal')?.addEventListener('click', cerrarImagenModal);
+    $('img-modal')?.addEventListener('click', e => {
+      if (e.target.id === 'img-modal') cerrarImagenModal();
     });
   }
 
