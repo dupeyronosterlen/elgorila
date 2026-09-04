@@ -1230,6 +1230,21 @@ function htmlEmailPostFuncion(venta, funcionNombre, config, opts = {}) {
     </a>
   </td></tr>
 
+  <tr><td style="background:#1a1206;padding:30px 28px;text-align:center;border-top:1px solid rgba(217,155,58,.3);">
+    <p style="margin:0 0 10px;font-family:Georgia,serif;font-size:15px;line-height:1.5;color:rgba(241,234,217,.85);">
+      ¿Quieres invitar a alguien? Te dejamos un descuento para ellos:
+    </p>
+    <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:26px;font-weight:700;letter-spacing:3px;color:#d99b3a;">
+      BUTACA37
+    </p>
+    <p style="margin:0 0 20px;font-family:Georgia,serif;font-size:14px;line-height:1.5;color:rgba(241,234,217,.65);">
+      25% de descuento en boletos generales para quien tú invites.
+    </p>
+    <a href="https://wa.me/?text=${encodeURIComponent('🦍 Vengo de ver EL GORILA en el Teatro Wilberto Cantón — te invito con 25% de descuento.\n\nCódigo: BUTACA37\nAplícalo al comprar tus boletos aquí: ' + SITIO_BASE + '/boletos.html')}" style="display:inline-block;background:#25D366;color:#06210f;padding:13px 26px;text-decoration:none;font-family:Georgia,serif;font-size:15px;font-weight:bold;">
+      Compartir por WhatsApp →
+    </a>
+  </td></tr>
+
   <tr><td style="background:#e8dfc8;padding:26px 28px;text-align:center;border-top:1px solid #c9b896;">
     <p style="margin:0 0 14px;font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#3a2e26;">
       Si esta noche te gustó, ¿nos dejas una reseña corta en Google? Ayuda a que más gente encuentre <em>El Gorila</em> los sábados a las 18:00.
