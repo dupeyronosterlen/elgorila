@@ -434,42 +434,19 @@
     });
   }
 
-  async function compartirCertificadoWa() {
-    if (!token) {
-      alert('Este certificado necesita venir de un enlace real para poder enviarse.');
-      return;
-    }
+  async function verCertificadoParaGuardar() {
     const nombre = exigirNombre();
     if (!nombre) return;
 
-    const btn = $('btn-enviar-cert-wa');
+    const btn = $('btn-ver-certificado');
     const label = btn ? btn.textContent.trim() : '';
     if (btn) { btn.classList.add('is-loading'); btn.textContent = 'Generando…'; }
 
     try {
       const blob = await generarImagenCertificado();
-      const archivo = new File([blob], 'certificado-el-gorila.png', { type: 'image/png' });
-      const texto = `🦍 Aquí está el certificado de ${nombre} de EL GORILA.`;
-
-      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-        try {
-          await navigator.share({ files: [archivo], text: texto, title: 'Certificado — El Gorila' });
-          return;
-        } catch (shareErr) {
-          if (shareErr && shareErr.name === 'AbortError') return;
-          // Si el share nativo falla, caemos al método de "abrir en pestaña".
-        }
-      }
-
-      // WhatsApp no deja adjuntar un archivo vía el link wa.me — es un límite
-      // de la plataforma. Y en iPhone/Safari el truco de <a download> con un
-      // blob no descarga nada, ni window.open/navigator.share funcionan ya
-      // (el gesto de usuario se perdió mientras html2canvas generaba la
-      // imagen) — mostramos la imagen dentro de la misma página.
       const dataUrl = await blobToDataUrl(blob);
-      mostrarImagenParaGuardar(dataUrl, 'Mantén presionada la imagen para guardarla, y luego adjúntala en tu chat de WhatsApp.');
+      mostrarImagenParaGuardar(dataUrl, 'Mantén presionada la imagen para guardarla en tus fotos.');
     } catch (e) {
-      if (e && e.name === 'AbortError') return;
       alert('No se pudo generar el certificado. Intenta de nuevo.' + describirError(e));
     } finally {
       if (btn) { btn.classList.remove('is-loading'); btn.textContent = label; }
@@ -523,8 +500,8 @@
     $('btn-copiar-link-ig')?.addEventListener('click', () => {
       copiarLinkIG();
     });
-    $('btn-enviar-cert-wa')?.addEventListener('click', () => {
-      compartirCertificadoWa();
+    $('btn-ver-certificado')?.addEventListener('click', () => {
+      verCertificadoParaGuardar();
     });
     $('btn-cerrar-img-modal')?.addEventListener('click', cerrarImagenModal);
     $('img-modal')?.addEventListener('click', e => {
