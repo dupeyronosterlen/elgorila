@@ -24,26 +24,6 @@
 
   function $(id) { return document.getElementById(id); }
 
-  // Muestra la imagen generada directamente en la página (no depende de
-  // window.open/navigator.share, que iOS Safari bloquea si ya pasó
-  // demasiado tiempo desde el toque del usuario — html2canvas tarda).
-  function mostrarImagenParaGuardar(dataUrl, texto) {
-    const modal = $('img-modal');
-    const img = $('img-modal-imagen');
-    const p = $('img-modal-texto');
-    if (!modal || !img || !p) return;
-    img.src = dataUrl;
-    p.textContent = texto;
-    modal.classList.remove('hidden');
-  }
-
-  function cerrarImagenModal() {
-    const modal = $('img-modal');
-    const img = $('img-modal-imagen');
-    if (modal) modal.classList.add('hidden');
-    if (img) img.src = '';
-  }
-
   // El sello se ve "puesto a mano": varía un poco de posición/ángulo cada
   // vez que se genera un certificado, en vez de caer siempre en el mismo sitio.
   function variarSelloGigante() {
@@ -165,6 +145,7 @@
     const esMujer = !!chk?.checked;
     generosTira[tiraIndex] = esMujer ? 'mujer' : 'hombre';
     pintarGenero(esMujer);
+    preWarmCertBlob();
   }
 
   function pintarNombreEnFrente(nombre) {
@@ -187,6 +168,7 @@
     const nombre = $('input-mi-nombre')?.value || '';
     nombresTira[tiraIndex] = nombre;
     pintarNombreEnFrente(nombre);
+    preWarmCertBlob();
   }
 
   // ─── Tira de boletos (1 certificado por boleto de la compra) ───────────────
@@ -229,6 +211,7 @@
     pintarGenero(chk ? chk.checked : false);
     pintarTira();
     variarSelloGigante();
+    preWarmCertBlob();
   }
 
   // ─── API ────────────────────────────────────────────────────────────────────
@@ -248,140 +231,6 @@
       return null;
     }
     return nombre;
-  }
-
-  // ─── Compartir en Instagram (imagen prearmada + link con UTM + cupón) ──────
-
-  const SITIO_SOBRE_LA_OBRA = 'https://elgorilateatro.com.mx/sobre-la-obra.html';
-  const IG_FONDO_SRC = 'img/ig-fondo-1.jpg';
-
-  function urlCompartirIG() {
-    return `${SITIO_SOBRE_LA_OBRA}?cupon=${encodeURIComponent(BUTACA_CODIGO)}`
-      + `&utm_source=instagram&utm_medium=social&utm_campaign=certificado_ig`;
-  }
-
-  function cargarImagen(src) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('No se pudo cargar la imagen de fondo (' + src + ')'));
-      img.src = src;
-    });
-  }
-
-  async function generarImagenIG() {
-    const W = 1080, H = 1920;
-    const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
-
-    try {
-      const foto = await cargarImagen(IG_FONDO_SRC);
-      const escala = Math.max(W / foto.width, H / foto.height);
-      const fw = foto.width * escala, fh = foto.height * escala;
-      ctx.drawImage(foto, (W - fw) / 2, (H - fh) / 2, fw, fh);
-    } catch (_) {
-      ctx.fillStyle = '#0d1f12';
-      ctx.fillRect(0, 0, W, H);
-    }
-
-    // Velo oscuro para que el texto se lea sobre la foto.
-    const velo = ctx.createLinearGradient(0, 0, 0, H);
-    velo.addColorStop(0, 'rgba(6,8,6,.55)');
-    velo.addColorStop(0.4, 'rgba(6,8,6,.35)');
-    velo.addColorStop(0.68, 'rgba(6,8,6,.55)');
-    velo.addColorStop(1, 'rgba(6,8,6,.82)');
-    ctx.fillStyle = velo;
-    ctx.fillRect(0, 0, W, H);
-
-    ctx.strokeStyle = 'rgba(217,155,58,.55)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(56, 56, W - 112, H - 112);
-
-    // Zona segura de historias de IG: los primeros ~250px y los últimos
-    // ~250px quedan tapados por la UI de Instagram (perfil/reloj arriba,
-    // barra de respuesta/stickers abajo) — nada importante va ahí.
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#d99b3a';
-    ctx.font = '600 28px "Courier New", monospace';
-    ctx.fillText('E L   G O R I L A', W / 2, 300);
-
-    ctx.fillStyle = 'rgba(241,234,217,.75)';
-    ctx.font = '22px "Courier New", monospace';
-    ctx.fillText('SÁBADOS 18:00', W / 2, 350);
-
-    ctx.strokeStyle = 'rgba(217,155,58,.5)';
-    ctx.beginPath();
-    ctx.moveTo(W / 2 - 90, H - 420);
-    ctx.lineTo(W / 2 + 90, H - 420);
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(241,234,217,.75)';
-    ctx.font = '24px "Courier New", monospace';
-    ctx.fillText('25% de descuento con el código', W / 2, H - 360);
-
-    ctx.fillStyle = '#d99b3a';
-    ctx.font = '700 46px "Courier New", monospace';
-    ctx.fillText(BUTACA_CODIGO, W / 2, H - 290);
-
-    ctx.fillStyle = 'rgba(241,234,217,.5)';
-    ctx.font = '18px "Courier New", monospace';
-    ctx.fillText('elgorilateatro.com.mx', W / 2, H - 240);
-
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(b => b ? resolve(b) : reject(new Error('canvas.toBlob devolvió null')), 'image/png');
-    });
-  }
-
-  async function compartirIG(btn) {
-    const label = btn.textContent.trim();
-    btn.classList.add('is-loading');
-    try {
-      // Instagram no deja incrustar un link cliqueable dentro de la imagen —
-      // solo se vuelve cliqueable si la persona pega un link "sticker" a mano
-      // sobre su historia. Por eso copiamos el link ANTES de compartir: IG
-      // sugiere pegar automáticamente si detecta una URL en el portapapeles.
-      try { await navigator.clipboard.writeText(urlCompartirIG()); } catch (_) { /* no bloquea */ }
-
-      const blob = await generarImagenIG();
-      const archivo = new File([blob], 'el-gorila-certificado.png', { type: 'image/png' });
-      const texto = `🦍 EL GORILA — 25% de descuento con el código ${BUTACA_CODIGO}\n${urlCompartirIG()}`;
-
-      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-        try {
-          await navigator.share({ files: [archivo], text: texto, title: 'El Gorila' });
-          return;
-        } catch (shareErr) {
-          if (shareErr && shareErr.name === 'AbortError') return; // usuario canceló el share sheet
-          // Si el share nativo falla por cualquier otra razón, caemos al
-          // método de "abrir en pestaña" en vez de rendirnos.
-        }
-      }
-
-      // En iPhone/Safari <a download> con un blob no descarga nada, y
-      // window.open/navigator.share requieren un gesto de usuario reciente
-      // que ya se perdió (html2canvas tardó) — mostramos la imagen dentro
-      // de la misma página en vez de intentar abrir algo nuevo.
-      const dataUrl = await blobToDataUrl(blob);
-      try { await navigator.clipboard.writeText(urlCompartirIG()); } catch (_) { /* no bloquea */ }
-      mostrarImagenParaGuardar(dataUrl, 'Mantén presionada la imagen para guardarla. Ya copiamos el link con tu código al portapapeles — pégalo al compartir tu historia.');
-    } catch (e) {
-      if (e && e.name === 'AbortError') return; // usuario canceló el share sheet
-      alert('No se pudo generar la imagen. Intenta de nuevo.' + describirError(e));
-    } finally {
-      btn.classList.remove('is-loading');
-      btn.textContent = label;
-    }
-  }
-
-  async function copiarLinkIG() {
-    try {
-      await navigator.clipboard.writeText(urlCompartirIG());
-      alert('Link copiado, con tu código de descuento incluido.');
-    } catch (_) {
-      prompt('Copia tu link:', urlCompartirIG());
-    }
   }
 
   // ─── Compartir por WhatsApp (código BUTACA37) ──────────────────────────────
@@ -425,13 +274,25 @@
     }
   }
 
-  function blobToDataUrl(blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(String(reader.result));
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+  // Se pre-genera el certificado en cuanto cambia el nombre/género, para que
+  // al tocar "Guardar" el navegador ya tenga la imagen lista y pueda abrir
+  // el share nativo (o la descarga) en el mismo instante del toque — si se
+  // genera EN ESE momento, html2canvas tarda y el sistema operativo cancela
+  // el permiso de compartir/descargar por haber pasado demasiado tiempo.
+  let certBlobCache = null;
+  let certBlobToken = 0;
+  let certPreWarmTimer = null;
+
+  function preWarmCertBlob() {
+    certBlobCache = null;
+    clearTimeout(certPreWarmTimer);
+    const miToken = ++certBlobToken;
+    certPreWarmTimer = setTimeout(async () => {
+      try {
+        const blob = await generarImagenCertificado();
+        if (miToken === certBlobToken) certBlobCache = blob;
+      } catch (_) { /* si falla, se genera de nuevo al tocar "Guardar" */ }
+    }, 500);
   }
 
   async function verCertificadoParaGuardar() {
@@ -440,12 +301,34 @@
 
     const btn = $('btn-ver-certificado');
     const label = btn ? btn.textContent.trim() : '';
-    if (btn) { btn.classList.add('is-loading'); btn.textContent = 'Generando…'; }
 
     try {
-      const blob = await generarImagenCertificado();
-      const dataUrl = await blobToDataUrl(blob);
-      mostrarImagenParaGuardar(dataUrl, 'Mantén presionada la imagen para guardarla en tus fotos.');
+      let blob = certBlobCache;
+      if (!blob) {
+        if (btn) { btn.classList.add('is-loading'); btn.textContent = 'Generando…'; }
+        blob = await generarImagenCertificado();
+      }
+
+      const archivo = new File([blob], 'certificado-el-gorila.png', { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+        try {
+          await navigator.share({ files: [archivo], title: 'Certificado — El Gorila' });
+          return;
+        } catch (shareErr) {
+          if (shareErr && shareErr.name === 'AbortError') return; // canceló el share sheet
+          // sigue al plan B si el share nativo falla por otra razón
+        }
+      }
+
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = 'certificado-el-gorila.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
     } catch (e) {
       alert('No se pudo generar el certificado. Intenta de nuevo.' + describirError(e));
     } finally {
@@ -494,18 +377,8 @@
     $('btn-compartir-wa')?.addEventListener('click', () => {
       compartirWa();
     });
-    $('btn-compartir-ig')?.addEventListener('click', e => {
-      compartirIG(e.currentTarget);
-    });
-    $('btn-copiar-link-ig')?.addEventListener('click', () => {
-      copiarLinkIG();
-    });
     $('btn-ver-certificado')?.addEventListener('click', () => {
       verCertificadoParaGuardar();
-    });
-    $('btn-cerrar-img-modal')?.addEventListener('click', cerrarImagenModal);
-    $('img-modal')?.addEventListener('click', e => {
-      if (e.target.id === 'img-modal') cerrarImagenModal();
     });
   }
 

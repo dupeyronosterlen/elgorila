@@ -491,52 +491,6 @@
     stroke-linejoin: round;
   }
 
-  /* Modal para mostrar la imagen generada directamente en la página —
-     no depende de window.open/navigator.share, que en iOS Safari se
-     bloquean si ya pasó demasiado tiempo desde el toque del usuario
-     (varias operaciones async antes, como html2canvas). */
-  .img-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(6,8,6,0.92);
-    z-index: 200;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 16px;
-  }
-  .img-modal.hidden { display: none; }
-  .img-modal img {
-    max-width: 100%;
-    max-height: 68vh;
-    border-radius: 4px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-  }
-  .img-modal p {
-    color: #f1ead9;
-    font-family: 'Courier Prime', monospace;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    text-align: center;
-    max-width: 320px;
-    margin-top: 18px;
-    line-height: 1.5;
-  }
-  .img-modal .img-modal-cerrar {
-    margin-top: 16px;
-    padding: 10px 22px;
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 6px;
-    background: transparent;
-    color: #d99b3a;
-    font-family: 'Courier Prime', monospace;
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-  }
-
   @media print {
     body { background:white; padding:0; }
     .label, .dl-bar, .flujo-panel, .estado, .kicker-funcion, .bloque-resena { display:none !important; }
@@ -702,11 +656,7 @@
     background: rgba(217,155,58,.06);
     text-align: center;
   }
-  .invita-divider {
-    margin: 24px 0;
-    border-top: 1px solid rgba(241,234,217,.15);
-  }
-  .butaca-box, .ig-comparte-box { text-align: center; }
+  .butaca-box { text-align: center; }
   .butaca-codigo {
     font-family: 'Courier Prime', monospace;
     font-size: 30px;
@@ -752,78 +702,8 @@
     .dl-btn.tira-btn { font-size: 12px; }
     .butaca-desc { font-size: 15px; }
     .genero-toggle { font-size: 14px; }
-    .ig-link-fallback { font-size: 13px; }
     .bloque-resena .resena-privado { font-size: 14px; }
-    .ig-preview-marca { font-size: 11px; }
-    .ig-preview-horario { font-size: 10px; }
-    .ig-preview-sub { font-size: 9px; }
   }
-
-  .ig-preview {
-    width: 152px;
-    aspect-ratio: 9 / 16;
-    margin: 4px auto 14px;
-    border-radius: 10px;
-    background:
-      linear-gradient(180deg, rgba(6,8,6,.55) 0%, rgba(6,8,6,.35) 40%, rgba(6,8,6,.55) 68%, rgba(6,8,6,.82) 100%),
-      url('img/ig-fondo-1.jpg') center / cover no-repeat;
-    border: 1px solid rgba(217,155,58,.35);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 18px 10px 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.4);
-  }
-  .ig-preview-marca {
-    font-family: 'Courier Prime', monospace;
-    font-size: 9px;
-    letter-spacing: 3px;
-    color: #d99b3a;
-    text-align: center;
-  }
-  .ig-preview-horario {
-    display: inline-block;
-    margin-top: 4px;
-    font-size: 8px;
-    letter-spacing: 1px;
-    color: rgba(241,234,217,.7);
-  }
-  .ig-preview-sub {
-    font-family: 'Courier Prime', monospace;
-    font-size: 7px;
-    letter-spacing: 1.5px;
-    color: #d99b3a;
-    text-transform: uppercase;
-    margin-top: auto;
-  }
-  .dl-btn.ig-btn {
-    width: 100%;
-    justify-content: center;
-    box-sizing: border-box;
-    background: linear-gradient(90deg, #f58529, #dd2a7b, #8134af, #515bd4);
-    color: #fff;
-    border-color: transparent;
-    font-size: 12px;
-    padding: 13px 18px;
-  }
-  .dl-btn.ig-btn:hover { filter: brightness(1.08); }
-  .dl-btn.ig-btn svg { width: 16px; height: 16px; }
-  .dl-btn.ig-btn.is-loading { opacity: .6; pointer-events: none; }
-  .ig-link-fallback {
-    display: inline-block;
-    margin-top: 10px;
-    background: none;
-    border: none;
-    font-family: 'Courier Prime', monospace;
-    font-size: 11px;
-    letter-spacing: 1px;
-    color: rgba(241,234,217,.5);
-    text-decoration: underline;
-    cursor: pointer;
-  }
-  .ig-link-fallback:hover { color: #d99b3a; }
 
   .bloque-resena {
     margin-top: 28px;
@@ -1079,20 +959,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         Compartir por WhatsApp →
       </button>
     </div>
-
-    <div class="invita-divider"></div>
-
-    <div class="ig-comparte-box">
-      <div class="ig-preview" id="ig-preview">
-        <span class="ig-preview-marca">EL GORILA<br><span class="ig-preview-horario">Sábados 18:00</span></span>
-        <span class="ig-preview-sub">BUTACA37 · 25% de descuento</span>
-      </div>
-      <button type="button" class="dl-btn ig-btn" id="btn-compartir-ig">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
-        Compartir en Instagram →
-      </button>
-      <button type="button" class="ig-link-fallback" id="btn-copiar-link-ig">o copiar el link con tu código</button>
-    </div>
   </div>
 
   <div class="bloque-resena" id="bloque-resena">
@@ -1104,16 +970,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 </div><!-- #contenido-acta -->
 
-<div id="img-modal" class="img-modal hidden">
-  <img id="img-modal-imagen" src="" alt="Certificado">
-  <p id="img-modal-texto"></p>
-  <button type="button" class="img-modal-cerrar" id="btn-cerrar-img-modal">Cerrar</button>
-</div>
-
 <script src="js/config.js"></script>
 <script src="js/api-config.js"></script>
 <script src="js/vendor/html2canvas.min.js"></script>
-<script src="js/acta.js?v=20260904c"></script>
+<script src="js/acta.js?v=20260904d"></script>
 
 </body>
 </html>
