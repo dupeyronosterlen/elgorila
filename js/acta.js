@@ -153,8 +153,8 @@
     const c = $('clausula-genero');
     if (c) {
       c.textContent = esMujer
-        ? 'Este documento documenta al portador como una «mujer», destacada entre las mujeres.'
-        : 'Este documento documenta al portador como un «hombre», destacado entre los hombres.';
+        ? 'Por medio de la presente se reconoce al portador de este documento como una «mujer» destacada entre las mujeres.'
+        : 'Por medio de la presente se reconoce al portador de este documento como un «hombre» destacado entre los hombres.';
     }
     const e = $('expediente-genero');
     if (e) e.textContent = esMujer ? 'de la mujer' : 'del hombre';

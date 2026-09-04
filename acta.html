@@ -131,8 +131,16 @@
     font-size: 32px;
     letter-spacing: 3px;
     color: #2d7a2d;
-    margin-bottom: 18px;
+    margin-bottom: 8px;
     font-weight: 700;
+  }
+  .titulo-ornamento {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: #2d7a2d;
+    opacity: 0.55;
+    margin-bottom: 16px;
   }
 
   .clausula {
@@ -183,14 +191,14 @@
   }
   .guino em { color: #8a2a18; font-style: italic; }
 
-  .firma-area { width: 282px; height: auto; margin-top: -29px; margin-bottom: -67px; flex-shrink: 0; object-fit: contain; position: relative; z-index: 2; }
+  .firma-area { width: 282px; height: auto; margin-top: -16px; margin-bottom: -40px; flex-shrink: 0; object-fit: contain; position: relative; z-index: 2; }
   .firma-leyenda {
     font-family: 'Courier Prime', monospace;
     font-size: 10px;
     letter-spacing: 2px;
     color: #4a6a4a;
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
     text-transform: uppercase;
   }
 
@@ -242,6 +250,16 @@
     padding: 3px 10px;
     margin-top: 8px;
     text-align: center;
+  }
+
+  .separador-puntos {
+    text-align: center;
+    font-family: 'Courier Prime', monospace;
+    font-size: 14px;
+    letter-spacing: 10px;
+    color: #2d7a2d;
+    opacity: 0.5;
+    margin: 0 0 18px;
   }
 
   .validez {
@@ -911,11 +929,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div class="titulo-acta">
       <span class="titulo-rubro">Certificado Oficial</span>
+      <span class="titulo-ornamento" aria-hidden="true">✦ ✦ ✦ ✦ ✦</span>
       <span id="titulo-genero" style="display:none;">Hombre destacado</span>
     </div>
 
     <p class="clausula clausula--seco clausula--enfasis" id="clausula-genero">
-      Este documento documenta al portador como un «hombre», destacado entre los hombres.
+      Por medio de la presente se reconoce al portador de este documento como un «hombre» destacado entre los hombres.
     </p>
 
     <div class="campo campo--hero">
@@ -923,6 +942,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="campo-linea"></div>
       <p class="conteo-certificado hidden" id="conteo-certificado">Certificado <span id="conteo-actual">1</span> de <span id="conteo-total">1</span> · uno por boleto de esta compra</p>
     </div>
+
+    <p class="separador-puntos" aria-hidden="true">· · · ·</p>
 
     <p class="validez">
       El presente instrumento se expide de conformidad con las disposiciones aplicables en la materia,
@@ -1092,7 +1113,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/config.js"></script>
 <script src="js/api-config.js"></script>
 <script src="js/vendor/html2canvas.min.js"></script>
-<script src="js/acta.js?v=20260904b"></script>
+<script src="js/acta.js?v=20260904c"></script>
 
 </body>
 </html>
