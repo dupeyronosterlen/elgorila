@@ -1217,10 +1217,10 @@ function htmlEmailPostFuncion(venta, funcionNombre, config, opts = {}) {
 
   <tr><td style="background:#0a0706;padding:36px 28px 28px;border:1px solid rgba(241,234,217,.12);text-align:center;">
     <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.15;font-weight:500;color:#f1ead9;">
-      Gracias por acompañarnos.
+      ${opts.titulo || 'Gracias por acompañarnos.'}
     </h1>
     <p style="margin:18px auto 0;font-family:Georgia,serif;font-size:20px;line-height:1.5;color:rgba(241,234,217,.82);max-width:360px;">
-      El Gorila te deja una sorpresa.
+      ${opts.subtitulo || 'El Gorila te deja una sorpresa.'}
     </p>
   </td></tr>
 
@@ -3992,7 +3992,7 @@ async function handleAdminVentaDetail(tid, id, request, env) {
   } catch { return json({ error: 'Error al obtener la venta.' }, 500, request); }
 }
 
-async function ejecutarEmailPostFuncion(tid, fecha, { dryRun, forzar }, env) {
+async function ejecutarEmailPostFuncion(tid, fecha, { dryRun, forzar, titulo, subtitulo }, env) {
   const config = await getVenueConfig(tid, env);
 
   const hoyMx = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
@@ -4068,6 +4068,8 @@ async function ejecutarEmailPostFuncion(tid, fecha, { dryRun, forzar }, env) {
     const html = htmlEmailPostFuncion(venta, funcionNombre, config, {
       encuestaToken,
       folioSobre: venta.sobreFolio,
+      titulo,
+      subtitulo,
     });
     const ok   = await enviarEmail(
       venta.email,
@@ -4164,8 +4166,10 @@ async function handleEmailPostFuncion(tid, request, env) {
 
   const dryRun = !!body.dryRun;
   const forzar = !!body.forzar;
+  const titulo = typeof body.titulo === 'string' ? body.titulo.trim().slice(0, 200) : undefined;
+  const subtitulo = typeof body.subtitulo === 'string' ? body.subtitulo.trim().slice(0, 200) : undefined;
 
-  const resultado = await ejecutarEmailPostFuncion(tid, fecha, { dryRun, forzar }, env);
+  const resultado = await ejecutarEmailPostFuncion(tid, fecha, { dryRun, forzar, titulo, subtitulo }, env);
 
   if (resultado.status === 200) {
     await registrarAuditoria(env, {
