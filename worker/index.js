@@ -1757,6 +1757,13 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
   let maxPorFn = Number(entry.max_usos_por_funcion) || 0;
   if (codigo === 'ESPEJO') maxPorFn = Math.max(maxPorFn, 10);
   const fechaIso = fechaIsoCupon(fecha);
+  // Extra puntual por función, aditivo al tope base — nunca reemplaza el tope
+  // normal, solo lo sube para la(s) fecha(s) listada(s) en el KV. Ej.:
+  // "extras_por_fecha": { "2026-09-19": 5 } → esa función sube de 10 a 15.
+  if (fechaIso && entry.extras_por_fecha && typeof entry.extras_por_fecha === 'object') {
+    const extra = Number(entry.extras_por_fecha[fechaIso]) || 0;
+    if (extra > 0) maxPorFn += extra;
+  }
   let usosRestantesFuncion = null;
   if (maxPorFn > 0 && fechaIso) {
     const usadosFn = await usosCuponEnFuncion(codigo, fechaIso, env);
