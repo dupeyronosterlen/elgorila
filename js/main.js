@@ -363,7 +363,7 @@ function pintarEspejoCupo(data) {
     }
     const n = info.restantes;
     if (n <= 0) {
-        el.textContent = 'ESPEJO se agotó para esta función';
+        el.textContent = 'Promoción ESPEJO se agotó para esta función';
         el.classList.add('agotado');
     } else if (n === 1) {
         el.innerHTML = '<strong>1 código restante</strong> · ESPEJO para este sábado';
