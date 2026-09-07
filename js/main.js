@@ -19,6 +19,7 @@ let _galeriaAbierta    = false;
 let _grupoGrandeNotificado = false;
 let _confirmandoPedido = false;
 let _omitirScrollFecha = false;
+let _espejoRestantes   = null; // null = sin dato aún; number = restantes en vivo para esta función
 
 // Chequeo real de cupo (Worker) solo cuando esa fecha ya vendió más de esto.
 const UMBRAL_CHEQUEO_CUPO = 100;
@@ -357,11 +358,13 @@ function pintarEspejoCupo(data) {
     if (!el) return;
     const info = data && data.cupones && data.cupones.ESPEJO;
     if (!info || typeof info.restantes !== 'number') {
+        _espejoRestantes = null;
         el.hidden = true;
         el.textContent = '';
         return;
     }
     const n = info.restantes;
+    _espejoRestantes = n;
     if (n <= 0) {
         el.textContent = 'Promoción ESPEJO se agotó para esta función';
         el.classList.add('agotado');
@@ -374,6 +377,31 @@ function pintarEspejoCupo(data) {
     }
     el.hidden = false;
 }
+
+// Clic en el banner "aún puedes obtener un código" del carrito (2 generales):
+// continúa al checkout y aplica ESPEJO automáticamente, sin que el cliente
+// tenga que escribirlo a mano. Reutiliza irAConfirmacion() y aplicarCuponInline()
+// tal cual existen — la validación real sigue viviendo en el Worker.
+async function activarEspejoDesdeCarrito() {
+    const banner = document.getElementById('promo-grupo-banner');
+    if (banner) banner.style.opacity = '.6';
+    try {
+        const ok = await irAConfirmacion();
+        if (!ok) return;
+        const panel = document.getElementById('inline-checkout');
+        if (!panel || panel.style.display === 'none') return;
+        const detalles = document.querySelector('.ichk-cupon-details');
+        const input = document.getElementById('ichk-cupon-input');
+        if (detalles) detalles.open = true;
+        if (input) input.value = 'ESPEJO';
+        if (typeof window.aplicarCuponInline === 'function') {
+            await window.aplicarCuponInline();
+        }
+    } finally {
+        if (banner) banner.style.opacity = '';
+    }
+}
+window.activarEspejoDesdeCarrito = activarEspejoDesdeCarrito;
 
 function refrescarDisponibilidadWorker() {
     if (!fechaIsoActual || !window.API_BASE) return;
@@ -481,12 +509,43 @@ function actualizarPantalla() {
 
     const promoBanner = document.getElementById('promo-grupo-banner');
     if (promoBanner) {
+        // Limpiar el estado clickeable en cada repintado; cada rama de abajo
+        // vuelve a activarlo solo si aplica.
+        promoBanner.onclick = null;
+        promoBanner.onkeydown = null;
+        promoBanner.removeAttribute('role');
+        promoBanner.removeAttribute('tabindex');
+        promoBanner.style.cursor = '';
+
         const gen = cantidades.general || 0;
         if (gen === 2 && !tieneBoletosCredencial() && gen === totalCantidad()) {
-            promoBanner.className = 'promo-grupo-banner';
             promoBanner.style.color = 'rgba(217,155,58,.75)';
-            promoBanner.innerHTML =
-                'Pareja: ingresa el código <strong>ESPEJO</strong> al pagar — 2 generales por <strong>$600</strong> · máx. 10 por sábado';
+            if (typeof _espejoRestantes === 'number' && _espejoRestantes > 0) {
+                const etiqueta = _espejoRestantes === 1 ? 'código disponible' : 'códigos disponibles';
+                promoBanner.className = 'promo-grupo-banner promo-grupo-clickable';
+                promoBanner.innerHTML =
+                    '🎉 <strong>¡Felicidades!</strong> Aún puedes obtener un código de descuento para esta función ' +
+                    '· solo quedan <strong>' + _espejoRestantes + ' ' + etiqueta + '</strong> ' +
+                    '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
+                promoBanner.style.cursor = 'pointer';
+                promoBanner.setAttribute('role', 'button');
+                promoBanner.setAttribute('tabindex', '0');
+                promoBanner.onclick = activarEspejoDesdeCarrito;
+                promoBanner.onkeydown = function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activarEspejoDesdeCarrito(); }
+                };
+            } else if (_espejoRestantes === 0) {
+                // Agotado para esta función: el badge #espejo-cupo ya lo explica,
+                // no invitamos a un clic que va a fallar.
+                promoBanner.className = 'promo-grupo-banner hidden';
+                promoBanner.innerHTML = '';
+            } else {
+                // Sin dato en vivo todavía (API aún no responde): hint estático,
+                // el cliente sigue pudiendo escribir el código a mano al pagar.
+                promoBanner.className = 'promo-grupo-banner';
+                promoBanner.innerHTML =
+                    'Pareja: ingresa el código <strong>ESPEJO</strong> al pagar — 2 generales por <strong>$600</strong> · máx. 10 por sábado';
+            }
         } else if (
             gen >= CUPON_GRUPO20_MIN
             && gen === totalCantidad()
