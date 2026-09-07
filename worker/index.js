@@ -2914,6 +2914,12 @@ async function handleDisponibilidad(tid, request, env) {
     const espejo   = catalogo.ESPEJO || {};
     let maxEspejo  = Number(espejo.max_usos_por_funcion) || 0;
     maxEspejo = Math.max(maxEspejo, 10);
+    // Mismo extra puntual por fecha que validarCuponDescuento() — ver comentario
+    // allá. Debe coincidir o el banner del sitio y el checkout se desincronizan.
+    if (fecha && espejo.extras_por_fecha && typeof espejo.extras_por_fecha === 'object') {
+      const extraEspejo = Number(espejo.extras_por_fecha[fecha]) || 0;
+      if (extraEspejo > 0) maxEspejo += extraEspejo;
+    }
     const usadosEspejo = await usosCuponEnFuncion('ESPEJO', fecha, env);
     cupones = {
       ESPEJO: {
