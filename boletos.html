@@ -1760,7 +1760,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/temporada-copy.js"></script>
 <script src="js/testimonios.js?v=20260817t1"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js?v=20260907-espejo-cta"></script>
+<script src="js/main.js?v=20260907-espejo-extra"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {
@@ -1882,7 +1882,12 @@ async function aplicarCuponInline() {
     let okMsg = data.tipo === 'par_fijo'
       ? `✓ ${data.nombre} — $${data.totalMxn} total aplicado`
       : `✓ ${data.nombre} (−${data.porcentaje}%) aplicado`;
-    if (typeof data.usosRestantesFuncion === 'number') {
+    if (typeof data.extraDisponibles === 'number' && data.extraDisponibles > 0) {
+      // Cupo original agotado; lo que queda es del cupo extra abierto para esta función.
+      okMsg += data.extraDisponibles === 1
+        ? ' · quedaba 1 código extra para este sábado'
+        : ` · quedaban ${data.extraDisponibles} códigos extra para este sábado`;
+    } else if (typeof data.usosRestantesFuncion === 'number') {
       okMsg += data.usosRestantesFuncion === 1
         ? ' · queda 1 para este sábado'
         : ` · quedan ${data.usosRestantesFuncion} para este sábado`;

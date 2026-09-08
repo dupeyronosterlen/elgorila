@@ -1754,17 +1754,19 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
     if (usos >= entry.max_usos) return { ok: false, error: 'Código agotado.' };
   }
 
-  let maxPorFn = Number(entry.max_usos_por_funcion) || 0;
-  if (codigo === 'ESPEJO') maxPorFn = Math.max(maxPorFn, 10);
+  let baseMaxPorFn = Number(entry.max_usos_por_funcion) || 0;
+  if (codigo === 'ESPEJO') baseMaxPorFn = Math.max(baseMaxPorFn, 10);
   const fechaIso = fechaIsoCupon(fecha);
   // Extra puntual por función, aditivo al tope base — nunca reemplaza el tope
   // normal, solo lo sube para la(s) fecha(s) listada(s) en el KV. Ej.:
   // "extras_por_fecha": { "2026-09-19": 5 } → esa función sube de 10 a 15.
+  let extraPorFn = 0;
   if (fechaIso && entry.extras_por_fecha && typeof entry.extras_por_fecha === 'object') {
-    const extra = Number(entry.extras_por_fecha[fechaIso]) || 0;
-    if (extra > 0) maxPorFn += extra;
+    extraPorFn = Number(entry.extras_por_fecha[fechaIso]) || 0;
   }
+  const maxPorFn = baseMaxPorFn + extraPorFn;
   let usosRestantesFuncion = null;
+  let extraDisponibles = 0;
   if (maxPorFn > 0 && fechaIso) {
     const usadosFn = await usosCuponEnFuncion(codigo, fechaIso, env);
     if (usadosFn >= maxPorFn) {
@@ -1774,6 +1776,7 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
       };
     }
     usosRestantesFuncion = maxPorFn - usadosFn;
+    if (extraPorFn > 0 && usadosFn >= baseMaxPorFn) extraDisponibles = usosRestantesFuncion;
   }
 
   const tipo = entry.tipo || 'porcentaje';
@@ -1790,6 +1793,7 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
     soloFecha:    typeof entry.solo_fecha === 'string' ? entry.solo_fecha : null,
     maxUsosPorFuncion: maxPorFn > 0 ? maxPorFn : null,
     usosRestantesFuncion,
+    extraDisponibles,
   };
 
   if (tipo === 'par_fijo') {
@@ -2911,21 +2915,26 @@ async function handleDisponibilidad(tid, request, env) {
   let cupones = null;
   try {
     const catalogo = await getCodigosDescuento(env);
-    const espejo   = catalogo.ESPEJO || {};
-    let maxEspejo  = Number(espejo.max_usos_por_funcion) || 0;
-    maxEspejo = Math.max(maxEspejo, 10);
-    // Mismo extra puntual por fecha que validarCuponDescuento() — ver comentario
-    // allá. Debe coincidir o el banner del sitio y el checkout se desincronizan.
+    const espejo    = catalogo.ESPEJO || {};
+    let baseEspejo  = Number(espejo.max_usos_por_funcion) || 0;
+    baseEspejo = Math.max(baseEspejo, 10);
+    // Extra puntual por fecha — ver mismo comentario en validarCuponDescuento().
+    // Debe coincidir o el banner del sitio y el checkout se desincronizan.
+    let extraEspejo = 0;
     if (fecha && espejo.extras_por_fecha && typeof espejo.extras_por_fecha === 'object') {
-      const extraEspejo = Number(espejo.extras_por_fecha[fecha]) || 0;
-      if (extraEspejo > 0) maxEspejo += extraEspejo;
+      extraEspejo = Number(espejo.extras_por_fecha[fecha]) || 0;
     }
+    const maxEspejo = baseEspejo + extraEspejo;
     const usadosEspejo = await usosCuponEnFuncion('ESPEJO', fecha, env);
+    const restantesEspejo = Math.max(0, maxEspejo - usadosEspejo);
     cupones = {
       ESPEJO: {
         max: maxEspejo,
         usados: usadosEspejo,
-        restantes: Math.max(0, maxEspejo - usadosEspejo),
+        restantes: restantesEspejo,
+        // Cuántos de los restantes vienen del cupo extra (solo si ya se agotó
+        // el cupo base) — el front lo usa para avisar "abrimos N extra".
+        extraDisponibles: (extraEspejo > 0 && usadosEspejo >= baseEspejo) ? restantesEspejo : 0,
       },
     };
   } catch { /* el contador es informativo; no tumbar disponibilidad */ }

@@ -20,6 +20,7 @@ let _grupoGrandeNotificado = false;
 let _confirmandoPedido = false;
 let _omitirScrollFecha = false;
 let _espejoRestantes   = null; // null = sin dato aún; number = restantes en vivo para esta función
+let _espejoExtra       = 0;    // > 0 = de esos restantes, cuántos son cupo extra ya abierto (cupo base agotado)
 
 // Chequeo real de cupo (Worker) solo cuando esa fecha ya vendió más de esto.
 const UMBRAL_CHEQUEO_CUPO = 100;
@@ -359,15 +360,23 @@ function pintarEspejoCupo(data) {
     const info = data && data.cupones && data.cupones.ESPEJO;
     if (!info || typeof info.restantes !== 'number') {
         _espejoRestantes = null;
+        _espejoExtra = 0;
         el.hidden = true;
         el.textContent = '';
         return;
     }
     const n = info.restantes;
     _espejoRestantes = n;
+    _espejoExtra = typeof info.extraDisponibles === 'number' ? info.extraDisponibles : 0;
     if (n <= 0) {
         el.textContent = 'Promoción ESPEJO se agotó para esta función';
         el.classList.add('agotado');
+    } else if (_espejoExtra > 0) {
+        // Se acabó el cupo original y se abrieron códigos extra: decirlo tal cual,
+        // no mezclarlo con el conteo normal para que no parezca que nunca se agotó.
+        const etiquetaExtra = _espejoExtra === 1 ? 'código extra' : 'códigos extra';
+        el.innerHTML = '¡Se agotaron los códigos originales, pero abrimos <strong>' + _espejoExtra + ' ' + etiquetaExtra + '</strong>! · ESPEJO para este sábado';
+        el.classList.remove('agotado');
     } else if (n === 1) {
         el.innerHTML = '<strong>1 código restante</strong> · ESPEJO para este sábado';
         el.classList.remove('agotado');
@@ -521,12 +530,21 @@ function actualizarPantalla() {
         if (gen === 2 && !tieneBoletosCredencial() && gen === totalCantidad()) {
             promoBanner.style.color = 'rgba(217,155,58,.75)';
             if (typeof _espejoRestantes === 'number' && _espejoRestantes > 0) {
-                const etiqueta = _espejoRestantes === 1 ? 'código disponible' : 'códigos disponibles';
                 promoBanner.className = 'promo-grupo-banner promo-grupo-clickable';
-                promoBanner.innerHTML =
-                    '🎉 <strong>¡Felicidades!</strong> Aún puedes obtener un código de descuento para esta función ' +
-                    '· solo quedan <strong>' + _espejoRestantes + ' ' + etiqueta + '</strong> ' +
-                    '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
+                if (_espejoExtra > 0) {
+                    // Cupo original agotado, pero se abrieron extras: decirlo tal
+                    // cual en vez de sonar como si nunca se hubiera acabado.
+                    const etiquetaExtra = _espejoExtra === 1 ? 'código extra' : 'códigos extra';
+                    promoBanner.innerHTML =
+                        '🎉 Los códigos originales se agotaron, ¡pero abrimos <strong>' + _espejoExtra + ' ' + etiquetaExtra + '</strong> para esta función! ' +
+                        '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
+                } else {
+                    const etiqueta = _espejoRestantes === 1 ? 'código disponible' : 'códigos disponibles';
+                    promoBanner.innerHTML =
+                        '🎉 <strong>¡Felicidades!</strong> Aún puedes obtener un código de descuento para esta función ' +
+                        '· solo quedan <strong>' + _espejoRestantes + ' ' + etiqueta + '</strong> ' +
+                        '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
+                }
                 promoBanner.style.cursor = 'pointer';
                 promoBanner.setAttribute('role', 'button');
                 promoBanner.setAttribute('tabindex', '0');
