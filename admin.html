@@ -1056,13 +1056,16 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
   <div class="bol-card hidden" id="panel-lista-puerta">
     <h2 class="bol-card-title">Lista de llamado</h2>
     <div class="bol-card-rule"></div>
-    <span class="sec-label">Folios internos · agrupados por certificado · toca para marcar entrada</span>
+    <span class="sec-label">Un check marca la orden completa (no boleto por boleto) · toca para marcar entrada</span>
     <p id="lista-sin-sesion" class="hidden" style="font-size:15px;color:#b5280f;margin-bottom:12px;">
       Abre la boletera desde <a href="/admin.html" style="color:var(--gold);">admin</a> (enlace de taquilla).
     </p>
     <label class="form-label" for="lista-funcion">Función</label>
     <select id="lista-funcion" class="form-input" style="margin-bottom:12px;"></select>
-    <div id="lista-resumen" class="lista-resumen"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div id="lista-resumen" class="lista-resumen"></div>
+      <button type="button" id="btn-lista-nuevas" class="btn-ghost" style="flex:0 0 auto;">🔄 Nuevas compras</button>
+    </div>
     <div id="lista-grupos" class="lista-grupos"></div>
   </div>
 
