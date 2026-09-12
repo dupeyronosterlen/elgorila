@@ -615,9 +615,10 @@ async function cargarFuncionesLista() {
     } catch { sel.innerHTML = '<option value="">—</option>'; }
 }
 
+let _listaPuertaCache = null;
+
 async function cargarListaPuerta() {
     const cont   = v$('lista-grupos');
-    const resumen = v$('lista-resumen');
     const fecha  = v$('lista-funcion')?.value;
     const token  = obtenerTokenAdmin();
     if (!cont || !fecha || !token || !_puedeVerListaPuerta()) return;
@@ -630,56 +631,127 @@ async function cargarListaPuerta() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');
 
-        if (resumen) {
-            resumen.textContent = `${data.ingresados || 0} / ${data.total || 0} ingresados · ${data.pendientes || 0} pendientes`;
-        }
-
-        if (!data.grupos?.length) {
-            cont.innerHTML = '<p style="color:var(--d-soft);">Sin ventas para esta función.</p>';
-            return;
-        }
-
-        cont.innerHTML = data.grupos.map(g => {
-            const color = _colorGrupo(g.certificado);
-            const papel = (g.cortesia || (g.metodoPago || '').toLowerCase() === 'cortesia')
-              ? `${g.cantidad || (g.boletos || []).length} × Cortesía`
-              : ((g.items || []).length
-                ? g.items.map(i => `${i.cantidad} × ${(i.tipo === 'estudiante' || i.tipo === 'inapam' || i.tipo === 'maestro') ? 'Credencial' : 'General'}`).join(' · ')
-                : `${g.cantidad || (g.boletos || []).length} × General`);
-            const boletosHtml = (g.boletos || []).map(b => `
-              <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0" title="${b.usado ? 'Toca para quitar check-in' : 'Toca para marcar ingreso'}">
-                <div>
-                  <div class="lista-boleto-folio">${b.folio || b.cert}</div>
-                  <div class="lista-boleto-meta">${b.tipo || 'entrada'} · #${b.numero || '—'}</div>
-                </div>
-                <div class="lista-boleto-check" aria-hidden="true">${b.usado ? '✓' : ''}</div>
-              </div>`).join('');
-            return `
-              <div class="lista-grupo" style="border-left-color:${color}">
-                <p class="lista-grupo-nombre">${g.nombre || '—'}</p>
-                <p class="lista-grupo-papel" style="margin:0 0 8px;font-size:14px;font-weight:600;color:var(--gold);">${papel}${g.codigoCupon ? ' · ' + g.codigoCupon : ''}</p>
-                ${boletosHtml}
-              </div>`;
-        }).join('');
-
-        cont.querySelectorAll('.lista-boleto:not(.usado)').forEach(el => {
-            el.addEventListener('click', () => canjearDesdeLista(el.dataset.cert));
-        });
-        cont.querySelectorAll('.lista-boleto.usado').forEach(el => {
-            el.addEventListener('click', () => descanjearDesdeLista(el.dataset.cert));
-        });
+        _listaPuertaCache = data;
+        _renderListaPuerta(data);
     } catch (e) {
         cont.innerHTML = `<p style="color:#f87171;">${e.message}</p>`;
     }
 }
 
-async function canjearDesdeLista(cert) {
-    if (!cert) return;
+function _renderResumenPuerta(data) {
+    const resumen = v$('lista-resumen');
+    if (resumen) {
+        resumen.textContent = `${data.ingresados || 0} / ${data.total || 0} ingresados · ${data.pendientes || 0} pendientes`;
+    }
+}
+
+// Un solo control de check por ORDEN (certificado de grupo), no uno por boleto —
+// mismo criterio que la lista impresa/PDF de taquilla: si son 2 o 14 entradas de
+// la misma compra, es un solo toque. Si algunas ya entraron por QR (parcial), el
+// toque marca únicamente las que faltan; si ya están todas, el toque las quita.
+function _renderListaPuerta(data, { append = false } = {}) {
+    const cont = v$('lista-grupos');
+    if (!cont) return;
+
+    // En modo "append" el resumen ya lo actualizó quien llama (con los totales
+    // reales del servidor) — `data` aquí solo trae los grupos nuevos a pintar.
+    if (!append) _renderResumenPuerta(data);
+
+    if (!data.grupos?.length) {
+        if (!append) cont.innerHTML = '<p style="color:var(--d-soft);">Sin ventas para esta función.</p>';
+        return;
+    }
+
+    const html = data.grupos.map(g => _htmlGrupoPuerta(g, append)).join('');
+    if (append) cont.insertAdjacentHTML('beforeend', html);
+    else cont.innerHTML = html;
+
+    _bindListaPuertaClicks(append ? data.grupos : null);
+}
+
+function _htmlGrupoPuerta(g, esNuevo) {
+    const color = _colorGrupo(g.certificado);
+    const papel = (g.cortesia || (g.metodoPago || '').toLowerCase() === 'cortesia')
+      ? `${g.cantidad || (g.boletos || []).length} × Cortesía`
+      : ((g.items || []).length
+        ? g.items.map(i => `${i.cantidad} × ${(i.tipo === 'estudiante' || i.tipo === 'inapam' || i.tipo === 'maestro') ? 'Credencial' : 'General'}`).join(' · ')
+        : `${g.cantidad || (g.boletos || []).length} × General`);
+    const boletos = g.boletos || [];
+    const usadoCount = boletos.filter(b => b.usado).length;
+    const totalCount = boletos.length;
+    const completo = totalCount > 0 && usadoCount === totalCount;
+    const folioResumen = boletos.map(b => b.folio || b.cert).join(' · ') || '—';
+    const metaTxt = (usadoCount > 0 && !completo)
+      ? `${usadoCount}/${totalCount} ya adentro — toca para el resto`
+      : `${totalCount} entrada${totalCount === 1 ? '' : 's'}`;
+    return `
+      <div class="lista-grupo" style="border-left-color:${esNuevo ? 'var(--gold)' : color}" data-grupo-cert="${g.certificado}">
+        <p class="lista-grupo-nombre">${g.nombre || '—'}${esNuevo ? ' <span style="color:var(--gold);font-size:11px;font-weight:700;">· NUEVA</span>' : ''}</p>
+        <p class="lista-grupo-papel" style="margin:0 0 8px;font-size:14px;font-weight:600;color:var(--gold);">${papel}${g.codigoCupon ? ' · ' + g.codigoCupon : ''}</p>
+        <div class="lista-boleto${completo ? ' usado' : ''}" data-grupo="${g.certificado}" role="button" tabindex="0" title="${completo ? 'Toca para quitar check-in de toda la orden' : 'Toca para marcar entrada de toda la orden'}">
+          <div>
+            <div class="lista-boleto-folio">${folioResumen}</div>
+            <div class="lista-boleto-meta">${metaTxt}</div>
+          </div>
+          <div class="lista-boleto-check" aria-hidden="true">${completo ? '✓' : ''}</div>
+        </div>
+      </div>`;
+}
+
+function _bindListaPuertaClicks(soloGrupos) {
+    const cont = v$('lista-grupos');
+    if (!cont) return;
+    const certs = soloGrupos ? new Set(soloGrupos.map(g => g.certificado)) : null;
+    cont.querySelectorAll('.lista-boleto[data-grupo]').forEach(el => {
+        const cert = el.dataset.grupo;
+        if (certs && !certs.has(cert)) return; // ya tenía su listener de antes
+        el.addEventListener('click', () => {
+            if (el.classList.contains('usado')) descanjearGrupoDesdeLista(cert);
+            else canjearGrupoDesdeLista(cert);
+        });
+    });
+}
+
+function _grupoEnCache(certGrupo) {
+    return (_listaPuertaCache?.grupos || []).find(g => g.certificado === certGrupo) || null;
+}
+
+// Repinta solo la tarjeta de ese grupo (folio/meta/check) y el resumen — nunca
+// vuelve a pedir ni redibujar el resto de la lista, así el scroll no se mueve.
+function _actualizarGrupoEnDOM(certGrupo) {
+    const g = _grupoEnCache(certGrupo);
+    const cont = v$('lista-grupos');
+    const nodoViejo = cont?.querySelector(`.lista-grupo[data-grupo-cert="${CSS.escape(certGrupo)}"]`);
+    if (!g || !nodoViejo) return false;
+
+    const div = document.createElement('div');
+    div.innerHTML = _htmlGrupoPuerta(g, false).trim();
+    const nodoNuevo = div.firstElementChild;
+    nodoViejo.replaceWith(nodoNuevo);
+    _bindListaPuertaClicks([g]);
+
+    if (_listaPuertaCache) _renderResumenPuerta(_listaPuertaCache);
+    return true;
+}
+
+// Nota permisos: canjear-lote exige rol taquilla/gerente/admin (PUEDE_CANJEAR_LOTE
+// en el worker) y el rol "validacion" (el de puerta, quien de hecho más usa este
+// panel) NO lo tiene — le tira 403 "La puerta solo verifica por QR". Por eso el
+// check de grupo NO usa canjear-lote: usa el mismo endpoint de canjear individual
+// (`/canjear/{codigo}`, permiso PUEDE_CANJEAR, sí incluye validacion) pasando el
+// CERTIFICADO DE LA ORDEN — el worker ya sabe que si ese código no corresponde a
+// un boleto específico, marca de una vez todos los pendientes de esa venta
+// (ver handleCanjear en worker/index.js). Un solo request, sin importar cuántos
+// boletos traiga la orden.
+async function canjearGrupoDesdeLista(certGrupo) {
+    const g = _grupoEnCache(certGrupo);
     const token = obtenerTokenAdmin();
-    if (!token) return;
+    if (!g || !token) return;
+    const pendientes = (g.boletos || []).filter(b => !b.usado);
+    if (!pendientes.length) return;
     try {
         const body = _canjeBodyExtra();
-        const res = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(cert)}`), {
+        const res = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(certGrupo)}`), {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -688,26 +760,78 @@ async function canjearDesdeLista(cert) {
             body,
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.error || 'No se pudo marcar'); return; }
-        await cargarListaPuerta();
-        _agregarIngreso(data.folio || cert, 1);
+        if (!res.ok) { alert(data.error || 'No se pudo marcar la orden'); return; }
+
+        pendientes.forEach(b => { b.usado = true; });
+        if (_listaPuertaCache) {
+            _listaPuertaCache.ingresados = (_listaPuertaCache.ingresados || 0) + pendientes.length;
+            _listaPuertaCache.pendientes = Math.max(0, (_listaPuertaCache.pendientes || 0) - pendientes.length);
+        }
+        _actualizarGrupoEnDOM(certGrupo);
+        _agregarIngreso(g.nombre || certGrupo, pendientes.length);
     } catch { alert('Error de conexión'); }
 }
 
-async function descanjearDesdeLista(cert) {
-    if (!cert || !confirm(`¿Quitar check-in de ${cert}?`)) return;
+async function descanjearGrupoDesdeLista(certGrupo) {
+    const g = _grupoEnCache(certGrupo);
     const token = obtenerTokenAdmin();
-    if (!token) return;
+    if (!g || !token) return;
+    const boletos = g.boletos || [];
+    if (!confirm(`¿Quitar el check-in de toda la orden de ${g.nombre || certGrupo} (${boletos.length} boleto${boletos.length === 1 ? '' : 's'})?`)) return;
     try {
-        const res = await fetch(window.teatroAdminApi(`descanjear/${encodeURIComponent(cert)}`), {
-            method: 'POST',
+        let quitados = 0;
+        for (const b of boletos) {
+            if (!b.usado) continue;
+            const res = await fetch(window.teatroAdminApi(`descanjear/${encodeURIComponent(b.cert)}`), {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            if (!res.ok) { alert(data.error || `No se pudo quitar ${b.cert}`); continue; }
+            b.usado = false;
+            quitados++;
+        }
+        if (_listaPuertaCache && quitados) {
+            _listaPuertaCache.ingresados = Math.max(0, (_listaPuertaCache.ingresados || 0) - quitados);
+            _listaPuertaCache.pendientes = (_listaPuertaCache.pendientes || 0) + quitados;
+        }
+        _actualizarGrupoEnDOM(certGrupo);
+    } catch { alert('Error de conexión'); }
+}
+
+// Botón "Nuevas compras": trae la lista fresca del servidor y SOLO agrega al
+// final las órdenes que no existían en la caché — nunca reordena ni toca las
+// tarjetas ya pintadas, así quien esté a media búsqueda no pierde su lugar.
+async function verNuevasComprasPuerta() {
+    const fecha = v$('lista-funcion')?.value;
+    const token = obtenerTokenAdmin();
+    if (!fecha || !token || !_listaPuertaCache) return;
+    try {
+        const res = await fetch(window.teatroAdminApi(`lista-puerta?fecha=${encodeURIComponent(fecha)}`), {
             headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.error || 'No se pudo quitar el check-in'); return; }
-        await cargarListaPuerta();
-    } catch { alert('Error de conexión'); }
+        if (!res.ok) throw new Error(data.error || 'Error');
+
+        const certsActuales = new Set((_listaPuertaCache.grupos || []).map(g => g.certificado));
+        const nuevos = (data.grupos || []).filter(g => !certsActuales.has(g.certificado));
+
+        // El resumen (ingresados/total/pendientes) sí se toma completo del servidor:
+        // es la fuente de verdad y no depende del orden en pantalla.
+        _listaPuertaCache.ingresados = data.ingresados;
+        _listaPuertaCache.total = data.total;
+        _listaPuertaCache.pendientes = data.pendientes;
+        _renderResumenPuerta(_listaPuertaCache);
+
+        if (!nuevos.length) {
+            alert('Sin compras nuevas desde la última carga.');
+            return;
+        }
+        _listaPuertaCache.grupos = [...(_listaPuertaCache.grupos || []), ...nuevos];
+        _renderListaPuerta({ grupos: nuevos }, { append: true });
+    } catch (e) { alert(e.message); }
 }
+window.verNuevasComprasPuerta = verNuevasComprasPuerta;
 
 // ── Modo nombre / lote ─────────────────────────────────────────────────────────
 
@@ -908,6 +1032,7 @@ function _bindVerificarUI() {
         if (e.key === 'Enter') buscarPorNombre();
     });
     v$('lista-funcion')?.addEventListener('change', cargarListaPuerta);
+    v$('btn-lista-nuevas')?.addEventListener('click', verNuevasComprasPuerta);
 
 }
 
