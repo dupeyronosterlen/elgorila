@@ -20,9 +20,11 @@ let _grupoGrandeNotificado = false;
 let _confirmandoPedido = false;
 let _omitirScrollFecha = false;
 let _espejoRestantes   = null; // null = sin dato aún; number = restantes en vivo para esta función
-let _espejoExtra       = 0;    // > 0 = de esos restantes, cuántos son cupo extra ya abierto (cupo base agotado)
+let _espejoExtra       = 0;    // > 0 = de esos restantes, cuántos son cupo extra sin usar (cupo base agotado)
+let _espejoExtraTotal  = 0;    // tamaño fijo del cupo extra que se abrió (para "abrimos N extra")
 let _grupo20Restantes  = null; // mismo patrón que ESPEJO, desde que GRUPO20 tiene tope (11 sep 2026)
 let _grupo20Extra      = 0;
+let _grupo20ExtraTotal = 0;
 
 // Chequeo real de cupo (Worker) solo cuando esa fecha ya vendió más de esto.
 const UMBRAL_CHEQUEO_CUPO = 100;
@@ -363,10 +365,12 @@ function pintarGrupo20Cupo(data) {
     if (!info || typeof info.restantes !== 'number') {
         _grupo20Restantes = null;
         _grupo20Extra = 0;
+        _grupo20ExtraTotal = 0;
         return;
     }
     _grupo20Restantes = info.restantes;
     _grupo20Extra = typeof info.extraDisponibles === 'number' ? info.extraDisponibles : 0;
+    _grupo20ExtraTotal = typeof info.extraTotal === 'number' ? info.extraTotal : 0;
 }
 
 function pintarEspejoCupo(data) {
@@ -377,6 +381,7 @@ function pintarEspejoCupo(data) {
     if (!info || typeof info.restantes !== 'number') {
         _espejoRestantes = null;
         _espejoExtra = 0;
+        _espejoExtraTotal = 0;
         el.hidden = true;
         el.textContent = '';
         return;
@@ -384,14 +389,16 @@ function pintarEspejoCupo(data) {
     const n = info.restantes;
     _espejoRestantes = n;
     _espejoExtra = typeof info.extraDisponibles === 'number' ? info.extraDisponibles : 0;
+    _espejoExtraTotal = typeof info.extraTotal === 'number' ? info.extraTotal : 0;
     if (n <= 0) {
         el.textContent = 'Promoción ESPEJO se agotó para esta función';
         el.classList.add('agotado');
     } else if (_espejoExtra > 0) {
         // Se acabó el cupo original y se abrieron códigos extra: decirlo tal cual,
-        // no mezclarlo con el conteo normal para que no parezca que nunca se agotó.
-        const etiquetaExtra = _espejoExtra === 1 ? 'código extra' : 'códigos extra';
-        el.innerHTML = '¡Se agotaron los códigos originales, pero abrimos <strong>' + _espejoExtra + ' ' + etiquetaExtra + '</strong>! · ESPEJO para este sábado';
+        // y mostrar que el extra TAMBIÉN se va agotando (no repetir el tamaño fijo
+        // como si fueran siempre los mismos disponibles).
+        const etiquetaExtra = _espejoExtraTotal === 1 ? 'código extra' : 'códigos extra';
+        el.innerHTML = '¡Se agotaron los códigos originales, pero abrimos <strong>' + _espejoExtraTotal + ' ' + etiquetaExtra + '</strong> — quedan <strong>' + _espejoExtra + '</strong> · ESPEJO para este sábado';
         el.classList.remove('agotado');
     } else if (n === 1) {
         el.innerHTML = '<strong>1 código restante</strong> · ESPEJO para este sábado';
@@ -552,10 +559,12 @@ function actualizarPantalla() {
                 promoBanner.className = 'promo-grupo-banner promo-grupo-clickable';
                 if (_espejoExtra > 0) {
                     // Cupo original agotado, pero se abrieron extras: decirlo tal
-                    // cual en vez de sonar como si nunca se hubiera acabado.
-                    const etiquetaExtra = _espejoExtra === 1 ? 'código extra' : 'códigos extra';
+                    // cual, mostrando también que el extra se va agotando (no
+                    // repetir el tamaño fijo como si siempre quedaran los mismos).
+                    const etiquetaExtra = _espejoExtraTotal === 1 ? 'código extra' : 'códigos extra';
                     promoBanner.innerHTML =
-                        '🎉 Los códigos originales se agotaron, ¡pero abrimos <strong>' + _espejoExtra + ' ' + etiquetaExtra + '</strong> para esta función! ' +
+                        '🎉 Los códigos originales se agotaron, ¡pero abrimos <strong>' + _espejoExtraTotal + ' ' + etiquetaExtra + '</strong> para esta función! ' +
+                        '· quedan <strong>' + _espejoExtra + '</strong> ' +
                         '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
                 } else {
                     const etiqueta = _espejoRestantes === 1 ? 'código disponible' : 'códigos disponibles';
@@ -593,9 +602,10 @@ function actualizarPantalla() {
                 promoBanner.className = 'promo-grupo-banner promo-grupo-clickable';
                 const pct = Math.round(CUPON_GRUPO20_PCT * 100);
                 if (_grupo20Extra > 0) {
-                    const etiquetaExtra = _grupo20Extra === 1 ? 'código extra' : 'códigos extra';
+                    const etiquetaExtra = _grupo20ExtraTotal === 1 ? 'código extra' : 'códigos extra';
                     promoBanner.innerHTML =
-                        `🎉 GRUPO20 se agotó para esta función, ¡pero abrimos <strong>${_grupo20Extra} ${etiquetaExtra}</strong>! ` +
+                        `🎉 GRUPO20 se agotó para esta función, ¡pero abrimos <strong>${_grupo20ExtraTotal} ${etiquetaExtra}</strong>! ` +
+                        `· quedan <strong>${_grupo20Extra}</strong> ` +
                         `· −${pct}% en tus ${gen} generales ` +
                         '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
                 } else {

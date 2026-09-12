@@ -1758,9 +1758,11 @@ async function resumenCupoPorFuncion(codigo, entry, fecha, env, baseDefault) {
     max,
     usados,
     restantes,
-    // Cuántos de los restantes vienen del cupo extra (solo si ya se agotó el
-    // cupo base) — el front avisa "abrimos N extra" en vez de sonar como si
-    // nunca se hubiera acabado.
+    // Tamaño fijo del cupo extra que se abrió (para el mensaje "abrimos N extra").
+    extraTotal: extra,
+    // Cuántos de esos extra quedan sin usar (solo si ya se agotó el cupo base) —
+    // el front avisa "abrimos N extra — quedan M" en vez de sonar como si nunca
+    // se hubiera acabado, y sin confundir "cuántos abrimos" con "cuántos quedan".
     extraDisponibles: (extra > 0 && usados >= base) ? restantes : 0,
   };
 }
@@ -1826,6 +1828,7 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
     soloFecha:    typeof entry.solo_fecha === 'string' ? entry.solo_fecha : null,
     maxUsosPorFuncion: maxPorFn > 0 ? maxPorFn : null,
     usosRestantesFuncion,
+    extraTotal: extraPorFn,
     extraDisponibles,
   };
 
