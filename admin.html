@@ -1002,12 +1002,12 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
 <div class="bol-card">
     <h2 class="bol-card-title">Folio o QR</h2>
     <div class="bol-card-rule"></div>
-    <span class="sec-label">Escanea el QR del boleto (CERT-)</span>
+    <span class="sec-label">Escanea el QR, escribe el código CERT- o el nombre del comprador</span>
 
-    <label class="form-label" for="codigo-qr-input">Código CERT</label>
+    <label class="form-label" for="codigo-qr-input">Código CERT o nombre</label>
     <div class="form-row" style="margin-bottom:14px;">
       <input type="text" id="codigo-qr-input" class="form-input"
-             placeholder="CERT-…" autocomplete="off" autocapitalize="characters">
+             placeholder="CERT-… o nombre del comprador" autocomplete="off" autocapitalize="characters">
       <button type="button" id="btn-verificar" class="btn-primario" style="flex:0 0 auto;">
         Verificar
       </button>
@@ -1136,6 +1136,7 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
     <div id="scanner-emergencia-resultado" class="scanner-emergencia-resultado hidden" role="dialog" aria-live="polite">
       <div class="scanner-emergencia-card" id="scanner-emergencia-card">
         <p class="scanner-emergencia-estado" id="scanner-emergencia-estado">—</p>
+        <p class="scanner-emergencia-nombre hidden" id="scanner-emergencia-nombre"></p>
         <p class="scanner-emergencia-total" id="scanner-emergencia-total"></p>
         <div class="scanner-emergencia-lineas" id="scanner-emergencia-lineas"></div>
         <p class="scanner-emergencia-meta" id="scanner-emergencia-meta"></p>

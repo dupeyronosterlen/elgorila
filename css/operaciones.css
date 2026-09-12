@@ -650,6 +650,15 @@ tbody tr:hover td { color: var(--d-fg); }
 .scanner-emergencia-card.ok .scanner-emergencia-estado { color: #4ade80; }
 .scanner-emergencia-card.bad .scanner-emergencia-estado { color: #f87171; }
 .scanner-emergencia-card.warn .scanner-emergencia-estado { color: #fbbf24; }
+.scanner-emergencia-nombre {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--gold, #d99b3a);
+  line-height: 1.3;
+}
+.scanner-emergencia-nombre.hidden { display: none; }
 .scanner-emergencia-total {
   margin: 0 0 14px;
   font-size: 28px;

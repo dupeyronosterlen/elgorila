@@ -21,11 +21,27 @@ function _canjeBodyExtra() {
   return fecha ? JSON.stringify({ fecha }) : undefined;
 }
 
+function _pareceCodigoCert(s) {
+    return /^(CERT-|WIL-)/i.test((s || '').trim());
+}
+
 async function verificarBoleto() {
-    const input    = v$('codigo-qr-input');
-    const codigo   = (input?.value || '').trim().toUpperCase();
-    if (!codigo) { alert('Ingresa un código de folio'); return; }
+    const input = v$('codigo-qr-input');
+    const raw   = (input?.value || '').trim();
+    if (!raw) { alert('Ingresa un código de folio o el nombre del comprador'); return; }
     if (!window.API_BASE) { alert('API no configurada'); return; }
+
+    // El buscador de caja también acepta el nombre del comprador: si lo que se
+    // escribió no parece un código (CERT-… / WIL-…), se busca por nombre/email
+    // en las ventas de la función seleccionada y, si hay una sola coincidencia,
+    // se resuelve sola reusando este mismo verificarBoleto() con su certificado
+    // — mismo endpoint público, misma vista, mismo botón de "Marcar entrada".
+    if (!_pareceCodigoCert(raw)) {
+        await _buscarPorNombreEnCaja(raw);
+        return;
+    }
+
+    const codigo = raw.toUpperCase();
 
     _codigoActual = codigo;
     _ventaActual  = null;
@@ -153,6 +169,72 @@ function mostrarInvalido(mensaje) {
     v$('resultado-invalido').classList.remove('hidden');
     v$('resultado-error').textContent = mensaje;
     v$('resultado-info-adicional').classList.add('hidden');
+}
+
+// Busca por nombre/email dentro de las ventas de la función seleccionada (mismo
+// filtro que ya usa "Lista de llamado") y resuelve sobre el mismo código de
+// folio de siempre — no inventa una vista nueva para no duplicar reglas de qué
+// se le puede mostrar a quién.
+async function _buscarPorNombreEnCaja(query) {
+    if (!_puedeBuscarNombre()) {
+        mostrarInvalido(`"${query}" no parece un código (CERT-… / WIL-…) y tu rol no tiene permiso para buscar por nombre.`);
+        return;
+    }
+    const fecha = _fechaPuertaSeleccionada();
+    if (!fecha) {
+        mostrarInvalido('Selecciona primero la función (arriba, en "Lista de llamado") para poder buscar por nombre.');
+        return;
+    }
+    const token = obtenerTokenAdmin();
+    if (!token) { mostrarInvalido('Sin sesión de administrador.'); return; }
+
+    const btnV = v$('btn-verificar');
+    if (btnV) { btnV.disabled = true; btnV.textContent = 'Buscando…'; }
+    try {
+        const res = await fetch(window.teatroAdminApi(`ventas?fecha=${encodeURIComponent(fecha)}&q=${encodeURIComponent(query)}`), {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) { mostrarInvalido(data.error || 'Error al buscar por nombre.'); return; }
+
+        const activas = (data.ventas || []).filter(v => v.estado !== 'reembolsada');
+        if (!activas.length) {
+            mostrarInvalido(`Sin resultados para "${query}" en esta función.`);
+            return;
+        }
+        if (activas.length === 1) {
+            v$('codigo-qr-input').value = activas[0].certificado || activas[0].codigo;
+            await verificarBoleto();
+            return;
+        }
+        _mostrarOpcionesNombreEnCaja(activas, query);
+    } catch {
+        mostrarInvalido('Error de conexión al buscar por nombre.');
+    } finally {
+        if (btnV) { btnV.disabled = false; btnV.textContent = 'Verificar'; }
+    }
+}
+
+function _mostrarOpcionesNombreEnCaja(ventas, query) {
+    mostrarInvalido(`${ventas.length} coincidencias para "${query}" — toca la orden correcta:`);
+    const info = v$('resultado-info-adicional');
+    info.classList.remove('hidden');
+    info.innerHTML = ventas.slice(0, 12).map(v => {
+        const cert = v.certificado || v.codigo;
+        const cant = v.cantidad || (v.boletos || []).length || 1;
+        const estadoTxt = v.usado ? 'ya canjeado' : 'pendiente';
+        return `<div class="resultado-fila" data-opcion-cert="${cert}" role="button" tabindex="0"
+                     style="cursor:pointer;border-top:1px solid var(--d-faint);padding-top:8px;margin-top:8px;">
+                  <span>${v.nombre || v.email || '—'}</span>
+                  <span>${cant} bol. · ${estadoTxt}</span>
+                </div>`;
+    }).join('');
+    info.querySelectorAll('[data-opcion-cert]').forEach(el => {
+        el.addEventListener('click', () => {
+            v$('codigo-qr-input').value = el.dataset.opcionCert;
+            verificarBoleto();
+        });
+    });
 }
 
 async function marcarComoUsado() {
@@ -394,10 +476,11 @@ function _resumenEmergencia(venta) {
     return { total: n, lineas, texto: lineas.join(' · ') };
 }
 
-function _mostrarResultadoEmergencia({ kind, titulo, lineas, total, meta }) {
+function _mostrarResultadoEmergencia({ kind, titulo, lineas, total, meta, nombre }) {
     const box = document.getElementById('scanner-emergencia-resultado');
     const card = document.getElementById('scanner-emergencia-card');
     const estado = document.getElementById('scanner-emergencia-estado');
+    const nombreEl = document.getElementById('scanner-emergencia-nombre');
     const totalEl = document.getElementById('scanner-emergencia-total');
     const lineasEl = document.getElementById('scanner-emergencia-lineas');
     const metaEl = document.getElementById('scanner-emergencia-meta');
@@ -409,6 +492,16 @@ function _mostrarResultadoEmergencia({ kind, titulo, lineas, total, meta }) {
     else card.classList.add('warn');
 
     if (estado) estado.textContent = titulo || '—';
+    // Línea propia para el comprador, arriba del total — nunca metida en la
+    // misma fila que función/folio (eso es "meta", chico y monoespaciado) para
+    // que no se encimen. Se respeta el mismo permiso de PII que el resto del
+    // panel: el rol "validacion" (puerta) no ve nombre de comprador en ningún
+    // lado, tampoco aquí.
+    if (nombreEl) {
+        const mostrarNombre = !!nombre && _puedeVerComprador();
+        nombreEl.textContent = mostrarNombre ? nombre : '';
+        nombreEl.classList.toggle('hidden', !mostrarNombre);
+    }
     if (totalEl) {
         if (total != null && total > 0) {
             totalEl.textContent = total === 1 ? '1 boleto' : `${total} boletos`;
@@ -475,6 +568,7 @@ async function procesarScanEmergencia(codigo) {
 
         const resumen = _resumenEmergencia(data);
         const meta = `${data.funcionNombre || data.fecha || '—'} · ${codigo}`;
+        const nombreComprador = data.nombre || data.email || null;
 
         if (data.usado) {
             const cuandoMX = data.usadoEn
@@ -486,6 +580,7 @@ async function procesarScanEmergencia(codigo) {
                 total: resumen.total,
                 lineas: [...resumen.lineas, cuandoMX ? `Canjeado: ${cuandoMX}` : 'Ya tenía entrada'].filter(Boolean),
                 meta,
+                nombre: nombreComprador,
             });
             return;
         }
@@ -518,6 +613,7 @@ async function procesarScanEmergencia(codigo) {
                 lineas: [canjeData.error || 'Error al canjear', ...resumen.lineas],
                 total: resumen.total,
                 meta,
+                nombre: nombreComprador,
             });
             return;
         }
@@ -528,6 +624,7 @@ async function procesarScanEmergencia(codigo) {
             total: resumen.total,
             lineas: resumen.lineas,
             meta,
+            nombre: nombreComprador,
         });
 
         if (_puedeCanjear()) cargarListaPuerta();
