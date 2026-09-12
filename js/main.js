@@ -391,7 +391,7 @@ function pintarEspejoCupo(data) {
 // continúa al checkout y aplica ESPEJO automáticamente, sin que el cliente
 // tenga que escribirlo a mano. Reutiliza irAConfirmacion() y aplicarCuponInline()
 // tal cual existen — la validación real sigue viviendo en el Worker.
-async function activarEspejoDesdeCarrito() {
+async function activarCuponDesdeCarrito(codigo) {
     const banner = document.getElementById('promo-grupo-banner');
     if (banner) banner.style.opacity = '.6';
     try {
@@ -402,7 +402,7 @@ async function activarEspejoDesdeCarrito() {
         const detalles = document.querySelector('.ichk-cupon-details');
         const input = document.getElementById('ichk-cupon-input');
         if (detalles) detalles.open = true;
-        if (input) input.value = 'ESPEJO';
+        if (input) input.value = codigo;
         if (typeof window.aplicarCuponInline === 'function') {
             await window.aplicarCuponInline();
         }
@@ -410,7 +410,10 @@ async function activarEspejoDesdeCarrito() {
         if (banner) banner.style.opacity = '';
     }
 }
+function activarEspejoDesdeCarrito() { return activarCuponDesdeCarrito('ESPEJO'); }
+function activarGrupo20DesdeCarrito() { return activarCuponDesdeCarrito('GRUPO20'); }
 window.activarEspejoDesdeCarrito = activarEspejoDesdeCarrito;
+window.activarGrupo20DesdeCarrito = activarGrupo20DesdeCarrito;
 
 function refrescarDisponibilidadWorker() {
     if (!fechaIsoActual || !window.API_BASE) return;
@@ -569,10 +572,19 @@ function actualizarPantalla() {
             && gen === totalCantidad()
             && !tieneBoletosCredencial()
         ) {
-            promoBanner.className = 'promo-grupo-banner';
+            promoBanner.className = 'promo-grupo-banner promo-grupo-clickable';
             promoBanner.style.color = 'rgba(217,155,58,.75)';
             promoBanner.innerHTML =
-                `Grupo: ingresa <strong>GRUPO20</strong> al pagar — −${Math.round(CUPON_GRUPO20_PCT * 100)}% en ${gen} generales`;
+                `🎉 <strong>¡Felicidades!</strong> Eres acreedor al código <strong>GRUPO20</strong> ` +
+                `· −${Math.round(CUPON_GRUPO20_PCT * 100)}% en tus ${gen} generales ` +
+                '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
+            promoBanner.style.cursor = 'pointer';
+            promoBanner.setAttribute('role', 'button');
+            promoBanner.setAttribute('tabindex', '0');
+            promoBanner.onclick = activarGrupo20DesdeCarrito;
+            promoBanner.onkeydown = function (e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activarGrupo20DesdeCarrito(); }
+            };
         } else if (gen >= CUPON_GRUPO20_HINT_MIN && gen < CUPON_GRUPO20_MIN && !tieneBoletosCredencial()) {
             promoBanner.className = 'promo-grupo-banner';
             promoBanner.style.color = 'rgba(217,155,58,.55)';
