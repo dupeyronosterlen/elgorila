@@ -1737,6 +1737,32 @@ async function usosCuponEnFuncion(codigo, fecha, env) {
   return parseInt((await env.INVENTARIO.get(claveUsosCuponFuncion(codigo, iso))) || '0', 10);
 }
 
+// Resumen de cupo por función para un cupón con tope (usado por /disponibilidad,
+// que el sitio consulta para pintar el badge "quedan N" antes de intentar pagar).
+// `baseDefault` es el piso duro del cupón si el KV no trae max_usos_por_funcion
+// (ver mismo patrón en validarCuponDescuento — deben coincidir o el banner del
+// sitio y el checkout se desincronizan).
+async function resumenCupoPorFuncion(codigo, entry, fecha, env, baseDefault) {
+  let base = Number(entry.max_usos_por_funcion) || 0;
+  if (baseDefault > 0) base = Math.max(base, baseDefault);
+  let extra = 0;
+  if (fecha && entry.extras_por_fecha && typeof entry.extras_por_fecha === 'object') {
+    extra = Number(entry.extras_por_fecha[fecha]) || 0;
+  }
+  const max = base + extra;
+  const usados = await usosCuponEnFuncion(codigo, fecha, env);
+  const restantes = Math.max(0, max - usados);
+  return {
+    max,
+    usados,
+    restantes,
+    // Cuántos de los restantes vienen del cupo extra (solo si ya se agotó el
+    // cupo base) — el front avisa "abrimos N extra" en vez de sonar como si
+    // nunca se hubiera acabado.
+    extraDisponibles: (extra > 0 && usados >= base) ? restantes : 0,
+  };
+}
+
 async function validarCuponDescuento(codigoRaw, env, fecha) {
   const codigo = normalizarCodigoCupon(codigoRaw);
   if (!codigo || codigo.length < 4) return { ok: false, error: 'Código inválido.' };
@@ -1755,7 +1781,10 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
   }
 
   let baseMaxPorFn = Number(entry.max_usos_por_funcion) || 0;
-  if (codigo === 'ESPEJO') baseMaxPorFn = Math.max(baseMaxPorFn, 10);
+  // ESPEJO y GRUPO20 tienen piso duro de 10 usos por función aunque el KV no
+  // traiga max_usos_por_funcion (decisión de Os, 11 sep 2026 para GRUPO20 —
+  // antes no tenía tope). Ver mismo piso en resumenCupoPorFuncion().
+  if (codigo === 'ESPEJO' || codigo === 'GRUPO20') baseMaxPorFn = Math.max(baseMaxPorFn, 10);
   const fechaIso = fechaIsoCupon(fecha);
   // Extra puntual por función, aditivo al tope base — nunca reemplaza el tope
   // normal, solo lo sube para la(s) fecha(s) listada(s) en el KV. Ej.:
@@ -2915,27 +2944,10 @@ async function handleDisponibilidad(tid, request, env) {
   let cupones = null;
   try {
     const catalogo = await getCodigosDescuento(env);
-    const espejo    = catalogo.ESPEJO || {};
-    let baseEspejo  = Number(espejo.max_usos_por_funcion) || 0;
-    baseEspejo = Math.max(baseEspejo, 10);
-    // Extra puntual por fecha — ver mismo comentario en validarCuponDescuento().
-    // Debe coincidir o el banner del sitio y el checkout se desincronizan.
-    let extraEspejo = 0;
-    if (fecha && espejo.extras_por_fecha && typeof espejo.extras_por_fecha === 'object') {
-      extraEspejo = Number(espejo.extras_por_fecha[fecha]) || 0;
-    }
-    const maxEspejo = baseEspejo + extraEspejo;
-    const usadosEspejo = await usosCuponEnFuncion('ESPEJO', fecha, env);
-    const restantesEspejo = Math.max(0, maxEspejo - usadosEspejo);
     cupones = {
-      ESPEJO: {
-        max: maxEspejo,
-        usados: usadosEspejo,
-        restantes: restantesEspejo,
-        // Cuántos de los restantes vienen del cupo extra (solo si ya se agotó
-        // el cupo base) — el front lo usa para avisar "abrimos N extra".
-        extraDisponibles: (extraEspejo > 0 && usadosEspejo >= baseEspejo) ? restantesEspejo : 0,
-      },
+      ESPEJO:   await resumenCupoPorFuncion('ESPEJO', catalogo.ESPEJO || {}, fecha, env, 10),
+      // Mismo piso de 10 que ESPEJO, decisión de Os 11 sep 2026 (antes sin tope).
+      GRUPO20:  await resumenCupoPorFuncion('GRUPO20', catalogo.GRUPO20 || {}, fecha, env, 10),
     };
   } catch { /* el contador es informativo; no tumbar disponibilidad */ }
 

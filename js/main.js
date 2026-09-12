@@ -21,6 +21,8 @@ let _confirmandoPedido = false;
 let _omitirScrollFecha = false;
 let _espejoRestantes   = null; // null = sin dato aún; number = restantes en vivo para esta función
 let _espejoExtra       = 0;    // > 0 = de esos restantes, cuántos son cupo extra ya abierto (cupo base agotado)
+let _grupo20Restantes  = null; // mismo patrón que ESPEJO, desde que GRUPO20 tiene tope (11 sep 2026)
+let _grupo20Extra      = 0;
 
 // Chequeo real de cupo (Worker) solo cuando esa fecha ya vendió más de esto.
 const UMBRAL_CHEQUEO_CUPO = 100;
@@ -354,7 +356,21 @@ function aplicarDisponibilidadWorker(data) {
     pintarEspejoCupo(data);
 }
 
+function pintarGrupo20Cupo(data) {
+    // Sin badge propio en el DOM todavía (a diferencia de #espejo-cupo) — solo
+    // alimenta el estado que usa el banner clickeable de actualizarPantalla().
+    const info = data && data.cupones && data.cupones.GRUPO20;
+    if (!info || typeof info.restantes !== 'number') {
+        _grupo20Restantes = null;
+        _grupo20Extra = 0;
+        return;
+    }
+    _grupo20Restantes = info.restantes;
+    _grupo20Extra = typeof info.extraDisponibles === 'number' ? info.extraDisponibles : 0;
+}
+
 function pintarEspejoCupo(data) {
+    pintarGrupo20Cupo(data);
     const el = document.getElementById('espejo-cupo');
     if (!el) return;
     const info = data && data.cupones && data.cupones.ESPEJO;
@@ -572,19 +588,39 @@ function actualizarPantalla() {
             && gen === totalCantidad()
             && !tieneBoletosCredencial()
         ) {
-            promoBanner.className = 'promo-grupo-banner promo-grupo-clickable';
             promoBanner.style.color = 'rgba(217,155,58,.75)';
-            promoBanner.innerHTML =
-                `🎉 <strong>¡Felicidades!</strong> Eres acreedor al código <strong>GRUPO20</strong> ` +
-                `· −${Math.round(CUPON_GRUPO20_PCT * 100)}% en tus ${gen} generales ` +
-                '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
-            promoBanner.style.cursor = 'pointer';
-            promoBanner.setAttribute('role', 'button');
-            promoBanner.setAttribute('tabindex', '0');
-            promoBanner.onclick = activarGrupo20DesdeCarrito;
-            promoBanner.onkeydown = function (e) {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activarGrupo20DesdeCarrito(); }
-            };
+            if (typeof _grupo20Restantes === 'number' && _grupo20Restantes > 0) {
+                promoBanner.className = 'promo-grupo-banner promo-grupo-clickable';
+                const pct = Math.round(CUPON_GRUPO20_PCT * 100);
+                if (_grupo20Extra > 0) {
+                    const etiquetaExtra = _grupo20Extra === 1 ? 'código extra' : 'códigos extra';
+                    promoBanner.innerHTML =
+                        `🎉 GRUPO20 se agotó para esta función, ¡pero abrimos <strong>${_grupo20Extra} ${etiquetaExtra}</strong>! ` +
+                        `· −${pct}% en tus ${gen} generales ` +
+                        '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
+                } else {
+                    promoBanner.innerHTML =
+                        `🎉 <strong>¡Felicidades!</strong> Eres acreedor al código <strong>GRUPO20</strong> ` +
+                        `· −${pct}% en tus ${gen} generales ` +
+                        '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
+                }
+                promoBanner.style.cursor = 'pointer';
+                promoBanner.setAttribute('role', 'button');
+                promoBanner.setAttribute('tabindex', '0');
+                promoBanner.onclick = activarGrupo20DesdeCarrito;
+                promoBanner.onkeydown = function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activarGrupo20DesdeCarrito(); }
+                };
+            } else if (_grupo20Restantes === 0) {
+                // Agotado para esta función: no invitamos a un clic que va a fallar.
+                promoBanner.className = 'promo-grupo-banner hidden';
+                promoBanner.innerHTML = '';
+            } else {
+                // Sin dato en vivo todavía: hint estático, sigue pudiendo escribirse a mano.
+                promoBanner.className = 'promo-grupo-banner';
+                promoBanner.innerHTML =
+                    `Grupo: ingresa <strong>GRUPO20</strong> al pagar — −${Math.round(CUPON_GRUPO20_PCT * 100)}% en ${gen} generales`;
+            }
         } else if (gen >= CUPON_GRUPO20_HINT_MIN && gen < CUPON_GRUPO20_MIN && !tieneBoletosCredencial()) {
             promoBanner.className = 'promo-grupo-banner';
             promoBanner.style.color = 'rgba(217,155,58,.55)';
