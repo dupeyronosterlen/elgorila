@@ -1743,6 +1743,11 @@ async function usosCuponEnFuncion(codigo, fecha, env) {
 // (ver mismo patrón en validarCuponDescuento — deben coincidir o el banner del
 // sitio y el checkout se desincronizan).
 async function resumenCupoPorFuncion(codigo, entry, fecha, env, baseDefault) {
+  // Cierre manual puntual por fecha — mismo mecanismo que validarCuponDescuento().
+  if (fecha && Array.isArray(entry.fechas_cerradas) && entry.fechas_cerradas.includes(fecha)) {
+    const usados = await usosCuponEnFuncion(codigo, fecha, env);
+    return { max: usados, usados, restantes: 0, extraTotal: 0, extraDisponibles: 0 };
+  }
   let base = Number(entry.max_usos_por_funcion) || 0;
   if (baseDefault > 0) base = Math.max(base, baseDefault);
   // Extra estándar: se suma en TODAS las funciones (a diferencia de extras_por_fecha,
@@ -1784,13 +1789,22 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
     if (usos >= entry.max_usos) return { ok: false, error: 'Código agotado.' };
   }
 
+  const fechaIso = fechaIsoCupon(fecha);
+  // Cierre manual puntual por fecha (decisión de Os) — independiente del tope
+  // base/extra normal. Se usa para cerrar un código en UNA función específica
+  // sin afectar el resto (ej. ESPEJO cerrado solo para la función de hoy).
+  if (fechaIso && Array.isArray(entry.fechas_cerradas) && entry.fechas_cerradas.includes(fechaIso)) {
+    return {
+      ok: false,
+      error: `${entry.nombre || codigo} se agotó para esta función. Elige otra fecha o paga precio general.`,
+    };
+  }
   let baseMaxPorFn = Number(entry.max_usos_por_funcion) || 0;
   // Piso duro por código aunque el KV no traiga max_usos_por_funcion (decisión de
   // Os, 12 sep 2026): ESPEJO 10 base, GRUPO20 5 base. Ver mismo piso en
   // resumenCupoPorFuncion().
   if (codigo === 'ESPEJO') baseMaxPorFn = Math.max(baseMaxPorFn, 10);
   if (codigo === 'GRUPO20') baseMaxPorFn = Math.max(baseMaxPorFn, 5);
-  const fechaIso = fechaIsoCupon(fecha);
   // Extra estándar (todas las funciones) + extra puntual por fecha — ambos
   // aditivos al tope base, nunca lo reemplazan. El estándar es la mecánica
   // normal ("se agotaron los N originales, abrimos 5 extra"); el de fecha es
