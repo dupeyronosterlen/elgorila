@@ -1745,9 +1745,11 @@ async function usosCuponEnFuncion(codigo, fecha, env) {
 async function resumenCupoPorFuncion(codigo, entry, fecha, env, baseDefault) {
   let base = Number(entry.max_usos_por_funcion) || 0;
   if (baseDefault > 0) base = Math.max(base, baseDefault);
-  let extra = 0;
+  // Extra estándar: se suma en TODAS las funciones (a diferencia de extras_por_fecha,
+  // que solo aplica a fechas puntuales listadas en el KV). Ambos son aditivos.
+  let extra = Number(entry.extra_estandar) || 0;
   if (fecha && entry.extras_por_fecha && typeof entry.extras_por_fecha === 'object') {
-    extra = Number(entry.extras_por_fecha[fecha]) || 0;
+    extra += Number(entry.extras_por_fecha[fecha]) || 0;
   }
   const max = base + extra;
   const usados = await usosCuponEnFuncion(codigo, fecha, env);
@@ -1781,17 +1783,19 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
   }
 
   let baseMaxPorFn = Number(entry.max_usos_por_funcion) || 0;
-  // ESPEJO y GRUPO20 tienen piso duro de 10 usos por función aunque el KV no
-  // traiga max_usos_por_funcion (decisión de Os, 11 sep 2026 para GRUPO20 —
-  // antes no tenía tope). Ver mismo piso en resumenCupoPorFuncion().
-  if (codigo === 'ESPEJO' || codigo === 'GRUPO20') baseMaxPorFn = Math.max(baseMaxPorFn, 10);
+  // Piso duro por código aunque el KV no traiga max_usos_por_funcion (decisión de
+  // Os, 12 sep 2026): ESPEJO 10 base, GRUPO20 5 base. Ver mismo piso en
+  // resumenCupoPorFuncion().
+  if (codigo === 'ESPEJO') baseMaxPorFn = Math.max(baseMaxPorFn, 10);
+  if (codigo === 'GRUPO20') baseMaxPorFn = Math.max(baseMaxPorFn, 5);
   const fechaIso = fechaIsoCupon(fecha);
-  // Extra puntual por función, aditivo al tope base — nunca reemplaza el tope
-  // normal, solo lo sube para la(s) fecha(s) listada(s) en el KV. Ej.:
-  // "extras_por_fecha": { "2026-09-19": 5 } → esa función sube de 10 a 15.
-  let extraPorFn = 0;
+  // Extra estándar (todas las funciones) + extra puntual por fecha — ambos
+  // aditivos al tope base, nunca lo reemplazan. El estándar es la mecánica
+  // normal ("se agotaron los N originales, abrimos 5 extra"); el de fecha es
+  // para casos excepcionales puntuales además del estándar.
+  let extraPorFn = Number(entry.extra_estandar) || 0;
   if (fechaIso && entry.extras_por_fecha && typeof entry.extras_por_fecha === 'object') {
-    extraPorFn = Number(entry.extras_por_fecha[fechaIso]) || 0;
+    extraPorFn += Number(entry.extras_por_fecha[fechaIso]) || 0;
   }
   const maxPorFn = baseMaxPorFn + extraPorFn;
   let usosRestantesFuncion = null;
@@ -2945,9 +2949,10 @@ async function handleDisponibilidad(tid, request, env) {
   try {
     const catalogo = await getCodigosDescuento(env);
     cupones = {
+      // Piso base 10 + extra_estandar 5 en KV = 15 total (decisión de Os 12 sep 2026).
       ESPEJO:   await resumenCupoPorFuncion('ESPEJO', catalogo.ESPEJO || {}, fecha, env, 10),
-      // Mismo piso de 10 que ESPEJO, decisión de Os 11 sep 2026 (antes sin tope).
-      GRUPO20:  await resumenCupoPorFuncion('GRUPO20', catalogo.GRUPO20 || {}, fecha, env, 10),
+      // Piso base 5 + extra_estandar 5 en KV = 10 total (decisión de Os 12 sep 2026).
+      GRUPO20:  await resumenCupoPorFuncion('GRUPO20', catalogo.GRUPO20 || {}, fecha, env, 5),
     };
   } catch { /* el contador es informativo; no tumbar disponibilidad */ }
 
