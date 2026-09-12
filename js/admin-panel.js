@@ -542,10 +542,19 @@
     });
   }
 
+  // Ventas visibles en la tabla de la función: todas, o solo las que constan con
+  // el correo (y por tanto el QR) fallido — para armar la lista de "prepárate,
+  // esta gente puede llegar sin boleto en el teléfono" antes de abrir puerta.
+  function ventasVisiblesFuncion() {
+    const soloSinQr = document.getElementById('filtro-sin-qr')?.checked;
+    return soloSinQr ? state.ventas.filter(correoFallido) : state.ventas;
+  }
+
   function renderFuncion() {
     const f = state.funciones.find(x => x.fecha_iso === state.funcion);
     const nombre = f ? f.nombre : state.funcion;
     const rows = state.ventas.map(renderVentaRow).join('');
+    const sinQrCount = state.ventas.filter(correoFallido).length;
 
     const opts = state.funciones.filter(x => x.fecha_iso !== state.funcion);
 
@@ -554,13 +563,16 @@
         <button type="button" data-back="teatro" class="text-sm text-primary hover:underline">← Wilberto Cantón</button>
         <h2 class="text-2xl font-display text-primary">${esc(nombre)}</h2>
       </div>
-      <div class="flex flex-wrap gap-2 mb-4">
+      <div class="flex flex-wrap gap-2 mb-2">
         <input type="search" id="buscar-ventas" placeholder="Nombre, email, certificado, cupón, referido…" class="px-3 py-2 bg-background-dark border border-primary/30 text-sm flex-1 min-w-[200px]">
         <button type="button" id="btn-buscar-ventas" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Buscar</button>
         ${perm('exportarDatos') ? '<button type="button" id="btn-export-funcion" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Exportar CSV</button>' : ''}
         ${perm('reenviarBoleto') ? '<button type="button" id="btn-email-post-funcion" class="px-4 py-2 bg-primary/20 border border-primary/30 text-primary text-sm">Email post-función (22h)</button>' : ''}
         ${perm('verificarBoletos') ? '<button type="button" onclick="abrirVerificar()" class="px-4 py-2 border border-primary/30 text-primary text-sm">Verificar</button>' : ''}
       </div>
+      <label class="flex items-center gap-2 text-sm mb-4" style="color:var(--red,#d43a1a);">
+        <input type="checkbox" id="filtro-sin-qr"> Solo sin QR entregado (correo falló)${sinQrCount ? ` — ${sinQrCount}` : ''}
+      </label>
       <div class="overflow-x-auto border border-primary/20">
         <table class="w-full text-left text-sm min-w-[900px]">
           <thead><tr class="border-b border-primary/20 font-mono text-xs text-text-dark/60">
@@ -1145,11 +1157,19 @@
         await cargarVentas(state.funcion, q);
         const tbody = document.querySelector('#admin-app tbody');
         if (!tbody) return;
-        tbody.innerHTML = state.ventas.map(renderVentaRow).join('')
+        tbody.innerHTML = ventasVisiblesFuncion().map(renderVentaRow).join('')
           || '<tr><td colspan="10" class="p-6 text-center">Sin resultados</td></tr>';
         bindVentaRowEvents();
       };
     }
+
+    document.getElementById('filtro-sin-qr')?.addEventListener('change', () => {
+      const tbody = document.querySelector('#admin-app tbody');
+      if (!tbody) return;
+      tbody.innerHTML = ventasVisiblesFuncion().map(renderVentaRow).join('')
+        || '<tr><td colspan="10" class="p-6 text-center">Nadie con el correo fallido en esta función</td></tr>';
+      bindVentaRowEvents();
+    });
 
     bindVentaRowEvents();
 
@@ -1176,7 +1196,10 @@
       } catch (e) { alert(e.message); }
     });
 
-    document.getElementById('btn-export-funcion')?.addEventListener('click', () => exportCsv(state.ventas, `ventas_${state.funcion}.csv`));
+    document.getElementById('btn-export-funcion')?.addEventListener('click', () => {
+      const soloSinQr = document.getElementById('filtro-sin-qr')?.checked;
+      exportCsv(ventasVisiblesFuncion(), `ventas_${state.funcion}${soloSinQr ? '_sin-qr' : ''}.csv`);
+    });
 
     document.getElementById('btn-email-post-funcion')?.addEventListener('click', async () => {
       if (!state.funcion) return;

@@ -615,9 +615,10 @@ async function cargarFuncionesLista() {
     } catch { sel.innerHTML = '<option value="">—</option>'; }
 }
 
+let _listaPuertaCache = null;
+
 async function cargarListaPuerta() {
     const cont   = v$('lista-grupos');
-    const resumen = v$('lista-resumen');
     const fecha  = v$('lista-funcion')?.value;
     const token  = obtenerTokenAdmin();
     if (!cont || !fecha || !token || !_puedeVerListaPuerta()) return;
@@ -630,47 +631,102 @@ async function cargarListaPuerta() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Error');
 
-        if (resumen) {
-            resumen.textContent = `${data.ingresados || 0} / ${data.total || 0} ingresados · ${data.pendientes || 0} pendientes`;
-        }
-
-        if (!data.grupos?.length) {
-            cont.innerHTML = '<p style="color:var(--d-soft);">Sin ventas para esta función.</p>';
-            return;
-        }
-
-        cont.innerHTML = data.grupos.map(g => {
-            const color = _colorGrupo(g.certificado);
-            const papel = (g.cortesia || (g.metodoPago || '').toLowerCase() === 'cortesia')
-              ? `${g.cantidad || (g.boletos || []).length} × Cortesía`
-              : ((g.items || []).length
-                ? g.items.map(i => `${i.cantidad} × ${(i.tipo === 'estudiante' || i.tipo === 'inapam' || i.tipo === 'maestro') ? 'Credencial' : 'General'}`).join(' · ')
-                : `${g.cantidad || (g.boletos || []).length} × General`);
-            const boletosHtml = (g.boletos || []).map(b => `
-              <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0" title="${b.usado ? 'Toca para quitar check-in' : 'Toca para marcar ingreso'}">
-                <div>
-                  <div class="lista-boleto-folio">${b.folio || b.cert}</div>
-                  <div class="lista-boleto-meta">${b.tipo || 'entrada'} · #${b.numero || '—'}</div>
-                </div>
-                <div class="lista-boleto-check" aria-hidden="true">${b.usado ? '✓' : ''}</div>
-              </div>`).join('');
-            return `
-              <div class="lista-grupo" style="border-left-color:${color}">
-                <p class="lista-grupo-nombre">${g.nombre || '—'}</p>
-                <p class="lista-grupo-papel" style="margin:0 0 8px;font-size:14px;font-weight:600;color:var(--gold);">${papel}${g.codigoCupon ? ' · ' + g.codigoCupon : ''}</p>
-                ${boletosHtml}
-              </div>`;
-        }).join('');
-
-        cont.querySelectorAll('.lista-boleto:not(.usado)').forEach(el => {
-            el.addEventListener('click', () => canjearDesdeLista(el.dataset.cert));
-        });
-        cont.querySelectorAll('.lista-boleto.usado').forEach(el => {
-            el.addEventListener('click', () => descanjearDesdeLista(el.dataset.cert));
-        });
+        _listaPuertaCache = data;
+        _renderListaPuerta(data);
     } catch (e) {
         cont.innerHTML = `<p style="color:#f87171;">${e.message}</p>`;
     }
+}
+
+function _renderResumenPuerta(data) {
+    const resumen = v$('lista-resumen');
+    if (resumen) {
+        resumen.textContent = `${data.ingresados || 0} / ${data.total || 0} ingresados · ${data.pendientes || 0} pendientes`;
+    }
+}
+
+function _renderListaPuerta(data) {
+    const cont = v$('lista-grupos');
+    if (!cont) return;
+
+    _renderResumenPuerta(data);
+
+    if (!data.grupos?.length) {
+        cont.innerHTML = '<p style="color:var(--d-soft);">Sin ventas para esta función.</p>';
+        return;
+    }
+
+    cont.innerHTML = data.grupos.map(g => {
+        const color = _colorGrupo(g.certificado);
+        const papel = (g.cortesia || (g.metodoPago || '').toLowerCase() === 'cortesia')
+          ? `${g.cantidad || (g.boletos || []).length} × Cortesía`
+          : ((g.items || []).length
+            ? g.items.map(i => `${i.cantidad} × ${(i.tipo === 'estudiante' || i.tipo === 'inapam' || i.tipo === 'maestro') ? 'Credencial' : 'General'}`).join(' · ')
+            : `${g.cantidad || (g.boletos || []).length} × General`);
+        const boletosHtml = (g.boletos || []).map(b => `
+          <div class="lista-boleto${b.usado ? ' usado' : ''}" data-cert="${b.cert}" role="button" tabindex="0" title="${b.usado ? 'Toca para quitar check-in' : 'Toca para marcar ingreso'}">
+            <div>
+              <div class="lista-boleto-folio">${b.folio || b.cert}</div>
+              <div class="lista-boleto-meta">${b.tipo || 'entrada'} · #${b.numero || '—'}</div>
+            </div>
+            <div class="lista-boleto-check" aria-hidden="true">${b.usado ? '✓' : ''}</div>
+          </div>`).join('');
+        return `
+          <div class="lista-grupo" style="border-left-color:${color}">
+            <p class="lista-grupo-nombre">${g.nombre || '—'}</p>
+            <p class="lista-grupo-papel" style="margin:0 0 8px;font-size:14px;font-weight:600;color:var(--gold);">${papel}${g.codigoCupon ? ' · ' + g.codigoCupon : ''}</p>
+            ${boletosHtml}
+          </div>`;
+    }).join('');
+
+    _bindListaPuertaClicks();
+}
+
+function _bindListaPuertaClicks() {
+    const cont = v$('lista-grupos');
+    if (!cont) return;
+    cont.querySelectorAll('.lista-boleto:not(.usado)').forEach(el => {
+        el.addEventListener('click', () => canjearDesdeLista(el.dataset.cert));
+    });
+    cont.querySelectorAll('.lista-boleto.usado').forEach(el => {
+        el.addEventListener('click', () => descanjearDesdeLista(el.dataset.cert));
+    });
+}
+
+// Marca/desmarca un boleto directo en el DOM (y en el resumen), sin volver a pedir
+// la lista completa al servidor. Antes, cada toque recargaba y redibujaba TODO
+// `lista-grupos` — con 2+ entradas por comprador, marcar la primera hacía que el
+// scroll saltara a la cabecera y había que volver a bajar a buscar el nombre.
+// Devuelve false si no encontró el nodo (p. ej. caché vacía) para que el llamador
+// pueda recurrir al recargo completo como respaldo.
+function _actualizarBoletoEnDOM(cert, usado) {
+    const cont = v$('lista-grupos');
+    const el = cont?.querySelector(`.lista-boleto[data-cert="${CSS.escape(cert)}"]`);
+    if (!el) return false;
+
+    const nuevo = el.cloneNode(true);
+    nuevo.classList.toggle('usado', usado);
+    nuevo.title = usado ? 'Toca para quitar check-in' : 'Toca para marcar ingreso';
+    const check = nuevo.querySelector('.lista-boleto-check');
+    if (check) check.textContent = usado ? '✓' : '';
+    el.replaceWith(nuevo);
+    nuevo.addEventListener('click', () => (usado ? descanjearDesdeLista(cert) : canjearDesdeLista(cert)));
+
+    if (_listaPuertaCache) {
+        for (const g of _listaPuertaCache.grupos || []) {
+            const b = (g.boletos || []).find(x => x.cert === cert);
+            if (b) {
+                if (!!b.usado !== usado) {
+                    _listaPuertaCache.ingresados = (_listaPuertaCache.ingresados || 0) + (usado ? 1 : -1);
+                    _listaPuertaCache.pendientes = (_listaPuertaCache.pendientes || 0) + (usado ? -1 : 1);
+                }
+                b.usado = usado;
+                break;
+            }
+        }
+        _renderResumenPuerta(_listaPuertaCache);
+    }
+    return true;
 }
 
 async function canjearDesdeLista(cert) {
@@ -689,7 +745,7 @@ async function canjearDesdeLista(cert) {
         });
         const data = await res.json();
         if (!res.ok) { alert(data.error || 'No se pudo marcar'); return; }
-        await cargarListaPuerta();
+        if (!_actualizarBoletoEnDOM(cert, true)) await cargarListaPuerta();
         _agregarIngreso(data.folio || cert, 1);
     } catch { alert('Error de conexión'); }
 }
@@ -705,7 +761,7 @@ async function descanjearDesdeLista(cert) {
         });
         const data = await res.json();
         if (!res.ok) { alert(data.error || 'No se pudo quitar el check-in'); return; }
-        await cargarListaPuerta();
+        if (!_actualizarBoletoEnDOM(cert, false)) await cargarListaPuerta();
     } catch { alert('Error de conexión'); }
 }
 
