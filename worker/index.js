@@ -991,6 +991,20 @@ function htmlBoleto(venta, funcionNombre, config, opts = {}) {
     </p>
   </td></tr>` : '';
 
+  // Aviso puntual función 19 sep 2026 (develación de placa: prensa, invitados, reservas de
+  // espacio). Prearmado con Os 13 sep 2026 para que los que compren de aquí en adelante ya lo
+  // reciban en el correo de confirmación y no haga falta reenviarles el aviso por separado.
+  const avisoPlacaBanner = venta.fecha === '2026-09-19' ? `
+  <tr><td style="background:#fff8e6;padding:18px 28px;border-left:4px solid #d99b3a;">
+    <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#3a2e26;">
+      <strong>Aviso importante para tu función:</strong> el 19 de septiembre develamos la placa
+      conmemorativa de El Gorila, con prensa e invitados especiales. Ese día abriremos acceso a
+      sala desde las <strong>5:15pm</strong> y <strong>comenzaremos puntuales a las 6:10pm</strong>
+      — te pedimos llegar con un poco más de tiempo. Toma tus precauciones. Muchas gracias por
+      ser parte de esta celebración.
+    </p>
+  </td></tr>` : '';
+
   const itemsRows = (venta.items || []).map(item => {
     const tipoNombre = TIPOS_BOLETO[item.tipo]?.nombre || item.tipo;
     const secNombre  = (multiSeccion && item.seccion)
@@ -1036,6 +1050,7 @@ function htmlBoleto(venta, funcionNombre, config, opts = {}) {
   </td></tr>
 
   ${reagendaBanner}
+  ${avisoPlacaBanner}
 
   <!-- Bloque papel: función -->
   <tr><td style="background:#f1ead9;padding:28px;color:#1a1411;">
