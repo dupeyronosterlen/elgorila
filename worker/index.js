@@ -1362,20 +1362,64 @@ function htmlEmailDiaFuncion(venta, funcionNombre, config) {
 }
 
 // Función 19 sep 2026 ya recibió su propio aviso puntual (desarrollado aparte,
-// horario de acceso adelantado por la develación de placa) — se salta el
-// correo de día-función genérico para no duplicar. Vuelve a mandarse normal
-// a partir de la siguiente función (26 sep en adelante). Decisión de Os, 14 sep 2026.
-const FECHA_SIN_CORREO_DIA_FUNCION = '2026-09-19';
+// horario de acceso adelantado por la develación de placa) — el correo de
+// día-función genérico se reemplaza por una versión reducida, solo con el
+// programa de mano (sin repetir taquilla/acceso/llamadas). Vuelve al correo
+// completo normal desde la siguiente función (26 sep en adelante). Decisión
+// de Os, 14 sep 2026.
+const FECHA_SOLO_PROGRAMA_DE_MANO = '2026-09-19';
+
+function htmlEmailSoloProgramaDeMano(venta, funcionNombre) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tu programa de mano — EL GORILA</title>
+</head>
+<body style="margin:0;padding:0;background:#0a0706;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0706;padding:28px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+  <tr><td style="background:#0a0706;padding:32px 28px 24px;border:1px solid rgba(241,234,217,.12);">
+    <p style="margin:0 0 16px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:#d99b3a;">
+      Hoy · ${funcionNombre}
+    </p>
+    <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:36px;line-height:.95;font-weight:500;color:#f1ead9;letter-spacing:-.02em;">
+      Nos vemos <span style="font-style:italic;color:#D43A1A;">esta noche</span>
+    </h1>
+    <p style="margin:16px 0 0;font-family:Georgia,serif;font-size:18px;line-height:1.45;color:rgba(241,234,217,.85);">
+      ${venta.nombre ? `${venta.nombre}, ` : ''}aquí tienes tu programa de mano digital.
+    </p>
+  </td></tr>
+
+  <tr><td style="background:#f1ead9;padding:28px;text-align:center;">
+    <p style="margin:0 0 16px;font-family:Georgia,serif;font-size:17px;line-height:1.5;color:#1a1411;">
+      Lee el programa de mano antes de entrar — contexto, elenco y notas de la función.
+    </p>
+    <a href="${URL_PROGRAMA_V2}" style="display:inline-block;background:#D43A1A;color:#fff;padding:14px 26px;text-decoration:none;font-family:Georgia,serif;font-size:17px;margin:0 6px 10px;border-radius:2px;">
+      Programa de mano →
+    </a>
+  </td></tr>
+
+  <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
+    <p style="margin:0;font-family:Georgia,serif;font-size:13px;color:rgba(241,234,217,.55);">
+      ¿Dudas? <a href="mailto:${EMAIL_OPERATIVO}" style="color:#d99b3a;text-decoration:underline;">${EMAIL_OPERATIVO}</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
 
 async function enviarEmailsDiaFuncion(env, opts = {}) {
   const { fecha = null, dryRun = false, forzar = false } = opts;
   const hoyMx = fecha || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
   const resumen = { fecha: hoyMx, dryRun, teatros: [], enviados: 0, fallidos: 0, omitidos: 0 };
-
-  if (hoyMx === FECHA_SIN_CORREO_DIA_FUNCION && !forzar) {
-    resumen.omitido = 'función con aviso puntual propio, sin correo de día-función genérico';
-    return resumen;
-  }
+  const soloPrograma = hoyMx === FECHA_SOLO_PROGRAMA_DE_MANO;
 
   for (const tid of VALID_TEATROS) {
     const config = await getVenueConfig(tid, env);
@@ -1401,10 +1445,15 @@ async function enviarEmailsDiaFuncion(env, opts = {}) {
         resumen.enviados += 1;
         continue;
       }
-      const html = htmlEmailDiaFuncion(venta, funcionNombre, config);
+      const html    = soloPrograma
+        ? htmlEmailSoloProgramaDeMano(venta, funcionNombre)
+        : htmlEmailDiaFuncion(venta, funcionNombre, config);
+      const asunto  = soloPrograma
+        ? `Hoy: ${funcionNombre} · tu programa de mano — EL GORILA`
+        : `Hoy: ${funcionNombre} · programa e indicaciones — EL GORILA`;
       const ok   = await enviarEmail(
         venta.email,
-        `Hoy: ${funcionNombre} · programa e indicaciones — EL GORILA`,
+        asunto,
         html,
         env,
       );
