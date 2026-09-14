@@ -263,6 +263,15 @@ async function _enviarEmailResend(to, subject, html, env, from, opts = {}) {
       html,
       reply_to: opts.replyTo || EMAIL_OPERATIVO,
     };
+    // BCC oculto al buzón operativo en TODO correo saliente (excepto si el
+    // destinatario ya es ese mismo buzón, p.ej. el aviso admin) — para poder
+    // verificar qué se mandó, a quién y desde qué remitente sin que el
+    // destinatario lo vea. Decisión de Os, 14 sep 2026.
+    const bccDefault = adminNotifyEmail(env);
+    const toStr = (Array.isArray(to) ? to.join(',') : String(to || '')).toLowerCase();
+    if (!opts.noBcc && bccDefault && !toStr.includes(bccDefault.toLowerCase())) {
+      payload.bcc = bccDefault;
+    }
     if (opts.attachments) payload.attachments = opts.attachments;
     const res = await fetch('https://api.resend.com/emails', {
       method:  'POST',
