@@ -1330,7 +1330,7 @@ function htmlEmailDiaFuncion(venta, funcionNombre, config) {
     <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a7760;">Acceso</p>
     <ul style="margin:0;padding:0 0 0 18px;font-family:Georgia,serif;font-size:15px;line-height:1.65;color:#3a2e26;">
       <li><strong>${config.venue || 'Teatro Wilberto Cantón'}</strong><br>${direccion}</li>
-      <li style="margin-top:10px;">Validación de tu boleto disponible desde las <strong>17:00 hrs</strong>.</li>
+      <li style="margin-top:10px;">Taquilla abierta desde las <strong>17:00 hrs</strong>.</li>
       <li>Acceso a sala: <strong>17:20 hrs</strong>.</li>
       <li>Primera llamada: <strong>17:55 hrs</strong>.</li>
       <li>Segunda llamada: <strong>18:05 hrs</strong>.</li>
@@ -1345,7 +1345,7 @@ function htmlEmailDiaFuncion(venta, funcionNombre, config) {
       Lee el programa de mano antes de entrar — contexto, elenco y notas de la función.
     </p>
     <a href="${URL_PROGRAMA_V2}" style="display:inline-block;background:#D43A1A;color:#fff;padding:14px 26px;text-decoration:none;font-family:Georgia,serif;font-size:17px;margin:0 6px 10px;border-radius:2px;">
-      Programa de mano (v2) →
+      Programa de mano →
     </a>
   </td></tr>
 
