@@ -6331,7 +6331,7 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
       try {
-        if (event.cron === '0 14 * * 0') {
+        if (event.cron === '0 14 * * 7') {
           const res = await enviarEmailsPostFuncionAutomatico(env);
           logInfo('cron.email_post_funcion', sanitizeObject(res));
           return;

@@ -70,7 +70,7 @@ DISABLE_LOGIN_RATE_LIMIT = "false"
 # + cupón BUTACA37 + reseña Google) a los asistentes de la función del sábado
 # anterior. Decisión de Os, 4 sep 2026.
 [triggers]
-crons = ["0 13 * * *", "0 14 * * 0"]
+crons = ["0 13 * * *", "0 14 * * 7"]
 
 # Workers Logs — JSON estructurado sin PII (ver worker/logs.js)
 [observability]
