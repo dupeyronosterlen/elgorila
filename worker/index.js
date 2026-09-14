@@ -1361,10 +1361,21 @@ function htmlEmailDiaFuncion(venta, funcionNombre, config) {
 </body></html>`;
 }
 
+// Función 19 sep 2026 ya recibió su propio aviso puntual (desarrollado aparte,
+// horario de acceso adelantado por la develación de placa) — se salta el
+// correo de día-función genérico para no duplicar. Vuelve a mandarse normal
+// a partir de la siguiente función (26 sep en adelante). Decisión de Os, 14 sep 2026.
+const FECHA_SIN_CORREO_DIA_FUNCION = '2026-09-19';
+
 async function enviarEmailsDiaFuncion(env, opts = {}) {
   const { fecha = null, dryRun = false, forzar = false } = opts;
   const hoyMx = fecha || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
   const resumen = { fecha: hoyMx, dryRun, teatros: [], enviados: 0, fallidos: 0, omitidos: 0 };
+
+  if (hoyMx === FECHA_SIN_CORREO_DIA_FUNCION && !forzar) {
+    resumen.omitido = 'función con aviso puntual propio, sin correo de día-función genérico';
+    return resumen;
+  }
 
   for (const tid of VALID_TEATROS) {
     const config = await getVenueConfig(tid, env);
