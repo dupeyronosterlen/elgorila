@@ -1325,8 +1325,11 @@ function htmlEmailDiaFuncion(venta, funcionNombre, config) {
     <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a7760;">Acceso</p>
     <ul style="margin:0;padding:0 0 0 18px;font-family:Georgia,serif;font-size:15px;line-height:1.65;color:#3a2e26;">
       <li><strong>${config.venue || 'Teatro Wilberto Cantón'}</strong><br>${direccion}</li>
-      <li style="margin-top:10px;">Llega al menos <strong>30 minutos antes</strong> (recomendado 17:30 hrs).</li>
-      <li>Inicio de función: <strong>18:00 hrs</strong>.</li>
+      <li style="margin-top:10px;">Validación de tu boleto disponible desde las <strong>17:00 hrs</strong>.</li>
+      <li>Acceso a sala: <strong>17:20 hrs</strong>.</li>
+      <li>Primera llamada: <strong>17:55 hrs</strong>.</li>
+      <li>Segunda llamada: <strong>18:05 hrs</strong>.</li>
+      <li>Tercera llamada: <strong>18:10 hrs</strong>.</li>
       <li>Presenta tu boleto con QR (correo de confirmación o imagen guardada).</li>
       <li>Tarifas con descuento: lleva credencial vigente (estudiante, INAPAM, maestro).</li>
     </ul>
