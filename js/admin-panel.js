@@ -244,9 +244,32 @@
     const p = new URLSearchParams();
     if (fecha) p.set('fecha', fecha);
     if (q) p.set('q', q);
-    const qs = p.toString();
-    const d = await api(window.teatroAdminApi('ventas') + (qs ? `?${qs}` : ''));
-    state.ventas = d.ventas || [];
+    if (fecha) {
+      // Filtrado por fecha: el worker usa el índice ventaIdx:{fecha}: y devuelve
+      // el total real de esa función en una sola llamada, sin paginar.
+      const qs = p.toString();
+      const d = await api(window.teatroAdminApi('ventas') + (qs ? `?${qs}` : ''));
+      state.ventas = d.ventas || [];
+      return;
+    }
+    // Sin fecha ("todas las ventas"): el worker pagina de 100 en 100
+    // (handleVentas, LIMIT=100) y devuelve `cursor` para la siguiente página.
+    // Antes esta función solo pedía una página y la trataba como el total —
+    // bug real encontrado 14 sep 2026: con más de 100 órdenes en la temporada,
+    // "todas las ventas" en realidad solo traía las 100 más recientes, y
+    // cualquier vista que sumara/filtrara sobre state.ventas (compradores,
+    // dashboards) quedaba corta. Seguir el cursor hasta agotarlo.
+    let todas = [];
+    let cursor = null;
+    do {
+      const qp = new URLSearchParams(p);
+      if (cursor) qp.set('cursor', cursor);
+      const qs = qp.toString();
+      const d = await api(window.teatroAdminApi('ventas') + (qs ? `?${qs}` : ''));
+      todas = todas.concat(d.ventas || []);
+      cursor = d.cursor || null;
+    } while (cursor);
+    state.ventas = todas;
   }
 
   async function cargarUsuarios() {
