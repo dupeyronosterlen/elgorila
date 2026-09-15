@@ -865,6 +865,28 @@ ul { padding-left: 1.35rem; margin-bottom: 14px; }
    37 años · gorila · $400 · sábados 18:00 · Teatro Wilberto Cantón ·
    Escoge tu sábado. */
 .kw { color: var(--gold); font-weight: 600; }
+.fila-temporada-extendida td {
+  text-align: center;
+  padding: 20px 8px;
+  border-top: 2px solid rgba(217,155,58,.35);
+  border-bottom: 2px solid rgba(217,155,58,.35);
+}
+.fte-kicker {
+  display: block;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.fte-titulo {
+  display: block;
+  font-family: var(--display);
+  font-size: clamp(20px, 5vw, 26px);
+  font-weight: 500;
+  line-height: 1.1;
+}
 .calendario .nota-placa { line-height: 1.5; }
 .calendario .nota-placa-titulo { color: var(--gold); font-weight: 500; }
 .calendario .nota-placa-detalle {
@@ -1133,7 +1155,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <tr id="2026-09-05" data-fecha="2026-09-05"><td>Sábado 5 Sep</td><td>18:00</td><td>—</td></tr>
 <tr id="2026-09-12" data-fecha="2026-09-12"><td>Sábado 12 Sep</td><td>18:00</td><td>—</td></tr>
 <tr id="2026-09-19" data-fecha="2026-09-19"><td>Sábado 19 Sep</td><td>18:00</td><td class="nota-placa"><span class="nota-placa-titulo">Develación de placa</span><span class="nota-placa-detalle">Devela esta placa: Janett Arceo<br>Padrino de ceremonias: José Luis Arévalo</span></td></tr>
-<tr id="2026-09-26" data-fecha="2026-09-26"><td>Sábado 26 Sep</td><td>18:00</td><td>Temporada extendida</td></tr>
+<tr class="fila-temporada-extendida"><td colspan="3"><span class="fte-kicker">La temporada continúa — gracias</span><span class="fte-titulo">Nuevas fechas en CDMX</span></td></tr>
+<tr id="2026-09-26" data-fecha="2026-09-26"><td>Sábado 26 Sep</td><td>18:00</td><td>—</td></tr>
 <tr id="2026-10-03" data-fecha="2026-10-03"><td>Sábado 3 Oct</td><td>18:00</td><td>—</td></tr>
 <tr id="2026-10-10" data-fecha="2026-10-10"><td>Sábado 10 Oct</td><td>18:00</td><td>—</td></tr>
 <tr id="2026-10-17" data-fecha="2026-10-17"><td>Sábado 17 Oct</td><td>18:00</td><td>—</td></tr>
