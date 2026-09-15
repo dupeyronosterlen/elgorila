@@ -1841,7 +1841,15 @@ async function resumenCupoPorFuncion(codigo, entry, fecha, env, baseDefault) {
   }
   const max = base + extra;
   const usados = await usosCuponEnFuncion(codigo, fecha, env);
-  const restantes = Math.max(0, max - usados);
+  // "restantes" es lo que ve el público (badge + banner del carrito): mientras
+  // no se agote el cupo base, debe reflejar SOLO el base (10 ESPEJO / 5 GRUPO20)
+  // sin asomar el extra oculto. Solo al agotar el base se revela el extra como
+  // "regalo" — si contáramos max-usados desde el inicio, el sitio anunciaría
+  // los 15 (10+5) desde el primer boleto vendido.
+  const restantesBase = Math.max(0, base - usados);
+  const restantesTotal = Math.max(0, max - usados);
+  const extraDisponibles = (extra > 0 && usados >= base) ? restantesTotal : 0;
+  const restantes = usados >= base ? restantesTotal : restantesBase;
   return {
     max,
     usados,
@@ -1851,7 +1859,7 @@ async function resumenCupoPorFuncion(codigo, entry, fecha, env, baseDefault) {
     // Cuántos de esos extra quedan sin usar (solo si ya se agotó el cupo base) —
     // el front avisa "abrimos N extra — quedan M" en vez de sonar como si nunca
     // se hubiera acabado, y sin confundir "cuántos abrimos" con "cuántos quedan".
-    extraDisponibles: (extra > 0 && usados >= base) ? restantes : 0,
+    extraDisponibles,
   };
 }
 
@@ -1907,8 +1915,14 @@ async function validarCuponDescuento(codigoRaw, env, fecha) {
         error: `${entry.nombre || codigo} se agotó para esta función (máx. ${maxPorFn} por sábado). Elige otra fecha o paga precio general.`,
       };
     }
-    usosRestantesFuncion = maxPorFn - usadosFn;
-    if (extraPorFn > 0 && usadosFn >= baseMaxPorFn) extraDisponibles = usosRestantesFuncion;
+    // Mismo criterio que resumenCupoPorFuncion(): no revelar el extra oculto
+    // en "quedan N" hasta que el cupo base ya se haya agotado.
+    if (usadosFn >= baseMaxPorFn) {
+      usosRestantesFuncion = maxPorFn - usadosFn;
+      if (extraPorFn > 0) extraDisponibles = usosRestantesFuncion;
+    } else {
+      usosRestantesFuncion = baseMaxPorFn - usadosFn;
+    }
   }
 
   const tipo = entry.tipo || 'porcentaje';

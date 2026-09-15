@@ -400,11 +400,8 @@ function pintarEspejoCupo(data) {
         const etiquetaExtra = _espejoExtraTotal === 1 ? 'código extra' : 'códigos extra';
         el.innerHTML = '¡Se agotaron los códigos originales, pero abrimos <strong>' + _espejoExtraTotal + ' ' + etiquetaExtra + '</strong> — quedan <strong>' + _espejoExtra + '</strong> · ESPEJO para este sábado';
         el.classList.remove('agotado');
-    } else if (n === 1) {
-        el.innerHTML = '<strong>1 código restante</strong> · ESPEJO para este sábado';
-        el.classList.remove('agotado');
     } else {
-        el.innerHTML = '<strong>' + n + ' códigos restantes</strong> · ESPEJO para este sábado';
+        el.innerHTML = '<strong>' + n + ' de 10 códigos</strong> · ESPEJO para este sábado';
         el.classList.remove('agotado');
     }
     el.hidden = false;
@@ -567,11 +564,10 @@ function actualizarPantalla() {
                         '· quedan <strong>' + _espejoExtra + '</strong> ' +
                         '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
                 } else {
-                    const etiqueta = _espejoRestantes === 1 ? 'código disponible' : 'códigos disponibles';
                     promoBanner.innerHTML =
-                        '🎉 <strong>¡Felicidades!</strong> Aún puedes obtener un código de descuento para esta función ' +
-                        '· solo quedan <strong>' + _espejoRestantes + ' ' + etiqueta + '</strong> ' +
-                        '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
+                        '🎉 <strong>¡Felicidades!</strong> Puedes obtener 1 cupo <strong>ESPEJO</strong> ' +
+                        '· quedan <strong>' + _espejoRestantes + ' de 10</strong> por función ' +
+                        '· <span style="text-decoration:underline;">toca aquí para ir a caja con tu descuento</span>';
                 }
                 promoBanner.style.cursor = 'pointer';
                 promoBanner.setAttribute('role', 'button');
