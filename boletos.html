@@ -1427,7 +1427,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section class="sd--mid" id="main-content">
   <div class="inner">
     <p class="bofu-urgencia" role="status">
-      <span data-escasez-funciones>Quedan 6 sábados — cupo limitado</span>
+      <span>Temporada extendida — nuevas fechas disponibles en CDMX — cupo limitado</span>
       <span class="bofu-urgencia-sep" aria-hidden="true">·</span>
       <span>sábados 18:00</span>
       <span class="bofu-urgencia-sep" aria-hidden="true">·</span>
@@ -1687,7 +1687,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <details class="faq-item">
       <summary class="faq-summary"><span>¿Cómo llego al teatro?</span><span class="faq-chevron" aria-hidden="true">+</span></summary>
-      <p class="faq-resp">Teatro Wilberto Cantón — José María Velasco 59, San José Insurgentes, CDMX. Estacionamiento propio. Funciones sábados 18:00 — llega 30 min antes.</p>
+      <p class="faq-resp">Teatro Wilberto Cantón — José María Velasco 59, San José Insurgentes, CDMX. Estacionamiento propio. Funciones sábados 18:00, taquilla abierta desde las 17:00.</p>
       <p class="faq-resp" style="margin-top:10px;"><a href="https://www.google.com/maps/search/?api=1&amp;query=Teatro+Wilberto+Cant%C3%B3n+Jos%C3%A9+Mar%C3%ADa+Velasco+59+San+Jos%C3%A9+Insurgentes+CDMX" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:underline;">Abrir en Google Maps ↗</a></p>
     </details>
 
@@ -2012,7 +2012,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var preseleccionHecha = false;
   var fallbackIntentado = false;
   var fechasExpandidas = false;
-  var FECHAS_OCULTAS_INICIAL = 0;
+  var FECHAS_OCULTAS_INICIAL = 3;
 
   var CUPONES_URL = {
     ESPEJO: {
@@ -2107,7 +2107,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var btnMas = document.createElement('button');
       btnMas.type = 'button';
       btnMas.className = 'btn-fechas-toggle';
-      btnMas.textContent = 'Ver ' + ocultas + ' fechas más \u2192';
+      btnMas.textContent = 'Ver más \u2192';
       btnMas.addEventListener('click', function() {
         fechasExpandidas = true;
         aplicarFechasProgressivas();

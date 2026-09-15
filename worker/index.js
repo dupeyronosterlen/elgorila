@@ -1004,7 +1004,7 @@ function htmlBoleto(venta, funcionNombre, config, opts = {}) {
     <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#3a2e26;">
       <strong>Aviso importante para tu función:</strong> el 19 de septiembre develamos la placa
       conmemorativa de El Gorila, con prensa e invitados especiales. Ese día abriremos acceso a
-      sala desde las <strong>5:15pm</strong> y <strong>comenzaremos puntuales a las 6:10pm</strong>
+      sala desde las <strong>5:05pm</strong> y <strong>comenzaremos puntuales a las 6:10pm</strong>
       — te pedimos llegar con un poco más de tiempo. Toma tus precauciones. Muchas gracias por
       ser parte de esta celebración.
     </p>

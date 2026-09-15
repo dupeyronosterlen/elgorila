@@ -11,7 +11,7 @@
  *
  * Atributos soportados — el contenido que ya trae el HTML queda como respaldo
  * si el JS no corre, así que siempre debe ser una frase neutra y verdadera:
- *   data-temporada-conteo       → "6 sábados" / "último sábado" / "Temporada finalizada"
+ *   data-temporada-conteo       → "6 sábados" / "1 sábado" / "nuevas fechas pronto"
  *   data-temporada-conteo-solo  → "solo 6 sábados" (para frases que ya dicen "Sí: …")
  *   data-temporada-rango        → "del 15 de agosto al 19 de septiembre"
  *
@@ -42,7 +42,7 @@
   }
 
   function textoEscasez(n, soloSabados) {
-    if (n === 0) return 'Temporada finalizada en CDMX';
+    if (n === 0) return 'Nuevas fechas pronto en CDMX';
     var sust = soloSabados ? 'sábado' : 'función';
     var sustPl = soloSabados ? 'sábados' : 'funciones';
     if (n === 1) return 'Queda 1 ' + sust + ' — cupo limitado';
@@ -116,7 +116,7 @@
 
     // aria-label de los CTA de venta: se arma aparte porque lleva precio.
     document.querySelectorAll('.link-venta-boletos[aria-label]').forEach(function (a) {
-      a.setAttribute('aria-label', a.getAttribute('aria-label').replace(/\d+\s+sábados|solo\s+\d+\s+sábados|último sábado|\d+\s+funciones|última función/i, r.conteo));
+      a.setAttribute('aria-label', a.getAttribute('aria-label').replace(/\d+\s+sábados?|solo\s+\d+\s+sábados?|\d+\s+funciones?|nuevas fechas pronto/i, r.conteo));
     });
 
     return r;

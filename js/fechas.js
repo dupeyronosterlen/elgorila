@@ -21,7 +21,7 @@ const SEDES = {
 
 const SEDE_TEMPORADA = 'teatro-wilberto-canton';
 
-/** Temporada 2026 — quedan 6 sábados públicos (15 ago – 19 sep); miércoles ocultos */
+/** Temporada 2026 — extendida: sábados públicos hasta 31 oct; nov-dic sembrados ocultos; miércoles ocultos */
 const FUNCIONES_TEMPORADA = [
   { fecha_iso: '2026-07-04', nombre: 'Sábado 4 Jul — 18:00 hrs',  sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-07-08', nombre: 'Miércoles 8 Jul — 20:30 hrs',  sede: SEDE_TEMPORADA, activa: false },
@@ -47,8 +47,19 @@ const FUNCIONES_TEMPORADA = [
   { fecha_iso: '2026-09-16', nombre: 'Miércoles 16 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-09-19', nombre: 'Sábado 19 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, etiqueta: 'Develación de placa', activa: true },
   { fecha_iso: '2026-09-23', nombre: 'Miércoles 23 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
-  { fecha_iso: '2026-09-26', nombre: 'Sábado 26 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
+  { fecha_iso: '2026-09-26', nombre: 'Sábado 26 Sep — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
   { fecha_iso: '2026-09-30', nombre: 'Miércoles 30 Sep — 20:30 hrs', sede: SEDE_TEMPORADA, activa: false },
+  { fecha_iso: '2026-10-03', nombre: 'Sábado 3 Oct — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-10-10', nombre: 'Sábado 10 Oct — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-10-17', nombre: 'Sábado 17 Oct — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-10-24', nombre: 'Sábado 24 Oct — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-10-31', nombre: 'Sábado 31 Oct — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-11-07', nombre: 'Sábado 7 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
+  { fecha_iso: '2026-11-14', nombre: 'Sábado 14 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
+  { fecha_iso: '2026-11-21', nombre: 'Sábado 21 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
+  { fecha_iso: '2026-11-28', nombre: 'Sábado 28 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
+  { fecha_iso: '2026-12-05', nombre: 'Sábado 5 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
+  { fecha_iso: '2026-12-12', nombre: 'Sábado 12 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
 ];
 
 const FechasManager = {
@@ -159,16 +170,16 @@ const FechasManager = {
     const sust = soloSabados ? 'sábados' : 'funciones';
 
     let conteo;
-    if (n === 0)      conteo = 'Temporada finalizada';
-    else if (n === 1) conteo = soloSabados ? 'último sábado' : 'última función';
+    if (n === 0)      conteo = 'nuevas fechas pronto';
+    else if (n === 1) conteo = soloSabados ? '1 sábado' : '1 función';
     else              conteo = `${n} ${sust}`;
 
     return {
       n,
       conteo,
       soloSabados,
-      // "solo 6 sábados" / "última función" — para frases que ya traen el "solo"
-      conteoConSolo: n === 0 ? 'Temporada finalizada'
+      // "solo 6 sábados" / "1 función" — para frases que ya traen el "solo"
+      conteoConSolo: n === 0 ? 'nuevas fechas pronto'
                    : n === 1 ? conteo
                    : `solo ${conteo}`,
       rango: n >= 2 ? `del ${largo(fns[0].fecha_iso)} al ${largo(fns[n - 1].fecha_iso)}`
@@ -248,7 +259,6 @@ const FechasManager = {
     const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
     const dia = dias[f.getDay()];
     const fecha = `${f.getDate()} de ${MESES[f.getMonth()]}`;
-    if (r.n === 1) return `Última función · ${dia} ${fecha} · 18:00`;
     if (f.getDay() === 6) return `Próximo sábado ${fecha} · 18:00`;
     return `Próxima función · ${dia} ${fecha} · 18:00`;
   },
