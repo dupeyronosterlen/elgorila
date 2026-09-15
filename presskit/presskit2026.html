@@ -276,6 +276,8 @@
     font-size:22px;
     font-weight:500;
     line-height:1.25;
+    min-width:0;
+    overflow-wrap:anywhere;
   }
   .ficha .row .v em{font-style:italic;color:var(--red-deep)}
   .ficha .row .v small{
@@ -320,15 +322,22 @@
   .bleed-photo img{
     width:100%;height:100%;object-fit:cover;
   }
+  .bleed-photo::after{
+    content:"";
+    position:absolute;left:0;right:0;bottom:0;
+    height:55%;
+    background:linear-gradient(to top, rgba(0,0,0,.75) 0%, rgba(0,0,0,.42) 45%, rgba(0,0,0,0) 100%);
+    pointer-events:none;
+  }
   .bleed-photo .caption{
-    position:absolute;left:64px;bottom:48px;
+    position:absolute;left:64px;bottom:48px;z-index:1;
     color:#f1ead9;
     max-width:520px;
     font-family:"Cormorant Garamond",serif;
     font-style:italic;
     font-size:26px;
     line-height:1.25;
-    text-shadow:0 2px 16px rgba(0,0,0,.7);
+    text-shadow:0 2px 4px rgba(0,0,0,.9), 0 4px 24px rgba(0,0,0,.8);
   }
   .bleed-photo .caption span{
     display:block;
@@ -591,6 +600,8 @@
   .contact-card dd{
     font-family:"Cormorant Garamond",serif;
     font-size:20px;font-weight:500;
+    min-width:0;
+    overflow-wrap:anywhere;
   }
   .contact-card dd a{text-decoration:none;border-bottom:1px solid var(--red);color:var(--red-deep)}
 
@@ -763,6 +774,7 @@
     .sheet{padding:64px 32px}
     .cover{padding:32px 24px}
     .index,.sinopsis,.historial,.bio,.bio.reverse,.nota,.critica,.critica-meta,.contacto{grid-template-columns:1fr;gap:32px}
+    .nota .body[style*="column-count"]{column-count:1 !important}
     .cover__bottom{grid-template-columns:1fr;gap:24px}
     .photo-strip{grid-template-columns:1fr;height:auto}
     .photo-strip > div{height:60vw;min-height:280px}
@@ -924,7 +936,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="col">
       <h3>Versión corta <span>· 80 palabras</span></h3>
       <div class="body dropcap">
-        <p>Un simio capturado presenta ante una academia de científicos el informe de su transformación en hombre. Entre la comedia dramática, el humor, la ironía y la reflexión existencial, Peter —el gorila— narra su proceso de "civilización" forzada: desde la captura hasta su adaptación al mundo humano. Humberto Dupeyron encarna este monólogo kafkiano que, tras 37 años en escena, se ha convertido en el más longevo del teatro mexicano: una indagación perturbadora sobre identidad, libertad y el precio de la asimilación.</p>
+        <p>Un simio capturado presenta ante una academia de científicos el informe de su transformación en hombre. Entre la comedia dramática, el humor, la ironía y la reflexión existencial, Peter —el gorila— narra su proceso de "civilización" forzada: desde la captura hasta su adaptación al mundo humano. Humberto Dupeyron encarna este monólogo kafkiano, hoy el más longevo del teatro mexicano: una indagación perturbadora sobre identidad, libertad y el precio de la asimilación.</p>
       </div>
     </div>
 
@@ -1032,7 +1044,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="body">
         <p>Humberto Dupeyron es actor, director, escritor y pedagogo teatral con más de seis décadas de trayectoria. Nacido en la Ciudad de México, se formó en la academia de Andrés Soler.</p>
         <p>Ha participado en cine, televisión y en más de 80 montajes teatrales, tanto en roles protagónicos como en ensambles, abarcando desde el teatro clásico y comedia, hasta la experimentación contemporánea. Entre sus trabajos más reconocidos se encuentran <em>El Gorila</em>, <em>Los Malditos</em>, <em>La Dama de Negro</em>, <em>Mi Querido Profesor</em>, <em>Esta Noche Cena Pancho</em>, <em>Mañana Será Otro Día</em>, <em>Cuando el Pepino Falla</em>, <em>Hacemos de Tocho Morocho</em>, <em>Para Petacas las Mías</em>, <em>Las Hijas de Don Tomás</em>, <em>Nace una Estrella</em>, <em>Dulce Amor Mío</em>. Como director, ha montado obras como <em>Violación</em>, <em>Dos Parejas Disparejas</em>.</p>
-        <p>Su compromiso con <em>El Gorila</em> representa no solo una hazaña actoral, sino una defensa del teatro como oficio de resistencia: 37 años sosteniendo el mismo personaje en escena, reinventándolo cada función, sin concesiones.</p>
+        <p>Su compromiso con <em>El Gorila</em> representa no solo una hazaña actoral, sino una defensa del teatro como oficio de resistencia: casi cuatro décadas sosteniendo el mismo personaje en escena, reinventándolo cada función, sin concesiones.</p>
       </div>
     </div>
   </div>
@@ -1097,8 +1109,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="nota">
     <div class="body" style="grid-column:1 / -1;column-count:2;column-gap:64px;text-indent:0">
       <p>A lo largo de casi cuatro décadas, <em>El Gorila</em> ha recorrido decenas de foros de la Ciudad de México y del interior de la república. En cada espacio, el público se encuentra con Humberto Dupeyron —y con Peter el Rojo— en una experiencia teatral que no concede tregua.</p>
-      <p>La decisión de sostener este monólogo durante 37 años no es solo una proeza actoral: es un acto de resistencia. En un contexto cultural que privilegia lo efímero y lo espectacular, <em>El Gorila</em> insiste en la permanencia, en la profundidad, en el valor de un texto que no busca complacer sino confrontar.</p>
-      <p>Es una cita con lo necesario, con la consciencia y el humor que caracteriza a Humberto Dupeyron. <strong>Y por eso sigue vivo.</strong></p>
+      <p>La decisión de sostener este monólogo durante casi cuatro décadas no es solo una proeza actoral: es un acto de resistencia. En un contexto cultural que privilegia lo efímero y lo espectacular, <em>El Gorila</em> insiste en la permanencia, en la profundidad, en el valor de un texto que no busca complacer sino confrontar. <strong>Y por eso sigue vivo.</strong></p>
     </div>
   </div>
 </section>
