@@ -597,12 +597,12 @@ body:has(.barra-reserva-fija:disabled) .barra-reserva-spacer {
 #fechas-fecha-wrap.fechas-menu-colapsado #botones-fecha,
 #fechas-fecha-wrap.fechas-menu-colapsado .fecha-sub-label { display: none; }
 .btn-fechas-toggle {
-  display: block; width: 100%; margin-top: 8px;
-  padding: 14px 16px; background: transparent;
+  display: block; width: 100%; margin-top: 6px;
+  padding: 10px 11px; background: transparent;
   border: 1px dashed rgba(217,155,58,.45);
   color: var(--gold);
-  font-family: var(--mono); font-size: 12px;
-  letter-spacing: .14em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: .12em; text-transform: uppercase;
   cursor: pointer; text-align: center;
   transition: border-color .15s, color .15s;
   -webkit-tap-highlight-color: transparent;
@@ -1496,7 +1496,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button type="button" class="qty-btn" onclick="cambiarCantidad('estudiante', 1)" aria-label="Más descuento 30%">+</button>
       </div>
     </div>
-    <div class="boletos-sticky-clear" aria-hidden="true"></div>
 
     <!-- IDs ocultos para compatibilidad con main.js (inapam y maestro siempre en 0) -->
     <span id="cantidad-inapam" style="display:none;">0</span>
@@ -1516,6 +1515,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span class="brd-arrow" aria-hidden="true">→</span>
       </button>
     </div>
+    <div class="boletos-sticky-clear" aria-hidden="true"></div>
 
     <!-- 3. Prueba social -->
     <div class="bofu-reviews" data-testimonios="boletos" aria-label="Opiniones del público">
@@ -2012,7 +2012,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var preseleccionHecha = false;
   var fallbackIntentado = false;
   var fechasExpandidas = false;
-  var FECHAS_OCULTAS_INICIAL = 3;
+  var FECHAS_OCULTAS_INICIAL = 4;
 
   var CUPONES_URL = {
     ESPEJO: {
