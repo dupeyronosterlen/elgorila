@@ -1628,6 +1628,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
          o no tocó el banner del carrito. -->
     <p id="ichk-espejo-hint" class="ichk-espejo-hint" hidden role="status"></p>
 
+    <!-- Recordatorio GRUPO20: mismo patrón que ESPEJO, para 5+ generales. -->
+    <p id="ichk-grupo20-hint" class="ichk-espejo-hint" hidden role="status"></p>
+
     <!-- Cupón colapsado -->
     <details class="ichk-cupon-details ichk-cupon-wrap">
       <summary>¿Tienes un código promocional?</summary>
@@ -1781,7 +1784,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/temporada-copy.js"></script>
 <script src="js/testimonios.js?v=20260817t1"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js?v=20260915-agotado-hint-color"></script>
+<script src="js/main.js?v=20260915-grupo20-parity"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {
@@ -1916,9 +1919,11 @@ async function aplicarCuponInline() {
     }
     msg(okMsg, true);
     _actualizarResumenCupon(orden);
-    // Ya se aplicó un cupón: el recordatorio de "calificas para ESPEJO" sobra.
+    // Ya se aplicó un cupón: los recordatorios "calificas para..." sobran.
     const hintEl = document.getElementById('ichk-espejo-hint');
     if (hintEl) { hintEl.hidden = true; hintEl.textContent = ''; }
+    const hintGrupo20El = document.getElementById('ichk-grupo20-hint');
+    if (hintGrupo20El) { hintGrupo20El.hidden = true; hintGrupo20El.textContent = ''; }
   } catch (err) {
     msg((err && err.message) || 'Error de conexión. Intenta de nuevo.', false);
   } finally {

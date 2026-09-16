@@ -603,9 +603,9 @@ function actualizarPantalla() {
                     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activarGrupo20DesdeCarrito(); }
                 };
             } else if (_grupo20Restantes === 0) {
-                // Agotado para esta función: no invitamos a un clic que va a fallar.
-                promoBanner.className = 'promo-grupo-banner hidden';
-                promoBanner.innerHTML = '';
+                // Agotado para esta función: mismo criterio que ESPEJO (15 sep 2026).
+                promoBanner.className = 'promo-grupo-banner';
+                promoBanner.innerHTML = 'El código <strong>GRUPO20</strong> se agotó para esta función';
             } else {
                 // Sin dato en vivo todavía: hint estático, sigue pudiendo escribirse a mano.
                 promoBanner.className = 'promo-grupo-banner';
@@ -846,7 +846,7 @@ function mostrarCheckoutInline(orden) {
         const soloGenerales = items.length > 0 && items.every(it => it.tipo === 'general');
         const calificaEspejo = soloGenerales && generales && generales.cantidad === 2 && !orden.promoManual;
         if (calificaEspejo && typeof _espejoRestantes === 'number' && _espejoRestantes > 0) {
-            hintEl.innerHTML = '🎉 Calificas para el cupón <strong>ESPEJO</strong>: 2 generales por <strong>$600</strong> total · <span style="text-decoration:underline;">toca aquí para aplicarlo</span>';
+            hintEl.innerHTML = '🎉 Calificas para el cupón <strong>ESPEJO</strong>: 2 generales por <strong>$600</strong> total · máx. 10 por función · <span style="text-decoration:underline;">toca aquí para aplicarlo</span>';
             hintEl.hidden = false;
             hintEl.style.cursor = 'pointer';
             hintEl.onclick = function () {
@@ -861,6 +861,34 @@ function mostrarCheckoutInline(orden) {
             hintEl.textContent = '';
             hintEl.onclick = null;
             hintEl.style.cursor = '';
+        }
+    }
+
+    // Recordatorio GRUPO20 en la confirmación: mismo patrón que ESPEJO, para
+    // 5+ generales sin credencial y sin cupón aplicado todavía.
+    const hintGrupo20El = document.getElementById('ichk-grupo20-hint');
+    if (hintGrupo20El) {
+        const items = Array.isArray(orden.items) ? orden.items : [];
+        const soloGenerales = items.length > 0 && items.every(it => it.tipo === 'general');
+        const cantGeneral = soloGenerales ? items.reduce((s, it) => s + it.cantidad, 0) : 0;
+        const calificaGrupo20 = soloGenerales && cantGeneral >= CUPON_GRUPO20_MIN && !orden.promoManual;
+        if (calificaGrupo20 && typeof _grupo20Restantes === 'number' && _grupo20Restantes > 0) {
+            const pct = Math.round(CUPON_GRUPO20_PCT * 100);
+            hintGrupo20El.innerHTML = '🎉 Calificas para el cupón <strong>GRUPO20</strong>: −' + pct + '% en tus ' + cantGeneral + ' generales · máx. 5 por función · <span style="text-decoration:underline;">toca aquí para aplicarlo</span>';
+            hintGrupo20El.hidden = false;
+            hintGrupo20El.style.cursor = 'pointer';
+            hintGrupo20El.onclick = function () {
+                const det = document.querySelector('.ichk-cupon-details');
+                const input = document.getElementById('ichk-cupon-input');
+                if (det) det.open = true;
+                if (input) input.value = 'GRUPO20';
+                if (typeof window.aplicarCuponInline === 'function') window.aplicarCuponInline();
+            };
+        } else {
+            hintGrupo20El.hidden = true;
+            hintGrupo20El.textContent = '';
+            hintGrupo20El.onclick = null;
+            hintGrupo20El.style.cursor = '';
         }
     }
 
