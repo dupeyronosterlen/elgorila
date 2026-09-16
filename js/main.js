@@ -562,9 +562,10 @@ function actualizarPantalla() {
                     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activarEspejoDesdeCarrito(); }
                 };
             } else if (_espejoRestantes === 0) {
-                // Agotado para esta función: no invitamos a un clic que va a fallar.
-                promoBanner.className = 'promo-grupo-banner hidden';
-                promoBanner.innerHTML = '';
+                // Agotado para esta función: se avisa (sin invitar a un clic que
+                // va a fallar) en vez de no decir nada — a petición de Os, 15 sep 2026.
+                promoBanner.className = 'promo-grupo-banner';
+                promoBanner.innerHTML = 'El código <strong>ESPEJO</strong> se agotó para esta función';
             } else {
                 // Sin dato en vivo todavía (API aún no responde): hint estático,
                 // el cliente sigue pudiendo escribir el código a mano al pagar.

@@ -1172,6 +1172,22 @@ details[open] .faq-chevron { transform: rotate(45deg); }
 .ichk-cupon-err {
   margin-top: 8px; font-family: var(--cuerpo); font-size: 16px; color: var(--red);
 }
+/* Recordatorio ESPEJO en la confirmación — fondo de papel claro, a diferencia
+   de .espejo-cupo (pensado para el fondo oscuro de la zona de boletos), así
+   que necesita texto oscuro para no perderse. */
+.ichk-espejo-hint {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(217,155,58,.55);
+  background: linear-gradient(135deg, rgba(217,155,58,.18) 0%, rgba(217,155,58,.08) 100%);
+  border-left: 3px solid var(--gold);
+  font-family: var(--cuerpo);
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--p-ink);
+  text-align: center;
+}
+.ichk-espejo-hint strong { color: #8a5a12; }
 
 /* ── Banner invitación personal ─────────────────────────── */
 .invitacion-banner {
@@ -1610,7 +1626,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- Recordatorio ESPEJO: solo si el pedido califica (2 generales, sin
          credencial) y aún no se aplicó ningún cupón. Cubre a quien nunca vio
          o no tocó el banner del carrito. -->
-    <p id="ichk-espejo-hint" class="espejo-cupo" hidden role="status"></p>
+    <p id="ichk-espejo-hint" class="ichk-espejo-hint" hidden role="status"></p>
 
     <!-- Cupón colapsado -->
     <details class="ichk-cupon-details ichk-cupon-wrap">
@@ -1765,7 +1781,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/temporada-copy.js"></script>
 <script src="js/testimonios.js?v=20260817t1"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js?v=20260915-hint-checkout"></script>
+<script src="js/main.js?v=20260915-agotado-hint-color"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {
