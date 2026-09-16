@@ -833,6 +833,36 @@ function mostrarCheckoutInline(orden) {
 
     renderResumenDescuentoOrden(orden);
 
+    // Recordatorio ESPEJO en la confirmación: cubre a quien nunca vio o no
+    // tocó el banner del carrito. Solo si el pedido ya califica (2 generales,
+    // sin credencial), todavía no se aplicó ningún cupón, y sigue habiendo
+    // cupo ESPEJO para esta función (mismo _espejoRestantes que pinta el
+    // banner — ver pintarEspejoCupo()).
+    const hintEl = document.getElementById('ichk-espejo-hint');
+    if (hintEl) {
+        const items = Array.isArray(orden.items) ? orden.items : [];
+        const generales = items.find(it => it.tipo === 'general');
+        const soloGenerales = items.length > 0 && items.every(it => it.tipo === 'general');
+        const calificaEspejo = soloGenerales && generales && generales.cantidad === 2 && !orden.promoManual;
+        if (calificaEspejo && typeof _espejoRestantes === 'number' && _espejoRestantes > 0) {
+            hintEl.innerHTML = '🎉 Calificas para el cupón <strong>ESPEJO</strong>: 2 generales por <strong>$600</strong> total · <span style="text-decoration:underline;">toca aquí para aplicarlo</span>';
+            hintEl.hidden = false;
+            hintEl.style.cursor = 'pointer';
+            hintEl.onclick = function () {
+                const det = document.querySelector('.ichk-cupon-details');
+                const input = document.getElementById('ichk-cupon-input');
+                if (det) det.open = true;
+                if (input) input.value = 'ESPEJO';
+                if (typeof window.aplicarCuponInline === 'function') window.aplicarCuponInline();
+            };
+        } else {
+            hintEl.hidden = true;
+            hintEl.textContent = '';
+            hintEl.onclick = null;
+            hintEl.style.cursor = '';
+        }
+    }
+
     const cuponInput = document.getElementById('ichk-cupon-input');
     const cuponMsg   = document.getElementById('ichk-cupon-msg');
     if (cuponInput) cuponInput.value = orden.promoManual ? (orden.codigoCupon || '') : '';
