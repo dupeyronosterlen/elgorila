@@ -473,6 +473,21 @@ body:has(.barra-reserva-fija:disabled) .barra-reserva-spacer {
 .ichk-trust-logo--mc { color: #eb001b; }
 .ichk-trust-logo--oxxo { background: #ffd100; color: #1a1411; font-weight: 700; }
 
+/* Canales de venta alternos (mismo patrón que logos de pago, como texto/link) */
+.venta-alt-logos {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 10px 0 4px;
+}
+.venta-alt-logo {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 28px; padding: 0 10px;
+  background: #fff; border: 1px solid rgba(26,20,17,.12); border-radius: 3px;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .03em; text-transform: uppercase; text-decoration: none;
+}
+.venta-alt-logo--tm { color: #026cdf; }
+.venta-alt-logo--teatrando { color: #c8102e; }
+.venta-alt-logo--cartelera { color: #6b3fa0; }
+
 /* ── CABECERA DE PORTADA (compacta) ──────────────────────── */
 .cover-section {
   background: var(--d-bg);
@@ -1718,6 +1733,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <details class="faq-item">
       <summary class="faq-summary"><span>¿Cómo recibo mis boletos?</span><span class="faq-chevron" aria-hidden="true">+</span></summary>
       <p class="faq-resp">Al completar el pago recibes tu boleto digital con QR por correo. Muéstralo en tu celular al llegar.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary class="faq-summary"><span>¿Puedo comprar en otro lado?</span><span class="faq-chevron" aria-hidden="true">+</span></summary>
+      <p class="faq-resp">Sí. Esta es la taquilla oficial de la Producción y la única <strong>sin cargo por servicio</strong>. También puedes comprar en:</p>
+      <div class="venta-alt-logos" aria-label="Otros canales de venta">
+        <a href="https://www.ticketmaster.com.mx/el-gorila-boletos/artist/2744867?month=2026-09" target="_blank" rel="noopener noreferrer" class="venta-alt-logo venta-alt-logo--tm">ticketmaster</a>
+        <a href="https://teatrando.com.mx/obra/el-gorila/" target="_blank" rel="noopener noreferrer" class="venta-alt-logo venta-alt-logo--teatrando">Teatrando</a>
+        <a href="https://carteleradeteatro.mx/2011/el-gorila/" target="_blank" rel="noopener noreferrer" class="venta-alt-logo venta-alt-logo--cartelera">Cartelera de Teatro</a>
+      </div>
+      <p class="faq-resp" style="margin-top:8px;">Esas boleteras son alternativas independientes y pueden aplicar cargos por servicio propios.</p>
     </details>
   </div>
 </section>
