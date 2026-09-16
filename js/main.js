@@ -375,36 +375,21 @@ function pintarGrupo20Cupo(data) {
 
 function pintarEspejoCupo(data) {
     pintarGrupo20Cupo(data);
+    // Badge junto a la fecha retirado a petición de Os (15 sep 2026): ya no se
+    // anuncia "cuántos códigos quedan" ahí, solo en el banner clickeable del
+    // carrito (actualizarPantalla). Seguimos leyendo el estado para ese banner.
     const el = document.getElementById('espejo-cupo');
-    if (!el) return;
+    if (el) { el.hidden = true; el.textContent = ''; }
     const info = data && data.cupones && data.cupones.ESPEJO;
     if (!info || typeof info.restantes !== 'number') {
         _espejoRestantes = null;
         _espejoExtra = 0;
         _espejoExtraTotal = 0;
-        el.hidden = true;
-        el.textContent = '';
         return;
     }
-    const n = info.restantes;
-    _espejoRestantes = n;
+    _espejoRestantes = info.restantes;
     _espejoExtra = typeof info.extraDisponibles === 'number' ? info.extraDisponibles : 0;
     _espejoExtraTotal = typeof info.extraTotal === 'number' ? info.extraTotal : 0;
-    if (n <= 0) {
-        el.textContent = 'Promoción ESPEJO se agotó para esta función';
-        el.classList.add('agotado');
-    } else if (_espejoExtra > 0) {
-        // Se acabó el cupo original y se abrieron códigos extra: decirlo tal cual,
-        // y mostrar que el extra TAMBIÉN se va agotando (no repetir el tamaño fijo
-        // como si fueran siempre los mismos disponibles).
-        const etiquetaExtra = _espejoExtraTotal === 1 ? 'código extra' : 'códigos extra';
-        el.innerHTML = '¡Se agotaron los códigos originales, pero abrimos <strong>' + _espejoExtraTotal + ' ' + etiquetaExtra + '</strong> — quedan <strong>' + _espejoExtra + '</strong> · ESPEJO para este sábado';
-        el.classList.remove('agotado');
-    } else {
-        el.innerHTML = '<strong>' + n + ' de 10 códigos</strong> · ESPEJO para este sábado';
-        el.classList.remove('agotado');
-    }
-    el.hidden = false;
 }
 
 // Clic en el banner "aún puedes obtener un código" del carrito (2 generales):
@@ -565,8 +550,8 @@ function actualizarPantalla() {
                         '· <span style="text-decoration:underline;">toca aquí para usarlo</span>';
                 } else {
                     promoBanner.innerHTML =
-                        '🎉 <strong>¡Felicidades!</strong> Puedes obtener 1 cupo <strong>ESPEJO</strong> ' +
-                        '· quedan <strong>' + _espejoRestantes + ' de 10</strong> por función ' +
+                        '🎉 <strong>¡Felicidades!</strong> Puedes obtener el cupón <strong>ESPEJO</strong> ' +
+                        '· quedan <strong>' + _espejoRestantes + '</strong> ' +
                         '· <span style="text-decoration:underline;">toca aquí para ir a caja con tu descuento</span>';
                 }
                 promoBanner.style.cursor = 'pointer';
@@ -577,8 +562,7 @@ function actualizarPantalla() {
                     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activarEspejoDesdeCarrito(); }
                 };
             } else if (_espejoRestantes === 0) {
-                // Agotado para esta función: el badge #espejo-cupo ya lo explica,
-                // no invitamos a un clic que va a fallar.
+                // Agotado para esta función: no invitamos a un clic que va a fallar.
                 promoBanner.className = 'promo-grupo-banner hidden';
                 promoBanner.innerHTML = '';
             } else {
