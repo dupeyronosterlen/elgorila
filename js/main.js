@@ -957,6 +957,25 @@ function etiquetaOcupacionFecha(funcion) {
     return '';
 }
 
+// La etiqueta puede traer un evento y el aviso de disponibilidad separados por
+// "·" (ej. "Develación de placa · Últimas localidades") — se pintan como dos
+// piezas visuales distintas: el evento en el tag dorado de siempre, la
+// disponibilidad en un badge de color según qué tan urgente sea el texto.
+const DISPONIBILIDAD_CLASE = {
+    'pocas localidades':   'fecha-disp-tag--pocas',
+    'últimas localidades': 'fecha-disp-tag--ultimas',
+    'agotado':             'fecha-disp-tag--agotado',
+};
+
+function partesEtiqueta(funcion) {
+    const texto = etiquetaOcupacionFecha(funcion);
+    if (!texto) return { evento: '', disponibilidad: '' };
+    const partes = texto.split('·').map(p => p.trim()).filter(Boolean);
+    if (partes.length < 2) return { evento: texto, disponibilidad: '' };
+    const [evento, disponibilidad] = partes;
+    return { evento, disponibilidad };
+}
+
 function cargarFechas() {
     if (typeof FechasManager === 'undefined') return;
 
@@ -975,9 +994,13 @@ function cargarFechas() {
         const partesNombre   = funcion.nombre.split(/\s*[—–-]\s*/);
         const fechaCorta     = partesNombre[0] || funcion.nombre;
         const hora           = partesNombre[1] || '18:00 hrs';
-        const textoEtiqueta  = etiquetaOcupacionFecha(funcion);
-        const estrenoTag     = textoEtiqueta
-            ? `<span class="fecha-ocupacion-tag fecha-ocupacion-tag--evento">${textoEtiqueta}</span>`
+        const { evento: eventoTexto, disponibilidad: dispTexto } = partesEtiqueta(funcion);
+        const estrenoTag     = eventoTexto
+            ? `<span class="fecha-ocupacion-tag fecha-ocupacion-tag--evento">${eventoTexto}</span>`
+            : '';
+        const dispClase      = DISPONIBILIDAD_CLASE[dispTexto.toLowerCase()] || 'fecha-disp-tag--pocas';
+        const dispTag        = dispTexto
+            ? `<span class="fecha-disp-tag ${dispClase}">${dispTexto}</span>`
             : '';
         const claveStr       = funcion.clave;
         const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
@@ -1030,6 +1053,7 @@ function cargarFechas() {
                     ${bloqueada ? 'Ventas bloqueadas' : hora}
                 </span>
                 ${estrenoTag}
+                ${dispTag}
             </button>
         `;
     });
