@@ -1,0 +1,133 @@
+/* El Gorila — Taquilla y Puerta: tema práctico de alto contraste para uso en
+   operación real (fondo claro, sans-serif, verde/rojo marcados). Escopeado a
+   #view-boletera y #view-verificar nada más — el resto del panel admin
+   conserva la estética "de la obra" a propósito. El modal de escáner y el de
+   emergencia viven fuera de esos contenedores en el HTML, así que este
+   archivo no los toca ni de casualidad.
+
+   operaciones.css define sus propios tokens (--d-bg, --d-fg, --gold, --red…)
+   y varios colores de estado quedaron escritos directo en hex (pensados para
+   fondo oscuro) — por eso no basta con redefinir variables: hay que pisar
+   también esos hex sueltos, uno por uno, dentro del mismo scope. */
+
+#view-boletera,
+#view-verificar {
+  --d-bg:     #f6f3ec;
+  --d-bg2:    #ffffff;
+  --d-fg:     #1a1510;
+  --d-soft:   #55493b;
+  --d-faint:  rgba(26,21,16,.16);
+  --gold:     #8a5a00;
+  --gold-dim: rgba(138,90,0,.55);
+  --red:      #a01f0c;
+  --display:  "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cuerpo:   "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+#view-boletera,
+#view-verificar,
+#view-boletera *,
+#view-verificar * {
+  font-family: var(--cuerpo);
+}
+
+#view-boletera input,
+#view-boletera select,
+#view-boletera textarea,
+#view-verificar input,
+#view-verificar select,
+#view-verificar textarea {
+  background: #ffffff !important;
+  color: var(--d-fg) !important;
+  border: 2px solid var(--d-faint) !important;
+  font-size: 1.05rem !important;
+}
+#view-boletera input::placeholder,
+#view-verificar input::placeholder { color: rgba(26,21,16,.4) !important; }
+#view-boletera input:focus,
+#view-boletera select:focus,
+#view-verificar input:focus,
+#view-verificar select:focus { border-color: var(--gold) !important; }
+
+/* Tarjetas y fondos que estaban en rgba(10,7,6,…) — hardcoded a oscuro */
+#view-boletera .bol-card,
+#view-verificar .bol-card,
+#view-boletera .bol-resultado-venta,
+#view-boletera .fn-card,
+#view-boletera .fecha-card,
+#view-boletera #codigo-generado,
+#view-boletera .bol-caja-resumen,
+#view-verificar .resultado-ok,
+#view-verificar .resultado-error-box {
+  background: var(--d-bg2);
+  border-color: var(--d-faint);
+  box-shadow: 0 1px 3px rgba(26,21,16,.08);
+}
+
+/* Verde/rojo/ámbar pastel pensado para fondo negro — en fondo claro se lava,
+   aquí van versiones oscurecidas que mantienen buen contraste (AA) sobre
+   blanco/crema. */
+#view-boletera .bol-ticket-promo,
+#view-boletera .bol-descuento,
+#view-boletera .bol-total-promo,
+#view-boletera .bol-cupon-msg.ok,
+#view-boletera .fecha-card-disponible,
+#view-boletera .bol-resultado-estado.ok { color: #15803d; }
+
+#view-boletera .bol-cupon-msg.err,
+#view-boletera .fecha-card-agotada,
+#view-boletera .fn-avail-warn { color: #b91c1c; }
+
+#view-verificar .resultado-titulo.ok { color: #15803d; }
+#view-verificar .resultado-titulo.bad { color: #b91c1c; }
+
+#view-verificar .lista-boleto.usado .lista-boleto-check {
+  border-color: #15803d;
+  color: #15803d;
+  background: rgba(21,128,61,.1);
+}
+
+/* Botones de acción — más grandes y con color sólido, para dedo en
+   movimiento y luz de noche */
+#view-boletera .btn-generar,
+#view-boletera .btn-primario,
+#view-verificar .btn-primario,
+#view-verificar .btn-canjear {
+  font-size: 1.05rem;
+  padding: 16px 28px;
+  min-height: 52px;
+}
+#view-verificar .btn-canjear { background: #15803d; }
+#view-verificar .btn-canjear:disabled { background: #9c9284; color: #f6f3ec; }
+
+#view-boletera .bol-qty-btn {
+  width: 48px; height: 48px;
+  border-color: var(--d-faint);
+  color: var(--gold);
+}
+
+/* Lista de llamado — la parte que más se lee de corrido durante la función */
+#view-verificar .lista-grupo {
+  background: var(--d-bg2);
+  border-color: var(--d-faint);
+}
+#view-verificar .lista-grupo-nombre { color: var(--d-fg); font-size: 17px; }
+#view-verificar .lista-grupo-cert,
+#view-verificar .lista-boleto-meta { color: var(--d-soft); }
+#view-verificar .lista-resumen {
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Cabeceras y títulos con la tipografía sans en vez de la serif de la obra */
+#view-boletera .bol-card-title,
+#view-boletera .bol-header-titulo,
+#view-boletera .bol-topbar-logo,
+#view-boletera .fecha-card-nombre,
+#view-boletera .fn-name,
+#view-verificar .resultado-titulo,
+#view-verificar .page-title {
+  font-family: var(--display);
+  font-weight: 700;
+}
