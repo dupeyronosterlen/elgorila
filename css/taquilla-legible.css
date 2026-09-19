@@ -12,6 +12,12 @@
 
 #view-boletera,
 #view-verificar {
+  /* Sin esto, el navegador puede pintar controles nativos (el <select>, su
+     lista desplegable, checkboxes nativos) en modo oscuro del sistema, sin
+     importar los colores de este CSS — si el celular de puerta está en modo
+     oscuro (lo normal de noche), el <select> queda con texto claro sobre nuestro
+     fondo claro = invisible. Forzamos modo claro nada más en este scope. */
+  color-scheme: light;
   --d-bg:     #f6f3ec;
   --d-bg2:    #ffffff;
   --d-fg:     #1a1510;
@@ -38,9 +44,17 @@
 #view-verificar select,
 #view-verificar textarea {
   background: #ffffff !important;
-  color: var(--d-fg) !important;
-  border: 2px solid var(--d-faint) !important;
+  color: #1a1510 !important;
+  border: 2px solid #c9c0b0 !important;
   font-size: 1.05rem !important;
+}
+/* El <select> de función es de lo primero que se toca en la noche —
+   colores fijos, no solo variables, para blindarlo contra cualquier tema
+   nativo del navegador/SO. */
+#view-boletera select,
+#view-verificar select {
+  -webkit-appearance: menulist;
+  appearance: menulist;
 }
 #view-boletera input::placeholder,
 #view-verificar input::placeholder { color: rgba(26,21,16,.4) !important; }
@@ -107,10 +121,17 @@
 #view-verificar .resultado-titulo.ok { color: #15803d; }
 #view-verificar .resultado-titulo.bad { color: #b91c1c; }
 
+/* Checkbox de la Lista de llamado — colores fijos (no solo variables) para
+   que nunca dependa de que la herencia de --d-faint haya llegado bien hasta
+   acá; sin esto, en fondo oscuro nativo se vuelve negro sobre negro. */
+#view-verificar .lista-boleto-check {
+  border-color: #8a7f6d !important;
+  background: #ffffff;
+}
 #view-verificar .lista-boleto.usado .lista-boleto-check {
-  border-color: #15803d;
+  border-color: #15803d !important;
   color: #15803d;
-  background: rgba(21,128,61,.1);
+  background: rgba(21,128,61,.12);
 }
 
 /* Botones de acción — más grandes y con color sólido, para dedo en
@@ -132,17 +153,31 @@
   color: var(--gold);
 }
 
-/* Lista de llamado — la parte que más se lee de corrido durante la función */
+/* Lista de llamado — la parte que más se lee de corrido durante la función.
+   Nombre, cantidad y tipo son lo único que queda en la tarjeta (ya sin
+   folios), así que van grandes — se leen de un vistazo, sin acercarse. */
 #view-verificar .lista-grupo {
-  background: var(--d-bg2);
-  border-color: var(--d-faint);
+  background: #ffffff;
+  border-color: #c9c0b0;
+  padding: 14px 16px;
 }
-#view-verificar .lista-grupo-nombre { color: var(--d-fg); font-size: 17px; }
+#view-verificar .lista-grupo-nombre {
+  color: #1a1510 !important;
+  font-size: 19px;
+  font-weight: 700;
+}
+#view-verificar .lista-grupo-papel {
+  font-size: 17px !important;
+  color: #8a5a00 !important;
+}
 #view-verificar .lista-grupo-cert,
-#view-verificar .lista-boleto-meta { color: var(--d-soft); }
+#view-verificar .lista-boleto-meta {
+  color: #55493b;
+  font-size: 15px;
+}
 #view-verificar .lista-resumen {
-  color: var(--gold);
-  font-size: 13px;
+  color: #8a5a00;
+  font-size: 14px;
   font-weight: 700;
 }
 
