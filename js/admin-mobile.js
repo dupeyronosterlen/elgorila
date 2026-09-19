@@ -53,10 +53,20 @@
     _taquillaMode = !!(usuario?.viaEmail);
     bar.classList.remove('hidden');
 
+    // Sin esto, una cuenta con login normal (usuario/contraseña, ej. rol
+    // "taquilla" sin verVentas) seguía viendo el botón "Ventas" en la barra
+    // inferior — el sidebar ya lo ocultaba (v4AplicarUiAcceso en
+    // admin-panel.js), pero esta barra móvil vive en otro archivo y solo
+    // revisaba el modo "enlace por correo" (_taquillaMode), no el permiso
+    // real del rol. Ahora consulta el mismo AuthManager.tienePermiso.
+    const sinVentas = _taquillaMode || !AuthManager?.tienePermiso?.('verVentas');
+
     bar.querySelectorAll('.mob-nav-item').forEach(el => {
       const nav = el.dataset.mobNav;
       if (!nav) return;
-      if (_taquillaMode) {
+      if (nav === 'hub' || nav === 'ops') {
+        el.classList.toggle('hidden', sinVentas);
+      } else if (_taquillaMode) {
         el.classList.toggle('hidden', nav !== 'boletera' && nav !== 'verificar');
       } else if (nav === 'menu') {
         el.classList.remove('hidden');
