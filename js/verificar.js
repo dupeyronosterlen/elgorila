@@ -109,18 +109,19 @@ function mostrarValido(venta) {
     v$('resultado-valido').classList.remove('hidden');
     v$('resultado-invalido').classList.add('hidden');
 
-    const entradaLbl = venta.totalBoletos > 1
-        ? (venta.esCertificado && venta.pendientes != null
-            ? `Certificado · ${venta.pendientes} entrada(s) pendiente(s)`
-            : `Entrada ${venta.boletoNum || 1} de ${venta.totalBoletos}`)
-        : '1 entrada';
+    // Sin folio ni "entrada X de Y" en pantalla (pedido de Os 19 sep) — con la
+    // cantidad y el tipo de entrada (fila "A entregar", abajo) basta. La única
+    // excepción es un certificado con entradas ya canjeadas parcialmente: ahí
+    // sí importa cuántas quedan pendientes, no es un número de boleto.
+    const entradaLbl = (venta.esCertificado && venta.pendientes != null && venta.pendientes < venta.totalBoletos)
+        ? ` · ${venta.pendientes} pendiente(s)`
+        : '';
 
     const papelEl = v$('resultado-papel');
     if (papelEl) papelEl.textContent = _etiquetaPapelVerificar(venta);
 
-    v$('resultado-codigo').textContent  = venta.codigo;
     v$('resultado-fecha').textContent   =
-        `${venta.funcionNombre || venta.fecha || '—'} · ${entradaLbl}`;
+        `${venta.funcionNombre || venta.fecha || '—'}${entradaLbl}`;
     const filaComprador = v$('fila-comprador');
     const filaEmail     = v$('fila-email');
     const mostrarPii    = _puedeVerComprador() && (venta.nombre || venta.email);
@@ -159,8 +160,7 @@ function mostrarYaCanjeado(venta, cuandoMX) {
         ? `<div class="resultado-fila"><span>Email</span><span>${venta.email}</span></div>` : '';
     info.innerHTML = `
         <div class="resultado-fila"><span>Función</span><span>${venta.funcionNombre || venta.fecha || '—'}</span></div>
-        ${emailRow}
-        <div class="resultado-fila"><span>Folio</span><span>${venta.codigo}</span></div>`;
+        ${emailRow}`;
 }
 
 function mostrarInvalido(mensaje) {
@@ -809,7 +809,9 @@ function _htmlGrupoPuerta(g, esNuevo) {
     const usadoCount = boletos.filter(b => b.usado).length;
     const totalCount = boletos.length;
     const completo = totalCount > 0 && usadoCount === totalCount;
-    const folioResumen = boletos.map(b => b.folio || b.cert).join(' · ') || '—';
+    // Pedido de Os 19 sep: en esta tarjeta ya no se muestra folio ni CERT
+    // individual — con nombre + cantidad/tipo (arriba, "papel") y el estado
+    // de check-in basta para trabajar la puerta de corrido.
     const metaTxt = (usadoCount > 0 && !completo)
       ? `${usadoCount}/${totalCount} ya adentro — toca para el resto`
       : `${totalCount} entrada${totalCount === 1 ? '' : 's'}`;
@@ -818,10 +820,7 @@ function _htmlGrupoPuerta(g, esNuevo) {
         <p class="lista-grupo-nombre">${g.nombre || '—'}${esNuevo ? ' <span style="color:var(--gold);font-size:11px;font-weight:700;">· NUEVA</span>' : ''}</p>
         <p class="lista-grupo-papel" style="margin:0 0 8px;font-size:14px;font-weight:600;color:var(--gold);">${papel}${g.codigoCupon ? ' · ' + g.codigoCupon : ''}</p>
         <div class="lista-boleto${completo ? ' usado' : ''}" data-grupo="${g.certificado}" role="button" tabindex="0" title="${completo ? 'Toca para quitar check-in de toda la orden' : 'Toca para marcar entrada de toda la orden'}">
-          <div>
-            <div class="lista-boleto-folio">${folioResumen}</div>
-            <div class="lista-boleto-meta">${metaTxt}</div>
-          </div>
+          <div class="lista-boleto-meta">${metaTxt}</div>
           <div class="lista-boleto-check" aria-hidden="true">${completo ? '✓' : ''}</div>
         </div>
       </div>`;
@@ -1111,18 +1110,19 @@ async function canjearSeleccionados() {
 function _bindVerificarUI() {
     const btnV = v$('btn-verificar');
     const btnU = v$('btn-marcar-usado');
-    const btnS = v$('btn-escanear');
     const btnSTop = document.getElementById('btn-escanear-top');
     const input = v$('codigo-qr-input');
 
     if (btnV) btnV.addEventListener('click', verificarBoleto);
     if (btnU) btnU.addEventListener('click', marcarComoUsado);
-    if (btnS) {
-        btnS.disabled = false;
-        btnS.addEventListener('click', abrirScanner);
-    }
+    // Único botón de cámara en esta vista (pedido de Os 19 sep): en vez del
+    // lector "normal" (abrirScanner, que solo llenaba el input y llamaba a
+    // verificarBoleto), ahora abre directo el que antes era el de emergencia
+    // — valida y canjea solo, mostrando antes un preview de la orden. La
+    // lógica de abrirScannerEmergencia/procesarScanEmergencia no se tocó en
+    // nada, solo cambió qué botón la dispara.
     if (btnSTop) {
-        btnSTop.addEventListener('click', abrirScanner);
+        btnSTop.addEventListener('click', abrirScannerEmergencia);
     }
     if (input) {
         input.addEventListener('keypress', e => { if (e.key === 'Enter') verificarBoleto(); });
@@ -1139,10 +1139,10 @@ function _bindVerificarUI() {
     if (codigoURL && input) {
         input.value = codigoURL.toUpperCase();
         setTimeout(verificarBoleto, 300);
-    } else if (params.get('emergencia') === '1') {
+    } else if (params.get('emergencia') === '1' || params.get('scan') === '1') {
+        // Un solo lector en esta vista (ver comentario en _bindVerificarUI) —
+        // ambos parámetros de URL abren el mismo escáner.
         setTimeout(() => abrirScannerEmergencia(), 400);
-    } else if (params.get('scan') === '1' && btnS) {
-        setTimeout(abrirScanner, 400);
     }
 
     _aplicarUIPermisos();
