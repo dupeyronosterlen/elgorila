@@ -78,6 +78,32 @@
 #view-boletera .fecha-card-agotada,
 #view-boletera .fn-avail-warn { color: #b91c1c; }
 
+/* Botón "Validador QR" — es la acción principal de toda la pantalla de
+   Puerta, se toca cientos de veces en la noche. El .btn-primary genérico del
+   panel usa mono 11px mayúsculas pensado para botones secundarios de topbar;
+   aquí necesita texto legible, grande, y contraste garantizado sin depender
+   de --bg (que sigue siendo el tema oscuro fuera de este scope). */
+#view-verificar .page-hd-actions .btn-primary {
+  background: var(--gold);
+  color: #ffffff;
+  font-family: var(--cuerpo);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+  padding: 16px 24px;
+  min-height: 56px;
+}
+#view-verificar .page-hd-actions .btn-primary .material-symbols-outlined {
+  font-size: 22px !important;
+}
+@media (max-width: 900px) {
+  #view-verificar .page-hd-actions .btn-primary {
+    width: 100%;
+    font-size: 1.1rem;
+  }
+}
+
 #view-verificar .resultado-titulo.ok { color: #15803d; }
 #view-verificar .resultado-titulo.bad { color: #b91c1c; }
 

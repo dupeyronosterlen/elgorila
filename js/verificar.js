@@ -730,13 +730,24 @@ function _colorGrupo(certificado) {
     return GRUPO_COLORS[h];
 }
 
+// Puerta trabaja solo con la función de hoy en adelante — los sábados ya
+// pasados no le sirven de nada aquí (eso vive en Ventas/Informes, que no
+// toca esta función). Comparación por fecha ISO (YYYY-MM-DD) en huso CDMX,
+// no en huso del dispositivo, para que no varíe según dónde esté el celular.
+function _soloHoyEnAdelante(list) {
+    const hoyMx = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+    return list.filter(f => !f.fecha_iso || f.fecha_iso >= hoyMx);
+}
+
 async function cargarFuncionesLista() {
     const sel = v$('lista-funcion');
     if (!sel || !window.API_BASE) return;
     try {
         const res = await fetch(window.teatroApi('funciones'));
         const data = await res.json();
-        const list = (Array.isArray(data) ? data : (data.funciones || [])).filter(f => f.activa !== false);
+        const list = _soloHoyEnAdelante(
+            (Array.isArray(data) ? data : (data.funciones || [])).filter(f => f.activa !== false)
+        );
         sel.innerHTML = list.map(f =>
             `<option value="${f.fecha_iso}">${f.nombre}${f.numero_obra ? ` · obra ${f.numero_obra}` : ''}</option>`
         ).join('');
@@ -1026,7 +1037,9 @@ async function cargarFuncionesNombre() {
     try {
         const res = await fetch(window.teatroApi('funciones'));
         const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.funciones || []);
+        const list = _soloHoyEnAdelante(
+            (Array.isArray(data) ? data : (data.funciones || [])).filter(f => f.activa !== false)
+        );
         sel.innerHTML = list.map(f =>
             `<option value="${f.fecha_iso}">${f.nombre}</option>`
         ).join('');
