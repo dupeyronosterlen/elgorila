@@ -116,20 +116,51 @@
     width: 100%;
     font-size: 1.1rem;
   }
+  /* Pedido de Os 19 sep: título y botón centrados en vista móvil, ya sin el
+     texto de ayuda que sobraba abajo. */
+  #view-verificar .page-hd {
+    align-items: center;
+    text-align: center;
+  }
+  #view-verificar .page-hd-left {
+    align-items: center;
+    width: 100%;
+  }
+  #view-verificar .page-hd-actions {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 #view-verificar .resultado-titulo.ok { color: #15803d; }
 #view-verificar .resultado-titulo.bad { color: #b91c1c; }
 
-/* Checkbox de la Lista de llamado — colores fijos (no solo variables) para
-   que nunca dependa de que la herencia de --d-faint haya llegado bien hasta
-   acá; sin esto, en fondo oscuro nativo se vuelve negro sobre negro. */
+/* Checks de la Lista de llamado — colores fijos (no solo variables) para que
+   nunca dependa de que la herencia de --d-faint haya llegado bien hasta acá;
+   sin esto, en fondo oscuro nativo se vuelve negro sobre negro.
+   Dos niveles (pedido de Os 19 sep): el master (junto al nombre, valida TODA
+   la orden) va en dorado — color propio para distinguirse de los individuales,
+   que van en gris/verde como el resto de checks de la app. */
 #view-verificar .lista-boleto-check {
-  border-color: #8a7f6d !important;
+  width: 32px; height: 32px;
+  border: 2px solid #8a7f6d;
   background: #ffffff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+  color: transparent;
 }
-#view-verificar .lista-boleto.usado .lista-boleto-check {
-  border-color: #15803d !important;
+#view-verificar .lista-boleto-check-master {
+  width: 40px; height: 40px;
+  border-color: #8a5a00;
+  font-size: 22px;
+}
+#view-verificar .lista-boleto-check-master.usado {
+  border-color: #8a5a00;
+  background: #8a5a00;
+  color: #ffffff;
+}
+#view-verificar .lista-boleto-ind.usado .lista-boleto-check-ind {
+  border-color: #15803d;
   color: #15803d;
   background: rgba(21,128,61,.12);
 }
@@ -174,6 +205,49 @@
 #view-verificar .lista-boleto-meta {
   color: #55493b;
   font-size: 15px;
+}
+
+/* Head de la tarjeta: info a la izquierda, check master (dorado) a la
+   derecha, junto al nombre — como pidió Os. */
+#view-verificar .lista-grupo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#view-verificar .lista-grupo-info { min-width: 0; flex: 1 1 auto; }
+#view-verificar .lista-grupo-nombre,
+#view-verificar .lista-grupo-papel { margin: 0 0 4px; }
+
+/* Entradas individuales — debajo del head, separadas por una línea, cada
+   una con su propio check (verde al marcar) para cuando llegan por separado
+   o hay que quitar solo una sin tocar el resto de la orden. */
+#view-verificar .lista-boletos-ind-wrap {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e3ddd0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#view-verificar .lista-boleto-ind {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 4px 6px 10px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#view-verificar .lista-boleto-ind-label {
+  font-size: 15px;
+  color: #1a1510;
+}
+#view-verificar .lista-boleto-ind.usado .lista-boleto-ind-label {
+  color: #55493b;
+  text-decoration: line-through;
+  text-decoration-color: #a8a094;
 }
 #view-verificar .lista-resumen {
   color: #8a5a00;

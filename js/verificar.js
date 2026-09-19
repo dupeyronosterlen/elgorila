@@ -798,31 +798,52 @@ function _renderListaPuerta(data, { append = false } = {}) {
     _bindListaPuertaClicks(append ? data.grupos : null);
 }
 
+function _tipoLbl(tipo) {
+    return (tipo === 'estudiante' || tipo === 'inapam' || tipo === 'maestro') ? 'Credencial' : 'General';
+}
+
+// Dos niveles de check (pedido de Os 19 sep):
+// - Master, junto al nombre, color distinto (dorado) — un toque marca/quita
+//   TODA la orden (mismo criterio de siempre: certificado de grupo).
+// - Uno por entrada individual, abajo — para cuando llegan por separado o
+//   hay que quitar solo una sin tocar el resto (ej. no llegó una persona del
+//   grupo). Solo se pintan si hay más de 1 entrada; con 1 sola el master ya
+//   cubre el caso y no hace falta duplicar el control.
 function _htmlGrupoPuerta(g, esNuevo) {
     const color = _colorGrupo(g.certificado);
     const papel = (g.cortesia || (g.metodoPago || '').toLowerCase() === 'cortesia')
       ? `${g.cantidad || (g.boletos || []).length} × Cortesía`
       : ((g.items || []).length
-        ? g.items.map(i => `${i.cantidad} × ${(i.tipo === 'estudiante' || i.tipo === 'inapam' || i.tipo === 'maestro') ? 'Credencial' : 'General'}`).join(' · ')
+        ? g.items.map(i => `${i.cantidad} × ${_tipoLbl(i.tipo)}`).join(' · ')
         : `${g.cantidad || (g.boletos || []).length} × General`);
     const boletos = g.boletos || [];
     const usadoCount = boletos.filter(b => b.usado).length;
     const totalCount = boletos.length;
     const completo = totalCount > 0 && usadoCount === totalCount;
-    // Pedido de Os 19 sep: en esta tarjeta ya no se muestra folio ni CERT
-    // individual — con nombre + cantidad/tipo (arriba, "papel") y el estado
-    // de check-in basta para trabajar la puerta de corrido.
     const metaTxt = (usadoCount > 0 && !completo)
-      ? `${usadoCount}/${totalCount} ya adentro — toca para el resto`
+      ? `${usadoCount}/${totalCount} ya adentro`
       : `${totalCount} entrada${totalCount === 1 ? '' : 's'}`;
+
+    const individualesHtml = totalCount > 1 ? `
+        <div class="lista-boletos-ind-wrap">
+          ${boletos.map((b, i) => `
+            <div class="lista-boleto-ind${b.usado ? ' usado' : ''}" data-cert-ind="${b.cert}" data-grupo="${g.certificado}" role="button" tabindex="0" title="${b.usado ? 'Toca para quitar el check-in de esta entrada' : 'Toca para marcar esta entrada'}">
+              <span class="lista-boleto-ind-label">Entrada ${i + 1} · ${_tipoLbl(b.tipo)}</span>
+              <div class="lista-boleto-check lista-boleto-check-ind" aria-hidden="true">${b.usado ? '✓' : ''}</div>
+            </div>`).join('')}
+        </div>` : '';
+
     return `
       <div class="lista-grupo" style="border-left-color:${esNuevo ? 'var(--gold)' : color}" data-grupo-cert="${g.certificado}">
-        <p class="lista-grupo-nombre">${g.nombre || '—'}${esNuevo ? ' <span style="color:var(--gold);font-size:11px;font-weight:700;">· NUEVA</span>' : ''}</p>
-        <p class="lista-grupo-papel" style="margin:0 0 8px;font-size:14px;font-weight:600;color:var(--gold);">${papel}${g.codigoCupon ? ' · ' + g.codigoCupon : ''}</p>
-        <div class="lista-boleto${completo ? ' usado' : ''}" data-grupo="${g.certificado}" role="button" tabindex="0" title="${completo ? 'Toca para quitar check-in de toda la orden' : 'Toca para marcar entrada de toda la orden'}">
-          <div class="lista-boleto-meta">${metaTxt}</div>
-          <div class="lista-boleto-check" aria-hidden="true">${completo ? '✓' : ''}</div>
+        <div class="lista-grupo-head">
+          <div class="lista-grupo-info">
+            <p class="lista-grupo-nombre">${g.nombre || '—'}${esNuevo ? ' <span style="color:var(--gold);font-size:11px;font-weight:700;">· NUEVA</span>' : ''}</p>
+            <p class="lista-grupo-papel">${papel}${g.codigoCupon ? ' · ' + g.codigoCupon : ''}</p>
+            <p class="lista-boleto-meta">${metaTxt}</p>
+          </div>
+          <div class="lista-boleto-check lista-boleto-check-master${completo ? ' usado' : ''}" data-grupo-master="${g.certificado}" role="button" tabindex="0" title="${completo ? 'Toca para quitar check-in de toda la orden' : 'Toca para marcar entrada de toda la orden'}">${completo ? '✓' : ''}</div>
         </div>
+        ${individualesHtml}
       </div>`;
 }
 
@@ -830,12 +851,23 @@ function _bindListaPuertaClicks(soloGrupos) {
     const cont = v$('lista-grupos');
     if (!cont) return;
     const certs = soloGrupos ? new Set(soloGrupos.map(g => g.certificado)) : null;
-    cont.querySelectorAll('.lista-boleto[data-grupo]').forEach(el => {
-        const cert = el.dataset.grupo;
+
+    cont.querySelectorAll('[data-grupo-master]').forEach(el => {
+        const cert = el.dataset.grupoMaster;
         if (certs && !certs.has(cert)) return; // ya tenía su listener de antes
         el.addEventListener('click', () => {
             if (el.classList.contains('usado')) descanjearGrupoDesdeLista(cert);
             else canjearGrupoDesdeLista(cert);
+        });
+    });
+
+    cont.querySelectorAll('[data-cert-ind]').forEach(el => {
+        const certGrupo = el.dataset.grupo;
+        if (certs && !certs.has(certGrupo)) return;
+        el.addEventListener('click', () => {
+            const certInd = el.dataset.certInd;
+            if (el.classList.contains('usado')) descanjearBoletoIndividual(certInd, certGrupo);
+            else canjearBoletoIndividual(certInd, certGrupo);
         });
     });
 }
@@ -922,6 +954,63 @@ async function descanjearGrupoDesdeLista(certGrupo) {
         if (_listaPuertaCache && quitados) {
             _listaPuertaCache.ingresados = Math.max(0, (_listaPuertaCache.ingresados || 0) - quitados);
             _listaPuertaCache.pendientes = (_listaPuertaCache.pendientes || 0) + quitados;
+        }
+        _actualizarGrupoEnDOM(certGrupo);
+    } catch { alert('Error de conexión'); }
+}
+
+// Check por entrada individual (mismo endpoint /canjear|descanjear, pero con
+// el cert del BOLETO, no el de la orden — el worker ya distingue los dos
+// casos en handleCanjear/handleDescanjear). Para cuando llegan por separado
+// o hay que quitar solo una entrada de una orden sin tocar el resto.
+async function canjearBoletoIndividual(certInd, certGrupo) {
+    const g = _grupoEnCache(certGrupo);
+    const token = obtenerTokenAdmin();
+    if (!g || !token) return;
+    const b = g.boletos?.find(bb => bb.cert === certInd);
+    if (!b || b.usado) return;
+    try {
+        const body = _canjeBodyExtra();
+        const res = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(certInd)}`), {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                ...(body ? { 'Content-Type': 'application/json' } : {}),
+            },
+            body,
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'No se pudo marcar esta entrada'); return; }
+
+        b.usado = true;
+        if (_listaPuertaCache) {
+            _listaPuertaCache.ingresados = (_listaPuertaCache.ingresados || 0) + 1;
+            _listaPuertaCache.pendientes = Math.max(0, (_listaPuertaCache.pendientes || 0) - 1);
+        }
+        _actualizarGrupoEnDOM(certGrupo);
+        _agregarIngreso(g.nombre || certGrupo, 1);
+    } catch { alert('Error de conexión'); }
+}
+
+async function descanjearBoletoIndividual(certInd, certGrupo) {
+    const g = _grupoEnCache(certGrupo);
+    const token = obtenerTokenAdmin();
+    if (!g || !token) return;
+    const b = g.boletos?.find(bb => bb.cert === certInd);
+    if (!b || !b.usado) return;
+    if (!confirm(`¿Quitar el check-in de esta entrada de ${g.nombre || certGrupo}?`)) return;
+    try {
+        const res = await fetch(window.teatroAdminApi(`descanjear/${encodeURIComponent(certInd)}`), {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'No se pudo quitar esta entrada'); return; }
+
+        b.usado = false;
+        if (_listaPuertaCache) {
+            _listaPuertaCache.ingresados = Math.max(0, (_listaPuertaCache.ingresados || 0) - 1);
+            _listaPuertaCache.pendientes = (_listaPuertaCache.pendientes || 0) + 1;
         }
         _actualizarGrupoEnDOM(certGrupo);
     } catch { alert('Error de conexión'); }
