@@ -1006,19 +1006,12 @@ function cargarFechas() {
         const nombreStr      = funcion.nombre.replace(/'/g, "\\'");
 
         if (esAgotada) {
-            const fechaIsoF = funcion.fecha_iso || funcion.clave;
             html += `
-            <div data-fecha-item data-fecha-mes="${claveStr.slice(0, 7)}">
-                <button type="button" disabled data-fecha-clave="${claveStr}" data-fecha-mes="${claveStr.slice(0, 7)}"
-                    class="w-full p-4 rounded-lg text-center border border-red-800/50 bg-red-950/30 text-red-300 cursor-not-allowed backdrop-blur-sm">
-                    <span class="block font-bold text-sm">${fechaCorta}</span>
-                    <span class="inline-block mt-1 bg-red-700 text-white text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">Agotado</span>
-                </button>
-                <button type="button" onclick="abrirListaEspera('${claveStr}', '${nombreStr}', '${fechaIsoF}')"
-                    class="w-full mt-1 text-xs text-accent-gold underline hover:text-white transition-colors py-1">
-                    Anotarme en lista de espera →
-                </button>
-            </div>
+            <button type="button" disabled data-fecha-clave="${claveStr}" data-fecha-mes="${claveStr.slice(0, 7)}"
+                class="relative p-3 sm:p-4 rounded-lg text-center border-2 border-red-800/50 bg-red-950/30 text-red-300 cursor-not-allowed backdrop-blur-sm">
+                <span class="block font-bold">${fechaCorta}</span>
+                <span class="inline-block mt-1 bg-red-700 text-white text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">Agotado</span>
+            </button>
             `;
             return;
         }
