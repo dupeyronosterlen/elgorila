@@ -1236,7 +1236,10 @@ function _bindVerificarUI() {
             v$('resultado-verificacion')?.classList.add('hidden');
             _ventaActual = null;
         });
-        input.focus();
+        // Sin autofocus (pedido de Os 19 sep): en celular, enfocar el input
+        // al abrir la página dispara el teclado de inmediato y tapa la
+        // pantalla — que la persona elija QR o escribir, no que se le abra
+        // solo.
     }
 
     // Auto-verificar si hay ?codigo= en la URL (desde admin o enlace legacy)
