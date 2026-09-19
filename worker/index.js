@@ -4786,7 +4786,7 @@ async function handleListaPuerta(tid, request, env) {
       })),
       usado: v.usado || false,
     }))
-    .sort((a, b) => (a.boletos[0]?.folio || '').localeCompare(b.boletos[0]?.folio || ''));
+    .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
 
   const ingresados = grupos.reduce((s, g) => s + g.boletos.filter(b => b.usado).length, 0);
   const total      = grupos.reduce((s, g) => s + g.boletos.length, 0);
