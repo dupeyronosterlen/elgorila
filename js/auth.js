@@ -76,8 +76,12 @@ const AuthManager = {
             reenviarBoleto: true, corregirEmail: false,
             gestionarEquipo: false, editarSitio: false, accesoAdmin: true,
         },
+        // taquilla "operativo puro" (pedido de Os 19 sep): sin verVentas ni
+        // verInventario para que en el panel solo queden los tabs Taquilla y
+        // Verificar — nada de Informes/Funciones/Hub. Sigue pudiendo buscar
+        // por nombre en puerta (verificarPorNombre no depende de verVentas).
         taquilla: {
-            verInventario: true, verVentas: true, verFiscal: false, fiscalReset: false,
+            verInventario: false, verVentas: false, verFiscal: false, fiscalReset: false,
             venderEfectivo: true, verificarBoletos: true, verificarPorNombre: true,
             reagendar: false, reembolsar: false, exportarDatos: false, verAuditoria: false,
             reenviarBoleto: false, corregirEmail: false,

@@ -2894,6 +2894,11 @@
         if (perm('verAuditoria')) state.view = 'auditoria';
         else if (perm('editarSitio')) state.view = 'sitio';
         else if (perm('gestionarEquipo')) state.view = 'equipo';
+        // Rol sin ventas y sin ninguna de las anteriores (ej. taquilla con
+        // verVentas apagado a propósito): que no se quede en "hub" oculto
+        // sin nav resaltado — aterriza en lo que sí puede usar.
+        else if (perm('venderEfectivo')) state.view = 'boletera';
+        else if (perm('verificarBoletos')) state.view = 'verificar';
       }
       paint();
       window.AdminMobile?.configure?.(usuario);
