@@ -266,3 +266,10 @@
   font-family: var(--display);
   font-weight: 700;
 }
+
+/* El horario (.fn-name, ej. "18:00 hrs") y la disponibilidad (.fn-avail) de
+   las tarjetas de función usaban var(--fg)/var(--soft) — variables GLOBALES
+   que nunca redefinimos (solo --d-fg/--d-soft) y siguen resolviendo al beige
+   claro del tema oscuro de la obra. Color fijo para no depender de eso. */
+#view-boletera .fn-name { color: #1a1510 !important; }
+#view-boletera .fn-avail { color: #55493b !important; }

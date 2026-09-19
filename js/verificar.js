@@ -730,6 +730,21 @@ function _colorGrupo(certificado) {
     return GRUPO_COLORS[h];
 }
 
+// La lista (arriba) sigue mostrando TODAS las funciones (Os la necesita para
+// revisar fechas pasadas), pero el default seleccionado debe ser la función
+// en producción — hoy, o si no hay función hoy, la próxima más cercana — no
+// la primera de la lista (que sería la más vieja, ej. 25 jul).
+function _seleccionarFuncionPorDefecto(sel, list) {
+    if (!sel || !list.length) return;
+    const hoyMx = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+    const deHoy = list.find(f => f.fecha_iso === hoyMx);
+    const proxima = list
+        .filter(f => f.fecha_iso >= hoyMx)
+        .sort((a, b) => a.fecha_iso.localeCompare(b.fecha_iso))[0];
+    const elegida = deHoy || proxima;
+    if (elegida) sel.value = elegida.fecha_iso;
+}
+
 async function cargarFuncionesLista() {
     const sel = v$('lista-funcion');
     if (!sel || !window.API_BASE) return;
@@ -740,6 +755,7 @@ async function cargarFuncionesLista() {
         sel.innerHTML = list.map(f =>
             `<option value="${f.fecha_iso}">${f.nombre}${f.numero_obra ? ` · obra ${f.numero_obra}` : ''}</option>`
         ).join('');
+        _seleccionarFuncionPorDefecto(sel, list);
         await cargarListaPuerta();
     } catch { sel.innerHTML = '<option value="">—</option>'; }
 }
@@ -1119,6 +1135,7 @@ async function cargarFuncionesNombre() {
         sel.innerHTML = list.map(f =>
             `<option value="${f.fecha_iso}">${f.nombre}</option>`
         ).join('');
+        _seleccionarFuncionPorDefecto(sel, list);
     } catch { sel.innerHTML = '<option value="">—</option>'; }
 }
 
