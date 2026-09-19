@@ -272,11 +272,43 @@ async function marcarComoUsado() {
 
         _ventaActual.usado   = true;
         _ventaActual.usadoEn = data.usadoEn;
-        if (_puedeCanjear()) cargarListaPuerta();
+        if (_puedeCanjear()) _reflejarCanjeEnListaPuerta();
     } catch {
         alert('Error de conexión');
         if (btnU) { btnU.disabled = false; }
     }
+}
+
+// Refleja en la Lista de llamado un canje hecho desde el buscador de folio/nombre
+// (marcarComoUsado) sin volver a pedir toda la lista al servidor — mismo patrón
+// de actualización local que ya usa canjearGrupoDesdeLista() al tocar directo en
+// la lista, así el scroll y el resto de las tarjetas no se mueven. _codigoActual
+// puede ser el certificado de la orden completa (el worker marca TODOS los
+// pendientes) o el de un boleto individual dentro de ella (marca solo ese uno) —
+// ver handleCanjear en worker/index.js. Si el grupo no está en caché (lista aún
+// no cargada, o la venta pertenece a otra función que la seleccionada arriba),
+// se cae al reload completo de siempre como respaldo seguro.
+function _reflejarCanjeEnListaPuerta() {
+    const cod       = (_codigoActual || '').toUpperCase();
+    const certGrupo = (_ventaActual?.certificado || cod || '').toUpperCase();
+    const g = _grupoEnCache(certGrupo);
+    if (!g) { cargarListaPuerta(); return; }
+
+    let marcados = 0;
+    const boletos = g.boletos || [];
+    if (cod === certGrupo) {
+        boletos.forEach(b => { if (!b.usado) { b.usado = true; marcados++; } });
+    } else {
+        const b = boletos.find(bb => bb.cert === cod);
+        if (b && !b.usado) { b.usado = true; marcados = 1; }
+    }
+    if (!marcados) { cargarListaPuerta(); return; }
+
+    if (_listaPuertaCache) {
+        _listaPuertaCache.ingresados = (_listaPuertaCache.ingresados || 0) + marcados;
+        _listaPuertaCache.pendientes = Math.max(0, (_listaPuertaCache.pendientes || 0) - marcados);
+    }
+    _actualizarGrupoEnDOM(certGrupo);
 }
 
 function obtenerTokenAdmin() {
