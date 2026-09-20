@@ -6402,18 +6402,28 @@ export default {
     return json({ error: 'Not found.' }, 404, request);
   },
 
+  // Un solo cron diario (0 13 * * *, 7am CDMX) hace las dos revisiones: día-función
+  // (¿hay función HOY?) y post-función (¿hubo función AYER, sin su correo de
+  // certificado?). Antes el post-función dependía de un segundo cron semanal
+  // (0 14 * * 7) — Cloudflare interpreta el "7" de día-de-semana como SÁBADO,
+  // no domingo (verificado por API: disparó el 19 sep, un sábado, a las 8am
+  // CDMX — el mismo día de la función, antes de que ocurriera — así que
+  // diaAnterior() apuntaba al viernes, sin función, y nunca mandaba nada).
+  // Quitar la dependencia del día-de-semana de Cloudflare por completo es más
+  // robusto que adivinar el valor correcto. Decisión de Os, 20 sep 2026.
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
       try {
-        if (event.cron === '0 14 * * 7') {
-          const res = await enviarEmailsPostFuncionAutomatico(env);
-          logInfo('cron.email_post_funcion', sanitizeObject(res));
-          return;
-        }
-        const res = await enviarEmailsDiaFuncion(env);
-        logInfo('cron.email_dia_funcion', sanitizeObject(res));
+        const resDia = await enviarEmailsDiaFuncion(env);
+        logInfo('cron.email_dia_funcion', sanitizeObject(resDia));
       } catch (e) {
-        logError('cron.scheduled', { cron: event.cron, error: e.message });
+        logError('cron.scheduled.dia_funcion', { cron: event.cron, error: e.message });
+      }
+      try {
+        const resPost = await enviarEmailsPostFuncionAutomatico(env);
+        logInfo('cron.email_post_funcion', sanitizeObject(resPost));
+      } catch (e) {
+        logError('cron.scheduled.post_funcion', { cron: event.cron, error: e.message });
       }
     })());
   },

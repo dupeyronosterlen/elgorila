@@ -65,12 +65,16 @@ new_sqlite_classes = ["InventarioFuncion"]
 DISABLE_LOGIN_RATE_LIMIT = "false"
 
 # 13:00 UTC = 7:00 CDMX (México ya no tiene horario de verano desde 2022) —
-# correo matutino día de función, todos los días.
-# 14:00 UTC domingos = 8:00 CDMX — correo "sorpresa" post-función (certificado
-# + cupón BUTACA37 + reseña Google) a los asistentes de la función del sábado
-# anterior. Decisión de Os, 4 sep 2026.
+# un solo cron diario. El worker (scheduled()) hace las dos revisiones en cada
+# corrida: día-función (¿hay función HOY?) y post-función/certificado
+# (¿hubo función AYER sin su correo?). Antes había un segundo cron semanal
+# "0 14 * * 7" para el post-función, pero Cloudflare interpreta "7" como
+# SÁBADO (no domingo) — disparaba el mismo día de la función, de madrugada,
+# antes de que ocurriera, y nunca encontraba nada que mandar. Verificado por
+# API el 20 sep 2026. Un solo cron diario evita depender del día-de-semana de
+# Cloudflare por completo. Decisión de Os, 20 sep 2026.
 [triggers]
-crons = ["0 13 * * *", "0 14 * * 7"]
+crons = ["0 13 * * *"]
 
 # Workers Logs — JSON estructurado sin PII (ver worker/logs.js)
 [observability]
