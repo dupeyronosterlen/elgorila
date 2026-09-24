@@ -309,9 +309,86 @@
     },
   };
 
+  /** Pago por botón (reemplaza el <select>) — alimenta el mismo #metodo-pago-efectivo
+   *  oculto que ya lee boletera-panel.js al armar la venta. */
+  function wireBotonesPago() {
+    const hidden = document.getElementById('metodo-pago-efectivo');
+    if (!hidden) return;
+    document.querySelectorAll('.bol-pago-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.bol-pago-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        hidden.value = btn.dataset.pago;
+        hidden.dispatchEvent(new Event('change'));
+      });
+    });
+  }
+
+  /** Correo: usuario + dominio por botón (Gmail/Outlook/Hotmail/Yahoo) u "Otro" a mano.
+   *  Compone el valor real en el #email-efectivo oculto que ya lee el submit. */
+  function wireCorreoDominio() {
+    const userEl   = document.getElementById('email-user');
+    const domainEl = document.getElementById('email-domain');
+    const hiddenEl = document.getElementById('email-efectivo');
+    if (!userEl || !domainEl || !hiddenEl) return;
+
+    function recomponer() {
+      const u = userEl.value.trim();
+      const d = domainEl.value.trim();
+      hiddenEl.value = (u && d) ? `${u}@${d}` : '';
+    }
+    userEl.addEventListener('input', recomponer);
+    domainEl.addEventListener('input', recomponer);
+
+    document.querySelectorAll('.bol-domain-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.bol-domain-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (btn.dataset.domain) {
+          domainEl.value = btn.dataset.domain;
+          domainEl.readOnly = true;
+        } else {
+          domainEl.value = '';
+          domainEl.readOnly = false;
+          domainEl.focus();
+        }
+        recomponer();
+      });
+    });
+    // Si edita el dominio a mano tras haber tocado un botón, ese botón deja de aplicar.
+    domainEl.addEventListener('input', () => {
+      const activo = document.querySelector('.bol-domain-btn.active');
+      if (activo && activo.dataset.domain && activo.dataset.domain !== domainEl.value) {
+        activo.classList.remove('active');
+        domainEl.readOnly = false;
+      }
+    });
+  }
+
+  function limpiarComprador() {
+    ['nombre-efectivo', 'email-user', 'email-domain', 'email-efectivo', 'notas-efectivo'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.querySelectorAll('.bol-domain-btn').forEach(b => b.classList.remove('active'));
+    const domainEl = document.getElementById('email-domain');
+    if (domainEl) domainEl.readOnly = false;
+
+    // Pago: siempre vuelve a Efectivo entre una venta y la siguiente.
+    const pagoHidden = document.getElementById('metodo-pago-efectivo');
+    if (pagoHidden) pagoHidden.value = 'efectivo';
+    document.querySelectorAll('.bol-pago-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.pago === 'efectivo');
+    });
+  }
+  global.BoleteraVenta.limpiarComprador = limpiarComprador;
+
   document.addEventListener('DOMContentLoaded', () => {
     actualizarUi();
-    // Cortesía: al cambiar la forma de pago, refrescar el total mostrado ($0)
+    // Cortesía (legado, sin botón en UI desde 24 sep 2026): si algo deja el hidden
+    // en 'cortesia', el total sigue reflejándolo en $0.
     document.getElementById('metodo-pago-efectivo')?.addEventListener('change', actualizarUi);
+    wireBotonesPago();
+    wireCorreoDominio();
   });
 })(window);

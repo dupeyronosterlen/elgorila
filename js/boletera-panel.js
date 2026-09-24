@@ -16,6 +16,14 @@ function _boletaToken() {
   return typeof AuthManager !== 'undefined' ? AuthManager.obtenerAdminToken() : null;
 }
 
+// 'tarjeta_taquilla' = valor legado (antes de separar crédito/débito en botones,
+// 19 sep 2026). El corte de caja sigue sumando los tres como una sola "Tarjeta"
+// a propósito — decisión de Os, no separar esa pantalla.
+function _esTarjeta(metodoPago) {
+  const m = (metodoPago || '').toLowerCase();
+  return m === 'tarjeta_taquilla' || m === 'tarjeta_credito' || m === 'tarjeta_debito';
+}
+
 function _hoyIsoMx() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
 }
@@ -455,7 +463,7 @@ async function generarCodigoEfectivo() {
     if (txt) txt.textContent = data.codigo;
     if (inf) {
       const metodoLbl = metodoPago === 'cortesia' ? 'Cortesía'
-        : metodoPago === 'tarjeta_taquilla' ? 'Tarjeta' : 'Efectivo';
+        : _esTarjeta(metodoPago) ? 'Tarjeta' : 'Efectivo';
       const mailNote = email
         ? (data.emailEnviado ? ` · enviado a ${email}` : ` · no se pudo enviar a ${email}`)
         : '';
@@ -469,10 +477,7 @@ async function generarCodigoEfectivo() {
       if (qrCodigo) QRCode.toCanvas(qr, qrCodigo.trim().toUpperCase(), { width: 160, margin: 1 });
     }
 
-    ['nombre-efectivo', 'email-efectivo', 'notas-efectivo'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
+    BoleteraVenta?.limpiarComprador?.();
     BoleteraVenta?.limpiarCarrito?.();
 
     await Promise.all([_boletaCargarDisponibilidad(), _boletaCargarTablaDia(), _boletaCargarListaPuerta()]);
@@ -492,7 +497,7 @@ async function generarCodigo() { await generarCodigoEfectivo(); }
 
 function _esVentaTaquilla(v) {
   const m = (v.metodoPago || '').toLowerCase();
-  if (m === 'efectivo' || m === 'tarjeta_taquilla') return true;
+  if (m === 'efectivo' || _esTarjeta(m)) return true;
   return String(v.sessionId || '').startsWith('manual_') || v.metodoPago === 'efectivo';
 }
 
@@ -521,7 +526,7 @@ async function cargarBoletosHoy() {
     let tarjeta = 0;
     hoy.forEach(v => {
       const t = Number(v.total) || 0;
-      if ((v.metodoPago || '').toLowerCase() === 'tarjeta_taquilla') tarjeta += t;
+      if (_esTarjeta(v.metodoPago)) tarjeta += t;
       else efectivo += t;
     });
     const elEf = document.getElementById('bol-caja-efectivo');
@@ -537,7 +542,7 @@ async function cargarBoletosHoy() {
       const st = v.usado ? 'badge-cancelado' : 'badge-activo';
       const lb = v.usado ? 'Canjeado' : 'Válido';
       const info = [v.nombre, v.email].filter(Boolean).join(' · ') || '—';
-      const pago = (v.metodoPago || '').toLowerCase() === 'tarjeta_taquilla' ? 'Tarjeta' : 'Efectivo';
+      const pago = _esTarjeta(v.metodoPago) ? 'Tarjeta' : 'Efectivo';
       return `<tr>
         <td class="td-code">${v.codigo}</td>
         <td>${v.funcionNombre || v.fecha}</td>

@@ -16,7 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=IM+Fell+English:ital@0;1&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/operaciones.css">
+<link rel="stylesheet" href="css/operaciones.css?v=20260924a">
 <link rel="stylesheet" href="css/admin-mobile.css">
 <link rel="stylesheet" href="css/admin-legible.css">
 <link rel="stylesheet" href="css/taquilla-legible.css?v=20260919e">
@@ -855,45 +855,46 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
             <span class="bol-total-label">Total</span>
             <span id="bol-total-precio" class="bol-total-precio">$0.00 MXN</span>
           </div>
-          <div id="bol-promo-hint" class="bol-promo-hint" style="display:none;"></div>
         </div>
 
         <div class="bol-seccion-comprador">
-          <div class="form-grid">
-            <div>
-              <label class="form-label" for="metodo-pago-efectivo">Pago</label>
-              <select id="metodo-pago-efectivo" class="form-input" required>
-                <option value="efectivo">Efectivo</option>
-                <option value="tarjeta_taquilla">Tarjeta</option>
-                <option value="cortesia">Cortesía</option>
-              </select>
-            </div>
-            <div>
+          <span class="sec-label" style="display:block;margin-bottom:10px;">Pago</span>
+          <div class="bol-pago-grid bol-pago-grid-3">
+            <button type="button" class="bol-pago-btn active" data-pago="efectivo">Efectivo</button>
+            <button type="button" class="bol-pago-btn" data-pago="tarjeta_credito">Tarjeta crédito</button>
+            <button type="button" class="bol-pago-btn" data-pago="tarjeta_debito">Tarjeta débito</button>
+          </div>
+          <input type="hidden" id="metodo-pago-efectivo" value="efectivo" required>
+
+          <div class="form-grid" style="margin-top:18px;">
+            <div style="grid-column:1/-1;">
               <label class="form-label" for="nombre-efectivo">Nombre</label>
               <input type="text" id="nombre-efectivo" class="form-input" placeholder="Opcional · lista de llamado" autocomplete="name">
             </div>
             <div style="grid-column:1/-1;">
-              <label class="form-label" for="email-efectivo">Correo <span style="opacity:.55;font-weight:400;">(opcional · rifas / lookalike)</span></label>
-              <input type="email" id="email-efectivo" class="form-input" placeholder="Si lo dan — no obligatorio" autocomplete="email">
+              <label class="form-label" for="email-user">Correo <span style="opacity:.55;font-weight:400;">(opcional)</span></label>
+              <div class="bol-email-row">
+                <input type="text" id="email-user" class="form-input" placeholder="nombre" autocapitalize="none" autocorrect="off" spellcheck="false">
+                <span class="bol-email-at">@</span>
+                <input type="text" id="email-domain" class="form-input" placeholder="dominio.com" autocapitalize="none" autocorrect="off" spellcheck="false">
+              </div>
+              <div class="bol-email-domains">
+                <button type="button" class="bol-domain-btn" data-domain="gmail.com">Gmail</button>
+                <button type="button" class="bol-domain-btn" data-domain="outlook.com">Outlook</button>
+                <button type="button" class="bol-domain-btn" data-domain="hotmail.com">Hotmail</button>
+                <button type="button" class="bol-domain-btn" data-domain="yahoo.com">Yahoo</button>
+                <button type="button" class="bol-domain-btn" data-domain="">Otro</button>
+              </div>
+              <input type="hidden" id="email-efectivo">
+              <p style="font-family:var(--mono);font-size:10.5px;color:var(--d-soft);opacity:.65;margin-top:8px;line-height:1.4;">Con ese correo no les llega nada ahora — solo el certificado que se manda después de la función.</p>
             </div>
           </div>
         </div>
 
-        <details class="bol-mas-opciones">
-          <summary>Cupón y notas</summary>
-          <div class="bol-cupon-wrap" style="margin-top:12px;">
-            <label class="form-label" for="bol-cupon-input">Cupón</label>
-            <div class="bol-cupon-fila">
-              <input type="text" id="bol-cupon-input" class="form-input" placeholder="ESPEJO, GRUPO20…" autocomplete="off" spellcheck="false" maxlength="32">
-              <button type="button" id="bol-btn-cupon" class="btn-copiar" onclick="BoleteraVenta.aplicarCupon()">Aplicar</button>
-            </div>
-            <div id="bol-cupon-msg" class="bol-cupon-msg" aria-live="polite"></div>
-          </div>
-          <div style="margin-top:12px;">
-            <label class="form-label" for="notas-efectivo">Notas internas</label>
-            <input type="text" id="notas-efectivo" class="form-input" placeholder="Solo si hace falta…">
-          </div>
-        </details>
+        <div style="margin-top:16px;">
+          <label class="form-label" for="notas-efectivo">Notas internas</label>
+          <input type="text" id="notas-efectivo" class="form-input" placeholder="Solo si hace falta…">
+        </div>
 
         <button type="submit" class="btn-generar" id="btn-generar" disabled style="margin-top:18px;">
           Registrar venta
@@ -1193,8 +1194,8 @@ tbody tr.row-st-refund:hover{opacity:.9;background:rgba(212,58,26,.1)}
 <script src="js/generar-imagen-boleto.js?v=20260818qr"></script>
 <script src="js/compartir-wa-boleto.js"></script>
 <script src="js/selector-funciones.js"></script>
-<script src="js/boletera-venta.js"></script>
-<script src="js/boletera-panel.js"></script>
+<script src="js/boletera-venta.js?v=20260924a"></script>
+<script src="js/boletera-panel.js?v=20260924a"></script>
 <script src="js/verificar.js?v=20260919g"></script>
 <script src="js/admin-mobile.js?v=20260919a"></script>
 <script src="js/admin-panel.js?v=20260919a"></script>

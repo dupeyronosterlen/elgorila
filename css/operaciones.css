@@ -482,6 +482,32 @@ button { font-family: var(--cuerpo); border-radius: 0 !important; }
   font-size: 14px; color: rgba(217,155,58,.85);
   margin: 10px 0 0; line-height: 1.4; width: 100%;
 }
+
+/* Pago por botón (reemplaza el <select>, 24 sep 2026 — pensado para iPad) */
+.bol-pago-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.bol-pago-grid-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 480px) { .bol-pago-grid-3 { grid-template-columns: 1fr 1fr; } }
+.bol-pago-btn {
+  padding: 14px 10px; border: 1px solid var(--d-faint); background: var(--d-bg2);
+  color: var(--d-fg); font-family: var(--cuerpo); font-size: 15px; text-align: center;
+  cursor: pointer; transition: all .12s;
+}
+.bol-pago-btn:hover { border-color: var(--gold-dim); }
+.bol-pago-btn.active { border-color: var(--gold); background: rgba(217,155,58,.1); color: var(--gold); }
+
+/* Correo con @ fijo + selector de dominio rápido (Gmail/Outlook/Hotmail/Yahoo/Otro) */
+.bol-email-row { display: flex; align-items: center; gap: 6px; }
+.bol-email-row .form-input { flex: 1; min-width: 0; }
+.bol-email-at { font-family: var(--mono); font-size: 15px; color: var(--d-soft); flex-shrink: 0; }
+.bol-email-domains { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.bol-domain-btn {
+  padding: 9px 14px; border: 1px solid var(--d-faint); background: var(--d-bg2);
+  color: var(--d-soft); font-family: var(--mono); font-size: 12px; letter-spacing: .03em;
+  cursor: pointer; transition: all .12s;
+}
+.bol-domain-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+.bol-domain-btn.active { border-color: var(--gold); background: rgba(217,155,58,.1); color: var(--gold); }
+
 .bol-cupon-wrap { margin-bottom: 16px; }
 .bol-cupon-fila { display: flex; gap: 8px; margin-top: 6px; }
 .bol-cupon-fila .form-input { flex: 1; }
