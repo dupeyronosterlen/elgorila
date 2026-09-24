@@ -184,6 +184,57 @@
   color: var(--gold);
 }
 
+/* Resaltados en rgba(217,155,58,…) — el ámbar del tema OSCURO de la obra,
+   hardcoded en operaciones.css (no solo variable, por eso no basta con lo
+   de arriba). Sobre fondo claro se ve lavado/raro — versión con el ámbar
+   de este tema (var(--gold) = #8a5a00 aquí). Mismo patrón que el resto del
+   archivo: pisar el hex suelto, no solo redefinir variables. */
+#view-boletera .fn-card:hover,
+#view-boletera .fn-card.active,
+#view-boletera .sel-fn-ver-mas:hover,
+#view-boletera .bol-pago-btn.active,
+#view-boletera .bol-domain-btn.active {
+  background: rgba(138,90,0,.1) !important;
+}
+#view-boletera .bol-pago-btn:hover,
+#view-boletera .bol-domain-btn:hover {
+  border-color: var(--gold-dim) !important;
+}
+#view-boletera .sel-fn-ver-menos {
+  border-color: var(--d-faint) !important;
+  color: var(--d-soft) !important;
+}
+#view-boletera .sel-fn-ver-menos:hover {
+  border-color: rgba(26,21,16,.28) !important;
+  color: var(--d-fg) !important;
+}
+
+/* Compactación pedida por Os 24 sep 2026 — pensado para operar de un
+   vistazo en iPad, todo el formulario debe caber casi sin scroll. Los
+   botones de fecha eran los que más espacio robaban. */
+#view-boletera .bol-card { padding: 16px; }
+#view-boletera .bol-card-rule { margin: 8px 0 12px; }
+#view-boletera .sec-label { margin-bottom: 8px; }
+#view-boletera .fn-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
+#view-boletera .fn-card { padding: 8px 10px; gap: 1px; }
+#view-boletera .fn-date { font-size: 10px; }
+#view-boletera .fn-name { font-size: 14px; }
+#view-boletera .fn-avail { font-size: 8px; margin-top: 0; }
+#view-boletera .bol-funcion-seleccionada { font-size: 14px; margin-top: 6px; }
+#view-boletera .bol-funcion-aviso { padding: 6px 10px; font-size: 13px; margin-top: 6px; }
+#view-boletera .bol-ticket-fila { padding: 8px 0; }
+#view-boletera .bol-ticket-nombre { font-size: 15px; }
+#view-boletera .bol-ticket-precio { font-size: 14px; margin-top: 1px; }
+#view-boletera .bol-resumen-wrap { padding-top: 8px; margin: 2px 0 10px; }
+#view-boletera .bol-total-fila { padding-top: 6px; margin-top: 4px; }
+#view-boletera .bol-total-precio { font-size: 22px; }
+#view-boletera .bol-seccion-comprador { margin-top: 4px; padding-top: 10px; }
+#view-boletera .form-grid { gap: 10px; margin-bottom: 10px; }
+#view-boletera .form-label { margin-bottom: 5px; }
+#view-boletera .bol-pago-btn { padding: 11px 8px; font-size: 14px; }
+#view-boletera .bol-domain-btn { padding: 7px 11px; font-size: 12px; }
+#view-boletera .btn-generar { padding: 12px 24px; font-size: 16px; min-height: 44px; margin-top: 12px !important; }
+
 /* Lista de llamado — la parte que más se lee de corrido durante la función.
    Nombre, cantidad y tipo son lo único que queda en la tarjeta (ya sin
    folios), así que van grandes — se leen de un vistazo, sin acercarse. */
