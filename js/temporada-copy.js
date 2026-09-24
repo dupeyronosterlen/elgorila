@@ -14,6 +14,8 @@
  *   data-temporada-conteo       → "6 sábados" / "1 sábado" / "nuevas fechas pronto"
  *   data-temporada-conteo-solo  → "solo 6 sábados" (para frases que ya dicen "Sí: …")
  *   data-temporada-rango        → "del 15 de agosto al 19 de septiembre"
+ *   data-proxima-encabezado     → "Próxima función: sábado 26 de septiembre"
+ *                                 (salta agotadas; cambia el mismo día a las 20:00)
  *
  * Alargar la temporada = agregar fechas en fechas.js. Nada más.
  */
@@ -49,7 +51,33 @@
     return 'Quedan ' + n + ' ' + sustPl + ' — cupo limitado';
   }
 
+  var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+               'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+  /** Encabezado de sobre-la-obra: próxima función a la venta, sin hora. Pasa a
+   *  la siguiente el mismo día a las 20:00 (igual que la barra de escasez). */
+  function aplicarEncabezado() {
+    var FM = window.FechasManager;
+    var lista = window.FUNCIONES_TEMPORADA;
+    if (!FM || !Array.isArray(lista) || typeof FM.pasadaParaConteoOferta !== 'function') return;
+    var f = lista.filter(function (x) {
+      return x.activa !== false && !x.atenuada && x.agotada !== true &&
+        !FM.pasadaParaConteoOferta(x.fecha_iso, x);
+    }).sort(function (a, b) { return a.fecha_iso < b.fecha_iso ? -1 : 1; })[0];
+    var txt = 'Nuevas fechas pronto en CDMX'; // temporada terminada o todo agotado
+    if (f) {
+      var p = f.fecha_iso.split('-').map(Number);
+      var d = new Date(p[0], p[1] - 1, p[2]);
+      txt = 'Próxima función: ' + DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()];
+    }
+    document.querySelectorAll('[data-proxima-encabezado]').forEach(function (el) {
+      if (el.textContent !== txt) el.textContent = txt;
+    });
+  }
+
   function aplicar() {
+    aplicarEncabezado();
     var r = resumen();
     if (!r) return null; // sin datos: se respeta el texto de respaldo del HTML
 
@@ -132,4 +160,6 @@
 
   // El backend puede desactivar fechas (admin) — recalcular al sincronizar.
   window.addEventListener('temporada:sincronizada', aplicar);
+  // Pestaña abierta durante el sábado: el encabezado cambia solo a las 20:00.
+  setInterval(aplicarEncabezado, 60000);
 })();

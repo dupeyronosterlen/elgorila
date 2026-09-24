@@ -57,6 +57,134 @@
     }
   }
   </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Hay funciones en este momento?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. Actualmente en temporada en Ciudad de México. Fechas, hora y sede vigentes: https://elgorilateatro.com.mx/funciones.html"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cómo me entero de fechas y boletos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Fechas vigentes: https://elgorilateatro.com.mx/funciones.html. Taquilla oficial: elgorilateatro.com.mx. Instagram @elgorilateatro para avisos."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Dónde se presenta la obra?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Actualmente en el Teatro Wilberto Cantón, Ciudad de México. Dirección y calendario vigentes: https://elgorilateatro.com.mx/funciones.html"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿A qué hora debo llegar?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sábados a las 18:00. Taquilla abierta desde las 17:00 · acceso a sala desde las 17:20. Te recomendamos llegar con buen tiempo para encontrar un buen lugar — entrada general, sin asiento numerado. Presenta tu boleto (QR del correo de confirmación) al ingresar."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Hay estacionamiento?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. El Teatro Wilberto Cantón cuenta con estacionamiento para el público."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿De qué trata la obra y cuánto dura?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Monólogo basado en Un informe para la Academia de Franz Kafka, con Humberto Dupeyrón. Aproximadamente 1 hora 20 minutos, sin intermedio."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Es apta para menores?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Recomendamos la obra para público de 12 años en adelante."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cómo recibo mi boleto?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Compra en línea: boleto por correo con QR (CERT-). Taquilla: certificado al momento."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué formas de pago aceptan?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "En línea: tarjeta. Taquilla el día de la función: tarjeta o efectivo, sujeto a disponibilidad."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Hay descuentos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+"text": "Precio de temporada: generales $400. Tarifa credencial $280 (−30%) para INAPAM, estudiante y maestro. Código ESPEJO: 2 boletos generales por $600 total. Código GRUPO20: 5 o más generales (sin credenciales) con 20% de descuento. Los códigos se ingresan al pagar en la taquilla. Esta taquilla no cobra cargo por servicio; Ticketmaster y Teatrando pueden aplicar cargos propios."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Puedo comprar en taquilla el día de la función?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí, sujeto a disponibilidad. Tarjeta y efectivo en taquilla."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Puedo cambiar mi boleto de fecha?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Escríbenos a contacto@elgorilateatro.com.mx con tu folio para orientarte."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Puedo reservar para un grupo (escuela, empresa)?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Grupos de más de 10: WhatsApp o contacto@elgorilateatro.com.mx. Para 5 o más generales usa el código GRUPO20 al pagar en la taquilla."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Hay accesibilidad?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Acceso por puerta especial para sillas de ruedas. Avisar con anticipación en Contacto."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Puedo tomar fotos o grabar?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No está permitido fotografiar ni grabar durante la función."
+      }
+    }
+  ]
+}
+</script>
   <style>
     :root {
       --gold: #d99b3a; --gold-light: #e8b55a; --gold-dim: rgba(217,155,58,0.10);
@@ -838,6 +966,21 @@
       .hero-inner { max-width: 780px; }
       .datos-inner, .proof-strip-inner { max-width: 1040px; }
     }
+
+    /* ═══ Preguntas frecuentes ═══ */
+    .faq-lista { max-width: 680px; margin: 0 auto; }
+    .faq-item { border-bottom: 1px solid var(--gold-border); }
+    .faq-item summary {
+      list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+      padding: 1rem 0.25rem; min-height: 44px; font-family: var(--display); font-size: 1.15rem; color: var(--cream);
+    }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary::after { content: '+'; font-family: var(--mono); color: var(--gold); font-size: 1.1rem; flex-shrink: 0; }
+    .faq-item[open] summary::after { content: '–'; }
+    .faq-item summary:hover { color: var(--gold-light); }
+    .faq-item p { padding: 0 0.25rem 1.1rem; color: var(--cream-80); line-height: 1.7; font-size: 1.02rem; }
+    .faq-item a { color: var(--gold-light); text-decoration: underline; text-underline-offset: 3px; }
+    .faq-mas { margin-top: 1.25rem; }
   </style>
 </head>
 <body>
@@ -849,7 +992,7 @@
     <a href="/boletos.html#fechas-fecha-wrap" class="nav-cta link-venta-boletos" data-cta-position="nav">Boletos</a>
   </nav>
   <p class="escasez-bar" role="status">
-    <span>Temporada extendida — nuevas fechas disponibles en CDMX — cupo limitado</span>
+    <span data-proxima-encabezado>Próxima función: sábado 26 de septiembre</span>
     <span class="escasez-asientos" data-escasez-asientos hidden></span>
   </p>
 </header>
@@ -1124,7 +1267,35 @@
   </div>
 </section>
 
-<!-- ═══ 11 · BOLETOS + COMPRA ═════════════════════════════════ -->
+<!-- ═══ 11 · PREGUNTAS FRECUENTES ═══════════════════════════ -->
+<section class="section compacta section-dark" data-bloque="faq" id="faq">
+  <div class="section-inner">
+    <p class="section-kicker">Antes de ir</p>
+    <h2 class="section-title">Preguntas frecuentes</h2>
+    <div class="faq-lista">
+      <details class="faq-item"><summary>¿Hay funciones en este momento?</summary><p>Sí: <strong>actualmente en temporada</strong> en Ciudad de México. Fechas, hora y sede vigentes en <a href="/funciones.html">elgorilateatro.com.mx/funciones.html</a>. Avisos en <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer">Instagram</a>.</p></details>
+      <details class="faq-item"><summary>¿Cómo me entero de fechas y boletos?</summary><p>Las fechas vigentes están en <a href="/funciones.html">elgorilateatro.com.mx/funciones.html</a>. La taquilla oficial es este sitio. Sigue <a href="https://www.instagram.com/elgorilateatro" target="_blank" rel="noopener noreferrer">@elgorilateatro</a> en Instagram para avisos.</p></details>
+      <details class="faq-item"><summary>¿Dónde se presenta la obra?</summary><p>Actualmente en el <strong>Teatro Wilberto Cantón</strong>, Ciudad de México. Dirección y calendario vigentes: <a href="/funciones.html">funciones</a>.</p></details>
+      <details class="faq-item"><summary>¿A qué hora debo llegar?</summary><p>Sábados a las 18:00. Taquilla abierta desde las <strong>17:00</strong> · acceso a sala desde las <strong>17:20</strong>. Te recomendamos llegar con buen tiempo para encontrar un buen lugar — entrada general, sin asiento numerado. Presenta tu boleto (QR del correo de confirmación) al ingresar.</p></details>
+      <details class="faq-item"><summary>¿Hay estacionamiento?</summary><p>Sí. El <strong>Teatro Wilberto Cantón</strong> cuenta con <strong>estacionamiento</strong> para el público.</p></details>
+      <details class="faq-item"><summary>¿De qué trata la obra y cuánto dura?</summary><p>Es un <strong>monólogo</strong> basado en <em>Un informe para la Academia</em>, de Franz Kafka, con Humberto Dupeyron. Dura aproximadamente <strong>1 hora 20 minutos</strong>, <strong>sin intermedio</strong>.</p></details>
+      <details class="reviews-more-wrap faq-mas">
+        <summary>Más preguntas</summary>
+      <details class="faq-item"><summary>¿Es apta para menores?</summary><p>Recomendamos la obra para público de <strong>12 años en adelante</strong>.</p></details>
+      <details class="faq-item"><summary>¿Cómo recibo mi boleto?</summary><p>Al comprar en línea recibes tu boleto por <strong>correo electrónico</strong> con código <strong>QR</strong> (CERT-). Preséntalo en la puerta, impreso o en tu celular. Si compras en taquilla, te entregamos el certificado en el momento.</p></details>
+      <details class="faq-item"><summary>¿Qué formas de pago aceptan?</summary><p>En el sitio web: <strong>tarjeta</strong> (pago en línea). En <strong>taquilla</strong> el día de la función: <strong>tarjeta o efectivo</strong>, sujeto a disponibilidad.</p></details>
+      <details class="faq-item"><summary>¿Hay descuentos?</summary><p>Sí. <strong>Precio de temporada</strong>: generales a <strong>$400</strong>. Tarifa <strong>credencial $280</strong> (−30%) para INAPAM, estudiante y maestro. En <strong>pareja</strong>, código <strong>ESPEJO</strong> — 2 generales por <strong>$600</strong> total. En <strong>grupo</strong> (5+ generales, todos generales), código <strong>GRUPO20</strong> — <strong>20% de descuento</strong>. Los códigos se ingresan al pagar en la <a href="/boletos.html">taquilla en línea</a>. Ver <a href="#promociones">promociones activas</a>. En esta taquilla <strong>no hay cargo por servicio</strong>; también puedes comprar en Ticketmaster o Teatrando (esas plataformas pueden cobrar cargos propios).</p></details>
+      <details class="faq-item"><summary>¿Puedo comprar en taquilla el día de la función?</summary><p>Sí, <strong>sujeto a disponibilidad</strong>. En taquilla aceptamos <strong>tarjeta y efectivo</strong>. Te recomendamos comprar con anticipación en línea para asegurar tu lugar.</p></details>
+      <details class="faq-item"><summary>¿Puedo cambiar mi boleto de fecha?</summary><p>Si necesitas mover tu boleto a otra función, escríbenos a <a href="mailto:contacto@elgorilateatro.com.mx">contacto@elgorilateatro.com.mx</a> con tu <strong>folio</strong> y te orientamos.</p></details>
+      <details class="faq-item"><summary>¿Puedo reservar para un grupo (escuela, empresa)?</summary><p>Para <strong>grupos de más de 10 personas</strong>, escríbenos por <a href="https://wa.me/5215671311191?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20un%20grupo%20o%20escuela%20en%20El%20Gorila." target="_blank" rel="noopener noreferrer">WhatsApp</a> o a <a href="mailto:contacto@elgorilateatro.com.mx">contacto@elgorilateatro.com.mx</a>. Para <strong>5 a 10 generales</strong>, usa el código <strong>GRUPO20</strong> en la <a href="/boletos.html">taquilla</a> al pagar.</p></details>
+      <details class="faq-item"><summary>¿Hay accesibilidad?</summary><p>Sí. El teatro cuenta con acceso por una <strong>puerta especial para sillas de ruedas</strong>. Si necesitas apoyo, avísanos con anticipación a <a href="mailto:contacto@elgorilateatro.com.mx">contacto@elgorilateatro.com.mx</a>.</p></details>
+      <details class="faq-item"><summary>¿Puedo tomar fotos o grabar?</summary><p>No. Durante la función <strong>no está permitido fotografiar ni grabar</strong>.</p></details>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 12 · BOLETOS + COMPRA ═════════════════════════════════ -->
 <section class="cta-final" data-bloque="compra">
   <div class="section-inner">
     <h2 class="cta-final-title">37 años, llegó tu turno.</h2>
@@ -1144,7 +1315,7 @@
 </section>
 
 <footer class="footer">
-  <p><a href="/">Inicio</a> · <a href="/funciones.html">Funciones</a> · <a href="/boletos.html#fechas-fecha-wrap" class="link-venta-boletos" data-cta-position="footer">Boletos</a> · <a href="/presskit/presskit2026.html">Prensa</a> · <a href="/historia-del-gorila.html">Historia</a></p>
+  <p><a href="/">Inicio</a> · <a href="/funciones.html">Funciones</a> · <a href="/boletos.html#fechas-fecha-wrap" class="link-venta-boletos" data-cta-position="footer">Boletos</a> · <a href="/presskit/presskit2026.html">Prensa</a> · <a href="/historia-del-gorila.html">Historia</a> · <a href="#faq">Preguntas</a></p>
   <p style="margin-top:0.5rem">© 2026 El Gorila · <a href="mailto:contacto@elgorilateatro.com.mx">contacto@elgorilateatro.com.mx</a></p>
 </footer>
 
@@ -1161,7 +1332,7 @@
 <script src="js/rutas.js" defer></script>
 <script src="js/analytics.js?v=20260812vc2" data-viewcontent="sobre-la-obra" defer></script>
 <script src="js/fechas.js?v=20260919b" defer></script>
-<script src="js/temporada-copy.js" defer></script>
+<script src="js/temporada-copy.js?v=20260924" defer></script>
 <script src="js/testimonios.js?v=20260813t" defer></script>
 <script src="js/tofu-ad-match.js?v=20260812s" defer></script>
 <script src="js/tofu-landing.js?v=20260823v" defer></script>
