@@ -388,6 +388,23 @@ button { font-family: var(--cuerpo); border-radius: 0 !important; }
   margin-top: 10px;
   line-height: 1.4;
 }
+
+/* Chip compacto de la función ya elegida — reemplaza el grid completo una
+   vez que hay selección; tocarlo reabre el grid para cambiar de fecha. */
+.sel-fn-chip-seleccionada {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; padding: 10px 14px;
+  border: 1px solid var(--gold); background: rgba(217,155,58,.08);
+  cursor: pointer; text-align: left; transition: background .12s;
+}
+.sel-fn-chip-seleccionada:hover { background: rgba(217,155,58,.14); }
+.sel-fn-chip-fecha {
+  font-family: var(--cuerpo); font-size: 15px; color: var(--d-fg); font-weight: 600;
+}
+.sel-fn-chip-cambiar {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--gold); flex-shrink: 0;
+}
 .sel-fn-ver-mas {
   display: block;
   width: 100%;

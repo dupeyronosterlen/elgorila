@@ -215,13 +215,23 @@
 #view-boletera .bol-card { padding: 16px; }
 #view-boletera .bol-card-rule { margin: 8px 0 12px; }
 #view-boletera .sec-label { margin-bottom: 8px; }
-#view-boletera .fn-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
-#view-boletera .fn-card { padding: 8px 10px; gap: 1px; }
-#view-boletera .fn-date { font-size: 10px; }
-#view-boletera .fn-name { font-size: 14px; }
-#view-boletera .fn-avail { font-size: 8px; margin-top: 0; }
+#view-boletera .fn-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
+#view-boletera .fn-card { padding: 6px 8px; gap: 0; }
+#view-boletera .fn-date { font-size: 9px; }
+#view-boletera .fn-name { font-size: 13px; }
+#view-boletera .fn-avail { display: none; }
 #view-boletera .bol-funcion-seleccionada { font-size: 14px; margin-top: 6px; }
 #view-boletera .bol-funcion-aviso { padding: 6px 10px; font-size: 13px; margin-top: 6px; }
+
+/* Chip único cuando la función ya está elegida (26 sep 2026) — reemplaza el
+   grid abierto de 3+ tarjetas; tocarlo reabre el grid para cambiar. Sin esto
+   ocupaba el mismo espacio siempre estuviera decidido o no. */
+#view-boletera .sel-fn-chip-seleccionada {
+  background: rgba(138,90,0,.08) !important;
+}
+#view-boletera .sel-fn-chip-seleccionada:hover {
+  background: rgba(138,90,0,.14) !important;
+}
 #view-boletera .bol-ticket-fila { padding: 8px 0; }
 #view-boletera .bol-ticket-nombre { font-size: 15px; }
 #view-boletera .bol-ticket-precio { font-size: 14px; margin-top: 1px; }

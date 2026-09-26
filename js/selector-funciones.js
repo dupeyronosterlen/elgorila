@@ -154,6 +154,12 @@
     const onSelect = iso => {
       if (hiddenEl) hiddenEl.value = iso;
       if (userOnSelect) userOnSelect(iso);
+      // Al elegir una fecha del grid abierto, vuelve a colapsar sola —
+      // el grid abierto es solo para cambiar, no para quedarse ocupando espacio.
+      if (opts.iniciaColapsado) {
+        colapsado = true;
+        applyVisibility();
+      }
       renderControls();
     };
 
@@ -163,7 +169,7 @@
 
     const cards = gridEl ? Array.from(gridEl.querySelectorAll('.sel-fn-card')) : [];
     let visibleMax = Math.min(batch - 1, cards.length - 1);
-    let colapsado = false;
+    let colapsado = !!opts.iniciaColapsado;
 
     function applyVisibility() {
       if (colapsado) {
@@ -182,10 +188,16 @@
       uiEl.innerHTML = '';
 
       if (colapsado) {
+        const actual = list.find(f => f.fecha_iso === hiddenEl?.value);
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'sel-fn-ver-mas';
-        btn.textContent = 'Ver fechas \u2192';
+        btn.className = 'sel-fn-chip-seleccionada';
+        if (actual) {
+          const { fecha, hora } = partesNombre(actual.nombre, actual.fecha_iso);
+          btn.innerHTML = `<span class="sel-fn-chip-fecha">${fecha} \u00b7 ${hora}</span><span class="sel-fn-chip-cambiar">Cambiar</span>`;
+        } else {
+          btn.textContent = 'Ver fechas \u2192';
+        }
         btn.addEventListener('click', () => {
           colapsado = false;
           applyVisibility();

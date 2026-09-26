@@ -123,8 +123,9 @@ async function _boletaCargarFuncionesGrids() {
         _bolFuncionesCache,
         {
           futuras: true,
-          showDisponibles: true,
+          showDisponibles: false,
           batchSize: 3,
+          iniciaColapsado: true,
           onSelect: onVentaSelect,
         },
       )
@@ -134,7 +135,7 @@ async function _boletaCargarFuncionesGrids() {
         _bolFuncionesCache,
         {
           futuras: true,
-          showDisponibles: true,
+          showDisponibles: false,
           onSelect: onVentaSelect,
         },
       );
