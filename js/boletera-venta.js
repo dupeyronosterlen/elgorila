@@ -139,7 +139,7 @@
       if (cantidades.estudiante > 0) {
         lineas.push(`<div class="bol-resumen-linea"><span>${NOMBRE_CREDENCIAL} × ${cantidades.estudiante}</span><span>$${(PRECIOS.credencial * cantidades.estudiante).toFixed(2)}</span></div>`);
       }
-      resumen.innerHTML = lineas.join('') || '<div class="bol-resumen-vacio">Selecciona al menos un boleto</div>';
+      resumen.innerHTML = lineas.join('');
     }
 
     const sub = subtotalSinCupon();

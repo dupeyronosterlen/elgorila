@@ -484,7 +484,6 @@ button { font-family: var(--cuerpo); border-radius: 0 !important; }
   font-family: var(--cuerpo); font-size: 16px; color: var(--d-fg); padding: 3px 0;
 }
 .bol-descuento { color: #4ade80; }
-.bol-resumen-vacio { font-size: 15px; color: var(--d-soft); padding: 4px 0; }
 .bol-total-fila {
   display: flex; justify-content: space-between; align-items: baseline;
   padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--d-faint);
@@ -502,8 +501,6 @@ button { font-family: var(--cuerpo); border-radius: 0 !important; }
 
 /* Pago por botón (reemplaza el <select>, 24 sep 2026 — pensado para iPad) */
 .bol-pago-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.bol-pago-grid-3 { grid-template-columns: repeat(3, 1fr); }
-@media (max-width: 480px) { .bol-pago-grid-3 { grid-template-columns: 1fr 1fr; } }
 .bol-pago-btn {
   padding: 14px 10px; border: 1px solid var(--d-faint); background: var(--d-bg2);
   color: var(--d-fg); font-family: var(--cuerpo); font-size: 15px; text-align: center;
