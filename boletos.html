@@ -2070,7 +2070,9 @@ document.addEventListener('DOMContentLoaded', function() {
   var preseleccionHecha = false;
   var fallbackIntentado = false;
   var fechasExpandidas = false;
-  var FECHAS_OCULTAS_INICIAL = 4;
+  // Siempre se ven las 3 fechas más próximas; el resto va tras «Ver más».
+  // (Antes se escondían las últimas 4 fijas: con 5 fechas restantes solo se veía 1.)
+  var FECHAS_VISIBLES_INICIAL = 3;
 
   var CUPONES_URL = {
     ESPEJO: {
@@ -2150,11 +2152,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var items = Array.from(c.children);
     if (!items.length) return;
 
-    var ocultas = FECHAS_OCULTAS_INICIAL;
-    var hayOcultas = ocultas > 0 && items.length > ocultas;
+    var hayOcultas = items.length > FECHAS_VISIBLES_INICIAL;
 
     items.forEach(function(el, i) {
-      var hide = hayOcultas && !fechasExpandidas && i >= items.length - ocultas;
+      var hide = hayOcultas && !fechasExpandidas && i >= FECHAS_VISIBLES_INICIAL;
       el.style.display = hide ? 'none' : '';
     });
 
