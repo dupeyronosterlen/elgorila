@@ -586,11 +586,9 @@ body:has(.barra-reserva-fija:disabled) .barra-reserva-spacer {
   letter-spacing: .16em; text-transform: uppercase;
   color: var(--gold); display: block; margin-bottom: 14px;
 }
+/* 3 por fila también en iPhone: son las 3 fechas visibles antes de «Ver más» */
 #botones-fecha {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-}
-@media (min-width: 420px) {
-  #botones-fecha { grid-template-columns: 1fr 1fr 1fr; }
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
 }
 /* Despliegue progresivo: 3 fechas visibles, botón «Ver más» (sin letreros de mes) */
 #fechas-progressive-ui { margin-top: 10px; }
@@ -640,6 +638,14 @@ body:has(.barra-reserva-fija:disabled) .barra-reserva-spacer {
 #botones-fecha button:not([disabled]) .text-sm {
   font-size: 0.95rem !important;
   opacity: 1 !important;
+}
+/* Celular: 3 columnas de ~105px — menos relleno lateral y letra un poco menor */
+@media (max-width: 419px) {
+  #botones-fecha { gap: 6px; }
+  #botones-fecha button:not([disabled]),
+  #botones-fecha > div > button:not([disabled]) { padding: 12px 4px !important; }
+  #botones-fecha button:not([disabled]) .block.font-bold { font-size: 0.95rem !important; }
+  #botones-fecha button:not([disabled]) .text-sm { font-size: 0.85rem !important; }
 }
 #botones-fecha button:not([disabled]):hover,
 #botones-fecha > div > button:not([disabled]):hover {
