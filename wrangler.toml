@@ -72,7 +72,7 @@ DISABLE_LOGIN_RATE_LIMIT = "false"
 # Manager, y se borra ahí mismo al confirmar. Tampoco es un secreto (no es
 # sensible), por eso sí vive en [vars] como DISABLE_LOGIN_RATE_LIMIT arriba.
 META_CAPI_VIEWCONTENT_ENABLED = "true"
-META_CAPI_VIEWCONTENT_PAGES = "sobre-la-obra,historia-del-gorila,boletos,funciones"
+META_CAPI_VIEWCONTENT_PAGES = "sobre-la-obra,historia-del-gorila,boletos,funciones,programa-de-mano"
 
 # 13:00 UTC = 7:00 CDMX (México ya no tiene horario de verano desde 2022) —
 # un solo cron diario. El worker (scheduled()) hace las dos revisiones en cada
