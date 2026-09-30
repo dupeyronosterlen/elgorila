@@ -64,6 +64,16 @@ new_sqlite_classes = ["InventarioFuncion"]
 [vars]
 DISABLE_LOGIN_RATE_LIMIT = "false"
 
+# CAPI ViewContent (30-sep-2026, worker/meta-capi.js) — interruptor + lista de
+# páginas permitidas, pensado para reusarse igual en otra producción/gira sin
+# tocar código. NO poner aquí META_CAPI_TEST_EVENT_CODE: ese es temporal por
+# diseño de Meta (eventos de prueba, no cuentan para nada real) — se agrega a
+# mano en Cloudflare Dashboard → Secrets solo mientras se verifica en Events
+# Manager, y se borra ahí mismo al confirmar. Tampoco es un secreto (no es
+# sensible), por eso sí vive en [vars] como DISABLE_LOGIN_RATE_LIMIT arriba.
+META_CAPI_VIEWCONTENT_ENABLED = "true"
+META_CAPI_VIEWCONTENT_PAGES = "sobre-la-obra,historia-del-gorila,boletos,funciones"
+
 # 13:00 UTC = 7:00 CDMX (México ya no tiene horario de verano desde 2022) —
 # un solo cron diario. El worker (scheduled()) hace las dos revisiones en cada
 # corrida: día-función (¿hay función HOY?) y post-función/certificado

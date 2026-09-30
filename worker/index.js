@@ -27,7 +27,7 @@ import {
   registrarAuditoria, listAuditoria, getSitioConfig, saveSitioConfig,
 } from './admin-extra.js';
 import { googleWalletSaveUrl, appleWalletPkpass, walletStatus } from './wallet.js';
-import { sendMetaCapiPurchase, purchaseEventId } from './meta-capi.js';
+import { sendMetaCapiPurchase, purchaseEventId, sendMetaCapiViewContent } from './meta-capi.js';
 import {
   logInfo, logError, maskEmail, truncateId, sanitizeObject,
   metricaFromVenta, registrarMetricaVenta, registrarMetricaCheckout, listMetricasDias,
@@ -6206,6 +6206,69 @@ async function handleReporte(request, env, ctx) {
 
 // ─── PRÓXIMAMENTE: REGISTRO DE CORREOS ───────────────────────────────────────
 
+/**
+ * CAPI ViewContent (30-sep-2026 — ver worker/meta-capi.js para el detalle).
+ *
+ * A propósito SIN limitePorIp aquí: ese helper escribe en KV (env.INVENTARIO)
+ * en cada llamada, y esa misma tabla la comparten el checkout, el login admin
+ * y "próximamente" para SU rate limit. Este endpoint puede recibir tráfico
+ * real mucho más alto que esos (una vista de página normal, no una acción
+ * sensible) -- meterlo en la misma cuenta de escrituras de KV podía acercar
+ * la cuenta al límite de escrituras/día del plan gratuito de Workers KV y
+ * arriesgar el rate-limit de rutas SÍ sensibles (login, checkout). En su
+ * lugar: solo se acepta si el Origin/Referer es el sitio real -- sin estado,
+ * sin escritura, gratis en cualquier plan de Cloudflare. El daño de un abuso
+ * aquí (alguien mandando ViewContent falsos) es bajo: infla un poco el
+ * reporte de Meta, no toca VENTAS/INVENTARIO ni cuesta dinero real.
+ *
+ * El interruptor (META_CAPI_VIEWCONTENT_ENABLED) y la lista de páginas
+ * permitidas (META_CAPI_VIEWCONTENT_PAGES) viven en variables de entorno del
+ * worker y los revisa sendMetaCapiViewContent -- esta ruta NUNCA confía en lo
+ * que mande el cliente para decidir si algo cuenta o no.
+ */
+function origenEsSitioReal(request) {
+  const origin = request.headers.get('Origin') || '';
+  if (PROD_ORIGINS.has(origin)) return true;
+  if (workerEsLocal(request) && DEV_ORIGINS.has(origin)) return true;
+  // OJO: comparar por Origin real de la URL, NUNCA por prefijo de texto
+  // (referer.startsWith(o) dejaba pasar "elgorilateatro.com.mx.evil.com" por
+  // ser el mismo texto al inicio -- encontrado con prueba real, no teoría).
+  const referer = request.headers.get('Referer') || '';
+  try {
+    return PROD_ORIGINS.has(new URL(referer).origin);
+  } catch {
+    return false;
+  }
+}
+
+async function handleCapiViewContent(request, env) {
+  if (!origenEsSitioReal(request)) {
+    return json({ ok: true, skipped: true }, 200, request);
+  }
+
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'JSON inválido.' }, 400, request); }
+
+  const contentName = String(body?.contentName || '').trim();
+  const eventId = String(body?.eventId || '').trim();
+  if (!contentName || !eventId) {
+    return json({ error: 'Faltan contentName o eventId.' }, 400, request);
+  }
+
+  const result = await sendMetaCapiViewContent({
+    contentName,
+    eventId,
+    url: typeof body?.url === 'string' ? body.url.slice(0, 2048) : undefined,
+    fbp: typeof body?.fbp === 'string' ? body.fbp.slice(0, 200) : undefined,
+    fbc: typeof body?.fbc === 'string' ? body.fbc.slice(0, 200) : undefined,
+  }, env, {
+    clientIp:  request.headers.get('CF-Connecting-IP') || undefined,
+    userAgent: request.headers.get('User-Agent') || undefined,
+  });
+
+  return json({ ok: !!result.ok, skipped: !!result.skipped }, 200, request);
+}
+
 async function handleProximamente(request, env) {
   // Mismo motivo que lista-espera: POST público que escribe en KV.
   if (!await limitePorIp(request, env, 'prox', 8)) {
@@ -6257,6 +6320,9 @@ export default {
     // Rutas globales (sin teatroId)
     if (method === 'POST' && pathname === '/api/proximamente') {
       return handleProximamente(request, env);
+    }
+    if (method === 'POST' && pathname === '/api/capi/viewcontent') {
+      return handleCapiViewContent(request, env);
     }
     if (method === 'POST' && pathname === '/api/webhook') {
       return handleWebhook(request, env, ctx);

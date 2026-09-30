@@ -278,6 +278,59 @@
     return 'eg_purchase_' + String(id || '').replace(/[^a-zA-Z0-9_-]/g, '');
   }
 
+  // ── CAPI ViewContent (30-sep-2026) ──────────────────────────────────────────
+  // Por qué: el píxel de ViewContent SÍ dispara bien (confirmado en vivo), pero
+  // bloqueadores de anuncios / iOS ATT impiden que una fracción real llegue a
+  // Meta o se asocie a una persona — por eso las audiencias "Visitantes-*" se
+  // quedan atrapadas en el piso de reporte pese a haber tráfico real. Esto
+  // manda el mismo evento por servidor (worker/meta-capi.js) en paralelo,
+  // deduplicado con el píxel vía el mismo event_id (mismo patrón que Purchase).
+  //
+  // El cliente NO decide qué páginas cuentan -- siempre intenta mandar; el
+  // servidor (META_CAPI_VIEWCONTENT_ENABLED + META_CAPI_VIEWCONTENT_PAGES en
+  // Cloudflare, ver worker/meta-capi.js) es la única fuente de verdad y
+  // simplemente ignora en silencio lo que no esté habilitado. Así, prender/
+  // apagar la función o sumar una página nueva es cambiar una variable de
+  // entorno, no volver a tocar este archivo -- pensado para reusarse igual
+  // en otra producción/gira.
+  function viewContentEventId() {
+    try {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return 'vc_' + window.crypto.randomUUID();
+      }
+    } catch (_) {}
+    return 'vc_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  }
+
+  function getCookie(name) {
+    try {
+      var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+      return match ? decodeURIComponent(match[1]) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function sendCapiViewContent(contentName, eventId) {
+    if (NO_TRACK) return;
+    try {
+      var body = JSON.stringify({
+        contentName: contentName,
+        eventId: eventId,
+        url: location.href,
+        fbp: getCookie('_fbp'),
+        fbc: getCookie('_fbc'),
+      });
+      var url = '/api/capi/viewcontent';
+      if (navigator.sendBeacon) {
+        var blob = new Blob([body], { type: 'application/json' });
+        navigator.sendBeacon(url, blob);
+      } else {
+        fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function () {});
+      }
+    } catch (_) { /* nunca debe romper la página */ }
+  }
+
   window.ElGorilaAnalytics = {
     // Meta y GA4 los carga GTM; init se mantiene por compatibilidad de API.
     init: function () {
@@ -322,7 +375,30 @@
         meta.content_ids = ids;
         meta.contents = [{ id: ids[0], quantity: 1 }];
       }
-      trackMeta('ViewContent', meta);
+      // eventId compartido navegador+servidor: si el bloqueador de anuncios del
+      // usuario deja pasar el píxel Y llega el CAPI de abajo, Meta deduplica por
+      // este mismo id — no se cuenta doble (mismo patrón que Purchase).
+      var vcEventId = viewContentEventId();
+      trackMeta('ViewContent', meta, vcEventId);
+      // Solo la carga de página (data-viewcontent, opts.pageview=true) manda CAPI.
+      // Sin este filtro, cada clic en una fecha de boletos.html dispara OTRO
+      // viewContent() (ver js/main.js:seleccionarFecha, content_name = la fecha)
+      // y mandaría una llamada más al servidor por cada clic -- el servidor las
+      // ignora igual (no están en META_CAPI_VIEWCONTENT_PAGES) pero es tráfico
+      // de sobra sin ningún propósito. Filtrar aquí es más limpio que confiar
+      // solo en que el servidor las descarte.
+      if (opts.pageview) {
+        // Pequeño respiro (mismo patrón de 400ms que ya usa beginCheckout abajo)
+        // para darle chance a fbevents.js de terminar de cargar y fijar la
+        // cookie _fbp antes de leerla -- en visitas nuevas puede no existir
+        // todavía en el instante exacto de esta llamada. 400ms es corto a
+        // propósito: sendBeacon() sigue funcionando aunque el usuario navegue
+        // casi de inmediato, no vale la pena arriesgar perder el evento
+        // completo por esperar más (los reintentos del píxel tardan hasta 6s).
+        setTimeout(function () {
+          sendCapiViewContent(contentName, vcEventId);
+        }, 400);
+      }
     },
 
     addToCart: function (orden) {
@@ -394,8 +470,12 @@
   if (_egViewContent) {
     var dispararViewContent = function () {
       // TOFU / landing genérica: sin content_ids (no hay ítem de catálogo aún).
+      // pageview:true -- esta es la única llamada que representa "cargó la
+      // página" (viene del atributo data-viewcontent), por eso es la única
+      // que manda CAPI (ver viewContent() arriba).
       window.ElGorilaAnalytics.viewContent({
         content_name: _egViewContent,
+        pageview: true,
       });
     };
     if (document.readyState === 'loading') {
