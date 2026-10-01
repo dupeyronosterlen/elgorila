@@ -16,10 +16,11 @@ try {
   process.exit(1);
 }
 
-const BASE_URL = 'https://elgorilateatro.com.mx/programa';
+// URL corta (p1..p4 = stub que redirige a /programa/vN.html): menos módulos = QR más grande y fácil de escanear.
+const BASE_URL = 'https://elgorilateatro.com.mx';
 const OUT_DIR = path.join(__dirname, '..', 'codigos-qr');
-const SIZE = 600;      // px, buen tamaño para imprimir
-const MARGIN = 3;      // quiet zone
+const SIZE = 1000;     // px, buen tamaño para imprimir
+const MARGIN = 4;      // quiet zone mínimo del estándar
 
 const variants = [
   { id: 'v1', color: '#D43A1A', name: 'Programa v1' },   // rojo
@@ -39,16 +40,16 @@ async function main() {
   ensureDir(OUT_DIR);
 
   for (const v of variants) {
-    const url = `${BASE_URL}/${v.id}.html`;
+    const url = `${BASE_URL}/p${v.id.slice(1)}`;
     const outPath = path.join(OUT_DIR, `qr-${v.id}.png`);
     const options = {
       width: SIZE,
       margin: MARGIN,
       color: {
-        dark: v.color,
+        dark: '#000000',   // negro puro: máximo contraste para quien escanea con poca luz o vista cansada
         light: '#FFFFFF',
       },
-      errorCorrectionLevel: 'H',
+      errorCorrectionLevel: 'M',
     };
     await QRCode.toFile(outPath, url, options);
     console.log('Generado:', outPath, `(${v.name}, ${v.color})`);
