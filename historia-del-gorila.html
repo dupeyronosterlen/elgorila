@@ -246,11 +246,6 @@
     .cta-final-sub { font-family: var(--body); font-size: 1.1rem; color: var(--cream-80); margin-bottom: 0.5rem; }
     .cta-final-detail { font-family: var(--body); font-size: 0.95rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); opacity: 0.65; margin-bottom: 3rem; }
     .cta-final-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    .en-resumen { max-width: 860px; margin: 0 auto 4rem; padding: 2rem 2rem 2.2rem; border: 1px solid var(--gold-border); background: var(--gold-dim); }
-    .en-resumen h2 { font-family: var(--display); font-size: 1.8rem; font-weight: 400; color: var(--gold); margin-bottom: 1rem; }
-    .en-resumen ul { font-family: var(--body); font-size: 1.2rem; color: var(--cream-80); padding-left: 1.3rem; line-height: 1.7; }
-    .en-resumen li + li { margin-top: 0.45rem; }
-    .en-resumen a { color: var(--gold); text-decoration: underline; }
     .faq-lista details { border-bottom: 1px solid var(--gold-border); padding: 1rem 0; }
     .faq-lista summary { font-family: var(--display); font-size: 1.45rem; color: var(--gold); cursor: pointer; }
     .faq-lista details p { font-family: var(--body); font-size: 1.2rem; color: var(--cream-80); margin-top: 0.75rem; }
@@ -283,6 +278,9 @@
     .tl-cta-kicker { font-family: var(--body); font-size: 0.88rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.8rem; }
     .tl-cta-text { font-family: var(--display); font-size: 1.55rem; line-height: 1.4; color: var(--cream); max-width: 34rem; margin: 0 auto 1.4rem; }
     .tl-cta-detail { font-family: var(--body); font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream-50); margin-top: 1rem; }
+    .compartir-pagina { display: block; margin: 1.6rem auto 0; padding: 0.4rem 0.6rem; border: none; background: none; cursor: pointer; font-family: var(--body); font-size: 0.98rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cream-50); text-decoration: underline; text-underline-offset: 0.25em; text-decoration-color: rgba(241,234,217,0.28); transition: color 0.2s; }
+    .compartir-pagina:hover { color: var(--cream-80); text-decoration-color: rgba(241,234,217,0.5); }
+
     /* Medios (foto + video) */
     .media-fig { margin: 2.5rem 0; }
     .media-fig img, .media-fig video { display: block; width: 100%; height: auto; border: 1px solid var(--gold-border); background: var(--dark-mid); object-fit: cover; }
@@ -348,15 +346,6 @@
       <a href="#sinopsis" class="btn-ghost">Leer más ↓</a>
     </div>
   </div>
-</section>
-
-<section class="en-resumen" id="en-resumen" aria-labelledby="en-resumen-heading" style="margin-top:-2rem">
-  <h2 id="en-resumen-heading">En resumen</h2>
-  <ul>
-    <li>Monólogo de Humberto Dupeyrón, basado en «Un informe para una Academia» de Franz Kafka.</li>
-    <li>El monólogo más longevo del teatro mexicano. 37 años en escena (desde 1989).</li>
-    <li>Actualmente en temporada en Ciudad de México. Fechas: <a href="/funciones.html">funciones</a>.</li>
-  </ul>
 </section>
 
 <!-- STATS -->
@@ -846,6 +835,7 @@
       <a href="/boletos.html" class="btn-primary">Comprar boletos</a>
       <a href="/funciones.html" class="btn-ghost">Ver calendario</a>
     </div>
+    <button type="button" class="compartir-pagina" id="compartir-pagina" data-cta-position="compartir-pagina">Compartir página</button>
   </div>
 </section>
 
@@ -872,6 +862,16 @@
   var src=v.getAttribute(mobile?'data-src-mobile':'data-src-desktop'), loaded=false;
   function play(){ if(!loaded){ v.src=src; loaded=true; } var p=v.play(); if(p&&p.catch) p.catch(function(){}); }
   v.addEventListener('pause',function(){ if(!v.ended && visible) play(); }); /* nadie lo pausa a mano */
+  (function(){
+    var btn=document.getElementById('compartir-pagina'); if(!btn) return;
+    var url=window.location.href.split('#')[0].split('?')[0];
+    var texto='37 años de El Gorila, año por año: la historia del monólogo de Humberto Dupeyrón.';
+    var waUrl='https://wa.me/?text='+encodeURIComponent(texto+'\n\n'+url);
+    btn.addEventListener('click',function(){
+      if(navigator.share){ navigator.share({title:'EL GORILA — Historia',text:texto,url:url}).catch(function(){}); return; }
+      window.open(waUrl,'_blank','noopener,noreferrer');
+    });
+  })();
   var visible=false;
   function disponibles(){
     var FM=window.FechasManager; if(!FM||typeof FM.resumenTemporada!=='function') return;
