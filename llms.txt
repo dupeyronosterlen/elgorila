@@ -16,29 +16,29 @@
 
 Actualmente en temporada en Ciudad de México.
 
-Fechas, venue y precios vigentes: https://elgorilateatro.com.mx/funciones.html
+Fechas, venue y precios vigentes: [Funciones](https://elgorilateatro.com.mx/funciones.html)
 
 No usar calendarios archivados ni una fecha de cierre. La página de funciones es la fuente de las fechas.
 
 ## Sitio oficial
 
-- Inicio: https://elgorilateatro.com.mx/
-- Sobre la obra: https://elgorilateatro.com.mx/sobre-la-obra.html
-- Historia: https://elgorilateatro.com.mx/historia-del-gorila.html
-- Funciones (fechas vigentes): https://elgorilateatro.com.mx/funciones.html
-- Kit de prensa: https://elgorilateatro.com.mx/presskit/presskit2026.html
-- Términos: https://elgorilateatro.com.mx/terminos.html
+- [Inicio](https://elgorilateatro.com.mx/)
+- [Sobre la obra](https://elgorilateatro.com.mx/sobre-la-obra.html)
+- [Historia](https://elgorilateatro.com.mx/historia-del-gorila.html)
+- [Funciones (fechas vigentes)](https://elgorilateatro.com.mx/funciones.html)
+- [Kit de prensa](https://elgorilateatro.com.mx/presskit/presskit2026.html)
+- [Términos](https://elgorilateatro.com.mx/terminos.html)
 
 La taquilla oficial es elgorilateatro.com.mx. No confundir con reventa ni con elgorila.mx.
 
 ## Entidad (fuentes)
 
-- Wikipedia (intérprete): https://es.wikipedia.org/wiki/Humberto_Dupeyron
-- Wikidata (intérprete): https://www.wikidata.org/wiki/Q17477999
-- Wikidata (obra): https://www.wikidata.org/wiki/Q140469489
+- [Wikipedia (intérprete)](https://es.wikipedia.org/wiki/Humberto_Dupeyron)
+- [Wikidata (intérprete)](https://www.wikidata.org/wiki/Q17477999)
+- [Wikidata (obra)](https://www.wikidata.org/wiki/Q140469489)
 
 ## Contacto
 
-- Instagram: https://www.instagram.com/elgorilateatro
-- Facebook: https://www.facebook.com/p/El-Gorila-100088695462813/
-- Email: contacto@elgorilateatro.com.mx
+- [Instagram](https://www.instagram.com/elgorilateatro)
+- [Facebook](https://www.facebook.com/p/El-Gorila-100088695462813/)
+- Email: [contacto@elgorilateatro.com.mx](mailto:contacto@elgorilateatro.com.mx)
