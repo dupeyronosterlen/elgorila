@@ -255,12 +255,19 @@
       if (media) media.classList.add('poster-only');
       return;
     }
+    /* 4 s después de `load` (o antes, si la persona toca/scrollea): así el póster ya
+       fue el LCP y el MP4 no compite con él ni lo cuenta Lighthouse como dependencia. */
+    var arrancado = false;
+    function iniciarVideo() {
+      if (arrancado) return;
+      arrancado = true;
+      loadCandidate(0);
+    }
     function arrancarVideo() {
-      if ('requestIdleCallback' in window) {
-        window.requestIdleCallback(function () { loadCandidate(0); }, { timeout: 3000 });
-      } else {
-        setTimeout(function () { loadCandidate(0); }, 1500);
-      }
+      setTimeout(iniciarVideo, 4000);
+      ['touchstart', 'scroll', 'keydown'].forEach(function (ev) {
+        window.addEventListener(ev, iniciarVideo, { once: true, passive: true });
+      });
     }
     if (document.readyState === 'complete') arrancarVideo();
     else window.addEventListener('load', arrancarVideo, { once: true });
