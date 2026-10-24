@@ -247,7 +247,23 @@
       pushEvent('tofu_video_complete', { page: 'sobre-la-obra' });
     }, { once: true });
 
-    loadCandidate(0);
+    /* El video pesa ~4.8 MB: arrancarlo en paralelo con el póster, fuentes y GTM
+       compite por ancho de banda en móvil y retrasa el LCP (11 s en PSI 4G lenta).
+       Se espera a `load` + idle, y con ahorro de datos / red ≤3G se queda el póster. */
+    var conn = navigator.connection || {};
+    if (conn.saveData || /(^|-)(2g|3g)$/.test(conn.effectiveType || '')) {
+      if (media) media.classList.add('poster-only');
+      return;
+    }
+    function arrancarVideo() {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(function () { loadCandidate(0); }, { timeout: 3000 });
+      } else {
+        setTimeout(function () { loadCandidate(0); }, 1500);
+      }
+    }
+    if (document.readyState === 'complete') arrancarVideo();
+    else window.addEventListener('load', arrancarVideo, { once: true });
     document.addEventListener('touchstart', playNow, { once: true, passive: true });
     document.addEventListener('click', playNow, { once: true });
   }
