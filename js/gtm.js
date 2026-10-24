@@ -20,7 +20,20 @@
   }
 
   var script = document.currentScript;
-  if (script && script.getAttribute('data-defer') === 'load') {
+  var modo = script && script.getAttribute('data-defer');
+  if (modo === 'interaccion') {
+    // 3 s después de `load`, o antes si hay toque/scroll/tecla (lo que ocurra primero).
+    var cargado = false;
+    var disparar = function () {
+      if (cargado) return;
+      cargado = true;
+      loadGtm();
+    };
+    window.addEventListener('load', function () { setTimeout(disparar, 3000); });
+    ['touchstart', 'scroll', 'keydown', 'mousemove', 'click'].forEach(function (ev) {
+      window.addEventListener(ev, disparar, { once: true, passive: true });
+    });
+  } else if (modo === 'load') {
     window.addEventListener('load', loadGtm);
   } else {
     loadGtm();
