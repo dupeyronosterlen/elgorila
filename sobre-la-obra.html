@@ -831,7 +831,7 @@
         position: absolute;
         /* El header fijo se come ~12px del hero y, si la barra de próxima
            función se parte en 2 líneas (pantallas muy chicas), tapaba el texto. */
-        top: 2.4rem;
+        top: 1.1rem;
         left: 1.15rem;
         right: 1.15rem;
         z-index: 4;
@@ -1076,7 +1076,8 @@
     <a href="/boletos.html#fechas-fecha-wrap" class="nav-cta link-venta-boletos" data-cta-position="nav">Boletos</a>
   </nav>
   <p class="escasez-bar" role="status">
-    <span data-proxima-encabezado>Próxima función: sábado 24 de octubre</span>
+    <span data-proxima-encabezado>Próxima función: sábado 31 de octubre</span>
+    <span data-escasez-funciones>Quedan 3 sábados en CDMX</span>
     <span class="escasez-asientos" data-escasez-asientos hidden></span>
   </p>
 </header>
@@ -1411,12 +1412,27 @@
   </span>
 </a>
 
+<script>
+/* El header es fijo y su alto cambia (la barra de urgencia baja de renglón en
+   pantallas angostas): se mide para que el hero siempre arranque debajo. */
+(function () {
+  var h = document.getElementById('site-header');
+  if (!h) return;
+  function medir() {
+    document.documentElement.style.setProperty('--site-header-height', h.offsetHeight + 'px');
+  }
+  medir();
+  window.addEventListener('resize', medir);
+  window.addEventListener('load', medir);
+  if (window.ResizeObserver) new ResizeObserver(medir).observe(h);
+})();
+</script>
 <script src="js/utm.js" defer></script>
 <script src="js/config.js" defer></script>
 <script src="js/rutas.js" defer></script>
 <script src="js/analytics.js?v=20260930capi1" data-viewcontent="sobre-la-obra" defer></script>
 <script src="js/fechas.js?v=20261019a" defer></script>
-<script src="js/temporada-copy.js?v=20260924b" defer></script>
+<script src="js/temporada-copy.js?v=20261030a" defer></script>
 <script src="js/testimonios.js?v=20260813t" defer></script>
 <script src="js/tofu-ad-match.js?v=20260812s" defer></script>
 <script src="js/tofu-landing.js?v=20261023b" defer></script>

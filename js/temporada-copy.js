@@ -47,8 +47,8 @@
     if (n === 0) return 'Nuevas fechas pronto en CDMX';
     var sust = soloSabados ? 'sábado' : 'función';
     var sustPl = soloSabados ? 'sábados' : 'funciones';
-    if (n === 1) return 'Queda 1 ' + sust + ' — cupo limitado';
-    return 'Quedan ' + n + ' ' + sustPl + ' — cupo limitado';
+    if (n === 1) return 'Última ' + (soloSabados ? 'fecha' : 'función') + ' en CDMX';
+    return 'Quedan ' + n + ' ' + sustPl + ' en CDMX';
   }
 
   var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
