@@ -21,7 +21,7 @@ const SEDES = {
 
 const SEDE_TEMPORADA = 'teatro-wilberto-canton';
 
-/** Temporada 2026 — extendida: sábados públicos hasta 31 oct; nov-dic sembrados ocultos; miércoles ocultos */
+/** Temporada 2026 — extendida: sábados públicos hasta 12 dic (cierre de temporada); miércoles ocultos */
 const FUNCIONES_TEMPORADA = [
   { fecha_iso: '2026-07-04', nombre: 'Sábado 4 Jul — 18:00 hrs',  sede: SEDE_TEMPORADA, activa: false },
   { fecha_iso: '2026-07-08', nombre: 'Miércoles 8 Jul — 20:30 hrs',  sede: SEDE_TEMPORADA, activa: false },
@@ -56,10 +56,10 @@ const FUNCIONES_TEMPORADA = [
   { fecha_iso: '2026-10-31', nombre: 'Sábado 31 Oct — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
   { fecha_iso: '2026-11-07', nombre: 'Sábado 7 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
   { fecha_iso: '2026-11-14', nombre: 'Sábado 14 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
-  { fecha_iso: '2026-11-21', nombre: 'Sábado 21 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
-  { fecha_iso: '2026-11-28', nombre: 'Sábado 28 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
-  { fecha_iso: '2026-12-05', nombre: 'Sábado 5 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
-  { fecha_iso: '2026-12-12', nombre: 'Sábado 12 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false },
+  { fecha_iso: '2026-11-21', nombre: 'Sábado 21 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-11-28', nombre: 'Sábado 28 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-12-05', nombre: 'Sábado 5 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-12-12', nombre: 'Sábado 12 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
 ];
 
 const FechasManager = {
