@@ -1561,7 +1561,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <p id="espejo-cupo" class="espejo-cupo" hidden role="status"></p>
       <div id="promo-grupo-banner" class="promo-grupo-banner hidden" role="status"></div>
-      <button type="button" id="btn-reservar-desktop" disabled aria-label="Comprar boletos">
+      <button type="button" id="btn-reservar-desktop" disabled aria-label="Continuar">
         <span id="brd-texto">Selecciona una fecha</span>
         <span class="brd-arrow" aria-hidden="true">→</span>
       </button>
@@ -1602,7 +1602,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-<button type="button" id="barra-reserva-fija" class="barra-reserva-fija" disabled aria-label="Comprar boletos">
+<button type="button" id="barra-reserva-fija" class="barra-reserva-fija" disabled aria-label="Continuar">
   Selecciona una fecha
 </button>
 
@@ -1668,7 +1668,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- Cupón colapsado -->
     <details class="ichk-cupon-details ichk-cupon-wrap">
-      <summary>¿Tienes un código promocional?</summary>
+      <summary>¿Tienes un código de descuento? Escríbelo aquí antes de pagar</summary>
       <div style="padding-top:8px;">
         <div class="ichk-cupon-fila">
           <input
@@ -1953,6 +1953,11 @@ async function aplicarCuponInline() {
         : ` · quedan ${data.usosRestantesFuncion} para este sábado`;
     }
     msg(okMsg, true);
+    if (data.codigo === 'ANTIFAZ' && msgEl) {
+      const nota = document.createElement('div');
+      nota.textContent = 'Todos los que entren con este código deben llegar con antifaz; si no, se cobra la diferencia en la puerta.';
+      msgEl.appendChild(nota);
+    }
     _actualizarResumenCupon(orden);
     // Ya se aplicó un cupón: los recordatorios "calificas para..." sobran.
     const hintEl = document.getElementById('ichk-espejo-hint');
@@ -2267,16 +2272,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!btn) return;
 
     var texto = btn.textContent.trim();
-    if (texto.indexOf('Continuar') === 0) {
-      texto = texto.replace(/^Continuar/, 'Comprar');
-    } else if (texto.indexOf('Selecciona al menos') === 0) {
+    if (texto.indexOf('Selecciona al menos') === 0) {
       texto = 'Elige al menos 1 boleto';
     }
 
     if (sticky) {
       sticky.textContent = texto;
       sticky.disabled = btn.disabled;
-      sticky.setAttribute('aria-label', btn.disabled ? texto : 'Comprar: ' + texto);
+      sticky.setAttribute('aria-label', btn.disabled ? texto : texto);
     }
 
     if (desktop) {
@@ -2284,7 +2287,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (txtEl) txtEl.textContent = texto;
       else desktop.textContent = texto;
       desktop.disabled = btn.disabled;
-      desktop.setAttribute('aria-label', btn.disabled ? texto : 'Comprar: ' + texto);
+      desktop.setAttribute('aria-label', btn.disabled ? texto : texto);
     }
 
     simplificarPromoBanner();
