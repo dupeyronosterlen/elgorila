@@ -59,7 +59,7 @@ const FUNCIONES_TEMPORADA = [
   { fecha_iso: '2026-11-21', nombre: 'Sábado 21 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
   { fecha_iso: '2026-11-28', nombre: 'Sábado 28 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
   { fecha_iso: '2026-12-05', nombre: 'Sábado 5 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
-  { fecha_iso: '2026-12-12', nombre: 'Sábado 12 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  { fecha_iso: '2026-12-12', nombre: 'Sábado 12 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, etiqueta: 'Cierre de temporada', activa: true },
 ];
 
 const FechasManager = {
