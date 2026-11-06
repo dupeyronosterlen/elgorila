@@ -69,15 +69,43 @@
     if (f) {
       var p = f.fecha_iso.split('-').map(Number);
       var d = new Date(p[0], p[1] - 1, p[2]);
-      txt = 'Próxima función: ' + DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()];
+      var diasQueFaltan = Math.round((d - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) / 86400000);
+      var fechaLarga = DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()];
+      if (diasQueFaltan === 0)      txt = 'Hoy ' + fechaLarga + ' · 18:00';
+      else if (diasQueFaltan === 1) txt = 'Mañana ' + fechaLarga + ' · 18:00';
+      else                          txt = 'Próxima función: ' + fechaLarga;
     }
     document.querySelectorAll('[data-proxima-encabezado]').forEach(function (el) {
       if (el.textContent !== txt) el.textContent = txt;
     });
   }
 
+  /** Urgencia de tiempo (no de lugares): «Últimas funciones» mientras quede
+    temporada. Sale de la misma lista que el resto del copy. */
+  function aplicarUrgencia() {
+    var FM = window.FechasManager;
+    var lista = window.FUNCIONES_TEMPORADA;
+    if (!FM || !Array.isArray(lista) || typeof FM.pasadaParaConteoOferta !== 'function') return;
+    var fns = lista.filter(function (f) {
+      return f.activa !== false && !f.atenuada && f.agotada !== true &&
+        !FM.pasadaParaConteoOferta(f.fecha_iso, f);
+    }).sort(function (a, b) { return a.fecha_iso < b.fecha_iso ? -1 : 1; });
+    if (!fns.length) return;
+    var txt = fns.length === 1 ? 'Última función' : 'Últimas funciones';
+    document.querySelectorAll('[data-urgencia-temporada]').forEach(function (el) {
+      el.textContent = txt;
+      el.hidden = false;
+    });
+    var p0 = fns[0].fecha_iso.split('-').map(Number);
+    var cta = 'Reservar mi lugar · ' + p0[2] + ' ' + MESES[p0[1] - 1].slice(0, 3) + ' →';
+    document.querySelectorAll('[data-cta-proxima]').forEach(function (el) {
+      el.textContent = cta;
+    });
+  }
+
   function aplicar() {
     aplicarEncabezado();
+    aplicarUrgencia();
     var r = resumen();
     if (!r) return null; // sin datos: se respeta el texto de respaldo del HTML
 

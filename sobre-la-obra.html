@@ -285,6 +285,9 @@
     }
     .escasez-asientos { display: block; font-size: 9px; letter-spacing: 0.1em; opacity: 0.92; margin-top: 0.15rem; color: #ffe8dc; }
     .escasez-asientos[hidden] { display: none; }
+    .escasez-urgencia { display: block; font-size: 9px; letter-spacing: 0.1em; color: #ffe8dc; }
+    .escasez-urgencia[hidden] { display: none; }
+    @media (min-width: 768px) { .escasez-urgencia { font-size: 11px; } }
 
     /* ═══ HERO — solo 4 elementos, con aire ═══════════════════ */
     /* Columna: el mensaje del anuncio arriba, el copy y el CTA abajo, y la cara
@@ -1051,7 +1054,27 @@
         font-size: clamp(1.4rem, 1.75vw, 2.2rem);
         max-width: none; white-space: nowrap;
       }
-      .hero-top { margin-top: -1.4rem; }
+      /* Todo el copy junto abajo a la izquierda: la cara del póster queda
+         limpia y la línea del «más longevo» ya no flota sobre el telón. */
+      .hero { justify-content: flex-end; align-items: flex-start; }
+      .hero-top { margin: 0 0 clamp(0.9rem, 1.4vw, 1.6rem); width: auto; }
+      .hero-top-fijo { text-align: left; margin-left: 0; white-space: normal; }
+      .hero-overlay {
+        background:
+          linear-gradient(90deg, rgba(8,5,4,0.62) 0%, rgba(8,5,4,0.28) 48%, transparent 72%),
+          radial-gradient(ellipse 105% 92% at 50% 44%, transparent 38%, rgba(6,4,3,0.5) 100%),
+          linear-gradient(180deg,
+            rgba(10,7,5,0.2) 0%, rgba(8,5,4,0.2) 38%,
+            rgba(6,4,3,0.6) 66%, rgba(18,13,11,0.96) 92%, var(--dark) 100%);
+      }
+      /* La barra fija ocupaba todo el ancho y se veía vacía: en escritorio
+         se vuelve una pastilla centrada con el precio bien legible. */
+      .barra-compra-fija {
+        left: 0; right: 0; width: min(620px, 90vw); margin-left: auto; margin-right: auto;
+        padding: 1rem 2rem 1.05rem;
+      }
+      .barra-compra-principal { font-size: 1.1rem; }
+      .barra-compra-meta { font-size: 16px; }
     }
 
     /* ═══ Preguntas frecuentes ═══ */
@@ -1080,7 +1103,8 @@
     <a href="/boletos.html#fechas-fecha-wrap" class="nav-cta link-venta-boletos" data-cta-position="nav">Boletos</a>
   </nav>
   <p class="escasez-bar" role="status">
-    <span data-proxima-encabezado>Próxima función: sábado 31 de octubre</span>
+    <span data-proxima-encabezado>Próxima función: sábado 7 de noviembre</span>
+    <span class="escasez-urgencia" data-urgencia-temporada hidden></span>
     <span class="escasez-asientos" data-escasez-asientos hidden></span>
   </p>
 </header>
@@ -1109,7 +1133,7 @@
       más memorables del teatro mexicano<br class="hero-br-mobile" aria-hidden="true" />
       en vivo frente a ti.</em>
     </h1>
-    <a href="/boletos.html#fechas-fecha-wrap" class="btn-cta-gold link-venta-boletos" data-cta-position="hero-primary">
+    <a href="/boletos.html#fechas-fecha-wrap" class="btn-cta-gold link-venta-boletos" data-cta-position="hero-primary" data-cta-proxima>
       Ver fechas y precios →
     </a>
   </div>
@@ -1420,7 +1444,7 @@
 <script src="js/rutas.js" defer></script>
 <script src="js/analytics.js?v=20260930capi1" data-viewcontent="sobre-la-obra" defer></script>
 <script src="js/fechas.js?v=20261019a" defer></script>
-<script src="js/temporada-copy.js?v=20260924b" defer></script>
+<script src="js/temporada-copy.js?v=20261106a" defer></script>
 <script src="js/testimonios.js?v=20260813t" defer></script>
 <script src="js/tofu-ad-match.js?v=20260812s" defer></script>
 <script src="js/tofu-landing.js?v=20261023b" defer></script>
