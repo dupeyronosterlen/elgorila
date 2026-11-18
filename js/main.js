@@ -262,6 +262,8 @@ function seleccionarFecha(clave, texto, funcion = null) {
 // --- RESALTAR BOTÓN DE FECHA ---
 function resaltarBotonFecha(clave) {
     document.querySelectorAll('#botones-fecha button').forEach(btn => {
+        btn.classList.remove('fecha-elegida');
+        btn.removeAttribute('aria-pressed');
         btn.style.border = '';
         btn.style.boxShadow = '';
         const atenuada = btn.dataset.fechaAtenuada === '1' && !btn.disabled;
@@ -274,8 +276,11 @@ function resaltarBotonFecha(clave) {
     });
     const sel = document.querySelector(`#botones-fecha button[data-fecha-clave="${clave}"]`);
     if (sel && !sel.disabled) {
-        sel.style.border = '3px solid white';
-        sel.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.5)';
+        // Estilo dorado suave: ver .fecha-elegida en boletos.html
+        sel.classList.add('fecha-elegida');
+        sel.setAttribute('aria-pressed', 'true');
+        sel.style.borderColor = '';
+        sel.style.boxShadow = '';
         sel.style.opacity = '';
         sel.style.filter = '';
     }

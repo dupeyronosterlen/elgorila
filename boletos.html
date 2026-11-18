@@ -655,6 +655,14 @@ body:has(.barra-reserva-fija:disabled) .barra-reserva-spacer {
 #botones-fecha button[data-fecha-destacada="1"]:not([disabled]) {
   border-color: rgba(212,58,26,.75) !important;
 }
+/* Fecha elegida: dorado suave (clase puesta por resaltarBotonFecha en main.js) */
+#botones-fecha button.fecha-elegida:not([disabled]),
+#botones-fecha button.fecha-elegida:not([disabled]):hover {
+  background: linear-gradient(180deg, rgba(217,155,58,.34), rgba(217,155,58,.22)) !important;
+  border-color: var(--gold) !important;
+  color: #f7e6c4 !important;
+  box-shadow: 0 0 0 1px var(--gold-dim), 0 0 16px rgba(217,155,58,.22) !important;
+}
 #botones-fecha > div > button.underline {
   background: transparent !important; border: none !important;
   color: var(--gold-dim) !important;
@@ -1823,7 +1831,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/temporada-copy.js"></script>
 <script src="js/testimonios.js?v=20260817t1"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js?v=20260919-agotado-boton"></script>
+<script src="js/main.js?v=20261117-fecha-dorada"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {
