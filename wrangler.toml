@@ -84,7 +84,7 @@ META_CAPI_VIEWCONTENT_PAGES = "sobre-la-obra,historia-del-gorila,boletos,funcion
 # API el 20 sep 2026. Un solo cron diario evita depender del día-de-semana de
 # Cloudflare por completo. Decisión de Os, 20 sep 2026.
 [triggers]
-crons = ["0 13 * * *", "0 18 * * *", "0 21 * * *"]
+crons = ["0 13 * * *", "0 18 * * *"]
 
 # Workers Logs — JSON estructurado sin PII (ver worker/logs.js)
 [observability]
