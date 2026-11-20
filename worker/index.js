@@ -596,6 +596,102 @@ async function avisarOxxoTardio(venta, t, env) {
   } catch (e) { logError('oxxo.aviso_tardio', { error: e.message }); }
 }
 
+// ─── RECORDATORIO AUTOMÁTICO DE FICHA OXXO SIN PAGAR (cron 12:00 CDMX) ────────
+// Pedido de Os 20 nov 2026. Una vez al día revisa las fichas OXXO pendientes y
+// le escribe al comprador cuando le quedan pocas horas:
+//   · 'funcion' → su función es HOY y aún no paga (límite 18:00 para entrar).
+//   · 'vence'   → la ficha vence HOY a las 23:59.
+// La verdad sale de Stripe (PaymentIntent en requires_action), no del registro
+// del admin: si ya pagó o ya venció, no se manda nada. Un correo por ficha y
+// por motivo (marca en KV), así que reintentos del cron no duplican.
+async function enviarRecordatoriosOxxo(env, opts = {}) {
+  const { dryRun = false } = opts;
+  const hoyMx   = hoyISOMx();
+  const resumen = { fecha: hoyMx, dryRun, revisadas: 0, enviados: 0, omitidos: 0, fallidos: 0 };
+  if (!env.STRIPE_SECRET_KEY) return { ...resumen, error: 'sin STRIPE_SECRET_KEY' };
+
+  const tids = new Set([...VALID_TEATROS].map(t => resolveTid(t)));
+  for (const tid of tids) {
+    const list = await env.VENTAS.list({ prefix: kv(tid, 'oxxoPend:') });
+    for (const k of list.keys) {
+      let p;
+      try { p = JSON.parse(await env.VENTAS.get(k.name) || 'null'); } catch { p = null; }
+      if (!p?.sessionId || !p.email) { resumen.omitidos += 1; continue; }
+      resumen.revisadas += 1;
+      try {
+        const res = await fetch(
+          `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(p.sessionId)}?expand[]=payment_intent`,
+          { headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` } },
+        );
+        const s    = await res.json();
+        const pi   = s?.payment_intent;
+        const oxxo = pi?.next_action?.oxxo_display_details;
+        if (!pi || pi.status !== 'requires_action' || !oxxo?.expires_after) { resumen.omitidos += 1; continue; }
+
+        const venceDiaMx  = new Date(oxxo.expires_after * 1000).toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+        const funcionHoy  = p.fecha === hoyMx && !funcionYaEmpezo(p.fecha);
+        const venceHoy    = venceDiaMx === hoyMx;
+        const motivo      = funcionHoy ? 'funcion' : (venceHoy ? 'vence' : null);
+        if (!motivo) { resumen.omitidos += 1; continue; }
+
+        const flagKey = kv(tid, `oxxo-recordatorio:${p.sessionId}:${motivo}`);
+        if (await env.INVENTARIO.get(flagKey)) { resumen.omitidos += 1; continue; }
+        if (dryRun) { resumen.enviados += 1; continue; }
+
+        const ok = await enviarEmail(
+          p.email,
+          motivo === 'funcion'
+            ? 'Hoy es tu función — tu ficha OXXO sigue sin pagar · EL GORILA'
+            : 'Tu ficha OXXO vence hoy — EL GORILA',
+          htmlRecordatorioOxxo({
+            nombre: p.nombre, funcionNombre: p.funcionNombre || p.fecha, total: p.total,
+            voucherUrl: oxxo.hosted_voucher_url || null, motivo,
+          }),
+          env,
+        );
+        if (ok) {
+          await env.INVENTARIO.put(flagKey, new Date().toISOString(), { expirationTtl: 30 * 24 * 60 * 60 });
+          resumen.enviados += 1;
+        } else {
+          resumen.fallidos += 1;
+        }
+      } catch (e) {
+        resumen.fallidos += 1;
+        logError('oxxo.recordatorio', { sessionId: truncateId(p.sessionId), error: e.message });
+      }
+    }
+  }
+  return resumen;
+}
+
+function htmlRecordatorioOxxo({ nombre, funcionNombre, total, voucherUrl, motivo }) {
+  const primerNombre = (nombre || '').trim().split(/\s+/)[0] || '';
+  const totalTxt = (total != null)
+    ? `$${Number(total).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} MXN`
+    : '';
+  const cuerpo = motivo === 'funcion'
+    ? `Hoy es tu función de <strong>EL GORILA</strong> (${funcionNombre}) y tu ficha OXXO${totalTxt ? ` por <strong>${totalTxt}</strong>` : ''}
+       todavía no aparece pagada.<br><br>
+       Para entrar hoy, págala en cualquier OXXO <strong>antes de las 18:00 h</strong>. Tu boleto con código QR te llega a este correo.`
+    : `Tu ficha OXXO para <strong>EL GORILA</strong> (${funcionNombre})${totalTxt ? ` por <strong>${totalTxt}</strong>` : ''}
+       <strong>vence hoy a las 23:59 h</strong>.<br><br>
+       Si la pagas hoy en cualquier OXXO, tus lugares quedan confirmados y tu boleto con código QR te llega a este correo.
+       Si vence, los lugares se liberan.`;
+  const boton = voucherUrl
+    ? `<a href="${voucherUrl}" style="display:inline-block;margin-top:22px;padding:14px 28px;background:#D43A1A;color:#fff;text-decoration:none;font-family:Georgia,serif;font-size:16px;">
+         Ver mi ficha OXXO →
+       </a>`
+    : '';
+  return `<div style="font-family:Georgia,serif;font-size:17px;line-height:1.55;color:#1a1411;max-width:520px;">
+    <p style="margin:0 0 14px;">${primerNombre ? `Hola, ${primerNombre}:` : 'Hola:'}</p>
+    <p style="margin:0;">${cuerpo}</p>
+    ${boton}
+    <p style="margin:26px 0 0;font-size:13px;color:rgba(26,20,17,.6);">
+      Si ya la pagaste, ignora este correo: OXXO puede tardar unas horas en avisarnos.
+    </p>
+  </div>`;
+}
+
 function htmlEmailOxxoPendiente({ funcionNombre, total, voucherUrl, venceTexto, pasaSiguiente }) {
   const totalTxt = (total != null)
     ? `$${Number(total).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`
@@ -1826,6 +1922,10 @@ const CAPACIDAD_DEFAULT = 200;
 const RESERVA_TTL       = 1800; // 30 minutos
 /** Días naturales de vigencia de la ficha OXXO (Stripe: 1–7, vence 23:59 CDMX) → 48–72 h. */
 const OXXO_DIAS_FICHA   = 2;
+/** Cron del recordatorio de fichas OXXO sin pagar: 12:00 CDMX (debe estar en wrangler.toml). */
+const CRON_RECORDATORIO_OXXO = '0 18 * * *';
+/** Corrida extra única (20 nov 2026, 15:00 CDMX) para las fichas que vencían ese día. Quitar de wrangler.toml después. */
+const CRON_RECORDATORIO_OXXO_EXTRA = '0 21 * * *';
 
 /** Días naturales (CDMX) entre hoy y la fecha de la función. Sábado visto un jueves → 2. */
 function diasNaturalesHastaMx(fechaIso) {
@@ -6574,6 +6674,18 @@ export default {
   // Quitar la dependencia del día-de-semana de Cloudflare por completo es más
   // robusto que adivinar el valor correcto. Decisión de Os, 20 sep 2026.
   async scheduled(event, env, ctx) {
+    // Cron de mediodía (18:00 UTC = 12:00 CDMX): solo recordatorios de fichas OXXO.
+    if (event.cron === CRON_RECORDATORIO_OXXO || event.cron === CRON_RECORDATORIO_OXXO_EXTRA) {
+      ctx.waitUntil((async () => {
+        try {
+          const res = await enviarRecordatoriosOxxo(env);
+          logInfo('cron.oxxo_recordatorio', sanitizeObject(res));
+        } catch (e) {
+          logError('cron.scheduled.oxxo_recordatorio', { cron: event.cron, error: e.message });
+        }
+      })());
+      return;
+    }
     ctx.waitUntil((async () => {
       try {
         const resDia = await enviarEmailsDiaFuncion(env);
