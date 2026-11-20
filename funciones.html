@@ -1424,14 +1424,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </table>
 <script>
 (function () {
-  // Marca filas ya pasadas (fecha de función + 18:15, mismo corte que el
-  // selector interactivo) con clase .fila-pasada — solo estilo, no oculta nada.
+  // Oculta filas ya pasadas (fecha de función + 18:15, mismo corte que el
+  // selector interactivo): solo se ven las funciones que quedan.
   var hoy = new Date();
-  document.querySelectorAll('table.calendario tbody tr[data-fecha]').forEach(function (tr) {
+  var tbody = document.querySelector('table.calendario tbody');
+  if (!tbody) return;
+  var quedan = 0;
+  tbody.querySelectorAll('tr[data-fecha]').forEach(function (tr) {
     var partes = tr.dataset.fecha.split('-').map(Number);
     var corte = new Date(partes[0], partes[1] - 1, partes[2], 18, 15, 0);
-    if (hoy >= corte) tr.classList.add('fila-pasada');
+    if (hoy >= corte) tr.hidden = true; else quedan++;
   });
+  // El separador "La temporada continúa" solo tiene sentido si arriba
+  // todavía hay fechas visibles.
+  var sep = tbody.querySelector('tr.fila-temporada-extendida');
+  if (sep) {
+    var prev = sep.previousElementSibling, hayVisibleArriba = false;
+    while (prev) { if (!prev.hidden) { hayVisibleArriba = true; break; } prev = prev.previousElementSibling; }
+    if (!hayVisibleArriba) sep.hidden = true;
+  }
+  if (quedan === 0) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="3">Por ahora no hay funciones programadas. Pronto anunciaremos nuevas fechas.</td>';
+    tbody.appendChild(tr);
+  }
 })();
 </script>
 
