@@ -464,6 +464,7 @@ async function enviarEmailOxxoPendiente(session, meta, tid, env) {
       total:         session.amount_total != null ? session.amount_total / 100 : null,
       voucherUrl,
       venceTexto,
+      pasaSiguiente: meta.oxxoPasaSiguiente === '1',
     }),
     env,
   );
@@ -507,6 +508,14 @@ async function notificarAdminOxxoPendiente(session, meta, tid, env) {
 // Registro visible en el admin de la reserva OXXO pendiente de pago. Es solo
 // informativo (no es una venta): se borra solo cuando el pago cae (async_payment
 // _succeeded) o cuando la ficha vence (checkout.session.expired).
+function vencimientoFichaOxxoMs(session) {
+  const dias = parseInt(session.payment_method_options?.oxxo?.expires_after_days, 10);
+  if (!dias) return session.expires_at ? session.expires_at * 1000 : null;
+  const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+  const d   = new Date(`${hoy}T23:59:59-06:00`);
+  return d.getTime() + dias * 86400000;
+}
+
 async function guardarOxxoPendiente(session, meta, tid, env) {
   const canonical = resolveTid(tid);
   let seccionCantidades = {};
@@ -523,9 +532,11 @@ async function guardarOxxoPendiente(session, meta, tid, env) {
       nombre:        meta.nombre || session.customer_details?.name || null,
       seccionCantidades,
       creadoEn:      new Date().toISOString(),
-      // Vencimiento real de la ficha (Stripe Checkout Session.expires_at). Sirve de
-      // respaldo para que el admin la oculte sola aunque el webhook expired no llegue.
-      expiraEn:      session.expires_at ? session.expires_at * 1000 : null,
+      // Vencimiento real de la ficha: 23:59 CDMX del N-ésimo día natural tras
+      // generarla (N = expires_after_days). OJO: Session.expires_at NO sirve aquí,
+      // es solo la ventana para generar la ficha (≤24 h) y ocultaría del admin
+      // fichas todavía pagables. Respaldo para que el admin la oculte sola.
+      expiraEn:      vencimientoFichaOxxoMs(session),
     }),
     // Respaldo: si por lo que sea no se borra al pagar/vencer, caduca solo a los 31 días.
     { expirationTtl: 31 * 24 * 60 * 60 },
@@ -559,7 +570,33 @@ async function guardarOxxoHistorial(tid, sessionId, estado, pendiente, extra, en
   } catch (e) { logError('oxxo.historial', { error: e.message }); }
 }
 
-function htmlEmailOxxoPendiente({ funcionNombre, total, voucherUrl, venceTexto }) {
+// Pago OXXO que llegó después de empezar su función: aviso al comprador (su
+// boleto pasó al siguiente sábado) y al equipo. Sin función siguiente, solo al
+// equipo, para resolverlo a mano.
+async function avisarOxxoTardio(venta, t, env) {
+  try {
+    if (t.a) {
+      if (venta.email) {
+        await enviarEmail(venta.email, `Tu boleto pasó a ${venta.funcionNombre} — EL GORILA`,
+          `<p style="font-family:Georgia,serif;font-size:17px;color:#1a1411;line-height:1.5;">
+            Recibimos tu pago de OXXO después de que empezó la función del <strong>${t.deNombre}</strong>.<br><br>
+            No te preocupes: tu boleto quedó para la siguiente función, <strong>${venta.funcionNombre}</strong>,
+            a la misma hora. En otro correo te llega tu boleto con código QR.
+          </p>`, env);
+      }
+      await enviarEmail(adminNotifyEmail(env), `OXXO pagado tarde → movido a ${venta.funcionNombre}`,
+        `<p>Pago OXXO de ${venta.nombre || venta.email || 's/n'} (${venta.cantidad} boletos, $${venta.total})
+         llegó después de la función ${t.deNombre}. Boleto emitido para <strong>${venta.funcionNombre}</strong>.</p>`, env);
+    } else {
+      await enviarEmail(adminNotifyEmail(env), `⚠️ OXXO pagado tarde SIN función siguiente — ${t.deNombre}`,
+        `<p>Pago OXXO de ${venta.nombre || venta.email || 's/n'} (${venta.cantidad} boletos, $${venta.total})
+         llegó después de la función ${t.deNombre} y ya no hay función siguiente activa.
+         Resolver a mano (reembolso o reagendar).</p>`, env);
+    }
+  } catch (e) { logError('oxxo.aviso_tardio', { error: e.message }); }
+}
+
+function htmlEmailOxxoPendiente({ funcionNombre, total, voucherUrl, venceTexto, pasaSiguiente }) {
   const totalTxt = (total != null)
     ? `$${Number(total).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`
     : null;
@@ -621,9 +658,12 @@ function htmlEmailOxxoPendiente({ funcionNombre, total, voucherUrl, venceTexto }
         en cuanto OXXO nos avisa, tu boleto sale solo a este correo.
       </td></tr>
     </table>
-    ${venceTexto ? `<p style="margin:18px 0 0;font-family:Georgia,serif;font-size:14px;line-height:1.5;color:#8a2a1a;">
-      Tus lugares quedan apartados hasta el <strong>${venceTexto}</strong>. Si la ficha vence sin pago, se liberan.
-    </p>` : ''}
+    <p style="margin:18px 0 0;font-family:Georgia,serif;font-size:14px;line-height:1.5;color:#8a2a1a;">
+      Para entrar a tu función, paga antes de las <strong>18:00 h del día de la función</strong>.
+      ${pasaSiguiente
+        ? `Si se te pasa, tu ficha sigue sirviendo${venceTexto ? ` hasta el <strong>${venceTexto}</strong>` : ''}: tu boleto pasa automáticamente a la siguiente función.`
+        : (venceTexto ? `Tu ficha vence el <strong>${venceTexto}</strong>; si vence sin pago, tus lugares se liberan.` : '')}
+    </p>
   </td></tr>
 
   <tr><td style="background:#120d0b;padding:22px 28px;text-align:center;border-top:1px solid rgba(241,234,217,.08);">
@@ -1784,6 +1824,29 @@ function getPrecio(tipo, seccionConfig) {
 const CAPACIDAD_DEFAULT = 200;
 /** Tiempo máximo en pantalla de pago (Stripe + hold en inventario). Stripe exige ≥30 min. */
 const RESERVA_TTL       = 1800; // 30 minutos
+/** Días naturales de vigencia de la ficha OXXO (Stripe: 1–7, vence 23:59 CDMX) → 48–72 h. */
+const OXXO_DIAS_FICHA   = 2;
+
+/** Días naturales (CDMX) entre hoy y la fecha de la función. Sábado visto un jueves → 2. */
+function diasNaturalesHastaMx(fechaIso) {
+  const hoy = hoyISOMx();
+  const ms  = Date.parse(`${fechaIso}T00:00:00Z`) - Date.parse(`${hoy}T00:00:00Z`);
+  return Math.round(ms / 86400000);
+}
+
+/** ¿Ya empezó la función (18:00 CDMX)? Para pagos OXXO que llegan tarde. */
+function funcionYaEmpezo(fechaIso) {
+  return Date.now() >= new Date(`${fechaIso}T18:00:00-06:00`).getTime();
+}
+
+/** Siguiente función activa posterior a `fechaIso` que aún no empieza, o null. */
+function siguienteFuncionActiva(funcionesRaw, fechaIso) {
+  let lista = [];
+  try { lista = JSON.parse(funcionesRaw || '[]'); } catch { return null; }
+  return lista
+    .filter(f => f && f.activa !== false && f.fecha_iso > fechaIso && !f.precio_especial && !funcionYaEmpezo(f.fecha_iso))
+    .sort((a, b) => a.fecha_iso.localeCompare(b.fecha_iso))[0] || null;
+}
 const VENTA_404_MAX     = 40;  // máx. folios NO encontrados por IP / 15 min (anti-enumeración)
 const CODIGOS_DESCUENTO_KEY   = 'codigos:descuento';
 const STRIPE_MIN_TOTAL_CENTAVOS = 1000; // MXN 10.00 — mínimo Stripe en México
@@ -3241,9 +3304,19 @@ async function handleCheckout(tid, request, env, ctx) {
 
   // OXXO disponible solo si faltan más de 24 hrs para la función (18:00 CDMX)
   const fechaFuncionMs  = new Date(`${fecha}T18:00:00-06:00`).getTime();
-  const oxxoDisponible  = (fechaFuncionMs - Date.now()) > 24 * 60 * 60 * 1000;
-  // Si hay OXXO: voucher vence en min(24h, hasta 2h antes de la función); si no, TTL normal
-  const oxxoMaxMs       = Math.min(Date.now() + 24 * 60 * 60 * 1000, fechaFuncionMs - 2 * 60 * 60 * 1000);
+  // Ficha OXXO (decisión Os 20 nov 2026): Stripe la vence a las 23:59 CDMX del
+  // N-ésimo día natural → con N=2 dura entre 48 y 72 h. El límite que se le
+  // comunica al comprador es las 18:00 del día de su función; si paga después,
+  // el webhook le pasa el boleto al siguiente sábado activo (ver
+  // siguienteFuncionActiva). Si NO hay función posterior (última de la
+  // temporada), la ficha no puede ir más allá del día de la función.
+  const hayFuncionPosterior = !!siguienteFuncionActiva(funcionesRaw, fecha);
+  let oxxoDias = OXXO_DIAS_FICHA;
+  if (!hayFuncionPosterior) oxxoDias = Math.min(oxxoDias, diasNaturalesHastaMx(fecha));
+  const oxxoDisponible  = (fechaFuncionMs - Date.now()) > 24 * 60 * 60 * 1000 && oxxoDias >= 1;
+  // Ventana para GENERAR la ficha en Stripe (no es la vigencia de la ficha):
+  // Stripe la topa en 24 h; nunca después de las 18:00 de la función.
+  const oxxoMaxMs       = Math.min(Date.now() + 24 * 60 * 60 * 1000, fechaFuncionMs);
   const sessionTtl      = oxxoDisponible ? Math.floor((oxxoMaxMs - Date.now()) / 1000) : RESERVA_TTL;
   const sessionExpiresAt = Math.floor(Date.now() / 1000) + sessionTtl;
 
@@ -3258,7 +3331,8 @@ async function handleCheckout(tid, request, env, ctx) {
     'payment_method_types[0]':          'card',
     ...(oxxoDisponible ? {
       'payment_method_types[1]': 'oxxo',
-      'payment_method_options[oxxo][expires_after_days]': String(Math.min(30, Math.max(1, Math.round(sessionTtl / 86400)))),
+      'payment_method_options[oxxo][expires_after_days]': String(oxxoDias),
+      'metadata[oxxoPasaSiguiente]': hayFuncionPosterior ? '1' : '0',
     } : {}),
     ...(modoEmbebido
       ? { ui_mode: 'embedded', return_url: `${baseUrl}/confirmacion.html?session_id={CHECKOUT_SESSION_ID}&teatro=${canonical}` }
@@ -3459,10 +3533,30 @@ async function handleWebhook(request, env, ctx) {
   //    medias, la marca expira sola y el siguiente reintento puede completarla.
   await env.INVENTARIO.put(lockKey, '1', { expirationTtl: 120 });
 
-  const fecha         = meta.fecha;
+  let   fecha         = meta.fecha;
   const cantidad      = parseInt(meta.cantidad, 10);
-  const reservaId     = meta.reservaId;
-  const funcionNombre = meta.funcionNombre || fecha;
+  let   reservaId     = meta.reservaId;
+  let   funcionNombre = meta.funcionNombre || fecha;
+
+  // Ficha OXXO pagada DESPUÉS de que empezó su función (decisión Os 20 nov
+  // 2026): el boleto pasa al siguiente sábado activo y la venta cuenta (también
+  // en lo contable) para la función a la que realmente va a entrar. Si no hay
+  // función siguiente, se queda en la original y se avisa al equipo para
+  // resolverlo a mano (reembolso o reagendar).
+  let oxxoTardio = null;
+  if (esAsyncPago && fecha && funcionYaEmpezo(fecha)) {
+    const fRaw = await env.INVENTARIO.get(kv(tid, 'funciones:activas'));
+    const sig  = siguienteFuncionActiva(fRaw, fecha);
+    if (sig) {
+      oxxoTardio    = { de: fecha, deNombre: funcionNombre, a: sig.fecha_iso, en: new Date().toISOString() };
+      reservaId     = null; // el apartado era de la función original, ya no aplica
+      fecha         = sig.fecha_iso;
+      funcionNombre = sig.nombre || sig.fecha_iso;
+    } else {
+      oxxoTardio = { de: fecha, deNombre: funcionNombre, a: null, en: new Date().toISOString() };
+      logError('oxxo.pago_tardio_sin_funcion', { sessionId: truncateId(session.id), fecha });
+    }
+  }
 
   let items = [];
   try { if (meta.items) items = JSON.parse(meta.items); } catch {}
@@ -3516,9 +3610,11 @@ async function handleWebhook(request, env, ctx) {
     codigoCupon:  meta.codigoCupon || null,
     cuponPct:     meta.cuponPct ? parseInt(meta.cuponPct, 10) : null,
     referidoDe:   meta.referidoDe || null,
+    ...(oxxoTardio ? { oxxoTardio } : {}),
   };
 
   await env.VENTAS.put(ventaKey, JSON.stringify(venta));
+  if (oxxoTardio) ctx.waitUntil(avisarOxxoTardio(venta, oxxoTardio, env));
   // Pago confirmado: ya existe la venta real, quitar el pendiente OXXO del admin
   // (se va a Ventas) y, si era OXXO, dejar registro en el historial como completada.
   if (metodoPago === 'oxxo') {
