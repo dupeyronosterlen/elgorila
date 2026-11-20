@@ -223,6 +223,7 @@ function formatMetodoPago(venta) {
   if (m === 'tarjeta_taquilla') return 'Tarjeta en taquilla';
   if (venta.sessionId?.startsWith('manual_') && !m) return 'Efectivo en taquilla';
   if (m.includes('oxxo')) return 'OXXO';
+  if (m === 'spei') return 'Transferencia SPEI';
   if (m.includes('card') || m.includes('link')) return 'Stripe (tarjeta en línea)';
   return m || '—';
 }
@@ -470,6 +471,98 @@ async function enviarEmailOxxoPendiente(session, meta, tid, env) {
   );
 }
 
+// ─── SPEI (transferencia bancaria, Stripe customer_balance) — 20 nov 2026 ─────
+// El comprador elige el método dentro de Stripe; session.payment_method_types
+// solo dice lo que se OFRECIÓ. El método real se lee del PaymentIntent.
+async function metodoAsyncDeSesion(session, env) {
+  const piId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
+  if (!piId || !env.STRIPE_SECRET_KEY) return 'oxxo';
+  try {
+    const res = await fetch(
+      `https://api.stripe.com/v1/payment_intents/${encodeURIComponent(piId)}?expand[]=payment_method`,
+      { headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` } },
+    );
+    const pi = await res.json();
+    const t  = pi?.payment_method?.type;
+    if (t === 'customer_balance') return 'spei';
+    if (t === 'oxxo') return 'oxxo';
+    if (pi?.next_action?.type === 'display_bank_transfer_instructions') return 'spei';
+    if (pi?.next_action?.oxxo_display_details) return 'oxxo';
+    // Pagado ya: el charge dice el método.
+    const tipos = pi?.payment_method_types || [];
+    if (tipos.length === 1 && tipos[0] === 'customer_balance') return 'spei';
+  } catch (e) { logError('pago.metodo_async', { error: e.message }); }
+  return 'oxxo';
+}
+
+// Correo al comprador con los datos para transferir (CLABE, referencia, monto).
+async function enviarEmailSpeiPendiente(session, meta, tid, env) {
+  const to = meta.email || session.customer_details?.email || session.customer_email;
+  if (!to) return;
+  const flagKey = kv(tid, `spei-mail:${session.id}`);
+  if (await env.INVENTARIO.get(flagKey)) return;
+  await env.INVENTARIO.put(flagKey, '1', { expirationTtl: 30 * 24 * 60 * 60 });
+
+  let instr = null;
+  try {
+    const piId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
+    if (piId && env.STRIPE_SECRET_KEY) {
+      const res = await fetch(`https://api.stripe.com/v1/payment_intents/${encodeURIComponent(piId)}`, {
+        headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
+      });
+      instr = (await res.json())?.next_action?.display_bank_transfer_instructions || null;
+    }
+  } catch (e) { logError('spei.instrucciones', { error: e.message }); }
+
+  const spei   = (instr?.financial_addresses || []).find(f => f.spei)?.spei || null;
+  const monto  = instr?.amount_remaining != null ? instr.amount_remaining / 100
+    : (session.amount_total != null ? session.amount_total / 100 : null);
+  const montoTxt = monto != null
+    ? `$${Number(monto).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN` : '';
+  const funcionNombre = meta.funcionNombre || meta.fecha || '';
+  const pasaSiguiente = meta.pasaSiguiente === '1';
+  const fila = (k, v) => v ? `<tr><td style="padding:4px 12px 4px 0;color:#8a5a2a;">${k}</td><td style="padding:4px 0;"><strong>${v}</strong></td></tr>` : '';
+
+  await enviarEmail(
+    to,
+    'Datos para tu transferencia SPEI — EL GORILA',
+    `<div style="font-family:Georgia,serif;font-size:16px;line-height:1.55;color:#1a1411;max-width:520px;">
+      <p style="margin:0 0 14px;font-size:20px;">Ya casi. Falta tu transferencia.</p>
+      <p style="margin:0 0 16px;">Apartamos tus lugares para <strong>EL GORILA</strong>${funcionNombre ? ` (${funcionNombre})` : ''}.
+      Haz una transferencia SPEI desde la app de tu banco con estos datos:</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="font-size:16px;margin:0 0 16px;">
+        ${fila('Monto exacto', montoTxt)}
+        ${fila('CLABE', spei?.clabe)}
+        ${fila('Banco', spei?.bank_name)}
+        ${fila('Referencia', instr?.reference)}
+      </table>
+      ${instr?.hosted_instructions_url ? `<a href="${instr.hosted_instructions_url}" style="display:inline-block;padding:14px 28px;background:#D43A1A;color:#fff;text-decoration:none;font-size:16px;">Ver instrucciones de pago →</a>` : ''}
+      <p style="margin:18px 0 0;">Transfiere el <strong>monto exacto</strong>. En cuanto llega (normalmente en minutos), tu boleto con código QR sale solo a este correo.</p>
+      <p style="margin:14px 0 0;font-size:14px;color:#8a2a1a;">Para entrar a tu función, transfiere antes de las <strong>18:00 h del día de la función</strong>.
+      ${pasaSiguiente ? 'Si llega después, tu boleto pasa automáticamente a la siguiente función.' : ''}</p>
+    </div>`,
+    env,
+  );
+}
+
+// Aviso al equipo de que entró una reserva OXXO/SPEI pendiente de pago (aún sin
+// emitir boleto). Cuando el pago cae, llega el aviso normal de "Nueva orden".
+async function notificarAdminSpeiPendiente(session, meta, tid, env) {
+  const flagKey = kv(tid, `spei-mail-admin:${session.id}`);
+  if (await env.INVENTARIO.get(flagKey)) return;
+  await env.INVENTARIO.put(flagKey, '1', { expirationTtl: 30 * 24 * 60 * 60 });
+  const total = session.amount_total != null ? `$${(session.amount_total / 100).toLocaleString('es-MX')} MXN` : '—';
+  await enviarEmail(
+    adminNotifyEmail(env),
+    `SPEI pendiente de pago — ${meta.funcionNombre || meta.fecha || '—'}`,
+    `<p>Un comprador eligió <strong>transferencia SPEI</strong> y aún no transfiere.
+     El boleto se emite solo cuando llega el dinero.</p>
+     <p>Función: <strong>${meta.funcionNombre || meta.fecha || '—'}</strong> · Entradas: ${meta.cantidad || '—'} · Total: ${total}<br>
+     Comprador: ${meta.nombre || session.customer_details?.name || '—'} · ${meta.email || session.customer_details?.email || '—'}</p>`,
+    env,
+  );
+}
+
 // Aviso al equipo de que entró una reserva OXXO pendiente de pago (aún sin
 // emitir boleto). Cuando el pago cae, llega el aviso normal de "Nueva orden".
 async function notificarAdminOxxoPendiente(session, meta, tid, env) {
@@ -516,8 +609,12 @@ function vencimientoFichaOxxoMs(session) {
   return d.getTime() + dias * 86400000;
 }
 
-async function guardarOxxoPendiente(session, meta, tid, env) {
+async function guardarOxxoPendiente(session, meta, tid, env, metodo = 'oxxo') {
   const canonical = resolveTid(tid);
+  // SPEI no tiene vencimiento propio: en el admin se muestra hasta que empieza la función.
+  const expiraEn = metodo === 'spei' && meta.fecha
+    ? new Date(`${meta.fecha}T18:00:00-06:00`).getTime()
+    : vencimientoFichaOxxoMs(session);
   let seccionCantidades = {};
   try { if (meta.seccionCants) seccionCantidades = JSON.parse(meta.seccionCants); } catch {}
   await env.VENTAS.put(
@@ -536,7 +633,8 @@ async function guardarOxxoPendiente(session, meta, tid, env) {
       // generarla (N = expires_after_days). OJO: Session.expires_at NO sirve aquí,
       // es solo la ventana para generar la ficha (≤24 h) y ocultaría del admin
       // fichas todavía pagables. Respaldo para que el admin la oculte sola.
-      expiraEn:      vencimientoFichaOxxoMs(session),
+      expiraEn,
+      metodo,
     }),
     // Respaldo: si por lo que sea no se borra al pagar/vencer, caduca solo a los 31 días.
     { expirationTtl: 31 * 24 * 60 * 60 },
@@ -579,7 +677,7 @@ async function avisarOxxoTardio(venta, t, env) {
       if (venta.email) {
         await enviarEmail(venta.email, `Tu boleto pasó a ${venta.funcionNombre} — EL GORILA`,
           `<p style="font-family:Georgia,serif;font-size:17px;color:#1a1411;line-height:1.5;">
-            Recibimos tu pago de OXXO después de que empezó la función del <strong>${t.deNombre}</strong>.<br><br>
+            Recibimos tu pago ${venta.metodoPago === 'spei' ? 'por transferencia' : 'de OXXO'} después de que empezó la función del <strong>${t.deNombre}</strong>.<br><br>
             No te preocupes: tu boleto quedó para la siguiente función, <strong>${venta.funcionNombre}</strong>,
             a la misma hora. En otro correo te llega tu boleto con código QR.
           </p>`, env);
@@ -3419,6 +3517,14 @@ async function handleCheckout(tid, request, env, ctx) {
   const oxxoMaxMs       = Math.min(Date.now() + 24 * 60 * 60 * 1000, fechaFuncionMs);
   const sessionTtl      = oxxoDisponible ? Math.floor((oxxoMaxMs - Date.now()) / 1000) : RESERVA_TTL;
   const sessionExpiresAt = Math.floor(Date.now() / 1000) + sessionTtl;
+  // SPEI (decisión Os 20 nov 2026): suele llegar en minutos, así que se ofrece
+  // hasta 3 h antes de la función. Si la transferencia cae después de las 18:00,
+  // aplica la misma regla que OXXO (pasa al siguiente sábado). Stripe exige un
+  // Customer YA creado para transferencias (customer_creation no basta), así que
+  // se crea uno sin email justo antes (sin email para no disparar el interstitial
+  // de Link). Si Stripe rechaza SPEI, el checkout reintenta sin SPEI: nunca se cae.
+  const speiDisponible  = (fechaFuncionMs - Date.now()) > 3 * 60 * 60 * 1000;
+  const metodosPago     = ['card', ...(oxxoDisponible ? ['oxxo'] : []), ...(speiDisponible ? ['customer_balance'] : [])];
 
   const params = new URLSearchParams({
     mode:        'payment',
@@ -3428,11 +3534,15 @@ async function handleCheckout(tid, request, env, ctx) {
     locale:                             'es',
     // Aparece en la ficha OXXO y en el recibo de Stripe.
     'payment_intent_data[description]': 'EL GORILA con Humberto Dupeyrón',
-    'payment_method_types[0]':          'card',
+    ...Object.fromEntries(metodosPago.map((m, i) => [`payment_method_types[${i}]`, m])),
+    'metadata[pasaSiguiente]':  hayFuncionPosterior ? '1' : '0',
     ...(oxxoDisponible ? {
-      'payment_method_types[1]': 'oxxo',
       'payment_method_options[oxxo][expires_after_days]': String(oxxoDias),
       'metadata[oxxoPasaSiguiente]': hayFuncionPosterior ? '1' : '0',
+    } : {}),
+    ...(speiDisponible ? {
+      'payment_method_options[customer_balance][funding_type]':        'bank_transfer',
+      'payment_method_options[customer_balance][bank_transfer][type]': 'mx_bank_transfer',
     } : {}),
     ...(modoEmbebido
       ? { ui_mode: 'embedded', return_url: `${baseUrl}/confirmacion.html?session_id={CHECKOUT_SESSION_ID}&teatro=${canonical}` }
@@ -3486,16 +3596,44 @@ async function handleCheckout(tid, request, env, ctx) {
     params.set(`line_items[${idx}][quantity]`,                              String(item.cantidad));
   });
 
+  const stripeHeaders = {
+    Authorization:  `Bearer ${env.STRIPE_SECRET_KEY}`,
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+  const quitarSpei = () => {
+    params.delete('customer');
+    params.delete('payment_method_options[customer_balance][funding_type]');
+    params.delete('payment_method_options[customer_balance][bank_transfer][type]');
+    for (const [k, v] of [...params.entries()]) {
+      if (k.startsWith('payment_method_types[') && v === 'customer_balance') params.delete(k);
+    }
+  };
+
   try {
-    const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-      method:  'POST',
-      headers: {
-        Authorization:  `Bearer ${env.STRIPE_SECRET_KEY}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
+    if (speiDisponible) {
+      try {
+        const cRes = await fetch('https://api.stripe.com/v1/customers', {
+          method: 'POST', headers: stripeHeaders,
+          body: new URLSearchParams({ 'metadata[teatroId]': canonical, 'metadata[origen]': 'checkout_web' }).toString(),
+        });
+        const cust = await cRes.json();
+        if (cRes.ok && cust.id) params.set('customer', cust.id); else quitarSpei();
+      } catch { quitarSpei(); }
+    }
+
+    let stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST', headers: stripeHeaders, body: params.toString(),
     });
-    const session = await stripeRes.json();
+    let session = await stripeRes.json();
+    if (!stripeRes.ok && params.has('payment_method_options[customer_balance][funding_type]')) {
+      // SPEI rechazado: se registra y se reintenta solo con tarjeta/OXXO.
+      logError('stripe.checkout_spei', { error: session.error?.message || 'Stripe error', teatroId: tid, fecha });
+      quitarSpei();
+      stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+        method: 'POST', headers: stripeHeaders, body: params.toString(),
+      });
+      session = await stripeRes.json();
+    }
     if (!stripeRes.ok) throw new Error(session.error?.message || 'Stripe error');
     await vincularSessionAlHold(tid, fecha, reservaId, session.id, env);
     ctx.waitUntil(registrarMetricaCheckout(env, metricaFromVenta({
@@ -3599,10 +3737,16 @@ async function handleWebhook(request, env, ctx) {
     // Solo procesamos si payment_status === 'paid'. El pago real llega por async_payment_succeeded.
     if (session.payment_status === 'unpaid') {
       // Correo al comprador + aviso al equipo + registro visible en el admin.
-      if ((session.payment_method_types || []).includes('oxxo')) {
+      // Solo OXXO y SPEI llegan aquí sin pagar; el método real sale del PaymentIntent.
+      const metodoPend = await metodoAsyncDeSesion(session, env);
+      if (metodoPend === 'spei') {
+        ctx.waitUntil(enviarEmailSpeiPendiente(session, meta, tid, env));
+        ctx.waitUntil(notificarAdminSpeiPendiente(session, meta, tid, env));
+        ctx.waitUntil(guardarOxxoPendiente(session, meta, tid, env, 'spei'));
+      } else if ((session.payment_method_types || []).includes('oxxo')) {
         ctx.waitUntil(enviarEmailOxxoPendiente(session, meta, tid, env));
         ctx.waitUntil(notificarAdminOxxoPendiente(session, meta, tid, env));
-        ctx.waitUntil(guardarOxxoPendiente(session, meta, tid, env));
+        ctx.waitUntil(guardarOxxoPendiente(session, meta, tid, env, 'oxxo'));
       }
       return new Response('ok', { status: 200 });
     }
@@ -3681,7 +3825,8 @@ async function handleWebhook(request, env, ctx) {
 
   // Método REAL usado (no la lista de métodos ofrecidos): OXXO se confirma por
   // async_payment_succeeded; la tarjeta en línea por checkout.session.completed.
-  const metodoPago = esAsyncPago ? 'oxxo' : 'card';
+  // SPEI también llega por async_payment_succeeded (20 nov 2026).
+  const metodoPago = esAsyncPago ? await metodoAsyncDeSesion(session, env) : 'card';
 
   const venta = {
     teatroId:     tid,
@@ -3717,7 +3862,7 @@ async function handleWebhook(request, env, ctx) {
   if (oxxoTardio) ctx.waitUntil(avisarOxxoTardio(venta, oxxoTardio, env));
   // Pago confirmado: ya existe la venta real, quitar el pendiente OXXO del admin
   // (se va a Ventas) y, si era OXXO, dejar registro en el historial como completada.
-  if (metodoPago === 'oxxo') {
+  if (metodoPago === 'oxxo' || metodoPago === 'spei') {
     ctx.waitUntil((async () => {
       let pendiente = null;
       try {
