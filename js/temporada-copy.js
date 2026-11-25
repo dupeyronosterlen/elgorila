@@ -15,7 +15,7 @@
  *   data-temporada-conteo-solo  → "solo 6 sábados" (para frases que ya dicen "Sí: …")
  *   data-temporada-rango        → "del 15 de agosto al 19 de septiembre"
  *   data-proxima-encabezado     → "Próxima función: sábado 26 de septiembre"
- *                                 (salta agotadas; cambia el mismo día a las 20:00)
+ *                                 (salta agotadas; cambia el mismo día a las 17:30, al cerrar la venta)
  *
  * Alargar la temporada = agregar fechas en fechas.js. Nada más.
  */
@@ -55,16 +55,25 @@
                'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
-  /** Encabezado de sobre-la-obra: próxima función a la venta, sin hora. Pasa a
-   *  la siguiente el mismo día a las 20:00 (igual que la barra de escasez). */
-  function aplicarEncabezado() {
+  /** Funciones que todavía se pueden comprar en línea, en orden. La del día
+   *  sale de la lista cuando boletos cierra la venta (30 min antes, 17:30),
+   *  para no anunciar una fecha que ya no se puede comprar. */
+  function funcionesALaVenta() {
     var FM = window.FechasManager;
     var lista = window.FUNCIONES_TEMPORADA;
-    if (!FM || !Array.isArray(lista) || typeof FM.pasadaParaConteoOferta !== 'function') return;
-    var f = lista.filter(function (x) {
+    if (!FM || !Array.isArray(lista) || typeof FM.estaBloqueada !== 'function') return null;
+    return lista.filter(function (x) {
       return x.activa !== false && !x.atenuada && x.agotada !== true &&
-        !FM.pasadaParaConteoOferta(x.fecha_iso, x);
-    }).sort(function (a, b) { return a.fecha_iso < b.fecha_iso ? -1 : 1; })[0];
+        !FM.estaBloqueada(x.fecha_iso, x);
+    }).sort(function (a, b) { return a.fecha_iso < b.fecha_iso ? -1 : 1; });
+  }
+
+  /** Encabezado de sobre-la-obra: próxima función a la venta, sin hora. Pasa a
+   *  la siguiente el mismo día a las 17:30, cuando cierra la venta en línea. */
+  function aplicarEncabezado() {
+    var fns = funcionesALaVenta();
+    if (!fns) return;
+    var f = fns[0];
     var txt = 'Nuevas fechas pronto en CDMX'; // temporada terminada o todo agotado
     if (f) {
       var p = f.fecha_iso.split('-').map(Number);
@@ -83,14 +92,15 @@
   /** Urgencia de tiempo (no de lugares): «Últimas funciones» mientras quede
     temporada. Sale de la misma lista que el resto del copy. */
   function aplicarUrgencia() {
-    var FM = window.FechasManager;
-    var lista = window.FUNCIONES_TEMPORADA;
-    if (!FM || !Array.isArray(lista) || typeof FM.pasadaParaConteoOferta !== 'function') return;
-    var fns = lista.filter(function (f) {
-      return f.activa !== false && !f.atenuada && f.agotada !== true &&
-        !FM.pasadaParaConteoOferta(f.fecha_iso, f);
-    }).sort(function (a, b) { return a.fecha_iso < b.fecha_iso ? -1 : 1; });
-    if (!fns.length) return;
+    var fns = funcionesALaVenta();
+    if (!fns || !fns.length) {
+      // Temporada terminada: sin «Últimas funciones» ni fecha en el botón.
+      document.querySelectorAll('[data-urgencia-temporada]').forEach(function (el) { el.hidden = true; });
+      document.querySelectorAll('[data-cta-proxima]').forEach(function (el) {
+        if (el.dataset.ctaOriginal) el.textContent = el.dataset.ctaOriginal;
+      });
+      return;
+    }
     var txt = fns.length === 1 ? 'Última función' : 'Últimas funciones';
     document.querySelectorAll('[data-urgencia-temporada]').forEach(function (el) {
       el.textContent = txt;
@@ -99,8 +109,41 @@
     var p0 = fns[0].fecha_iso.split('-').map(Number);
     var cta = 'Reservar mi lugar · ' + p0[2] + ' ' + MESES[p0[1] - 1].slice(0, 3) + ' →';
     document.querySelectorAll('[data-cta-proxima]').forEach(function (el) {
+      if (!el.dataset.ctaOriginal) el.dataset.ctaOriginal = el.textContent.trim();
       el.textContent = cta;
     });
+  }
+
+  /** "Próximo sábado 5 de diciembre · 18:00" — misma lista que el encabezado,
+   *  para que la página entera cambie de fecha al mismo tiempo. */
+  function aplicarProxima() {
+    var fns = funcionesALaVenta();
+    if (!fns) return;
+    var txt = 'Nuevas fechas pronto en CDMX';
+    if (fns.length) {
+      var p = fns[0].fecha_iso.split('-').map(Number);
+      var d = new Date(p[0], p[1] - 1, p[2]);
+      var fechaLarga = d.getDate() + ' de ' + MESES[d.getMonth()];
+      var hora = '18:00';
+      if (window.FechasManager && typeof window.FechasManager.horaDeFuncion === 'function') {
+        var hm = window.FechasManager.horaDeFuncion(fns[0]);
+        hora = String(hm.h).padStart(2, '0') + ':' + String(hm.min).padStart(2, '0');
+      }
+      txt = d.getDay() === 6
+        ? 'Próximo sábado ' + fechaLarga + ' · ' + hora
+        : 'Próxima función · ' + DIAS[d.getDay()] + ' ' + fechaLarga + ' · ' + hora;
+    }
+    document.querySelectorAll('[data-proxima-funcion]').forEach(function (el) {
+      if (el.textContent !== txt) el.textContent = txt;
+    });
+  }
+
+  /** Lo que depende de la hora: se recalcula cada minuto por si la pestaña
+   *  queda abierta mientras cierra la venta del sábado. */
+  function aplicarSegunHora() {
+    aplicarEncabezado();
+    aplicarUrgencia();
+    aplicarProxima();
   }
 
   function aplicar() {
@@ -115,15 +158,7 @@
       'data-temporada-rango':       r.rango,
     };
 
-    var proxima = '';
-    if (window.FechasManager && typeof window.FechasManager.etiquetaProximaFuncion === 'function') {
-      proxima = window.FechasManager.etiquetaProximaFuncion();
-    }
-    if (proxima) {
-      document.querySelectorAll('[data-proxima-funcion]').forEach(function (el) {
-        el.textContent = proxima;
-      });
-    }
+    aplicarProxima();
 
     if (window.FechasManager && typeof window.FechasManager.etiquetaCountdownProxima === 'function') {
       var countdown = window.FechasManager.etiquetaCountdownProxima();
@@ -188,6 +223,6 @@
 
   // El backend puede desactivar fechas (admin) — recalcular al sincronizar.
   window.addEventListener('temporada:sincronizada', aplicar);
-  // Pestaña abierta durante el sábado: el encabezado cambia solo a las 20:00.
-  setInterval(aplicarEncabezado, 60000);
+  // Pestaña abierta durante el sábado: todo cambia solo a las 17:30.
+  setInterval(aplicarSegunHora, 60000);
 })();
