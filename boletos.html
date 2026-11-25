@@ -122,6 +122,10 @@ a   { color: inherit; }
 .logo-37-cargando { opacity: 0; transition: opacity .2s ease-out; }
 .logo-37-loaded   { opacity: 1; }
 @media (max-width: 767px) {
+  /* Celular: los logos se quedan arriba de la página y se van con el scroll.
+     Fijos tapaban fechas y botones (+/−) y, al tocarlos, mandaban al inicio. */
+  .logo-gorila-sello,
+  .logo-37-sello { position: absolute !important; }
   .logo-gorila-sello { left: max(0.5rem, env(safe-area-inset-left)) !important; }
   .logo-gorila-sello img { height: clamp(2.5rem, 7vw, 3.5rem) !important; }
   .logo-37-sello img { height: clamp(4rem, 14vw, 6rem) !important; }
