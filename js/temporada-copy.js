@@ -78,7 +78,11 @@
     if (f) {
       var p = f.fecha_iso.split('-').map(Number);
       var d = new Date(p[0], p[1] - 1, p[2]);
-      var diasQueFaltan = Math.round((d - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) / 86400000);
+      // "Hoy" / "Mañana" según el calendario de CDMX, no el de la compu del visitante.
+      var FMh = window.FechasManager;
+      var hoyIso = (FMh && typeof FMh.hoyCDMXIso === 'function') ? FMh.hoyCDMXIso() : null;
+      var h0 = hoyIso ? hoyIso.split('-').map(Number) : [new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()];
+      var diasQueFaltan = Math.round((Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(h0[0], h0[1] - 1, h0[2])) / 86400000);
       var fechaLarga = DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()];
       if (diasQueFaltan === 0)      txt = 'Hoy ' + fechaLarga + ' · 18:00';
       else if (diasQueFaltan === 1) txt = 'Mañana ' + fechaLarga + ' · 18:00';

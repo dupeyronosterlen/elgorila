@@ -8,7 +8,7 @@
 <script src="js/utm.js"></script>
 <script src="js/analytics.js?v=20260930capi1" data-viewcontent="funciones"></script>
 <!-- Conteo y rango de temporada en vivo (fechas.js es la fuente de verdad) -->
-<script src="js/fechas.js?v=20261102a" defer></script>
+<script src="js/fechas.js?v=20261125tz" defer></script>
 <script src="js/temporada-copy.js" defer></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1426,14 +1426,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 (function () {
   // Oculta filas ya pasadas (fecha de función + 18:15, mismo corte que el
   // selector interactivo): solo se ven las funciones que quedan.
-  var hoy = new Date();
+  // Corte en hora de CDMX (UTC−6 fijo), sin importar el huso del visitante.
+  var ahora = Date.now();
   var tbody = document.querySelector('table.calendario tbody');
   if (!tbody) return;
   var quedan = 0;
   tbody.querySelectorAll('tr[data-fecha]').forEach(function (tr) {
     var partes = tr.dataset.fecha.split('-').map(Number);
-    var corte = new Date(partes[0], partes[1] - 1, partes[2], 18, 15, 0);
-    if (hoy >= corte) tr.hidden = true; else quedan++;
+    var corte = Date.UTC(partes[0], partes[1] - 1, partes[2], 18 + 6, 15, 0);
+    if (ahora >= corte) tr.hidden = true; else quedan++;
   });
   // El separador "La temporada continúa" solo tiene sentido si arriba
   // todavía hay fechas visibles.

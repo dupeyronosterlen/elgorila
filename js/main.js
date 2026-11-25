@@ -576,7 +576,7 @@ function actualizarPantalla() {
                 // el cliente sigue pudiendo escribir el código a mano al pagar.
                 promoBanner.className = 'promo-grupo-banner';
                 promoBanner.innerHTML =
-                    'Pareja: ingresa el código <strong>ESPEJO</strong> al pagar — 2 generales por <strong>$600</strong> · máx. 10 por sábado';
+                    'Pareja: ingresa el código <strong>ESPEJO</strong> al pagar — 2 generales por <strong>$600</strong> · máximo 10 cupones por función';
             }
         } else if (
             gen >= CUPON_GRUPO20_MIN
@@ -851,7 +851,7 @@ function mostrarCheckoutInline(orden) {
         const soloGenerales = items.length > 0 && items.every(it => it.tipo === 'general');
         const calificaEspejo = soloGenerales && generales && generales.cantidad === 2 && !orden.promoManual;
         if (calificaEspejo && typeof _espejoRestantes === 'number' && _espejoRestantes > 0) {
-            hintEl.innerHTML = '🎉 Calificas para el cupón <strong>ESPEJO</strong>: 2 generales por <strong>$600</strong> total · máx. 10 por función · <span style="text-decoration:underline;">toca aquí para aplicarlo</span>';
+            hintEl.innerHTML = '🎉 Calificas para el cupón <strong>ESPEJO</strong>: 2 generales por <strong>$600</strong> total · máximo 10 cupones por función · <span style="text-decoration:underline;">toca aquí para aplicarlo</span>';
             hintEl.hidden = false;
             hintEl.style.cursor = 'pointer';
             hintEl.onclick = function () {
@@ -879,7 +879,7 @@ function mostrarCheckoutInline(orden) {
         const calificaGrupo20 = soloGenerales && cantGeneral >= CUPON_GRUPO20_MIN && !orden.promoManual;
         if (calificaGrupo20 && typeof _grupo20Restantes === 'number' && _grupo20Restantes > 0) {
             const pct = Math.round(CUPON_GRUPO20_PCT * 100);
-            hintGrupo20El.innerHTML = '🎉 Calificas para el cupón <strong>GRUPO20</strong>: −' + pct + '% en tus ' + cantGeneral + ' generales · máx. 5 por función · <span style="text-decoration:underline;">toca aquí para aplicarlo</span>';
+            hintGrupo20El.innerHTML = '🎉 Calificas para el cupón <strong>GRUPO20</strong>: −' + pct + '% en tus ' + cantGeneral + ' generales · máximo 5 cupones por función · <span style="text-decoration:underline;">toca aquí para aplicarlo</span>';
             hintGrupo20El.hidden = false;
             hintGrupo20El.style.cursor = 'pointer';
             hintGrupo20El.onclick = function () {

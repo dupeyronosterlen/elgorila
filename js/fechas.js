@@ -102,18 +102,34 @@ const FechasManager = {
     return `${dias[fecha.getDay()]} ${fecha.getDate()} ${meses[fecha.getMonth()]} ${fecha.getFullYear()} - ${h}:${min} hrs`;
   },
 
+  /**
+   * Hora de CDMX → instante real. Todos los cortes (venta, "ya pasó", etc.)
+   * se miden en hora de la Ciudad de México, no en la de la compu del
+   * visitante (alguien en España o EE. UU. vería cortes desfasados).
+   * CDMX es UTC−6 fijo: México quitó el horario de verano en 2022.
+   */
+  fechaCDMX(y, m, d, h = 0, min = 0, s = 0) {
+    return new Date(Date.UTC(y, m - 1, d, h + 6, min, s));
+  },
+
+  /** Fecha de hoy en CDMX como 'YYYY-MM-DD'. */
+  hoyCDMXIso() {
+    const t = new Date(Date.now() - 6 * 3600 * 1000);
+    return t.getUTCFullYear() + '-' + String(t.getUTCMonth() + 1).padStart(2, '0') + '-' + String(t.getUTCDate()).padStart(2, '0');
+  },
+
   estaBloqueada(fecha_iso, f) {
     const [y, m, d] = fecha_iso.split('-').map(Number);
     const fn = f || FUNCIONES_TEMPORADA.find(x => x.fecha_iso === fecha_iso);
     const { h: hh, min: mm } = this.horaDeFuncion(fn);
-    const fechaFuncion = new Date(y, m - 1, d, hh, mm);
+    const fechaFuncion = this.fechaCDMX(y, m, d, hh, mm);
     const diff = (fechaFuncion - new Date()) / (1000 * 60);
     return diff <= this.CONFIG.MINUTOS_BLOQUEO;
   },
 
   yaPaso(fecha_iso) {
     const [y, m, d] = fecha_iso.split('-').map(Number);
-    return new Date() > new Date(y, m - 1, d, 23, 59, 59);
+    return new Date() > this.fechaCDMX(y, m, d, 23, 59, 59);
   },
 
   /**
@@ -124,9 +140,9 @@ const FechasManager = {
     const [y, m, d] = fecha_iso.split('-').map(Number);
     const fn = f || FUNCIONES_TEMPORADA.find(x => x.fecha_iso === fecha_iso);
     const { h: hh, min: mm } = this.horaDeFuncion(fn);
-    const show = new Date(y, m - 1, d, hh, mm);
+    const show = this.fechaCDMX(y, m, d, hh, mm);
     if (show > new Date()) return false;
-    const cutoff = new Date(y, m - 1, d, 20, 0, 0);
+    const cutoff = this.fechaCDMX(y, m, d, 20, 0, 0);
     return new Date() >= cutoff;
   },
 
@@ -199,7 +215,7 @@ const FechasManager = {
     const { h, min } = this.horaDeFuncion(fn);
     return {
       fecha_iso: r.primera,
-      fecha: new Date(y, m - 1, d, h, min),
+      fecha: this.fechaCDMX(y, m, d, h, min),
       fn,
       nRestantes: r.n,
       numeroObra: this.numeroObraDeFuncion(fn, r.primera),
