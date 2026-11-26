@@ -476,6 +476,14 @@ body:has(.barra-reserva-fija:disabled) .barra-reserva-spacer {
 .ichk-trust-logo--visa { color: #1a1f71; font-style: italic; }
 .ichk-trust-logo--mc { color: #eb001b; }
 .ichk-trust-logo--oxxo { background: #ffd100; color: #1a1411; font-weight: 700; }
+.ichk-trust-logo--spei { color: #0b4f8a; font-weight: 700; letter-spacing: .08em; }
+@media (max-width: 767px) {
+  /* Celular: apretar espacios para que Comprar y los métodos de pago
+     quepan en la misma pantalla que el resumen. */
+  #inline-checkout .ichk-btn-editar { margin-bottom: 14px; }
+  #inline-checkout #btn-pagar-inline { margin-bottom: 8px; }
+  .ichk-trust-logos { margin: 8px 0 4px; }
+}
 
 /* ── CABECERA DE PORTADA (compacta) ──────────────────────── */
 .cover-section {
@@ -1722,13 +1730,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span class="ichk-trust-logo ichk-trust-logo--visa">VISA</span>
       <span class="ichk-trust-logo ichk-trust-logo--mc">Mastercard</span>
       <span class="ichk-trust-logo ichk-trust-logo--oxxo">OXXO</span>
+      <span class="ichk-trust-logo ichk-trust-logo--spei">SPEI</span>
     </div>
     <!-- Nota de seguridad -->
     <p class="ichk-seguridad" aria-label="Pago seguro">
       🔒 Compra 100% segura · Conexión cifrada · Procesado por Stripe
     </p>
     <p style="font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:rgba(26,20,17,.45);text-align:center;margin-top:-6px;">
-      Pago en OXXO disponible hasta 24 hrs antes de la función
+      OXXO hasta 24 hrs antes · SPEI (transferencia) hasta 3 hrs antes de la función
     </p>
     <p style="font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:rgba(26,20,17,.42);text-align:center;margin-top:8px;line-height:1.45;">
       Esta taquilla no cobra cargo por servicio.
@@ -1835,7 +1844,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/temporada-copy.js"></script>
 <script src="js/testimonios.js?v=20260817t1"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js?v=20261125cupones"></script>
+<script src="js/main.js?v=20261126spei"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {

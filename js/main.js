@@ -790,16 +790,32 @@ function desplazarACheckoutInline(panel) {
     if (!panel) return;
     const movil = window.matchMedia('(max-width: 767px)').matches;
 
+    // Objetivo: que en una sola pantalla se vean el resumen, el botón Comprar
+    // y los métodos de pago. Si todo el panel cabe, se alinea arriba; si no,
+    // se baja lo justo para que asomen los logos de pago, sin esconder el
+    // inicio del resumen (fecha y boletos).
+    const calcularY = function () {
+        const sy = window.pageYOffset;
+        const yPanel = panel.getBoundingClientRect().top + sy;
+        const resumen = panel.querySelector('.ichk-resumen');
+        const logos = panel.querySelector('.ichk-trust-logos') || document.getElementById('btn-pagar-inline');
+        if (!resumen || !logos) return yPanel;
+        const yResumen = resumen.getBoundingClientRect().top + sy - 12;
+        const yLogosFin = logos.getBoundingClientRect().bottom + sy + 16;
+        const necesario = yLogosFin - window.innerHeight;
+        return Math.max(yPanel, Math.min(necesario, yResumen));
+    };
+
     const alinear = function () {
+        const y = Math.max(0, calcularY());
         if (!movil) {
-            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            window.scrollTo({ top: y, behavior: 'smooth' });
             return;
         }
-        const y = panel.getBoundingClientRect().top + window.pageYOffset;
         const html = document.documentElement;
         const prev = html.style.scrollBehavior;
         html.style.scrollBehavior = 'auto';
-        window.scrollTo(0, Math.max(0, y));
+        window.scrollTo(0, y);
         html.style.scrollBehavior = prev;
     };
 
