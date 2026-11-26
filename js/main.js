@@ -797,10 +797,11 @@ function desplazarACheckoutInline(panel) {
     const calcularY = function () {
         const sy = window.pageYOffset;
         const yPanel = panel.getBoundingClientRect().top + sy;
-        const resumen = panel.querySelector('.ichk-resumen');
+        // Tope: que siga visible el renglón de la fecha (primer dato del resumen).
+        const resumen = panel.querySelector('.ichk-resumen .ichk-item-fila') || panel.querySelector('.ichk-resumen');
         const logos = panel.querySelector('.ichk-trust-logos') || document.getElementById('btn-pagar-inline');
         if (!resumen || !logos) return yPanel;
-        const yResumen = resumen.getBoundingClientRect().top + sy - 12;
+        const yResumen = resumen.getBoundingClientRect().top + sy - 10;
         const yLogosFin = logos.getBoundingClientRect().bottom + sy + 16;
         const necesario = yLogosFin - window.innerHeight;
         return Math.max(yPanel, Math.min(necesario, yResumen));

@@ -483,6 +483,26 @@ body:has(.barra-reserva-fija:disabled) .barra-reserva-spacer {
   #inline-checkout .ichk-btn-editar { margin-bottom: 14px; }
   #inline-checkout #btn-pagar-inline { margin-bottom: 8px; }
   .ichk-trust-logos { margin: 8px 0 4px; }
+  /* Aviso «en el siguiente paso…» más compacto (en Android angosto ocupaba 4 renglones) */
+  #inline-checkout p.ichk-hint { font-size: 11px; letter-spacing: .06em; line-height: 1.45 !important; margin: 0 0 10px !important; }
+  #inline-checkout .ichk-cupon-details summary { padding-top: 10px; padding-bottom: 10px; font-size: 15px; }
+}
+/* Celulares angostos (≤ 359 px): los 5 logos de pago en un solo renglón. */
+@media (max-width: 359px) {
+  .ichk-trust-logos { gap: 6px; }
+  .ichk-trust-logo { min-width: 0; height: 24px; padding: 0 6px; font-size: 8px; }
+}
+/* Celulares de pantalla baja (≤ 720 px de alto): todo más compacto para que
+   resumen, Comprar y métodos de pago quepan en una sola pantalla. */
+@media (max-width: 767px) and (max-height: 720px) {
+  #inline-checkout .ichk-resumen { padding-top: 10px; padding-bottom: 12px; }
+  #inline-checkout .ichk-item-fila, #inline-checkout .ichk-suma-fila { padding: 4px 0; }
+  #inline-checkout .ichk-total-fila { padding-top: 8px; margin-top: 4px; }
+  #inline-checkout .ichk-asientos-nota { font-size: 13px; margin-top: 8px; padding-top: 8px; }
+  #inline-checkout .ichk-btn-editar { padding: 8px 12px; margin-bottom: 10px; }
+  #inline-checkout .ichk-cupon-details summary { padding: 7px 12px; font-size: 14px; }
+  #inline-checkout .ichk-cupon-wrap { margin-bottom: 10px; }
+  #inline-checkout #btn-pagar-inline { height: 54px; font-size: 21px; }
 }
 
 /* ── CABECERA DE PORTADA (compacta) ──────────────────────── */
@@ -1154,6 +1174,16 @@ details[open] .faq-chevron { transform: rotate(45deg); }
   font-size: 34px; font-weight: 500; line-height: .88;
 }
 .ichk-desc-val { color: #2a7a44; }
+@media (max-width: 767px) {
+  /* Pantallas chicas: nada se sale del cuadro del resumen. Si el total no
+     cabe junto a «Total a pagar», baja a su propio renglón (alineado a la
+     derecha) y su tamaño se ajusta al ancho del celular. */
+  .ichk-resumen { padding: 16px 16px; }
+  .ichk-item-fila, .ichk-suma-fila, .ichk-total-fila { flex-wrap: wrap; row-gap: 4px; }
+  .ichk-etiq { flex-shrink: 1; min-width: 0; letter-spacing: .12em; }
+  .ichk-val { min-width: 0; overflow-wrap: anywhere; margin-left: auto; }
+  .ichk-val.grande { font-size: clamp(24px, 8.5vw, 34px); line-height: 1; white-space: nowrap; }
+}
 .ichk-asientos-nota {
   margin: 12px 0 0;
   padding-top: 12px;
@@ -1844,7 +1874,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/temporada-copy.js"></script>
 <script src="js/testimonios.js?v=20260817t1"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js?v=20261126spei"></script>
+<script src="js/main.js?v=20261126android"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {
