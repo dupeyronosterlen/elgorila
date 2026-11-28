@@ -100,17 +100,35 @@
     if (!fns || !fns.length) {
       // Temporada terminada: sin «Últimas funciones» ni fecha en el botón.
       document.querySelectorAll('[data-urgencia-temporada]').forEach(function (el) { el.hidden = true; });
+      document.querySelectorAll('[data-urgencia-bloque]').forEach(function (el) { el.hidden = true; });
       document.querySelectorAll('[data-cta-proxima]').forEach(function (el) {
         if (el.dataset.ctaOriginal) el.textContent = el.dataset.ctaOriginal;
       });
       return;
     }
-    var txt = fns.length === 1 ? 'Última función' : 'Últimas funciones';
+    // «Últimas 2 funciones de la temporada» → «Última función de la temporada».
+    // El número sale de la lista, así que baja solo conforme pasan las fechas.
+    var txt = fns.length === 1
+      ? 'Última función de la temporada'
+      : 'Últimas ' + fns.length + ' funciones de la temporada';
     document.querySelectorAll('[data-urgencia-temporada]').forEach(function (el) {
       el.textContent = txt;
       el.hidden = false;
     });
     var p0 = fns[0].fecha_iso.split('-').map(Number);
+    // Banner de boletos: «Últimas 2 funciones · sábados 18:00» →
+    // «Última función · sábado 12 dic · 18:00» (con una sola, se dice cuál).
+    var corta = fns.length === 1 ? 'Última función' : 'Últimas ' + fns.length + ' funciones';
+    var dias = fns.length === 1
+      ? DIAS[new Date(p0[0], p0[1] - 1, p0[2]).getDay()] + ' ' + p0[2] + ' ' + MESES[p0[1] - 1].slice(0, 3) + ' · 18:00'
+      : 'sábados 18:00';
+    document.querySelectorAll('[data-urgencia-corta]').forEach(function (el) {
+      if (el.textContent !== corta) el.textContent = corta;
+    });
+    document.querySelectorAll('[data-urgencia-dias]').forEach(function (el) {
+      if (el.textContent !== dias) el.textContent = dias;
+    });
+    document.querySelectorAll('[data-urgencia-bloque]').forEach(function (el) { el.hidden = false; });
     var cta = 'Reservar mi lugar · ' + p0[2] + ' ' + MESES[p0[1] - 1].slice(0, 3) + ' →';
     document.querySelectorAll('[data-cta-proxima]').forEach(function (el) {
       if (!el.dataset.ctaOriginal) el.dataset.ctaOriginal = el.textContent.trim();

@@ -202,6 +202,7 @@ body { padding-top: 0; }
   background: rgba(212,58,26,.15); border: 1px solid rgba(212,58,26,.4);
   padding: 6px 10px; margin-bottom: 10px;
 }
+.bofu-urgencia[hidden] { display: none; }
 .bofu-urgencia-sep { opacity: .45; }
 .bofu-about-link {
   margin: -4px 0 12px;
@@ -1566,10 +1567,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- ══ TAQUILLA BOFU ═══════════════════════════════════════════ -->
 <section class="sd--mid" id="main-content">
   <div class="inner">
-    <p class="bofu-urgencia" role="status">
-      <span>Últimas funciones</span>
+    <p class="bofu-urgencia" role="status" data-urgencia-bloque>
+      <span data-urgencia-corta>Últimas funciones</span>
       <span class="bofu-urgencia-sep" aria-hidden="true">·</span>
-      <span>sábados 18:00</span>
+      <span data-urgencia-dias>sábados 18:00</span>
       <span class="bofu-urgencia-sep" aria-hidden="true">·</span>
       <span>desde $280</span>
     </p>
@@ -1910,7 +1911,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </script>
 <script src="js/inventario.js?v=20260813-cupo"></script>
 <script src="js/fechas.js?v=20261127sin5dic"></script>
-<script src="js/temporada-copy.js"></script>
+<script src="js/temporada-copy.js?v=20261128ultx"></script>
 <script src="js/testimonios.js?v=20260817t1"></script>
 <script src="js/imagenes.js"></script>
 <script src="js/main.js?v=20261128cancelada"></script>
