@@ -462,6 +462,47 @@ function _nombreTipoEmergencia(tipo, precio) {
 
 /** Resumen legible para taquilla: "1 boleto general ($400) · 1 boleto especial ($280)" */
 function _resumenEmergencia(venta) {
+    const base = _resumenEmergenciaBase(venta);
+    if (!venta || venta.cortesia || (venta.metodoPago || '').toLowerCase() === 'cortesia') return base;
+    const cupon = (venta.codigoCupon || '').trim();
+    if (!cupon) return base;
+    // Con promo, el precio de lista ($400) confundía: la taquilla lo anotaba
+    // como 2 × $400. Se muestra la promo y lo que realmente costó cada boleto.
+    // Ej. ESPEJO: «PROMO ESPEJO» · «2 boletos general — $300 c/u».
+    // Las promos (ESPEJO, GRUPO20, ANTIFAZ) solo bajan los generales: los de
+    // credencial quedan a su precio y el resto de lo pagado se reparte entre
+    // los generales.
+    const lineas = [`PROMO ${cupon.toUpperCase()}`];
+    const pagado = (venta.total != null && Number.isFinite(Number(venta.total))) ? Number(venta.total) : null;
+    const items = (venta.items || []).filter(i => (i.cantidad || 0) > 0);
+    const sinPrecio = l => l.replace(/\s*\(\$\d+\)/, '');
+    const fmt = n => '$' + (Math.round(n * 100) / 100).toLocaleString('es-MX');
+    const esCred = t => ['estudiante', 'inapam', 'maestro'].includes(String(t || '').toLowerCase());
+    let unitGeneral = null;
+    if (pagado != null && items.length) {
+        const cred = items.filter(i => esCred(i.tipo))
+            .reduce((s, i) => s + i.cantidad * _precioTipoEmergencia(i.tipo, venta.fechaCompra), 0);
+        const nGen = items.filter(i => !esCred(i.tipo)).reduce((s, i) => s + i.cantidad, 0);
+        if (nGen > 0 && pagado - cred > 0) unitGeneral = (pagado - cred) / nGen;
+    }
+    if (items.length && (unitGeneral != null || pagado == null)) {
+        items.forEach(i => {
+            const lista = _precioTipoEmergencia(i.tipo, venta.fechaCompra);
+            // Orden usada en parte (un solo tipo): solo lo que falta por entrar.
+            const cant = base.parcialUnTipo ? venta.pendientes : i.cantidad;
+            const desc = `${cant} boleto${cant === 1 ? '' : 's'} ${_nombreTipoEmergencia(i.tipo, lista)}`;
+            const unit = esCred(i.tipo) ? lista : unitGeneral;
+            lineas.push(unit != null ? `${desc} — ${fmt(unit)} c/u` : desc);
+        });
+        // Líneas extra del resumen base (p. ej. «2 pendiente(s) de esta orden»).
+        lineas.push(...base.lineas.slice((venta.items || []).length));
+    } else {
+        lineas.push(...base.lineas.map(sinPrecio));
+    }
+    return { total: base.total, lineas, texto: lineas.join(' · ') };
+}
+
+function _resumenEmergenciaBase(venta) {
     if (!venta) return { total: 0, lineas: ['Sin datos'], texto: 'Sin datos' };
 
     if (venta.cortesia || (venta.metodoPago || '').toLowerCase() === 'cortesia') {
@@ -476,18 +517,25 @@ function _resumenEmergencia(venta) {
     if (venta.esCertificado || (!venta.tipo && (venta.items || []).length)) {
         const items = venta.items || [];
         if (items.length) {
+            const totalItems = items.reduce((s, i) => s + (i.cantidad || 0), 0);
+            const total = venta.pendientes != null ? venta.pendientes : totalItems;
+            // Parcial = ya entró alguien pero todavía falta gente (0 pendientes =
+            // orden completa ya canjeada; ahí se muestra la orden entera).
+            const parcial = venta.pendientes != null && venta.pendientes > 0 && venta.pendientes < totalItems;
+            const unTipo = items.filter(i => (i.cantidad || 0) > 0).length === 1;
             const lineas = items.map(i => {
-                const cant = i.cantidad || 0;
+                // Orden ya usada en parte y de un solo tipo: se describe lo que
+                // FALTA por entrar (coincide con el número grande de arriba).
+                const cant = (parcial && unTipo && (i.cantidad || 0) > 0) ? venta.pendientes : (i.cantidad || 0);
                 const precio = _precioTipoEmergencia(i.tipo, venta.fechaCompra);
                 const nombre = _nombreTipoEmergencia(i.tipo, precio);
                 return `${cant} boleto${cant === 1 ? '' : 's'} ${nombre} ($${precio})`;
             }).filter(Boolean);
-            const totalItems = items.reduce((s, i) => s + (i.cantidad || 0), 0);
-            const total = venta.pendientes != null ? venta.pendientes : totalItems;
-            if (venta.pendientes != null && venta.pendientes < totalItems) {
-                lineas.push(`${venta.pendientes} pendiente(s) de esta orden`);
+            if (parcial) {
+                const yaEntraron = totalItems - venta.pendientes;
+                lineas.push(`Ya ${yaEntraron === 1 ? 'entró' : 'entraron'} ${yaEntraron} de ${totalItems} de esta orden`);
             }
-            return { total, lineas, texto: lineas.join(' · ') };
+            return { total, lineas, texto: lineas.join(' · '), parcialUnTipo: parcial && unTipo };
         }
     }
 
@@ -518,10 +566,15 @@ function _mostrarResultadoEmergencia({ kind, titulo, lineas, total, meta, nombre
     const metaEl = document.getElementById('scanner-emergencia-meta');
     if (!box || !card) return;
 
-    card.classList.remove('ok', 'bad', 'warn');
+    card.classList.remove('ok', 'bad', 'warn', 'pick');
     if (kind === 'ok') card.classList.add('ok');
     else if (kind === 'bad') card.classList.add('bad');
+    else if (kind === 'pick') card.classList.add('pick');
     else card.classList.add('warn');
+    // El selector (cuántos entran) solo se ve en modo «pick»; en los demás
+    // resultados vuelve el botón OK de siempre.
+    document.getElementById('scanner-emergencia-selector')?.classList.toggle('hidden', kind !== 'pick');
+    document.getElementById('btn-emergencia-ok')?.classList.toggle('hidden', kind === 'pick');
 
     if (estado) estado.textContent = titulo || '—';
     // Línea propia para el comprador, arriba del total — nunca metida en la
@@ -551,7 +604,194 @@ function _mostrarResultadoEmergencia({ kind, titulo, lineas, total, meta, nombre
     box.classList.remove('hidden');
 }
 
+// ─── Selector en puerta (28 nov 2026) ─────────────────────────────────────────
+// Antes, al escanear una orden entraban TODOS de golpe. Ahora, si la orden trae
+// 2+ boletos por entrar o alguno con credencial, la tarjeta pregunta cuántos
+// entran (general / con credencial) y qué credencial mostró cada uno
+// (INAPAM, maestro, estudiante). Una orden de 1 boleto general se sigue
+// validando sola, como siempre. Si el servidor todavía no manda
+// «pendientesPorTipo», se queda el comportamiento anterior.
+const _CREDENCIALES_PUERTA = [
+    { id: 'inapam', label: 'INAPAM' },
+    { id: 'maestro', label: 'MAESTRO' },
+    { id: 'estudiante', label: 'ESTUDIANTE' },
+];
+const _esTipoCred = t => ['estudiante', 'inapam', 'maestro'].includes(String(t || '').toLowerCase());
+let _sel = null;
+
+function _pendientesSelector(data) {
+    if (!data || data.usado) return null;
+    if (data.esCertificado) {
+        const pt = data.pendientesPorTipo;
+        if (!pt) return null;
+        const general = pt.general || 0;
+        const especial = pt.especial || 0;
+        if (general + especial >= 2 || especial >= 1) return { general, especial };
+        return null;
+    }
+    // QR de una sola entrada con credencial: solo se elige cuál mostró.
+    if (data.tipo && _esTipoCred(data.tipo)) return { general: 0, especial: 1 };
+    return null;
+}
+
+/** Precio por boleto que realmente se pagó (con promo, si hubo). */
+function _preciosUnitarios(venta) {
+    const cortesia = venta.cortesia || (venta.metodoPago || '').toLowerCase() === 'cortesia';
+    const items = (venta.items || []).filter(i => (i.cantidad || 0) > 0);
+    const general = _precioTipoEmergencia('general', venta.fechaCompra);
+    const especial = _precioTipoEmergencia('estudiante', venta.fechaCompra);
+    if (cortesia) return { general: 0, especial: 0, cortesia: true };
+    const cupon = (venta.codigoCupon || '').trim();
+    const pagado = Number(venta.total);
+    if (cupon && Number.isFinite(pagado) && items.length) {
+        const cred = items.filter(i => _esTipoCred(i.tipo)).reduce((s, i) => s + i.cantidad * especial, 0);
+        const nGen = items.filter(i => !_esTipoCred(i.tipo)).reduce((s, i) => s + i.cantidad, 0);
+        if (nGen > 0 && pagado - cred > 0) return { general: (pagado - cred) / nGen, especial, cupon };
+    }
+    return { general, especial, cupon: cupon || null };
+}
+
+function _fmtPrecio(n) {
+    return '$' + (Math.round(n * 100) / 100).toLocaleString('es-MX');
+}
+
+function _renderSelector() {
+    const box = document.getElementById('scanner-emergencia-selector');
+    if (!box || !_sel) return;
+    const { max, elegido, creds } = _sel;
+    const nums = (tipo, n, sel) => Array.from({ length: n + 1 }, (_, k) =>
+        `<button type="button" class="scanner-sel-num${k === sel ? ' on' : ''}" data-tipo="${tipo}" data-n="${k}">${k}</button>`
+    ).join('');
+    let html = '';
+    if (max.general > 0 && (max.general + max.especial > 1)) {
+        html += `<div class="scanner-sel-grupo"><p class="scanner-sel-titulo">General — ¿cuántos entran?</p>
+            <div class="scanner-sel-nums">${nums('general', max.general, elegido.general)}</div></div>`;
+    }
+    if (max.especial > 0) {
+        const titulo = max.especial === 1 && max.general === 0 && !_sel.esOrden
+            ? 'Con credencial — ¿cuál mostró?'
+            : 'Con credencial — ¿cuántos entran?';
+        html += `<div class="scanner-sel-grupo"><p class="scanner-sel-titulo">${titulo}</p>`;
+        if (!(max.especial === 1 && max.general === 0 && !_sel.esOrden)) {
+            html += `<div class="scanner-sel-nums">${nums('especial', max.especial, elegido.especial)}</div>`;
+        }
+        for (let i = 0; i < elegido.especial; i++) {
+            html += `<div class="scanner-sel-credfila">${elegido.especial > 1 ? `<span>${i + 1}</span>` : ''}${
+                _CREDENCIALES_PUERTA.map(c =>
+                    `<button type="button" class="scanner-sel-cred${creds[i] === c.id ? ' on' : ''}" data-cred-i="${i}" data-cred="${c.id}">${c.label}</button>`
+                ).join('')}</div>`;
+        }
+        html += '</div>';
+    }
+    const n = elegido.general + elegido.especial;
+    const faltaCred = creds.slice(0, elegido.especial).filter(Boolean).length < elegido.especial;
+    const txt = n === 0 ? 'Elige cuántos entran'
+        : faltaCred ? 'Elige la credencial'
+        : `Entra${n === 1 ? '' : 'n'} ${n} →`;
+    html += `<button type="button" class="btn-primario scanner-sel-confirmar" id="scanner-sel-confirmar" ${n === 0 || faltaCred ? 'disabled' : ''}>${txt}</button>
+        <button type="button" class="scanner-sel-cancelar" id="scanner-sel-cancelar">Cancelar · no entra nadie</button>`;
+    box.innerHTML = html;
+}
+
+function _onClickSelector(ev) {
+    if (!_sel) return;
+    const b = ev.target.closest('button');
+    if (!b) return;
+    if (b.id === 'scanner-sel-cancelar') { _sel = null; emergenciaOk(); return; }
+    if (b.id === 'scanner-sel-confirmar') { _confirmarSelector(); return; }
+    if (b.dataset.tipo) {
+        _sel.elegido[b.dataset.tipo] = Number(b.dataset.n);
+    } else if (b.dataset.cred) {
+        _sel.creds[Number(b.dataset.credI)] = b.dataset.cred;
+    }
+    _renderSelector();
+}
+
+function _mostrarSelectorEntrada(data, codigo, resumen, meta, nombre, max) {
+    const total = max.general + max.especial;
+    const esOrden = !!data.esCertificado;
+    _sel = {
+        data, codigo, meta, nombre, max, esOrden,
+        elegido: { general: max.general, especial: max.especial },
+        creds: [],
+    };
+    const totalOrden = data.totalBoletos || total;
+    const titulo = !esOrden ? 'Boleto válido'
+        : total < totalOrden ? `Falta${total === 1 ? '' : 'n'} ${total} de ${totalOrden}`
+        : `Boleto válido · Orden de ${totalOrden}`;
+    _mostrarResultadoEmergencia({
+        kind: 'pick',
+        titulo,
+        total: null,
+        lineas: resumen.lineas,
+        meta,
+        nombre,
+    });
+    const box = document.getElementById('scanner-emergencia-selector');
+    if (box && !box._selListo) {
+        box.addEventListener('click', _onClickSelector);
+        box._selListo = true;
+    }
+    _renderSelector();
+}
+
+async function _confirmarSelector() {
+    if (!_sel) return;
+    const { data, codigo, meta, nombre, elegido, creds } = _sel;
+    const btn = document.getElementById('scanner-sel-confirmar');
+    if (btn) { btn.disabled = true; btn.textContent = 'Validando…'; }
+    const token = obtenerTokenAdmin();
+    const fecha = _fechaPuertaSeleccionada();
+    const credenciales = creds.slice(0, elegido.especial);
+    const body = { general: elegido.general, especial: elegido.especial, credenciales };
+    if (fecha) body.fecha = fecha;
+    try {
+        const res = await fetch(window.teatroAdminApi(`canjear/${encodeURIComponent(codigo)}`), {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        const r = await res.json();
+        _sel = null;
+        if (!res.ok) {
+            _mostrarResultadoEmergencia({
+                kind: 'bad', titulo: 'No se pudo validar',
+                lineas: [r.error || 'Error al canjear'], meta, nombre,
+            });
+            return;
+        }
+        const p = _preciosUnitarios(data);
+        const precio = n => (p.cortesia ? 'cortesía' : `${_fmtPrecio(n)} c/u`);
+        const lineas = [];
+        if (p.cupon) lineas.push(`PROMO ${String(p.cupon).toUpperCase()}`);
+        if (elegido.general) lineas.push(`${elegido.general} general — ${precio(p.general)}`);
+        if (elegido.especial) {
+            const nombres = credenciales.map(c => (_CREDENCIALES_PUERTA.find(x => x.id === c) || {}).label || c);
+            lineas.push(`${elegido.especial} con credencial (${nombres.join(', ')}) — ${precio(p.especial)}`);
+        }
+        const faltan = r.faltan || 0;
+        if (faltan > 0 && data.esCertificado) lineas.push(`Falta${faltan === 1 ? '' : 'n'} ${faltan} de esta orden · se escanea el mismo QR cuando llegue${faltan === 1 ? '' : 'n'}`);
+        const entraron = r.entraron || (elegido.general + elegido.especial);
+        _mostrarResultadoEmergencia({
+            kind: 'ok',
+            titulo: 'Validado',
+            total: entraron,
+            lineas,
+            meta,
+            nombre,
+        });
+        if (_puedeCanjear()) cargarListaPuerta();
+        _agregarIngreso(data.nombre || data.email || codigo, entraron);
+    } catch {
+        _sel = null;
+        _mostrarResultadoEmergencia({
+            kind: 'bad', titulo: 'Error de conexión', lineas: ['Intenta de nuevo.'], meta: codigo,
+        });
+    }
+}
+
 function emergenciaOk() {
+    _sel = null;
     _ocultarResultadoEmergencia();
     _emergenciaPausa = false;
     if (_scannerActivo && _modoEmergencia && _scannerStream) {
@@ -625,6 +865,12 @@ async function procesarScanEmergencia(codigo) {
                 lineas: ['Inicia sesión para validar.'],
                 meta: codigo,
             });
+            return;
+        }
+
+        const porElegir = _pendientesSelector(data);
+        if (porElegir) {
+            _mostrarSelectorEntrada(data, codigo, resumen, meta, nombreComprador, porElegir);
             return;
         }
 

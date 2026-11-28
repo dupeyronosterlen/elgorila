@@ -1170,6 +1170,11 @@ function respuestaBoletoPublica(v, tid, boleto, boletoIdx) {
       totalBoletos,
       boletoNum:     pendientes.length ? (pendientes[0].numero || 1) : totalBoletos,
       pendientes:    pendientes.length,
+      // Para la tarjeta de puerta: cuántos faltan por entrar de cada tipo.
+      pendientesPorTipo: {
+        general:  pendientes.filter(b => !esTipoCredencial(b.tipo)).length,
+        especial: pendientes.filter(b => esTipoCredencial(b.tipo)).length,
+      },
       items:         v.items || [],
       metodoPago:    v.metodoPago || null,
       cortesia:      !!v.cortesia || (v.metodoPago || '').toLowerCase() === 'cortesia',
@@ -3070,6 +3075,31 @@ function _errorCanjeVenta(venta, fechaPuerta) {
     return `Esta función (${venta.funcionNombre || fechaVenta}) ya pasó. El boleto ya no es válido.`;
   }
   return null;
+}
+
+// Canje parcial en puerta (pedido de Os 28 nov 2026): la taquilla elige cuántos
+// de la orden entran ahora (general / con credencial) y, para los de credencial,
+// cuál mostraron (INAPAM, maestro, estudiante). Sin estos campos el canje sigue
+// como siempre: entran todos los pendientes de la orden.
+const CREDENCIALES_PUERTA = new Set(['inapam', 'maestro', 'estudiante']);
+const esTipoCredencial = t => !!TIPOS_BOLETO[String(t || '').toLowerCase()]?.es_descuento;
+
+async function _canjeParcialDesdeRequest(request) {
+  let body = null;
+  try { body = await request.clone().json(); } catch { return null; }
+  if (!body || (body.general == null && body.especial == null)) return null;
+  const n = v => {
+    const x = Number(v ?? 0);
+    return Number.isInteger(x) && x >= 0 && x <= 50 ? x : NaN;
+  };
+  const general = n(body.general);
+  const especial = n(body.especial);
+  if (Number.isNaN(general) || Number.isNaN(especial)) return { error: 'Cantidad inválida.' };
+  if (general + especial === 0) return { error: 'Elige cuántos entran.' };
+  const credenciales = (Array.isArray(body.credenciales) ? body.credenciales : [])
+    .map(c => String(c || '').toLowerCase())
+    .filter(c => CREDENCIALES_PUERTA.has(c));
+  return { general, especial, credenciales };
 }
 
 async function _fechaCanjeDesdeRequest(request) {
@@ -5005,6 +5035,10 @@ async function handleCanjear(tid, codigo, request, env) {
   const errCanje = _errorCanjeVenta(venta, fechaPuerta);
   if (errCanje) return json({ error: errCanje }, 409, request);
 
+  const parcial = await _canjeParcialDesdeRequest(request);
+  if (parcial?.error) return json({ error: parcial.error }, 400, request);
+  let entraron = null;
+
   if (boleto) {
     if (boleto.usado) {
       const cuandoMX = new Date(boleto.usadoEn).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
@@ -5012,6 +5046,8 @@ async function handleCanjear(tid, codigo, request, env) {
     }
     boleto.usado = true;
     boleto.usadoEn = new Date().toISOString();
+    if (parcial?.credenciales?.[0] && esTipoCredencial(boleto.tipo)) boleto.credencial = parcial.credenciales[0];
+    entraron = 1;
     syncVentaUsadoGlobal(venta);
   } else if (Array.isArray(venta.boletos) && venta.boletos.length) {
     const pendientes = venta.boletos.filter(b => !b.usado);
@@ -5020,7 +5056,21 @@ async function handleCanjear(tid, codigo, request, env) {
       return json({ error: `Ya fue canjeado el ${cuandoMX}.`, usadoEn: venta.usadoEn }, 409, request);
     }
     const now = new Date().toISOString();
-    pendientes.forEach(b => { b.usado = true; b.usadoEn = now; });
+    let aMarcar = pendientes;
+    if (parcial) {
+      const pendGen = pendientes.filter(b => !esTipoCredencial(b.tipo));
+      const pendEsp = pendientes.filter(b => esTipoCredencial(b.tipo));
+      if (parcial.general > pendGen.length || parcial.especial > pendEsp.length) {
+        return json({
+          error: `Esta orden solo tiene ${pendGen.length} general y ${pendEsp.length} con credencial por entrar.`,
+        }, 409, request);
+      }
+      const esp = pendEsp.slice(0, parcial.especial);
+      esp.forEach((b, i) => { if (parcial.credenciales[i]) b.credencial = parcial.credenciales[i]; });
+      aMarcar = [...pendGen.slice(0, parcial.general), ...esp];
+    }
+    aMarcar.forEach(b => { b.usado = true; b.usadoEn = now; });
+    entraron = aMarcar.length;
     syncVentaUsadoGlobal(venta);
   } else {
     if (venta.usado) {
@@ -5037,11 +5087,15 @@ async function handleCanjear(tid, codigo, request, env) {
   await registrarAuditoria(env, {
     usuarioId: payload.usuario, usuario: payload.nombre || payload.usuario,
     rol: payload.rol, accion: 'canjear_boleto', teatroId: tid,
-    detalles: `CERT ${codigo} canjeado en puerta${boleto?.folio ? ` · folio ${boleto.folio}` : ''}`,
-    meta: { codigo, folio: boleto?.folio || null, funcion: venta.funcionNombre || venta.fecha },
+    detalles: `CERT ${codigo} canjeado en puerta${boleto?.folio ? ` · folio ${boleto.folio}` : ''}`
+      + (parcial ? ` · entran ${entraron}${parcial.credenciales.length ? ` (${parcial.credenciales.join(', ')})` : ''}` : ''),
+    meta: { codigo, folio: boleto?.folio || null, funcion: venta.funcionNombre || venta.fecha,
+            entraron, credenciales: parcial?.credenciales || null },
   });
 
-  return json({ ok: true, usadoEn: boleto?.usadoEn || venta.usadoEn, folio: boleto?.folio || null }, 200, request);
+  const faltan = Array.isArray(venta.boletos) ? venta.boletos.filter(b => !b.usado).length : 0;
+  return json({ ok: true, usadoEn: boleto?.usadoEn || venta.usadoEn, folio: boleto?.folio || null,
+                entraron, faltan }, 200, request);
 }
 
 async function handleDescanjear(tid, codigo, request, env) {
