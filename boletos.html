@@ -695,6 +695,45 @@ body:has(.barra-reserva-fija:disabled) .barra-reserva-spacer {
   color: #f7e6c4 !important;
   box-shadow: 0 0 0 1px var(--gold-dim), 0 0 16px rgba(217,155,58,.22) !important;
 }
+/* Función cancelada: botón apagado, fecha tachada pero legible y sello rojo debajo */
+#botones-fecha button.fecha-cancelada {
+  position: relative;
+  padding: 14px 12px;
+  border: 1px dashed rgba(212,58,26,.5);
+  background: rgba(212,58,26,.06);
+  color: rgba(241,234,217,.55);
+  font-family: var(--cuerpo);
+  line-height: 1.35;
+  text-align: center;
+  cursor: not-allowed;
+}
+#botones-fecha .fecha-cancelada-fecha {
+  display: block; font-size: 1.05rem; font-weight: 600;
+  text-decoration: line-through; text-decoration-color: rgba(212,58,26,.75);
+}
+#botones-fecha .fecha-cancelada-hora {
+  display: block; font-size: .95rem; opacity: .75;
+  text-decoration: line-through; text-decoration-color: rgba(212,58,26,.75);
+}
+#botones-fecha .fecha-cancelada-sello {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 9px;
+  border: 2px solid var(--red);
+  color: var(--red);
+  font-family: var(--mono); font-size: 10.5px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase;
+  line-height: 1.25;
+  white-space: nowrap;
+  transform: rotate(-4deg);
+  pointer-events: none;
+}
+@media (max-width: 419px) {
+  #botones-fecha button.fecha-cancelada { padding: 12px 4px; }
+  #botones-fecha .fecha-cancelada-fecha { font-size: .95rem; }
+  #botones-fecha .fecha-cancelada-hora { font-size: .85rem; }
+  #botones-fecha .fecha-cancelada-sello { font-size: 9px; letter-spacing: .1em; padding: 2px 5px; }
+}
 #botones-fecha > div > button.underline {
   background: transparent !important; border: none !important;
   color: var(--gold-dim) !important;
@@ -1874,7 +1913,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/temporada-copy.js"></script>
 <script src="js/testimonios.js?v=20260817t1"></script>
 <script src="js/imagenes.js"></script>
-<script src="js/main.js?v=20261126android"></script>
+<script src="js/main.js?v=20261128cancelada"></script>
 <script src="js/mofu-boletos.js?v=20260812mofu"></script>
 <script>
 (function() {

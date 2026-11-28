@@ -1005,11 +1005,34 @@ function cargarFechas() {
     const botonesContainer = document.getElementById('botones-fecha');
     if (!botonesContainer) return;
 
-    const lista = [...funciones.especiales, ...funciones.regulares];
+    // Funciones canceladas (cancelada:true en fechas.js) siguen fuera de venta,
+    // pero se muestran como botón deshabilitado con sello "Cancelada" para que
+    // nadie piense que la fecha simplemente desapareció.
+    const canceladas = (typeof FUNCIONES_TEMPORADA !== 'undefined' ? FUNCIONES_TEMPORADA : [])
+        .filter(f => f.cancelada === true && !FechasManager.yaPaso(f.fecha_iso))
+        .map(f => ({ ...f, clave: f.fecha_iso, id: f.fecha_iso, esCancelada: true }));
+
+    const lista = [...funciones.especiales, ...funciones.regulares, ...canceladas]
+        .sort((a, b) => String(a.fecha_iso || a.clave).localeCompare(String(b.fecha_iso || b.clave)));
 
     let html = '';
 
     lista.forEach(funcion => {
+        if (funcion.esCancelada) {
+            const partes = funcion.nombre.split(/\s*[—–-]\s*/);
+            const fCorta = partes[0] || funcion.nombre;
+            const hCorta = partes[1] || '18:00 hrs';
+            html += `
+            <button type="button" disabled data-fecha-clave="${funcion.clave}" data-fecha-mes="${funcion.clave.slice(0, 7)}" data-fecha-cancelada="1"
+                class="fecha-cancelada" aria-label="${fCorta}: función cancelada por causas ajenas a la producción"
+                title="Función cancelada por causas ajenas a la producción">
+                <span class="fecha-cancelada-fecha">${fCorta}</span>
+                <span class="fecha-cancelada-hora">${hCorta}</span>
+                <span class="fecha-cancelada-sello" aria-hidden="true">Cancelada</span>
+            </button>
+            `;
+            return;
+        }
         const bloqueada      = funcion.bloqueada;
         const esAgotada      = funcion.agotada === true;
         const esSeleccionada = fechaSeleccionada === funcion.clave;
