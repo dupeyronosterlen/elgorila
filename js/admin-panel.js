@@ -1698,7 +1698,8 @@
       const n = counts[f.fecha_iso] || 0;
       const b = butacas[f.fecha_iso] || 0;
       const act = state.chipFuncion === f.fecha_iso ? ' active' : '';
-      chips.push(`<button type="button" class="fn-chip${act}" data-chip="${esc(f.fecha_iso)}">${esc(f.nombre)}<span class="fn-chip-count">${n}-${b}</span></button>`);
+      const oculta = f.activa === false ? ' <em style="opacity:.6;font-style:normal">(fuera de venta)</em>' : '';
+      chips.push(`<button type="button" class="fn-chip${act}" data-chip="${esc(f.fecha_iso)}">${esc(f.nombre)}${oculta}<span class="fn-chip-count">${n}-${b}</span></button>`);
     }
     wrap.innerHTML = chips.join('');
     wrap.querySelectorAll('[data-chip]').forEach(btn => {
@@ -2252,8 +2253,11 @@
   async function v4RenderHub() {
     if (!perm('verVentas')) return;
     let ventasError = null;
+    // Lista de admin (incluye funciones ocultas de la venta): una función que
+    // se quita de la venta (p. ej. 5 dic cancelada) debe seguir aquí mientras
+    // tenga boletos vendidos, para poder verlos y reagendarlos.
     const [, ventasResult] = await Promise.allSettled([
-      cargarFunciones(true),
+      cargarFunciones(false),
       cargarVentas(),  // TODAS las ventas; el chip filtra en el cliente
       cargarOxxoPendientes(),
       cargarOxxoHistorial(),
@@ -2262,6 +2266,11 @@
       ventasError = ventasResult.reason?.message || 'Error al cargar ventas';
       state.ventas = [];
     }
+    // Ocultas solo si tienen ventas (las viejas sin ventas, como los miércoles
+    // que nunca se abrieron, no estorban en los chips).
+    const conVentas = new Set(state.ventas.map(v => v.fechaContable || v.fecha).concat(state.ventas.map(v => v.fecha)));
+    state.funciones = state.funciones.filter(f =>
+      f.activa !== false || conVentas.has(f.fecha_iso) || (f.vendidos || 0) > 0);
     v4RenderFnChips();
     v4RenderVentasTable();
     v4RenderOxxoPendientes();
