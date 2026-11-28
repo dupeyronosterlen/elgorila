@@ -895,10 +895,10 @@
     {
       "@type": "TheaterEvent",
       "@id": "https://elgorilateatro.com.mx/funciones.html#funcion-2026-12-05",
-      "name": "EL GORILA — Sábado 5 Dic 2026",
-      "description": "Monólogo de Humberto Dupeyrón basado en Franz Kafka. Sábado 18:00, Teatro Wilberto Cantón, CDMX. Temporada extendida.",
+      "name": "EL GORILA — Sábado 5 Dic 2026 (Cancelada)",
+      "description": "Monólogo de Humberto Dupeyrón basado en Franz Kafka. Sábado 18:00, Teatro Wilberto Cantón, CDMX. Función cancelada por causas ajenas a la producción.",
       "startDate": "2026-12-05T18:00:00-06:00",
-      "eventStatus": "https://schema.org/EventScheduled",
+      "eventStatus": "https://schema.org/EventCancelled",
       "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
       "inLanguage": "es-MX",
       "location": {
@@ -922,7 +922,7 @@
         "url": "https://elgorilateatro.com.mx/boletos.html",
         "price": "400",
         "priceCurrency": "MXN",
-        "availability": "https://schema.org/InStock",
+        "availability": "https://schema.org/SoldOut",
         "validFrom": "2026-06-01"
       },
       "url": "https://elgorilateatro.com.mx/funciones.html#2026-12-05"
@@ -1148,6 +1148,18 @@ ul { padding-left: 1.35rem; margin-bottom: 14px; }
   color: rgba(241,234,217,.55);
   margin-top: 2px;
 }
+.calendario tr.fila-cancelada td:not(.nota-cancelada) { color: rgba(241,234,217,.45); }
+.calendario tr.fila-cancelada s { text-decoration-color: rgba(212,58,26,.7); }
+.calendario .nota-cancelada { line-height: 1.5; overflow-wrap: anywhere; }
+.calendario .nota-cancelada-titulo { color: var(--red); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.calendario .nota-cancelada-detalle {
+  display: block;
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(241,234,217,.62);
+  margin-top: 2px;
+}
+.calendario .nota-cancelada-detalle a { color: var(--gold); text-decoration: underline; text-underline-offset: 2px; }
 .calendario tr.fila-pasada td {
   color: rgba(241,234,217,.35);
   text-decoration: line-through;
@@ -1418,7 +1430,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <tr id="2026-11-14" data-fecha="2026-11-14"><td>Sábado 14 Nov</td><td>18:00</td><td>—</td></tr>
 <tr id="2026-11-21" data-fecha="2026-11-21"><td>Sábado 21 Nov</td><td>18:00</td><td>—</td></tr>
 <tr id="2026-11-28" data-fecha="2026-11-28"><td>Sábado 28 Nov</td><td>18:00</td><td>—</td></tr>
-<tr id="2026-12-05" data-fecha="2026-12-05"><td>Sábado 5 Dic</td><td>18:00</td><td>—</td></tr>
+<tr id="2026-12-05" data-fecha="2026-12-05" class="fila-cancelada"><td><s>Sábado 5 Dic</s></td><td><s>18:00</s></td><td class="nota-cancelada"><span class="nota-cancelada-titulo">Función cancelada</span><span class="nota-cancelada-detalle">Por causas ajenas a la producción.</span></td></tr>
 <tr id="2026-12-12" data-fecha="2026-12-12"><td>Sábado 12 Dic</td><td>18:00</td><td>Cierre de temporada</td></tr>
   </tbody>
 </table>
