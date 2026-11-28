@@ -58,7 +58,9 @@ const FUNCIONES_TEMPORADA = [
   { fecha_iso: '2026-11-14', nombre: 'Sábado 14 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
   { fecha_iso: '2026-11-21', nombre: 'Sábado 21 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
   { fecha_iso: '2026-11-28', nombre: 'Sábado 28 Nov — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
-  { fecha_iso: '2026-12-05', nombre: 'Sábado 5 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, activa: true },
+  // 5 Dic CANCELADA (27 nov 2026): SOGEM ocupa el teatro para un evento propio.
+  // activa:false la quita de la venta; cancelada:true queda para avisarlo en el calendario.
+  { fecha_iso: '2026-12-05', nombre: 'Sábado 5 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, activa: false, cancelada: true },
   { fecha_iso: '2026-12-12', nombre: 'Sábado 12 Dic — 18:00 hrs', sede: SEDE_TEMPORADA, etiqueta: 'Cierre de temporada', activa: true },
 ];
 
